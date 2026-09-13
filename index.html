@@ -137,6 +137,27 @@
   .card-edit > summary::-webkit-details-marker{display:none;}
   .card-edit > summary::after{content:' ▾';color:var(--text-soft);font-size:.8rem;}
   .card-edit[open] > summary::after{content:' ▴';}
+  .roster-row{display:flex;gap:6px;align-items:stretch;margin-bottom:8px;}
+  .roster-item{
+    flex:1;display:flex;align-items:center;gap:10px;min-width:0;
+    padding:10px 12px;border-radius:14px;border:1px solid var(--border);
+    background:var(--surface-2);color:inherit;font:inherit;font-weight:800;
+    text-align:left;cursor:pointer;
+  }
+  .roster-item.on{border-color:var(--accent);background:rgba(34,211,166,.12);}
+  .roster-av{
+    width:36px;height:36px;border-radius:50%;flex-shrink:0;overflow:hidden;
+    background:linear-gradient(135deg, var(--accent), var(--violet));
+    display:flex;align-items:center;justify-content:center;
+    font-size:.72rem;font-weight:900;color:#08121C;
+  }
+  .roster-av img{width:100%;height:100%;object-fit:cover;display:block;}
+  .roster-item span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .roster-x{
+    width:44px;flex-shrink:0;border-radius:14px;border:1px solid var(--border);
+    background:var(--surface-2);color:var(--danger);font-size:1.25rem;cursor:pointer;
+  }
+  #addPlayerBtn{margin:4px 0 0;}
   .cam-badge{right:0;bottom:0;width:30px;height:30px;border-radius:50%;font-size:.78rem;}
   .photo-sheet-back{
     position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:84;border:0;padding:0;
@@ -499,6 +520,11 @@
         <div class="fb-name" id="fbName"></div>
         <div class="fb-meta" id="fbMeta"></div>
       </div>
+      <div class="pf-card">
+        <h3 data-i18n="myPlayers">Мои игроки</h3>
+        <div id="rosterList"></div>
+        <button class="ghost-btn" id="addPlayerBtn" type="button" data-i18n="addPlayer">Добавить игрока</button>
+      </div>
       <div id="playerFeed"></div>
       <details class="card-edit">
         <summary data-i18n="pEditCard">Редактировать карточку</summary>
@@ -789,6 +815,8 @@ const VIEW_KEY = 'ffk_view';
 const EXPORT_KEY = 'ffk_last_export';
 const SETTINGS_KEY = 'ffk_settings';
 const PLAYER_KEY = 'ffk_player_v1';
+const ROSTER_KEY = 'ffk_roster_v1';
+const MAX_PLAYERS = 8;
 const ROLE_CODES = ['gk','def','mid','fwd'];
 const POS_CODES = ['GK','CB','LB','RB','LWB','RWB','CDM','CM','CAM','LM','RM','LW','RW','ST','CF'];
 const POS_GROUP = {
@@ -866,6 +894,12 @@ uk:{
   seasonClosed:'{s} · закритий',
   pSave:'Зберегти картку', toastPlayer:'Картку гравця збережено',
   pEditCard:'Редагувати картку',
+  myPlayers:'Мої гравці', addPlayer:'Додати гравця', deletePlayer:'Видалити',
+  confirmDeletePlayer:'Видалити {n}? Матчі цього гравця зникнуть з телефону.',
+  toastPlayerAdded:'Додано гравця. Заповніть картку.',
+  toastSwitched:'Зараз: {n}', toastPlayerRemoved:'Гравця видалено',
+  playerUntitled:'Новий гравець', cannotDeleteLast:'Залиште хоча б одного гравця',
+  toastTooManyPlayers:'Можна додати не більше {n} гравців',
   pfSeasonAvg:'середня за сезон', pfAllAvg:'середня за весь час',
   pfTrend:'{n} за останні {k} матчів', pfLast:'Останній матч', pfSeason:'Сезон',
   pfStrengths:'Сильні сторони', pfFocus:'Потребують уваги',
@@ -1013,6 +1047,12 @@ pl:{
   seasonClosed:'{s} · zamknięty',
   pSave:'Zapisz kartę', toastPlayer:'Karta zawodnika zapisana',
   pEditCard:'Edytuj kartę',
+  myPlayers:'Moi zawodnicy', addPlayer:'Dodaj zawodnika', deletePlayer:'Usuń',
+  confirmDeletePlayer:'Usunąć {n}? Mecze tego zawodnika znikną z telefonu.',
+  toastPlayerAdded:'Dodano zawodnika. Uzupełnij kartę.',
+  toastSwitched:'Teraz: {n}', toastPlayerRemoved:'Zawodnika usunięto',
+  playerUntitled:'Nowy zawodnik', cannotDeleteLast:'Zostaw przynajmniej jednego zawodnika',
+  toastTooManyPlayers:'Można dodać najwyżej {n} zawodników',
   pfSeasonAvg:'średnia za sezon', pfAllAvg:'średnia za cały czas',
   pfTrend:'{n} w ostatnich {k} meczach', pfLast:'Ostatni mecz', pfSeason:'Sezon',
   pfStrengths:'Mocne strony', pfFocus:'Do poprawy',
@@ -1160,6 +1200,12 @@ en:{
   seasonClosed:'{s} · closed',
   pSave:'Save player card', toastPlayer:'Player card saved',
   pEditCard:'Edit player card',
+  myPlayers:'My players', addPlayer:'Add a player', deletePlayer:'Delete',
+  confirmDeletePlayer:'Delete {n}? This player’s matches will be removed from the phone.',
+  toastPlayerAdded:'Player added. Fill in the card.',
+  toastSwitched:'Now: {n}', toastPlayerRemoved:'Player deleted',
+  playerUntitled:'New player', cannotDeleteLast:'Keep at least one player',
+  toastTooManyPlayers:'You can add up to {n} players',
   pfSeasonAvg:'season average', pfAllAvg:'all-time average',
   pfTrend:'{n} over the last {k} matches', pfLast:'Last match', pfSeason:'Season',
   pfStrengths:'Strengths', pfFocus:'Needs work',
@@ -1307,6 +1353,12 @@ ru:{
   seasonClosed:'{s} · закрыт',
   pSave:'Сохранить карточку', toastPlayer:'Карточка игрока сохранена',
   pEditCard:'Редактировать карточку',
+  myPlayers:'Мои игроки', addPlayer:'Добавить игрока', deletePlayer:'Удалить',
+  confirmDeletePlayer:'Удалить {n}? Матчи этого игрока пропадут с телефона.',
+  toastPlayerAdded:'Игрок добавлен. Заполните карточку.',
+  toastSwitched:'Сейчас: {n}', toastPlayerRemoved:'Игрок удалён',
+  playerUntitled:'Новый игрок', cannotDeleteLast:'Оставьте хотя бы одного игрока',
+  toastTooManyPlayers:'Можно добавить не больше {n} игроков',
   pfSeasonAvg:'средняя за сезон', pfAllAvg:'средняя за всё время',
   pfTrend:'{n} за последние {k} матчей', pfLast:'Последний матч', pfSeason:'Сезон',
   pfStrengths:'Сильные стороны', pfFocus:'Требуют внимания',
@@ -1532,6 +1584,7 @@ function applyI18n(){
   syncCompetitionField();
   syncDateShown();
   updatePhotoMeta();
+  renderRoster();
   if(lastReportMatch) document.getElementById('reportCard').innerHTML = renderReportHtml(lastReportMatch);
 }
 const BASE_RATING = 6.0;
@@ -1572,6 +1625,7 @@ const BEHAVIOR = [
 ];
 
 let settings = {club:'FC FFK', player:'Данило Михайлюк', position:'fwd', format:'2x30', minutes:'60', lang:'ru', seasonCloseDeclined:'', font:'inter'};
+let roster = {currentId:'', ids:[]};
 let player = defaultPlayer();
 let extraSelected = [];
 let photoDraft;
@@ -2187,7 +2241,10 @@ function defaultPlayer(){
   };
 }
 function displayName(){
-  return [player.firstName, player.lastName].filter(Boolean).join(' ').trim() || settings.player || '—';
+  return [player.firstName, player.lastName].filter(Boolean).join(' ').trim() || t('playerUntitled');
+}
+function playerLabel(p){
+  return [p.firstName, p.lastName].filter(Boolean).join(' ').trim() || t('playerUntitled');
 }
 function shirtNo(){
   const n = String(player.number || '').replace(/\D/g,'');
@@ -2212,10 +2269,13 @@ function ageLabel(n){
   const form = (n10 === 1 && n100 !== 11) ? 'ageOne' : (n10 >= 2 && n10 <= 4 && (n100 < 10 || n100 >= 20) ? 'ageFew' : 'ageMany');
   return t(form, {n});
 }
+function initialsOf(p){
+  const a = (p.firstName || '').trim().charAt(0);
+  const b = (p.lastName || '').trim().charAt(0);
+  return ((a + b) || (p.club || 'FFK').slice(0,2) || 'FF').toUpperCase();
+}
 function initials(){
-  const a = (player.firstName || '').trim().charAt(0);
-  const b = (player.lastName || '').trim().charAt(0);
-  return ((a + b) || (player.club || 'FFK').slice(0,2) || 'FF').toUpperCase();
+  return initialsOf(player);
 }
 function matchPosFromCode(code){
   if(isRoleCode(code)) return code;
@@ -2250,34 +2310,98 @@ function splitLegacyName(full){
   const parts = String(full || '').trim().split(/\s+/).filter(Boolean);
   return {firstName: parts[0] || '', lastName: parts.slice(1).join(' ')};
 }
+function newPlayerId(){
+  return 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+}
+function kidPlayerKey(id){ return 'ffk_kid_' + id; }
+function kidMatchesKey(id){ return 'ffk_kid_m_' + id; }
+function draftStorageKey(id){ return DRAFT_KEY + '_' + (id || roster.currentId || 'x'); }
+function saveRoster(){
+  try{ localStorage.setItem(ROSTER_KEY, JSON.stringify({currentId: roster.currentId, ids: roster.ids})); }catch(e){}
+}
+function writePlayerRecord(id, p){
+  const row = {...p, id};
+  try{
+    localStorage.setItem(kidPlayerKey(id), JSON.stringify(row));
+  }catch(e){
+    try{
+      const slim = {...row, photo:'', cover:''};
+      localStorage.setItem(kidPlayerKey(id), JSON.stringify(slim));
+      if(id === roster.currentId){ player.photo = ''; player.cover = ''; }
+      showToast(t('toastSaveFail'));
+    }catch(err){ showToast(t('toastSaveFail')); }
+  }
+}
+function readPlayerRecord(id){
+  try{
+    const raw = localStorage.getItem(kidPlayerKey(id));
+    if(!raw) return null;
+    return normalizePlayer(JSON.parse(raw), id);
+  }catch(e){ return null; }
+}
+function parseMatchList(raw){
+  const parsed = raw ? JSON.parse(raw) : [];
+  const list = Array.isArray(parsed) ? parsed : (Array.isArray(parsed.matches) ? parsed.matches : []);
+  let dirty = false;
+  const out = list.map(rawMatch => {
+    if(rawMatch && typeof rawMatch === 'object' && !String(rawMatch.season || '').trim()) dirty = true;
+    return normalizeMatch(rawMatch);
+  }).filter(Boolean);
+  return {list: out, dirty};
+}
+
 function loadPlayer(){
   try{
-    const raw = localStorage.getItem(PLAYER_KEY);
-    if(raw){
-      player = normalizePlayer(JSON.parse(raw));
-    } else {
-      const name = splitLegacyName(settings.player);
-      player = normalizePlayer({
-        firstName: name.firstName || defaultPlayer().firstName,
-        lastName: name.lastName,
-        club: settings.club === 'FFK' ? 'FC FFK' : (settings.club || 'FC FFK'),
-        primary: GROUP_TO_POS[settings.position] || 'RW',
-        extra: settings.position === 'fwd' ? ['CM'] : [],
-        season: currentSeason()
-      });
-      savePlayer();
+    const stored = JSON.parse(localStorage.getItem(ROSTER_KEY) || 'null');
+    if(stored && Array.isArray(stored.ids) && stored.ids.length){
+      roster.ids = stored.ids.map(String).filter(Boolean).slice(0, MAX_PLAYERS);
+      roster.currentId = roster.ids.includes(String(stored.currentId)) ? String(stored.currentId) : roster.ids[0];
+      player = readPlayerRecord(roster.currentId);
+      if(!player){
+        try{
+          const raw = localStorage.getItem(PLAYER_KEY);
+          player = raw ? normalizePlayer(JSON.parse(raw), roster.currentId) : normalizePlayer(defaultPlayer(), roster.currentId);
+        }catch(e){ player = normalizePlayer(defaultPlayer(), roster.currentId); }
+        writePlayerRecord(roster.currentId, player);
+      }
     }
-  }catch(e){ player = defaultPlayer(); }
+  }catch(e){ roster = {currentId:'', ids:[]}; player = null; }
+  if(!roster.currentId || !roster.ids.length){
+    try{
+      const raw = localStorage.getItem(PLAYER_KEY);
+      if(raw){
+        player = normalizePlayer(JSON.parse(raw));
+      } else {
+        const name = splitLegacyName(settings.player);
+        player = normalizePlayer({
+          firstName: name.firstName || defaultPlayer().firstName,
+          lastName: name.lastName,
+          club: settings.club === 'FFK' ? 'FC FFK' : (settings.club || 'FC FFK'),
+          primary: GROUP_TO_POS[settings.position] || 'RW',
+          extra: settings.position === 'fwd' ? ['CM'] : [],
+          season: currentSeason()
+        });
+      }
+    }catch(e){ player = defaultPlayer(); }
+    const id = player.id || newPlayerId();
+    player.id = id;
+    roster = {currentId: id, ids: [id]};
+    writePlayerRecord(id, player);
+    saveRoster();
+    savePlayer();
+  }
   extraSelected = [...(player.extra || [])];
   syncSettingsFromPlayer();
+  return migrated;
 }
-function normalizePlayer(p){
+function normalizePlayer(p, id){
   const d = defaultPlayer();
-  if(!p || typeof p !== 'object') return d;
+  if(!p || typeof p !== 'object') return {...d, id: String(id || d.id || '')};
   const primary = isPitchCode(p.primary) ? p.primary : d.primary;
   const extra = Array.isArray(p.extra) ? [...new Set(p.extra.filter(x => isPitchCode(x) && x !== primary))] : [];
   const num = String(p.number ?? '').replace(/\D/g,'');
   return {
+    id: String(p.id || id || '').slice(0, 32),
     firstName: String(p.firstName || '').slice(0,24),
     lastName: String(p.lastName || '').slice(0,32),
     birthDate: /^\d{4}-\d{2}-\d{2}$/.test(p.birthDate || '') ? p.birthDate : '',
@@ -2293,6 +2417,13 @@ function normalizePlayer(p){
   };
 }
 function savePlayer(){
+  if(!player.id){
+    player.id = roster.currentId || newPlayerId();
+    if(!roster.ids.includes(player.id)) roster.ids.push(player.id);
+    roster.currentId = player.id;
+    saveRoster();
+  }
+  writePlayerRecord(player.id, player);
   try{
     localStorage.setItem(PLAYER_KEY, JSON.stringify({...player, photo: player.photo, cover: player.cover}));
   }catch(e){
@@ -2417,6 +2548,126 @@ function applyHeader(){
   if(fbMeta) fbMeta.textContent = [no ? ((settings.lang === 'en' ? '#' : '№') + no) : '', posLine(), clubBits].filter(Boolean).join(' · ');
   renderPlayerFeed();
 }
+function rosterAvatarHtml(p){
+  if(p.photo) return `<span class="roster-av"><img alt="" src="${p.photo}"></span>`;
+  return `<span class="roster-av">${escapeHtml(initialsOf(p))}</span>`;
+}
+function renderRoster(){
+  const el = document.getElementById('rosterList');
+  if(!el) return;
+  el.innerHTML = roster.ids.map(id => {
+    const p = id === roster.currentId ? player : (readPlayerRecord(id) || {firstName:'', lastName:'', club:'', photo:''});
+    const on = id === roster.currentId ? ' on' : '';
+    const del = roster.ids.length > 1
+      ? `<button class="roster-x" type="button" data-del="${escapeHtml(id)}" aria-label="${escapeHtml(t('deletePlayer'))}">×</button>`
+      : '';
+    return `<div class="roster-row">
+      <button class="roster-item${on}" type="button" data-switch="${escapeHtml(id)}">${rosterAvatarHtml(p)}<span>${escapeHtml(playerLabel(p))}</span></button>
+      ${del}
+    </div>`;
+  }).join('');
+}
+function persistActivePlayer(){
+  if(document.getElementById('view-player').classList.contains('active')){
+    try{ player = collectPlayer(); }catch(e){}
+  }
+  savePlayer();
+  saveMatches();
+  try{ persistDraft(); }catch(e){}
+}
+function applyPlayerContext(){
+  extraSelected = [...(player.extra || [])];
+  photoDraft = undefined;
+  coverDraft = undefined;
+  syncSettingsFromPlayer();
+  saveSettings();
+  lastReportMatch = null;
+  currentSeasonFilter = 'current';
+  document.getElementById('app').classList.remove('live-on');
+  resetForm(true);
+  restoreDraft();
+  applyHeader();
+  fillPlayerForm();
+  fillSeasonSelects();
+  renderMetrics();
+  renderBehaviors();
+  renderLiveGrid();
+  renderFocusBanner();
+  renderHistory();
+  renderStats();
+  renderOppList();
+  updateHero();
+}
+function switchPlayer(id, silent){
+  if(!id || id === roster.currentId || !roster.ids.includes(id)) return;
+  persistActivePlayer();
+  roster.currentId = id;
+  saveRoster();
+  player = readPlayerRecord(id) || normalizePlayer({club: player.club, season: currentSeason()}, id);
+  loadMatches();
+  applyPlayerContext();
+  if(!silent) showToast(t('toastSwitched', {n: displayName()}));
+}
+function addPlayer(){
+  if(roster.ids.length >= MAX_PLAYERS){
+    showToast(t('toastTooManyPlayers', {n: MAX_PLAYERS}));
+    return;
+  }
+  persistActivePlayer();
+  const id = newPlayerId();
+  const next = normalizePlayer({
+    firstName: '',
+    lastName: '',
+    club: player.club || 'FC FFK',
+    team: player.team || '',
+    primary: isPitchCode(player.primary) ? player.primary : 'RW',
+    extra: [],
+    season: currentSeason(),
+    seasonOpen: true
+  }, id);
+  writePlayerRecord(id, next);
+  try{ localStorage.setItem(kidMatchesKey(id), '[]'); }catch(e){}
+  roster.ids.push(id);
+  roster.currentId = id;
+  saveRoster();
+  player = next;
+  matches = [];
+  savePlayer();
+  saveMatches();
+  applyPlayerContext();
+  showView('player');
+  document.querySelector('.card-edit')?.setAttribute('open', '');
+  window.scrollTo({top:0, behavior:'instant'});
+  showToast(t('toastPlayerAdded'));
+}
+function removePlayer(id){
+  if(roster.ids.length < 2){
+    showToast(t('cannotDeleteLast'));
+    return;
+  }
+  const p = id === roster.currentId ? player : readPlayerRecord(id);
+  const name = playerLabel(p || {firstName:'', lastName:''});
+  if(!confirm(t('confirmDeletePlayer', {n: name}))) return;
+  if(id === roster.currentId) persistActivePlayer();
+  roster.ids = roster.ids.filter(x => x !== id);
+  try{
+    localStorage.removeItem(kidPlayerKey(id));
+    localStorage.removeItem(kidMatchesKey(id));
+    sessionStorage.removeItem(draftStorageKey(id));
+  }catch(e){}
+  if(roster.currentId === id){
+    roster.currentId = roster.ids[0];
+    saveRoster();
+    player = readPlayerRecord(roster.currentId) || defaultPlayer();
+    player.id = roster.currentId;
+    loadMatches();
+    applyPlayerContext();
+  } else {
+    saveRoster();
+    renderRoster();
+  }
+  showToast(t('toastPlayerRemoved'));
+}
 function fillPrimarySelect(){
   const sel = document.getElementById('p-primary');
   const cur = isPitchCode(sel.value) ? sel.value : (isPitchCode(player.primary) ? player.primary : 'fwd');
@@ -2454,10 +2705,12 @@ function fillPlayerForm(){
   renderExtraChips();
   syncDateShown();
   syncSeasonUi();
+  renderRoster();
 }
 function collectPlayer(){
   const primary = document.getElementById('p-primary').value;
   return normalizePlayer({
+    id: player.id,
     firstName: document.getElementById('p-first').value.trim(),
     lastName: document.getElementById('p-last').value.trim(),
     birthDate: document.getElementById('p-birth').value,
@@ -2470,7 +2723,7 @@ function collectPlayer(){
     extra: extraSelected.filter(x => x !== primary),
     season: seasonIsOpen() ? (document.getElementById('p-season').value.trim() || player.season || currentSeason()) : (player.season || currentSeason()),
     seasonOpen: player.seasonOpen !== false
-  });
+  }, player.id);
 }
 function compressImage(file, w, h){
   return fileToImage(file).then(img => {
@@ -2487,20 +2740,21 @@ function compressCover(file){ return compressImage(file, 720, 270); }
 
 function loadMatches(){
   try{
-    const raw = localStorage.getItem(STORAGE_KEY) || localStorage.getItem(LEGACY_KEY);
-    const parsed = raw ? JSON.parse(raw) : [];
-    const list = Array.isArray(parsed) ? parsed : (Array.isArray(parsed.matches) ? parsed.matches : []);
-    let dirty = false;
-    matches = list.map(rawMatch => {
-      if(rawMatch && typeof rawMatch === 'object' && !String(rawMatch.season || '').trim()) dirty = true;
-      return normalizeMatch(rawMatch);
-    }).filter(Boolean);
-    if(dirty && matches.length) saveMatches();
+    const id = roster.currentId;
+    const kidRaw = id ? localStorage.getItem(kidMatchesKey(id)) : null;
+    let raw = kidRaw;
+    if(!raw && roster.ids.length <= 1) raw = localStorage.getItem(STORAGE_KEY) || localStorage.getItem(LEGACY_KEY);
+    const {list, dirty} = parseMatchList(raw);
+    matches = list;
+    if(id && (dirty || (!kidRaw && matches.length))) saveMatches();
   }catch(e){ matches = []; }
 }
 function saveMatches(){
-  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(matches)); }
-  catch(e){ showToast(t('toastSaveFail')); }
+  try{
+    const json = JSON.stringify(matches);
+    if(roster.currentId) localStorage.setItem(kidMatchesKey(roster.currentId), json);
+    localStorage.setItem(STORAGE_KEY, json);
+  }catch(e){ showToast(t('toastSaveFail')); }
 }
 
 function normalizeMatch(m){
@@ -2556,7 +2810,7 @@ function guessPos(label){
 }
 
 function persistDraft(){
-  sessionStorage.setItem(DRAFT_KEY, JSON.stringify({
+  sessionStorage.setItem(draftStorageKey(), JSON.stringify({
     date: document.getElementById('f-date').value,
     position: currentPitch(),
     opponent: document.getElementById('f-opponent').value,
@@ -2576,7 +2830,8 @@ function persistDraft(){
 }
 function restoreDraft(){
   try{
-    const d = JSON.parse(sessionStorage.getItem(DRAFT_KEY) || 'null');
+    const raw = sessionStorage.getItem(draftStorageKey()) || sessionStorage.getItem(DRAFT_KEY);
+    const d = JSON.parse(raw || 'null');
     if(!d) return;
     if(d.date) document.getElementById('f-date').value = d.date;
     if(d.position) fillMatchPitchSelects(d.position);
@@ -2700,7 +2955,7 @@ function setEditUi(on){
   document.getElementById('cancelEditBtn').hidden = !on;
 }
 
-function resetForm(){
+function resetForm(keepDraft){
   editingId = null;
   form = emptyForm();
   liveStack = [];
@@ -2723,7 +2978,10 @@ function resetForm(){
   renderFocusBanner();
   updateHero();
   syncDateShown();
-  sessionStorage.removeItem(DRAFT_KEY);
+  if(!keepDraft){
+    sessionStorage.removeItem(draftStorageKey());
+    sessionStorage.removeItem(DRAFT_KEY);
+  }
 }
 
 function fillForm(m){
@@ -2967,7 +3225,7 @@ document.getElementById('importFile').addEventListener('change', async (e) => {
     const imported = JSON.parse(await file.text());
     const bundle = Array.isArray(imported) ? {matches: imported} : imported;
     if(bundle.player && typeof bundle.player === 'object'){
-      player = normalizePlayer({...player, ...bundle.player});
+      player = normalizePlayer({...player, ...bundle.player}, player.id);
       extraSelected = [...(player.extra || [])];
       savePlayer();
       syncSettingsFromPlayer();
@@ -3418,6 +3676,13 @@ document.getElementById('pOpenSeasonBtn').addEventListener('click', () => {
 });
 document.getElementById('pCloseSeasonBtn').addEventListener('click', () => closeSeason(false));
 document.getElementById('playerHeadBtn').addEventListener('click', () => showView('player'));
+document.getElementById('addPlayerBtn').addEventListener('click', addPlayer);
+document.getElementById('rosterList').addEventListener('click', e => {
+  const del = e.target.closest('[data-del]');
+  if(del){ e.preventDefault(); e.stopPropagation(); removePlayer(del.dataset.del); return; }
+  const sw = e.target.closest('[data-switch]');
+  if(sw) switchPlayer(sw.dataset.switch);
+});
 document.getElementById('p-primary').addEventListener('change', renderExtraChips);
 document.getElementById('pExtraChips').addEventListener('click', e => {
   const chip = e.target.closest('.pos-chip');
