@@ -506,7 +506,6 @@
   </div>
   <div class="live-grid" id="liveGrid"></div>
   <div class="live-foot">
-    <button class="ghost-btn" id="liveUndoBtn" type="button" data-i18n="liveUndo">Отменить</button>
     <button class="save-btn" id="liveDoneBtn" type="button" data-i18n="liveDone">Готово</button>
   </div>
   </div>
@@ -1845,11 +1844,6 @@ function closeLive(){
 }
 document.getElementById('liveStartBtn').addEventListener('click', openLive);
 document.getElementById('liveDoneBtn').addEventListener('click', closeLive);
-document.getElementById('liveUndoBtn').addEventListener('click', () => {
-  const key = liveStack.pop();
-  if(!key){ showToast(t('toastNoUndo')); return; }
-  stepMetric(key, -1);
-});
 document.getElementById('live-position').addEventListener('change', () => {
   document.getElementById('f-position').value = document.getElementById('live-position').value;
   renderLiveGrid();
@@ -1963,7 +1957,11 @@ function wrapText(ctx, text, x, y, maxWidth, lineHeight){
   return yy;
 }
 
+let shareBusy = false;
 async function shareCard(m){
+  if(shareBusy) return;
+  shareBusy = true;
+  try{
   const lines = reportLines(m);
   const split = actionSplit(m.counts, m.position);
   const canvas = document.createElement('canvas');
@@ -2011,14 +2009,9 @@ async function shareCard(m){
 
   const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
   const file = new File([blob], `ffk_${m.date}.png`, {type:'image/png'});
-  const text = [`${reportPlayerName(m)} — ${fmtNum(m.rating, 1)}`, ...lines.map(l => `${l.icon} ${l.text}`), `${fmtSigned(split.plus, 2)} ${t('actPlus')}`, `${'−' + fmtNum(Math.abs(split.minus), 2)} ${t('actMinus')}`].join('\n');
   try{
     if(navigator.canShare && navigator.canShare({files:[file]})){
-      await navigator.share({files:[file], title:'FFK', text});
-      return;
-    }
-    if(navigator.share){
-      await navigator.share({title:'FFK', text});
+      await navigator.share({files:[file], title:'FFK'});
       return;
     }
   }catch(e){
@@ -2029,6 +2022,9 @@ async function shareCard(m){
   a.href = url; a.download = file.name; a.click();
   URL.revokeObjectURL(url);
   showToast(t('toastCard'));
+  } finally {
+    shareBusy = false;
+  }
 }
 
 (function init(){
