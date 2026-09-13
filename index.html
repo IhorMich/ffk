@@ -221,9 +221,12 @@
   .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px;}
   .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:13px 15px;}
   .stat-card .num{font-size:1.5rem;font-weight:800;font-variant-numeric:tabular-nums;}
+  .stat-card .num.up{color:var(--accent);}
+  .stat-card .num.down{color:var(--danger);}
   .stat-card .lbl{font-size:.72rem;color:var(--text-soft);font-weight:600;margin-top:2px;}
-  .chart-wrap{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px;}
+  .chart-wrap{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:18px;}
   .chart-wrap h3{margin:0 0 12px;font-size:.82rem;color:var(--text-soft);font-weight:700;}
+  .chart-wrap svg{display:block;width:100%;height:200px;}
   .tabbar{
     position:fixed;left:50%;transform:translateX(-50%);bottom:14px;
     width:calc(100% - 28px);max-width:452px;background:rgba(20,31,53,.92);
@@ -473,16 +476,16 @@
 
     <div class="view" id="view-stats">
       <div class="period-chips" id="periodChips">
-        <div class="chip active" data-days="7" data-i18n="periodWeek">Неделя</div>
-        <div class="chip" data-days="30" data-i18n="periodMonth">Месяц</div>
-        <div class="chip" data-days="90" data-i18n="period3m">3 месяца</div>
-        <div class="chip" data-days="99999" data-i18n="periodAll">Всё время</div>
+        <div class="chip active" data-range="10" data-i18n="periodLast10">Последние 10</div>
+        <div class="chip" data-range="30d" data-i18n="periodMonth">Месяц</div>
+        <div class="chip" data-range="90d" data-i18n="period3m">3 месяца</div>
+        <div class="chip" data-range="all" data-i18n="periodAll">Всё время</div>
+      </div>
+      <div class="chart-wrap">
+        <h3 id="chartHeading" data-i18n="chartTitle">Динамика общей оценки</h3>
+        <svg id="chartSvg" viewBox="0 0 320 200" role="img" data-i18n-aria="chartAria"></svg>
       </div>
       <div class="stat-grid" id="statGrid"></div>
-      <div class="chart-wrap">
-        <h3 data-i18n="chartTitle">Динамика общей оценки</h3>
-        <svg id="chartSvg" viewBox="0 0 300 120" style="width:100%;height:120px;" role="img" data-i18n-aria="chartAria"></svg>
-      </div>
     </div>
 
     <div class="view" id="view-settings">
@@ -584,8 +587,8 @@ uk:{
   saveMatch:'Зберегти матч', saveChanges:'Зберегти зміни', cancelEdit:'Скасувати правку',
   backupBanner:'Дані лише на цьому телефоні. Зробіть експорт, щоб не втратити сезон.',
   export:'Експорт', import:'Імпорт', copy:'Копіювати',
-  periodWeek:'Тиждень', periodMonth:'Місяць', period3m:'3 місяці', periodAll:'Весь час',
-  chartTitle:'Динаміка загальної оцінки', chartAria:'Графік оцінок', chartEmpty:'Поки немає даних',
+  periodLast10:'Останні 10', periodMonth:'Місяць', period3m:'3 місяці', periodAll:'Весь час',
+  chartTitle:'Динаміка оцінки', chartLastN:'Останні {n} матчів', chartAria:'Графік оцінок', chartEmpty:'Поки немає даних',
   sLang:'Мова', sFormat:'Формат матчу за замовчуванням', sSave:'Зберегти налаштування',
   tabPlayer:'Гравець', tabMatch:'Матч', tabHistory:'Історія', tabStats:'Статистика',
   pPhoto:'Фото', pPhotoHint:'Зберігається лише на цьому телефоні.', pRemovePhoto:'Прибрати фото',
@@ -610,7 +613,7 @@ uk:{
   mn_losses:'втрата|втрати|втрат', mn_ledtogoal:'втрата → гол суперника|втрати → гол суперника|втрат → гол суперника',
   mn_badpass:'неточний пас|неточні паси|неточних пасів', mn_badtouch:'втрата прийому|втрати прийому|втрат прийому',
   mn_fouls:'фол|фоли|фолів', mn_owngoal:'автогол|автоголи|автоголів',
-  stMatches:'Матчів', stAvg:'Середня загальна', stAction:'Середній вклад', stEffort:'Середнє старання', stVs5:'проти останніх 5', stMins:'Хвилин', stGoals:'Голи', stG90:'Голи / 90',
+  stMatches:'Матчів', stAvg:'Середня оцінка', stBest:'Найкращий матч', stWorst:'Найгірший', stTrend:'Тренд', stAction:'Середній вклад', stEffort:'Середнє старання', stMins:'Хвилин', stGoals:'Голи', stG90:'Голи / 90',
   toastSaveFail:'Не вдалося зберегти', toastSaved:'Матч збережено', toastUpdated:'Матч оновлено', toastDeleted:'Матч видалено',
   toastNothingExport:'Поки нічого експортувати', toastFileSaved:'Файл збережено', toastCopied:'Скопійовано', toastCopyFail:'Не вдалося скопіювати',
   toastAdded:'Додано: {n}', toastNoNew:'Нових матчів немає', toastReadFail:'Не вдалося прочитати файл', toastNoUndo:'Немає що скасувати',
@@ -649,8 +652,8 @@ pl:{
   saveMatch:'Zapisz mecz', saveChanges:'Zapisz zmiany', cancelEdit:'Anuluj edycję',
   backupBanner:'Dane są tylko na tym telefonie. Zrób eksport, żeby nie stracić sezonu.',
   export:'Eksport', import:'Import', copy:'Kopiuj',
-  periodWeek:'Tydzień', periodMonth:'Miesiąc', period3m:'3 miesiące', periodAll:'Cały czas',
-  chartTitle:'Dynamika oceny ogólnej', chartAria:'Wykres ocen', chartEmpty:'Brak danych',
+  periodLast10:'Ostatnie 10', periodMonth:'Miesiąc', period3m:'3 miesiące', periodAll:'Cały czas',
+  chartTitle:'Dynamika oceny', chartLastN:'Ostatnie {n} meczów', chartAria:'Wykres ocen', chartEmpty:'Brak danych',
   sLang:'Język', sFormat:'Domyślny format meczu', sSave:'Zapisz ustawienia',
   tabPlayer:'Zawodnik', tabMatch:'Mecz', tabHistory:'Historia', tabStats:'Statystyki',
   pPhoto:'Zdjęcie', pPhotoHint:'Przechowywane tylko na tym telefonie.', pRemovePhoto:'Usuń zdjęcie',
@@ -675,7 +678,7 @@ pl:{
   mn_losses:'strata|straty|strat', mn_ledtogoal:'strata → gol rywala|straty → gol rywala|strat → gol rywala',
   mn_badpass:'niedokładne podanie|niedokładne podania|niedokładnych podań', mn_badtouch:'strata przy przyjęciu|straty przy przyjęciu|strat przy przyjęciu',
   mn_fouls:'faul|faule|fauli', mn_owngoal:'gol samobójczy|gole samobójcze|goli samobójczych',
-  stMatches:'Mecze', stAvg:'Średnia ogólna', stAction:'Średni wkład', stEffort:'Średnie zaangażowanie', stVs5:'vs ostatnie 5', stMins:'Minuty', stGoals:'Gole', stG90:'Gole / 90',
+  stMatches:'Mecze', stAvg:'Średnia ocena', stBest:'Najlepszy mecz', stWorst:'Najsłabszy', stTrend:'Trend', stAction:'Średni wkład', stEffort:'Średnie zaangażowanie', stMins:'Minuty', stGoals:'Gole', stG90:'Gole / 90',
   toastSaveFail:'Nie udało się zapisać', toastSaved:'Mecz zapisany', toastUpdated:'Mecz zaktualizowany', toastDeleted:'Mecz usunięty',
   toastNothingExport:'Nie ma nic do eksportu', toastFileSaved:'Plik zapisany', toastCopied:'Skopiowano', toastCopyFail:'Nie udało się skopiować',
   toastAdded:'Dodano: {n}', toastNoNew:'Brak nowych meczów', toastReadFail:'Nie udało się odczytać pliku', toastNoUndo:'Nie ma czego cofnąć',
@@ -714,8 +717,8 @@ en:{
   saveMatch:'Save match', saveChanges:'Save changes', cancelEdit:'Cancel edit',
   backupBanner:'Data stays on this phone. Export so you do not lose the season.',
   export:'Export', import:'Import', copy:'Copy',
-  periodWeek:'Week', periodMonth:'Month', period3m:'3 months', periodAll:'All time',
-  chartTitle:'Overall rating trend', chartAria:'Rating chart', chartEmpty:'No data yet',
+  periodLast10:'Last 10', periodMonth:'Month', period3m:'3 months', periodAll:'All time',
+  chartTitle:'Rating trend', chartLastN:'Last {n} matches', chartAria:'Rating chart', chartEmpty:'No data yet',
   sLang:'Language', sFormat:'Default match format', sSave:'Save settings',
   tabPlayer:'Player', tabMatch:'Match', tabHistory:'History', tabStats:'Stats',
   pPhoto:'Photo', pPhotoHint:'Stored only on this phone.', pRemovePhoto:'Remove photo',
@@ -740,7 +743,7 @@ en:{
   mn_losses:'turnover|turnovers', mn_ledtogoal:'turnover to a goal|turnovers to a goal',
   mn_badpass:'incomplete pass|incomplete passes', mn_badtouch:'poor first touch|poor first touches',
   mn_fouls:'foul|fouls', mn_owngoal:'own goal|own goals',
-  stMatches:'Matches', stAvg:'Average overall', stAction:'Average impact', stEffort:'Average effort', stVs5:'vs last 5', stMins:'Minutes', stGoals:'Goals', stG90:'Goals / 90',
+  stMatches:'Matches', stAvg:'Average rating', stBest:'Best match', stWorst:'Worst', stTrend:'Trend', stAction:'Average impact', stEffort:'Average effort', stMins:'Minutes', stGoals:'Goals', stG90:'Goals / 90',
   toastSaveFail:'Could not save', toastSaved:'Match saved', toastUpdated:'Match updated', toastDeleted:'Match deleted',
   toastNothingExport:'Nothing to export yet', toastFileSaved:'File saved', toastCopied:'Copied', toastCopyFail:'Could not copy',
   toastAdded:'Added: {n}', toastNoNew:'No new matches', toastReadFail:'Could not read the file', toastNoUndo:'Nothing to undo',
@@ -779,8 +782,8 @@ ru:{
   saveMatch:'Сохранить матч', saveChanges:'Сохранить изменения', cancelEdit:'Отменить правку',
   backupBanner:'Данные только на этом телефоне. Сделайте экспорт, чтобы не потерять сезон.',
   export:'Экспорт', import:'Импорт', copy:'Копировать',
-  periodWeek:'Неделя', periodMonth:'Месяц', period3m:'3 месяца', periodAll:'Всё время',
-  chartTitle:'Динамика общей оценки', chartAria:'График оценок', chartEmpty:'Пока нет данных',
+  periodLast10:'Последние 10', periodMonth:'Месяц', period3m:'3 месяца', periodAll:'Всё время',
+  chartTitle:'Динамика оценки', chartLastN:'Последние {n} матчей', chartAria:'График оценок', chartEmpty:'Пока нет данных',
   sLang:'Язык', sFormat:'Формат матча по умолчанию', sSave:'Сохранить настройки',
   tabPlayer:'Игрок', tabMatch:'Матч', tabHistory:'История', tabStats:'Статистика',
   pPhoto:'Фотография', pPhotoHint:'Хранится только на этом телефоне.', pRemovePhoto:'Убрать фото',
@@ -805,7 +808,7 @@ ru:{
   mn_losses:'потеря|потери|потерь', mn_ledtogoal:'потеря → гол соперника|потери → гол соперника|потерь → гол соперника',
   mn_badpass:'неточный пас|неточных паса|неточных пасов', mn_badtouch:'потеря приёма|потери приёма|потерь приёма',
   mn_fouls:'фол|фола|фолов', mn_owngoal:'автогол|автогола|автоголов',
-  stMatches:'Матчей', stAvg:'Средняя общая', stAction:'Средний вклад', stEffort:'Среднее старание', stVs5:'К последним 5', stMins:'Минут', stGoals:'Голы', stG90:'Голы / 90',
+  stMatches:'Матчей', stAvg:'Средняя оценка', stBest:'Лучший матч', stWorst:'Худший', stTrend:'Тренд', stAction:'Средний вклад', stEffort:'Среднее старание', stMins:'Минут', stGoals:'Голы', stG90:'Голы / 90',
   toastSaveFail:'Не удалось сохранить', toastSaved:'Матч сохранён', toastUpdated:'Матч обновлён', toastDeleted:'Матч удалён',
   toastNothingExport:'Пока нечего экспортировать', toastFileSaved:'Файл сохранён', toastCopied:'Скопировано', toastCopyFail:'Не удалось скопировать',
   toastAdded:'Добавлено: {n}', toastNoNew:'Новых матчей нет', toastReadFail:'Не удалось прочитать файл', toastNoUndo:'Нечего отменять',
@@ -1850,19 +1853,34 @@ document.getElementById('importFile').addEventListener('change', async (e) => {
   e.target.value = '';
 });
 
-let currentPeriodDays = 7;
+let currentRange = '10';
 document.getElementById('periodChips').addEventListener('click', e => {
   const chip = e.target.closest('.chip');
   if(!chip) return;
   document.querySelectorAll('#periodChips .chip').forEach(c=>c.classList.remove('active'));
   chip.classList.add('active');
-  currentPeriodDays = parseInt(chip.dataset.days, 10);
+  currentRange = chip.dataset.range || '10';
   renderStats();
 });
+function statsMatches(){
+  const sorted = [...matches].sort((a,b)=> a.date.localeCompare(b.date) || a.id - b.id);
+  if(currentRange === '10') return sorted.slice(-10);
+  if(currentRange === 'all') return sorted;
+  const days = currentRange === '30d' ? 30 : 90;
+  return sorted.filter(m => m.date >= daysAgoStr(days));
+}
+function ratingTrend(list){
+  if(list.length < 2) return 0;
+  if(list.length < 4) return list[list.length-1].rating - list[0].rating;
+  const mid = Math.floor(list.length / 2);
+  const avg = arr => arr.reduce((a,b)=>a+b,0)/arr.length;
+  return avg(list.slice(mid).map(m=>m.rating)) - avg(list.slice(0, mid).map(m=>m.rating));
+}
 function renderStats(){
-  const cutoff = daysAgoStr(currentPeriodDays);
-  const list = matches.filter(m => m.date >= cutoff).sort((a,b)=>a.date.localeCompare(b.date));
+  const list = statsMatches();
   const grid = document.getElementById('statGrid');
+  const heading = document.getElementById('chartHeading');
+  heading.textContent = list.length <= 1 ? t('chartTitle') : t('chartLastN', {n: list.length});
   if(!list.length){
     grid.innerHTML = `<div class="empty" style="grid-column:1/-1;">${escapeHtml(t('noPeriod'))}</div>`;
     drawChart([]);
@@ -1871,45 +1889,67 @@ function renderStats(){
   const avg = arr => arr.reduce((a,b)=>a+b,0)/arr.length;
   const sum = key => list.reduce((a,m)=>a+(m.counts[key]||0),0);
   const minutes = list.reduce((a,m)=>a+(m.minutes||0),0);
-  const prev = list.slice(0,-1).slice(-5);
-  const last = list[list.length-1].rating;
-  const base = prev.length ? avg(prev.map(m=>m.rating)) : last;
+  const ratings = list.map(m=>m.rating);
+  const trend = ratingTrend(list);
+  const trendCls = trend > 0.05 ? 'up' : (trend < -0.05 ? 'down' : '');
+  const trendMark = trend > 0.05 ? '↗ ' : (trend < -0.05 ? '↘ ' : '→ ');
   grid.innerHTML = [
-    {num:list.length,lbl:t('stMatches')},
-    {num:fmtNum(avg(list.map(m=>m.rating)), 1),lbl:t('stAvg')},
-    {num:fmtNum(avg(list.map(m=>m.actionRating)), 1),lbl:t('stAction')},
-    {num:fmtNum(avg(list.map(m=>m.effortRating)), 1),lbl:t('stEffort')},
-    {num:fmtSigned(last-base, 1),lbl:t('stVs5')},
-    {num:minutes,lbl:t('stMins')},
-    {num:sum('goals'),lbl:t('stGoals')},
-    {num:minutes?fmtNum(sum('goals')*90/minutes, 1):fmtNum(0, 1),lbl:t('stG90')},
-  ].map(c=>`<div class="stat-card"><div class="num">${c.num}</div><div class="lbl">${c.lbl}</div></div>`).join('');
+    {num:fmtNum(avg(ratings), 2), lbl:t('stAvg')},
+    {num:trendMark + fmtSigned(trend, 2), lbl:t('stTrend'), cls:trendCls},
+    {num:fmtNum(Math.max(...ratings), 1), lbl:t('stBest')},
+    {num:fmtNum(Math.min(...ratings), 1), lbl:t('stWorst')},
+    {num:list.length, lbl:t('stMatches')},
+    {num:minutes, lbl:t('stMins')},
+    {num:sum('goals'), lbl:t('stGoals')},
+    {num:minutes?fmtNum(sum('goals')*90/minutes, 1):fmtNum(0, 1), lbl:t('stG90')},
+  ].map(c=>`<div class="stat-card"><div class="num ${c.cls||''}">${c.num}</div><div class="lbl">${c.lbl}</div></div>`).join('');
   drawChart(list);
 }
 function drawChart(list){
   const svg = document.getElementById('chartSvg');
   if(list.length < 1){
-    svg.innerHTML = `<text x="150" y="60" text-anchor="middle" font-size="11" fill="#8D9AB5">${escapeHtml(t('chartEmpty'))}</text>`;
+    svg.innerHTML = `<text x="160" y="100" text-anchor="middle" font-size="12" fill="#8D9AB5">${escapeHtml(t('chartEmpty'))}</text>`;
     return;
   }
-  const w=300,h=120,pad=18;
-  const xs = list.map((_,i)=> pad + i * ((w-2*pad)/Math.max(1,list.length-1)));
-  const ys = list.map(m => h - pad - (m.rating/10)*(h-2*pad));
-  if(list.length === 1){
-    svg.innerHTML = `<circle cx="${xs[0]}" cy="${ys[0]}" r="4" fill="#F5B942"/>`;
-    return;
+  const w=320,h=200,padL=36,padR=14,padT=14,padB=30;
+  const ratings = list.map(m=>m.rating);
+  let yMin = Math.min(...ratings);
+  let yMax = Math.max(...ratings);
+  if(yMax - yMin < 0.6){
+    const mid = (yMax + yMin) / 2;
+    yMin = mid - 0.4;
+    yMax = mid + 0.4;
+  } else {
+    yMin -= 0.2;
+    yMax += 0.2;
   }
-  let grid='';
-  [0,5,10].forEach(v=>{
-    const y = h - pad - (v/10)*(h-2*pad);
-    grid += `<line x1="${pad}" y1="${y}" x2="${w-pad}" y2="${y}" stroke="rgba(255,255,255,.08)"/>
-      <text x="2" y="${y+3}" font-size="8" fill="#8D9AB5">${v}</text>`;
-  });
-  const path = xs.map((x,i)=> `${i===0?'M':'L'}${x.toFixed(1)},${ys[i].toFixed(1)}`).join(' ');
-  const dots = xs.map((x,i)=> `<circle cx="${x.toFixed(1)}" cy="${ys[i].toFixed(1)}" r="3.5" fill="#F5B942"/>`).join('');
-  svg.innerHTML = `${grid}<path d="${path}" fill="none" stroke="#22D3A6" stroke-width="2.5"/>${dots}
-    <text x="${pad}" y="118" font-size="8" fill="#8D9AB5">${escapeHtml(formatDate(list[0].date))}</text>
-    <text x="${w-pad}" y="118" font-size="8" fill="#8D9AB5" text-anchor="end">${escapeHtml(formatDate(list[list.length-1].date))}</text>`;
+  yMin = Math.max(0, yMin);
+  yMax = Math.min(10, yMax);
+  const innerW = w - padL - padR;
+  const innerH = h - padT - padB;
+  const xAt = i => padL + (list.length === 1 ? innerW/2 : i * innerW / (list.length-1));
+  const yAt = r => padT + (1 - (r - yMin)/(yMax - yMin)) * innerH;
+  const ticks = 4;
+  let grid = '';
+  for(let i=0;i<=ticks;i++){
+    const val = yMin + (yMax-yMin)*(i/ticks);
+    const y = yAt(val);
+    grid += `<line x1="${padL}" y1="${y.toFixed(1)}" x2="${w-padR}" y2="${y.toFixed(1)}" stroke="rgba(255,255,255,.08)"/>
+      <text x="${padL-6}" y="${y+3}" font-size="9" fill="#8D9AB5" text-anchor="end">${escapeHtml(fmtNum(val, 1))}</text>`;
+  }
+  const xs = list.map((_,i)=> xAt(i));
+  const ys = ratings.map(r => yAt(r));
+  const path = list.length === 1 ? '' : `<path d="${xs.map((x,i)=> `${i===0?'M':'L'}${x.toFixed(1)},${ys[i].toFixed(1)}`).join(' ')}" fill="none" stroke="#22D3A6" stroke-width="2.5"/>`;
+  const dots = xs.map((x,i)=> {
+    const last = i === xs.length-1;
+    return `<circle cx="${x.toFixed(1)}" cy="${ys[i].toFixed(1)}" r="${last?5:3.5}" fill="${last?'#F5B942':'#22D3A6'}"/>`;
+  }).join('');
+  const step = list.length > 10 ? Math.ceil(list.length / 8) : 1;
+  const labels = xs.map((x,i)=> {
+    if(i !== 0 && i !== xs.length-1 && i % step) return '';
+    return `<text x="${x.toFixed(1)}" y="${h-8}" font-size="9" fill="#8D9AB5" text-anchor="middle">${i+1}</text>`;
+  }).join('');
+  svg.innerHTML = `${grid}${path}${dots}${labels}`;
 }
 
 function renderLiveGrid(){
