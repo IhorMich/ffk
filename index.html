@@ -767,8 +767,16 @@
         <button type="button" class="chip" data-range="all" data-i18n="periodAll">Всё время</button>
       </div>
       <div class="stat-grid" id="statGrid"></div>
-      <button class="save-btn" id="statsCardBtn" type="button" data-i18n="cardPeriodBtn">Карточка периода</button>
       <div id="timingBoard"></div>
+      <p class="hint" data-i18n="statsPeriodHint">Карточка периода — за выбранный ниже диапазон.</p>
+      <div class="period-chips" id="cardPeriodChips">
+        <button type="button" class="chip active" data-card-period="10" data-i18n="periodLast10">Последние 10</button>
+        <button type="button" class="chip" data-card-period="7d" data-i18n="periodWeek">Неделя</button>
+        <button type="button" class="chip" data-card-period="30d" data-i18n="periodMonth">Месяц</button>
+        <button type="button" class="chip" data-card-period="year" data-i18n="periodYear">Год</button>
+        <button type="button" class="chip" data-card-period="all" data-i18n="periodAll">Всё время</button>
+      </div>
+      <button class="save-btn" id="statsCardBtn" type="button" data-i18n="cardPeriodBtn">Карточка периода</button>
     </div>
 
     <div class="view" id="view-settings">
@@ -1080,7 +1088,7 @@ uk:{
   stSeasonTitle:'Статистика сезону', stSeasonAvg:'середня оцінка', stActions:'Дії', stDynamics:'Динаміка',
   stDynMetric:'Показник', stDynStart:'Початок', stDynNow:'Зараз',
   stDynHint:'Перші {n} і останні {n} матчів сезону',
-  statsPeriodHint:'Картки вище — за обраний період.',
+  statsPeriodHint:'Картка періоду — за обраний нижче діапазон.',
   stPeriodCards:'За обраний період',
   dyn_rating:'Рейтинг', dyn_dribbles:'Обводки', dyn_tackles:'Відбори', dyn_losses:'Втрати', dyn_duels:'Єдиноборства',
   cmpTitle:'Порівняння', cmpAll:'Весь час', cmpLast10:'Останні 10', cmpLastN:'Останні {n}', cmpSeason:'Сезон',
@@ -1286,7 +1294,7 @@ pl:{
   stSeasonTitle:'Statystyka sezonu', stSeasonAvg:'średnia ocena', stActions:'Akcje', stDynamics:'Dynamika',
   stDynMetric:'Wskaźnik', stDynStart:'Początek', stDynNow:'Teraz',
   stDynHint:'Pierwsze {n} i ostatnie {n} meczów sezonu',
-  statsPeriodHint:'Karty powyżej — za wybrany okres.',
+  statsPeriodHint:'Karta okresu — za zakres wybrany poniżej.',
   stPeriodCards:'Za wybrany okres',
   dyn_rating:'Ocena', dyn_dribbles:'Dryblingi', dyn_tackles:'Odbiory', dyn_losses:'Straty', dyn_duels:'Pojedynki',
   cmpTitle:'Porównanie', cmpAll:'Cały czas', cmpLast10:'Ostatnie 10', cmpLastN:'Ostatnie {n}', cmpSeason:'Sezon',
@@ -1492,7 +1500,7 @@ en:{
   stSeasonTitle:'Season stats', stSeasonAvg:'average rating', stActions:'Actions', stDynamics:'Trend',
   stDynMetric:'Metric', stDynStart:'Start', stDynNow:'Now',
   stDynHint:'First {n} vs last {n} matches of the season',
-  statsPeriodHint:'The cards above use the selected period.',
+  statsPeriodHint:'The period card uses the range selected below.',
   stPeriodCards:'Selected period',
   dyn_rating:'Rating', dyn_dribbles:'Dribbles', dyn_tackles:'Tackles', dyn_losses:'Turnovers', dyn_duels:'Duels',
   cmpTitle:'Compare', cmpAll:'All time', cmpLast10:'Last 10', cmpLastN:'Last {n}', cmpSeason:'Season',
@@ -1698,7 +1706,7 @@ ru:{
   stSeasonTitle:'Статистика сезона', stSeasonAvg:'средняя оценка', stActions:'Действия', stDynamics:'Динамика',
   stDynMetric:'Показатель', stDynStart:'Начало', stDynNow:'Сейчас',
   stDynHint:'Первые {n} и последние {n} матчей сезона',
-  statsPeriodHint:'Карточки выше — за выбранный период.',
+  statsPeriodHint:'Карточка периода — за выбранный ниже диапазон.',
   stPeriodCards:'За выбранный период',
   dyn_rating:'Рейтинг', dyn_dribbles:'Обводки', dyn_tackles:'Отборы', dyn_losses:'Потери', dyn_duels:'Единоборства',
   cmpTitle:'Сравнение', cmpAll:'Всё время', cmpLast10:'Последние 10', cmpLastN:'Последние {n}', cmpSeason:'Сезон',
@@ -3958,6 +3966,7 @@ document.getElementById('importFile').addEventListener('change', async (e) => {
 
 let currentRange = '10';
 let chartRange = '10';
+let cardPeriod = '10';
 let currentSeasonFilter = 'current';
 function loadFilters(){
   try{
@@ -3965,6 +3974,7 @@ function loadFilters(){
     if(f.season === 'all' || f.season === 'current' || /^\d{4}\/\d{2}$/.test(String(f.season || ''))) currentSeasonFilter = f.season;
     if(['10','100','all'].includes(f.range)) currentRange = f.range;
     if(['10','100','all'].includes(f.chart)) chartRange = f.chart;
+    if(['10','7d','30d','year','all'].includes(f.cardPeriod)) cardPeriod = f.cardPeriod;
   }catch(e){}
 }
 function saveFilters(){
@@ -3972,7 +3982,8 @@ function saveFilters(){
     localStorage.setItem(FILTER_KEY, JSON.stringify({
       season: currentSeasonFilter,
       range: currentRange,
-      chart: chartRange
+      chart: chartRange,
+      cardPeriod
     }));
   }catch(e){}
 }
@@ -3982,6 +3993,9 @@ function syncFilterChips(){
   });
   document.querySelectorAll('#chartChips .chip').forEach(c => {
     c.classList.toggle('active', c.dataset.chart === chartRange);
+  });
+  document.querySelectorAll('#cardPeriodChips .chip').forEach(c => {
+    c.classList.toggle('active', c.dataset.cardPeriod === cardPeriod);
   });
 }
 function knownSeasons(){
@@ -4040,6 +4054,40 @@ document.getElementById('chartChips').addEventListener('click', e => {
   saveFilters();
   renderStats();
 });
+document.getElementById('cardPeriodChips').addEventListener('click', e => {
+  const chip = e.target.closest('[data-card-period]');
+  if(!chip) return;
+  document.querySelectorAll('#cardPeriodChips .chip').forEach(c=>c.classList.remove('active'));
+  chip.classList.add('active');
+  cardPeriod = chip.dataset.cardPeriod || '10';
+  saveFilters();
+});
+function cardPeriodMatches(){
+  const sorted = seasonPool();
+  if(cardPeriod === '10') return sorted.slice(-10);
+  if(cardPeriod === 'all') return sorted;
+  if(cardPeriod === 'year'){
+    const y = String(new Date().getFullYear());
+    return sorted.filter(m => String(m.date).startsWith(y));
+  }
+  const days = cardPeriod === '7d' ? 7 : 30;
+  return sorted.filter(m => m.date >= daysAgoStr(days));
+}
+function cardPeriodLabel(){
+  const range = ({
+    '10': t('periodLast10'),
+    '7d': t('periodWeek'),
+    '30d': t('periodMonth'),
+    'year': t('periodYear'),
+    'all': t('periodAll')
+  })[cardPeriod] || t('periodLast10');
+  if(currentSeasonFilter === 'all'){
+    if(cardPeriod === 'all') return t('seasonAll');
+    return t('seasonAll') + ' · ' + range;
+  }
+  if(cardPeriod === 'all') return seasonNameLabel();
+  return seasonNameLabel() + ' · ' + range;
+}
 function chartMatches(){
   const all = sortedMatches();
   if(chartRange === '10') return all.slice(-10);
@@ -4936,7 +4984,7 @@ function sharePlayerCard(kind){
   return shareFutCard(playerCardList(kind || 'season'), playerCardPeriod(kind || 'season'), kind || 'season');
 }
 function shareStatsCard(){
-  return shareFutCard(statsMatches(), statsPeriodLabel(), currentRange);
+  return shareFutCard(cardPeriodMatches(), cardPeriodLabel(), cardPeriod);
 }
 function shareHistoryCard(){
   return shareFutCard(seasonPool(), seasonNameLabel(), 'season');
