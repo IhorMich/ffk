@@ -9,6 +9,9 @@
 <meta name="apple-mobile-web-app-title" content="FFK">
 <meta name="theme-color" content="#0B1220">
 <link rel="manifest" href="manifest.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link id="appFontLink" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%230B1220'/%3E%3Ctext x='50' y='64' font-size='40' font-family='Arial' font-weight='900' text-anchor='middle' fill='%2322D3A6'%3EFFK%3C/text%3E%3C/svg%3E">
 <title>FFK — Оценка матча</title>
 <style>
@@ -23,11 +26,14 @@
     --violet:#7C5CFC;
     --gold:#F5B942;
     --danger:#FB6767;
+    --font:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
   html,body{margin:0;padding:0;}
+  html,body,button,input,select,textarea{
+    font-family:var(--font);
+  }
   body{
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
     background:var(--bg);color:var(--text);min-height:100vh;
   }
   .app{max-width:480px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;}
@@ -48,8 +54,8 @@
     font-weight:900;font-size:.9rem;color:#08121C;flex-shrink:0;object-fit:cover;
   }
   .club-badge img{width:100%;height:100%;object-fit:cover;border-radius:16px;display:block;}
-  .club-name{font-size:1.08rem;font-weight:800;}
-  .player-name{font-size:.78rem;color:var(--text-soft);font-weight:600;line-height:1.35;}
+  .club-name{font-size:1.08rem;font-weight:800;overflow-wrap:anywhere;}
+  .player-name{font-size:.78rem;color:var(--text-soft);font-weight:600;line-height:1.35;overflow-wrap:anywhere;}
   .player-num{
     margin-left:8px;font-size:.82rem;font-weight:800;color:var(--gold);
     background:rgba(245,185,66,.12);padding:2px 8px;border-radius:999px;
@@ -98,11 +104,12 @@
   .field input,.field select,.field textarea{
     width:100%;padding:11px 13px;border:1px solid var(--border);border-radius:12px;
     background:var(--surface);font-size:.95rem;color:var(--text);font-family:inherit;outline:none;
+    overflow-wrap:anywhere;
   }
   .field textarea{resize:vertical;min-height:56px;}
   .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent);}
   .field select{
-    -webkit-appearance:none;appearance:none;
+    -webkit-appearance:none;appearance:none;padding-right:36px;
     background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%238D9AB5'%3E%3Cpath d='M5 7l5 6 5-6z'/%3E%3C/svg%3E");
     background-repeat:no-repeat;background-position:right 12px center;
   }
@@ -129,7 +136,16 @@
   .file-meta{display:block;font-size:.78rem;color:var(--text-soft);font-weight:600;margin-top:8px;}
   .row2{display:flex;gap:10px;}
   .row2 .field{flex:1;}
-  .hint{font-size:.72rem;color:var(--text-soft);margin:-6px 0 12px;font-weight:600;}
+  .hint{
+    font-size:.78rem;color:var(--text-soft);margin:8px 0 0;font-weight:600;
+    line-height:1.4;overflow-wrap:anywhere;word-break:break-word;
+  }
+  .field .ghost-btn{margin-top:10px;}
+  .insight,.banner,.report-title,.report-sub,.match-opp,.match-details,.stat-card .lbl{
+    overflow-wrap:anywhere;
+  }
+  .report-sub{flex-wrap:wrap;}
+  .chart-wrap svg text{font-family:inherit;}
   .section-title{
     font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;
     color:var(--text-soft);margin:22px 0 10px;display:flex;align-items:center;gap:8px;
@@ -185,8 +201,8 @@
   .toast{
     position:fixed;left:50%;bottom:96px;transform:translateX(-50%) translateY(20px);
     background:var(--surface-2);border:1px solid var(--border);color:var(--text);
-    padding:11px 20px;border-radius:24px;font-size:.85rem;font-weight:600;
-    opacity:0;transition:opacity .25s,transform .25s;pointer-events:none;z-index:80;white-space:nowrap;
+    padding:11px 20px;border-radius:24px;font-size:.85rem;font-weight:600;max-width:calc(100% - 32px);text-align:center;
+    opacity:0;transition:opacity .25s,transform .25s;pointer-events:none;z-index:80;white-space:normal;
   }
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
   .empty{text-align:center;padding:50px 20px;color:var(--text-soft);font-weight:600;}
@@ -234,8 +250,9 @@
     border-radius:20px;z-index:40;padding:6px;
   }
   .tabbtn{
-    flex:1;border:none;background:none;padding:9px 4px;display:flex;flex-direction:column;
+    flex:1;border:none;background:none;padding:9px 3px;display:flex;flex-direction:column;
     align-items:center;gap:3px;font-size:.68rem;font-weight:700;color:var(--text-soft);cursor:pointer;border-radius:14px;
+    line-height:1.2;white-space:normal;overflow:hidden;
   }
   .tabbtn.active{color:var(--bg);background:linear-gradient(135deg, var(--accent), var(--violet));}
   .app.live-on .tabbar,.app.live-on .topbar,.app.live-on .content{display:none;}
@@ -511,6 +528,19 @@
         </select>
       </div>
       <div class="field">
+        <label data-i18n="sFont">Шрифт</label>
+        <select id="s-font">
+          <option value="inter">Inter</option>
+          <option value="manrope">Manrope</option>
+          <option value="rubik">Rubik</option>
+          <option value="nunito">Nunito</option>
+          <option value="source">Source Sans 3</option>
+          <option value="plex">IBM Plex Sans</option>
+          <option value="onest">Onest</option>
+          <option value="system" data-i18n="fontSystem">Системный</option>
+        </select>
+      </div>
+      <div class="field">
         <label data-i18n="sFormat">Формат матча по умолчанию</label>
         <select id="s-format">
           <option value="3x15">3×15</option>
@@ -546,7 +576,7 @@
       <div class="hint" style="margin:0;" data-i18n="liveHint">Запись по ходу игры</div>
       <div class="live-score" id="liveScore">6.0</div>
     </div>
-    <select id="live-position" style="width:auto;max-width:62%;padding:10px 12px;border-radius:12px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-weight:700;font-size:.78rem;"></select>
+    <select id="live-position" style="width:auto;max-width:62%;padding:10px 12px;border-radius:12px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-weight:700;font-size:.78rem;font-family:inherit;"></select>
   </div>
   <div class="live-grid" id="liveGrid"></div>
   <div class="live-foot">
@@ -571,6 +601,17 @@ const POS_GROUP = {
 };
 const GROUP_TO_POS = {gk:'GK', def:'CB', mid:'CM', fwd:'RW'};
 const LANGS = ['uk','pl','en','ru'];
+const FONT_FALLBACK = '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif';
+const FONTS = {
+  inter:{stack:'"Inter",'+FONT_FALLBACK, href:'https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap'},
+  manrope:{stack:'"Manrope",'+FONT_FALLBACK, href:'https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap'},
+  rubik:{stack:'"Rubik",'+FONT_FALLBACK, href:'https://fonts.googleapis.com/css2?family=Rubik:wght@400;600;700;800&display=swap'},
+  nunito:{stack:'"Nunito",'+FONT_FALLBACK, href:'https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap'},
+  source:{stack:'"Source Sans 3",'+FONT_FALLBACK, href:'https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700;800&display=swap'},
+  plex:{stack:'"IBM Plex Sans",'+FONT_FALLBACK, href:'https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600;700&display=swap'},
+  onest:{stack:'"Onest",'+FONT_FALLBACK, href:'https://fonts.googleapis.com/css2?family=Onest:wght@400;600;700;800&display=swap'},
+  system:{stack:FONT_FALLBACK, href:''}
+};
 const I18N = {
 uk:{
   pageTitle:'FFK — оцінка матчу', settingsAria:'Налаштування',
@@ -601,15 +642,15 @@ uk:{
   export:'Експорт', import:'Імпорт', copy:'Копіювати',
   periodLast10:'Останні 10', periodWeek:'Тиждень', periodMonth:'Місяць', periodYear:'Рік', periodAll:'Весь час',
   chartTitle:'Динаміка оцінки', chartLastN:'Останні {n} матчів', chartAria:'Графік оцінок', chartEmpty:'Поки немає даних',
-  sLang:'Мова', sFormat:'Формат матчу за замовчуванням', sSave:'Зберегти налаштування',
+  sLang:'Мова', sFont:'Шрифт', fontSystem:'Системний', sFormat:'Формат матчу за замовчуванням', sSave:'Зберегти налаштування',
   tabPlayer:'Гравець', tabMatch:'Матч', tabHistory:'Історія', tabStats:'Статистика',
   pPhoto:'Фото', pPhotoHint:'Зберігається лише на цьому телефоні.', pRemovePhoto:'Прибрати фото',
   pPickPhoto:'Вибрати файл', pNoFile:'Файл не вибрано', pPhotoReady:'Фото вибрано', phDate:'дд.мм.рррр',
   pFirst:'Ім’я', pLast:'Прізвище', pBirth:'Дата народження', pNumber:'Номер',
   pTeam:'Команда', pClub:'Клуб / академія', pPrimary:'Основна позиція', pExtra:'Додаткові позиції',
   pSeason:'Сезон', pOpenSeason:'Відкрити сезон', pCloseSeason:'Закрити сезон',
-  pSeasonHintOpen:'Сезон відкрито. Нові матчі пишуться сюди.',
-  pSeasonHintClosed:'Сезон {s} закрито. Матчі лишились в архіві.',
+  pSeasonHintOpen:'Сезон відкрито. Нові матчі сюди.',
+  pSeasonHintClosed:'Сезон {s} закрито. Матчі в архіві.',
   confirmOpenSeason:'Відкрити сезон {s}? Нові матчі підуть сюди.',
   confirmOpenForMatch:'Сезон закрито. Відкрити {s} для цього матчу?',
   closeTooEarly:'Зараз {when}. Сезон {s} ще не почався (старт 1 липня {start}). Закрити все одно?',
@@ -681,15 +722,15 @@ pl:{
   export:'Eksport', import:'Import', copy:'Kopiuj',
   periodLast10:'Ostatnie 10', periodWeek:'Tydzień', periodMonth:'Miesiąc', periodYear:'Rok', periodAll:'Cały czas',
   chartTitle:'Dynamika oceny', chartLastN:'Ostatnie {n} meczów', chartAria:'Wykres ocen', chartEmpty:'Brak danych',
-  sLang:'Język', sFormat:'Domyślny format meczu', sSave:'Zapisz ustawienia',
+  sLang:'Język', sFont:'Czcionka', fontSystem:'Systemowa', sFormat:'Domyślny format meczu', sSave:'Zapisz ustawienia',
   tabPlayer:'Zawodnik', tabMatch:'Mecz', tabHistory:'Historia', tabStats:'Statystyki',
   pPhoto:'Zdjęcie', pPhotoHint:'Przechowywane tylko na tym telefonie.', pRemovePhoto:'Usuń zdjęcie',
   pPickPhoto:'Wybierz plik', pNoFile:'Nie wybrano pliku', pPhotoReady:'Zdjęcie wybrane', phDate:'dd.mm.rrrr',
   pFirst:'Imię', pLast:'Nazwisko', pBirth:'Data urodzenia', pNumber:'Numer',
   pTeam:'Drużyna', pClub:'Klub / akademia', pPrimary:'Pozycja główna', pExtra:'Pozycje dodatkowe',
   pSeason:'Sezon', pOpenSeason:'Otwórz sezon', pCloseSeason:'Zamknij sezon',
-  pSeasonHintOpen:'Sezon jest otwarty. Nowe mecze trafiają tutaj.',
-  pSeasonHintClosed:'Sezon {s} jest zamknięty. Mecze zostały w archiwum.',
+  pSeasonHintOpen:'Sezon otwarty. Nowe mecze tutaj.',
+  pSeasonHintClosed:'Sezon {s} zamknięty. Mecze w archiwum.',
   confirmOpenSeason:'Otworzyć sezon {s}? Nowe mecze trafią tutaj.',
   confirmOpenForMatch:'Sezon jest zamknięty. Otworzyć {s} dla tego meczu?',
   closeTooEarly:'Teraz jest {when}. Sezon {s} jeszcze się nie zaczął (start 1 lipca {start}). Zamknąć mimo to?',
@@ -761,15 +802,15 @@ en:{
   export:'Export', import:'Import', copy:'Copy',
   periodLast10:'Last 10', periodWeek:'Week', periodMonth:'Month', periodYear:'Year', periodAll:'All time',
   chartTitle:'Rating trend', chartLastN:'Last {n} matches', chartAria:'Rating chart', chartEmpty:'No data yet',
-  sLang:'Language', sFormat:'Default match format', sSave:'Save settings',
+  sLang:'Language', sFont:'Font', fontSystem:'System', sFormat:'Default match format', sSave:'Save settings',
   tabPlayer:'Player', tabMatch:'Match', tabHistory:'History', tabStats:'Stats',
   pPhoto:'Photo', pPhotoHint:'Stored only on this phone.', pRemovePhoto:'Remove photo',
   pPickPhoto:'Choose file', pNoFile:'No file chosen', pPhotoReady:'Photo selected', phDate:'Select date',
   pFirst:'First name', pLast:'Last name', pBirth:'Date of birth', pNumber:'Number',
   pTeam:'Team', pClub:'Club / academy', pPrimary:'Main position', pExtra:'Other positions',
   pSeason:'Season', pOpenSeason:'Open season', pCloseSeason:'Close season',
-  pSeasonHintOpen:'The season is open. New matches are saved here.',
-  pSeasonHintClosed:'Season {s} is closed. Matches stay in the archive.',
+  pSeasonHintOpen:'Season open. New matches go here.',
+  pSeasonHintClosed:'Season {s} closed. Matches stay in the archive.',
   confirmOpenSeason:'Open season {s}? New matches will go here.',
   confirmOpenForMatch:'The season is closed. Open {s} for this match?',
   closeTooEarly:'It is {when}. Season {s} has not started yet (1 July {start}). Close anyway?',
@@ -841,15 +882,15 @@ ru:{
   export:'Экспорт', import:'Импорт', copy:'Копировать',
   periodLast10:'Последние 10', periodWeek:'Неделя', periodMonth:'Месяц', periodYear:'Год', periodAll:'Всё время',
   chartTitle:'Динамика оценки', chartLastN:'Последние {n} матчей', chartAria:'График оценок', chartEmpty:'Пока нет данных',
-  sLang:'Язык', sFormat:'Формат матча по умолчанию', sSave:'Сохранить настройки',
+  sLang:'Язык', sFont:'Шрифт', fontSystem:'Системный', sFormat:'Формат матча по умолчанию', sSave:'Сохранить настройки',
   tabPlayer:'Игрок', tabMatch:'Матч', tabHistory:'История', tabStats:'Статистика',
   pPhoto:'Фотография', pPhotoHint:'Хранится только на этом телефоне.', pRemovePhoto:'Убрать фото',
   pPickPhoto:'Выбрать файл', pNoFile:'Файл не выбран', pPhotoReady:'Фото выбрано', phDate:'дд.мм.гггг',
   pFirst:'Имя', pLast:'Фамилия', pBirth:'Дата рождения', pNumber:'Номер',
   pTeam:'Команда', pClub:'Клуб / академия', pPrimary:'Основная позиция', pExtra:'Дополнительные позиции',
   pSeason:'Сезон', pOpenSeason:'Открыть сезон', pCloseSeason:'Закрыть сезон',
-  pSeasonHintOpen:'Сезон открыт. Новые матчи пишутся сюда.',
-  pSeasonHintClosed:'Сезон {s} закрыт. Матчи остались в архиве.',
+  pSeasonHintOpen:'Сезон открыт. Новые матчи сюда.',
+  pSeasonHintClosed:'Сезон {s} закрыт. Матчи в архиве.',
   confirmOpenSeason:'Открыть сезон {s}? Новые матчи пойдут сюда.',
   confirmOpenForMatch:'Сезон закрыт. Открыть {s} для этого матча?',
   closeTooEarly:'Сейчас {when}. Сезон {s} ещё не начался (старт 1 июля {start}). Закрыть всё равно?',
@@ -904,6 +945,25 @@ function t(key, vars){
   let s = (I18N[lang] && I18N[lang][key]) || I18N.ru[key] || key;
   if(vars) Object.keys(vars).forEach(k => { s = s.split('{'+k+'}').join(vars[k]); });
   return s;
+}
+function applyFont(){
+  const id = FONTS[settings.font] ? settings.font : 'inter';
+  settings.font = id;
+  const f = FONTS[id];
+  document.documentElement.style.setProperty('--font', f.stack);
+  let link = document.getElementById('appFontLink');
+  if(f.href){
+    if(!link){
+      link = document.createElement('link');
+      link.id = 'appFontLink';
+      link.rel = 'stylesheet';
+      document.head.appendChild(link);
+    }
+    if(link.getAttribute('href') !== f.href) link.href = f.href;
+  } else if(link) link.remove();
+}
+function canvasFont(weight, size){
+  return weight + ' ' + size + 'px ' + (getComputedStyle(document.body).fontFamily || 'sans-serif');
 }
 function metricLabel(key){ return t('m_'+key); }
 function behaviorLabel(key){ return t('b_'+key); }
@@ -1040,7 +1100,7 @@ const BEHAVIOR = [
   {key:'mood', inRating:false},
 ];
 
-let settings = {club:'FC FFK', player:'Данило Михайлюк', position:'fwd', format:'2x30', minutes:'60', lang:'ru', seasonCloseDeclined:''};
+let settings = {club:'FC FFK', player:'Данило Михайлюк', position:'fwd', format:'2x30', minutes:'60', lang:'ru', seasonCloseDeclined:'', font:'inter'};
 let player = defaultPlayer();
 let extraSelected = [];
 let photoDraft;
@@ -1413,7 +1473,8 @@ function loadSettings(){
       format: (FORMAT_MIN[s.format] || s.format === 'custom') ? s.format : (Object.keys(FORMAT_MIN).find(k => FORMAT_MIN[k] === Number(s.minutes)) || '2x30'),
       minutes: String(s.minutes || '60'),
       lang: LANGS.includes(s.lang) ? s.lang : detectLang(),
-      seasonCloseDeclined: String(s.seasonCloseDeclined || '')
+      seasonCloseDeclined: String(s.seasonCloseDeclined || ''),
+      font: FONTS[s.font] ? s.font : 'inter'
     };
     if(!s.lang) saveSettings();
   }catch(e){}
@@ -2241,12 +2302,18 @@ document.getElementById('settingsBtn').addEventListener('click', () => {
   document.getElementById('s-minutes').value = settings.minutes;
   document.getElementById('s-custom-wrap').hidden = (settings.format !== 'custom');
   document.getElementById('s-lang').value = settings.lang;
+  document.getElementById('s-font').value = settings.font || 'inter';
   showView('settings');
 });
 document.getElementById('s-lang').addEventListener('change', () => {
   settings.lang = document.getElementById('s-lang').value;
   saveSettings();
   applyI18n();
+});
+document.getElementById('s-font').addEventListener('change', () => {
+  settings.font = document.getElementById('s-font').value;
+  saveSettings();
+  applyFont();
 });
 document.getElementById('s-format').addEventListener('change', () => {
   document.getElementById('s-custom-wrap').hidden = document.getElementById('s-format').value !== 'custom';
@@ -2258,7 +2325,9 @@ document.getElementById('saveSettingsBtn').addEventListener('click', () => {
   settings.format = document.getElementById('s-format').value;
   settings.minutes = String(formatLength(settings.format, document.getElementById('s-minutes').value));
   settings.lang = document.getElementById('s-lang').value;
+  settings.font = document.getElementById('s-font').value;
   saveSettings();
+  applyFont();
   applyHeader();
   applyI18n();
   if(!editingId){
@@ -2366,17 +2435,17 @@ async function shareCard(m){
   ctx.fillStyle = '#0B1220';
   ctx.fillRect(0,0,canvas.width,canvas.height);
   ctx.fillStyle = '#8D9AB5';
-  ctx.font = '800 28px sans-serif';
+  ctx.font = canvasFont('800', 28);
   ctx.fillText(t('reportTitle').toUpperCase(), 60, 80);
   ctx.fillStyle = '#EDF1F7';
-  ctx.font = '800 52px sans-serif';
+  ctx.font = canvasFont('800', 52);
   ctx.fillText(`${reportPlayerName(m)} — ${fmtNum(m.rating, 1)}`, 60, 150);
   ctx.fillStyle = '#8D9AB5';
-  ctx.font = '600 26px sans-serif';
+  ctx.font = canvasFont('600', 26);
   ctx.fillText(`${formatDate(m.date)}  ·  ${m.opponent || t('shareVs')}  ·  ${m.score || '—'}`, 60, 200);
   ctx.fillText(`${t('heroAction')} ${fmtNum(m.actionRating, 1)}   ${t('heroEffort')} ${fmtNum(m.effortRating, 1)}`, 60, 245);
   let y = 310;
-  ctx.font = '700 34px sans-serif';
+  ctx.font = canvasFont('700', 34);
   if(!lines.length){
     ctx.fillStyle = '#EDF1F7';
     ctx.fillText(t('plusEven'), 60, y);
@@ -2390,16 +2459,16 @@ async function shareCard(m){
   }
   y += 20;
   ctx.fillStyle = '#22D3A6';
-  ctx.font = '800 40px sans-serif';
+  ctx.font = canvasFont('800', 40);
   ctx.fillText(fmtSigned(split.plus, 2), 60, y);
   ctx.fillStyle = '#8D9AB5';
-  ctx.font = '700 22px sans-serif';
+  ctx.font = canvasFont('700', 22);
   ctx.fillText(t('actPlus'), 60, y + 36);
   ctx.fillStyle = '#FB6767';
-  ctx.font = '800 40px sans-serif';
+  ctx.font = canvasFont('800', 40);
   ctx.fillText('−' + fmtNum(Math.abs(split.minus), 2), 460, y);
   ctx.fillStyle = '#8D9AB5';
-  ctx.font = '700 22px sans-serif';
+  ctx.font = canvasFont('700', 22);
   ctx.fillText(t('actMinus'), 460, y + 36);
 
   const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
@@ -2424,6 +2493,7 @@ async function shareCard(m){
 
 (function init(){
   loadSettings();
+  applyFont();
   loadPlayer();
   fillPrimarySelect();
   applyHeader();
