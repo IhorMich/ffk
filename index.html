@@ -785,6 +785,7 @@
 const STORAGE_KEY = 'ffk_matches_v2';
 const LEGACY_KEY = 'football_matches';
 const DRAFT_KEY = 'ffk_draft';
+const VIEW_KEY = 'ffk_view';
 const EXPORT_KEY = 'ffk_last_export';
 const SETTINGS_KEY = 'ffk_settings';
 const PLAYER_KEY = 'ffk_player_v1';
@@ -2896,6 +2897,8 @@ window.shareMatch = function(id){
 };
 
 function showView(name){
+  const views = ['player','new','history','stats','settings','report'];
+  if(!views.includes(name)) name = 'new';
   document.querySelectorAll('.tabbtn').forEach(b => b.classList.toggle('active', b.dataset.view === name));
   document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id === 'view-'+name));
   document.getElementById('heroBlock').style.display = (name === 'new') ? 'grid' : 'none';
@@ -2904,6 +2907,14 @@ function showView(name){
   if(name === 'report' && lastReportMatch) document.getElementById('reportCard').innerHTML = renderReportHtml(lastReportMatch);
   if(name === 'history') renderHistory();
   if(name === 'stats') renderStats();
+  try{ sessionStorage.setItem(VIEW_KEY, name === 'report' ? 'history' : name); }catch(e){}
+}
+function restoreView(){
+  let name = 'new';
+  try{ name = sessionStorage.getItem(VIEW_KEY) || 'new'; }catch(e){}
+  if(name === 'report') name = 'history';
+  if(!['player','new','history','stats','settings'].includes(name)) name = 'new';
+  showView(name);
 }
 
 function exportPayload(){
@@ -3616,6 +3627,7 @@ async function shareCard(m){
   applyI18n();
   renderOppList();
   maybePromptSeasonClose();
+  restoreView();
 })();
 </script>
 </body>
