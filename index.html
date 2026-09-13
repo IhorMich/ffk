@@ -309,14 +309,18 @@
           <input type="date" id="f-date">
         </div>
         <div class="field">
-          <label data-i18n="labelPos">Позиция</label>
-          <select id="f-position">
-            <option value="fwd" data-i18n="posFwd">Нападающий (FW)</option>
-            <option value="mid" data-i18n="posMid">Полузащитник (MF)</option>
-            <option value="def" data-i18n="posDef">Защитник (DF)</option>
-            <option value="gk" data-i18n="posGk">Вратарь (GK)</option>
+          <label data-i18n="labelKind">Тип игры</label>
+          <select id="f-kind">
+            <option value="league" data-i18n="kindLeague">Чемпионат</option>
+            <option value="friendly" data-i18n="kindFriendly">Товарищеский</option>
+            <option value="cup" data-i18n="kindCup">Кубок</option>
           </select>
         </div>
+      </div>
+      <div class="field">
+        <label data-i18n="labelTournament">Турнир</label>
+        <input type="text" id="f-tournament" list="tourList" maxlength="48" data-i18n-placeholder="phTournament" placeholder="Название турнира">
+        <datalist id="tourList"></datalist>
       </div>
       <div class="row2">
         <div class="field">
@@ -327,6 +331,22 @@
         <div class="field">
           <label data-i18n="labelScore">Счёт</label>
           <input type="text" id="f-score" inputmode="text">
+        </div>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label data-i18n="labelVenue">Где играли</label>
+          <select id="f-venue">
+            <option value="home" data-i18n="venueHome">Дома</option>
+            <option value="away" data-i18n="venueAway">На выезде</option>
+          </select>
+        </div>
+        <div class="field">
+          <label data-i18n="labelRole">Выход</label>
+          <select id="f-role">
+            <option value="start" data-i18n="roleStart">В старте</option>
+            <option value="sub" data-i18n="roleSub">Со скамейки</option>
+          </select>
         </div>
       </div>
       <div class="row2">
@@ -345,12 +365,8 @@
           </select>
         </div>
         <div class="field">
-          <label data-i18n="labelKind">Тип игры</label>
-          <select id="f-kind">
-            <option value="league" data-i18n="kindLeague">Чемпионат</option>
-            <option value="friendly" data-i18n="kindFriendly">Товарищеский</option>
-            <option value="cup" data-i18n="kindCup">Турнир</option>
-          </select>
+          <label data-i18n="labelPos">Позиция</label>
+          <select id="f-position"></select>
         </div>
       </div>
       <div class="row2">
@@ -449,12 +465,7 @@
       <div class="hint" style="margin:0;" data-i18n="liveHint">Запись по ходу игры</div>
       <div class="live-score" id="liveScore">6.0</div>
     </div>
-    <select id="live-position" style="width:auto;padding:10px 12px;border-radius:12px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-weight:700;">
-      <option value="fwd" data-i18n="posShortFwd">Нап (FW)</option>
-      <option value="mid" data-i18n="posShortMid">ПЗ (MF)</option>
-      <option value="def" data-i18n="posShortDef">Защ (DF)</option>
-      <option value="gk" data-i18n="posShortGk">Врт (GK)</option>
-    </select>
+    <select id="live-position" style="width:auto;max-width:62%;padding:10px 12px;border-radius:12px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-weight:700;font-size:.78rem;"></select>
   </div>
   <div class="live-grid" id="liveGrid"></div>
   <div class="live-foot">
@@ -485,15 +496,17 @@ uk:{
   heroOverall:'загальна оцінка', heroShort:'короткий вихід', heroAction:'вклад', heroEffort:'старання',
   liveStart:'Швидкий режим', labelDate:'Дата', labelPos:'Позиція', labelOpp:'Суперник', phOpp:'Назва команди',
   labelScore:'Рахунок', labelMin:'Хвилини на полі', labelFormat:'Формат матчу', labelMatchLen:'Довжина матчу, хв', fmtCustom:'Свій',
-  labelKind:'Тип гри', labelComment:'Коментар', phComment:'Що запам’яталось',
+  labelKind:'Тип гри', labelTournament:'Турнір', phTournament:'Назва турніру',
+  labelVenue:'Де грали', venueHome:'Вдома', venueAway:'На виїзді', labelRole:'Вихід',
+  labelComment:'Коментар', phComment:'Що запам’яталось',
   posFwd:'Нападник (FW)', posMid:'Півзахисник (MF)', posDef:'Захисник (DF)', posGk:'Воротар (GK)',
   posShortFwd:'Нап (FW)', posShortMid:'ПЗ (MF)', posShortDef:'Зах (DF)', posShortGk:'Врт (GK)',
   pc_GK:'Воротар', pc_CB:'Центральний захисник', pc_LB:'Лівий захисник', pc_RB:'Правий захисник',
   pc_LWB:'Лівий вінгбек', pc_RWB:'Правий вінгбек', pc_CDM:'Опорний півзахисник', pc_CM:'Центральний півзахисник',
   pc_CAM:'Атакувальний півзахисник', pc_LM:'Лівий півзахисник', pc_RM:'Правий півзахисник',
   pc_LW:'Лівий вінгер', pc_RW:'Правий вінгер', pc_ST:'Нападник', pc_CF:'Центральний нападник',
-  kindLeague:'Чемпіонат', kindFriendly:'Товариський', kindCup:'Турнір',
-  roleStart:'У старті', roleSub:'На заміну',
+  kindLeague:'Чемпіонат', kindFriendly:'Товариський', kindCup:'Кубок',
+  roleStart:'У старті', roleSub:'Зі лавки',
   secActions:'Ігрові дії', secBehavior:'Як грав (1–5)',
   saveMatch:'Зберегти матч', saveChanges:'Зберегти зміни', cancelEdit:'Скасувати правку',
   backupBanner:'Дані лише на цьому телефоні. Зробіть експорт, щоб не втратити сезон.',
@@ -531,15 +544,17 @@ pl:{
   heroOverall:'ocena ogólna', heroShort:'krótki występ', heroAction:'wkład', heroEffort:'zaangażowanie',
   liveStart:'Tryb szybki', labelDate:'Data', labelPos:'Pozycja', labelOpp:'Rywal', phOpp:'Nazwa drużyny',
   labelScore:'Wynik', labelMin:'Minuty na boisku', labelFormat:'Format meczu', labelMatchLen:'Długość meczu, min', fmtCustom:'Własny',
-  labelKind:'Typ meczu', labelComment:'Komentarz', phComment:'Co zapamiętałeś',
+  labelKind:'Typ meczu', labelTournament:'Turniej', phTournament:'Nazwa turnieju',
+  labelVenue:'Gdzie grali', venueHome:'U siebie', venueAway:'Wyjazd', labelRole:'Wejście',
+  labelComment:'Komentarz', phComment:'Co zapamiętałeś',
   posFwd:'Napastnik (FW)', posMid:'Pomocnik (MF)', posDef:'Obrońca (DF)', posGk:'Bramkarz (GK)',
   posShortFwd:'Nap (FW)', posShortMid:'Pom (MF)', posShortDef:'Obr (DF)', posShortGk:'Brk (GK)',
   pc_GK:'Bramkarz', pc_CB:'Środkowy obrońca', pc_LB:'Lewy obrońca', pc_RB:'Prawy obrońca',
   pc_LWB:'Lewy wahadłowy', pc_RWB:'Prawy wahadłowy', pc_CDM:'Defensywny pomocnik', pc_CM:'Środkowy pomocnik',
   pc_CAM:'Ofensywny pomocnik', pc_LM:'Lewy pomocnik', pc_RM:'Prawy pomocnik',
   pc_LW:'Lewy skrzydłowy', pc_RW:'Prawy skrzydłowy', pc_ST:'Napastnik', pc_CF:'Środkowy napastnik',
-  kindLeague:'Liga', kindFriendly:'Towarzyski', kindCup:'Turniej',
-  roleStart:'W składzie', roleSub:'Zmiana',
+  kindLeague:'Liga', kindFriendly:'Towarzyski', kindCup:'Puchar',
+  roleStart:'W składzie', roleSub:'Z ławki',
   secActions:'Akcje meczowe', secBehavior:'Jak grał (1–5)',
   saveMatch:'Zapisz mecz', saveChanges:'Zapisz zmiany', cancelEdit:'Anuluj edycję',
   backupBanner:'Dane są tylko na tym telefonie. Zrób eksport, żeby nie stracić sezonu.',
@@ -577,15 +592,17 @@ en:{
   heroOverall:'overall rating', heroShort:'short appearance', heroAction:'impact', heroEffort:'effort',
   liveStart:'Quick mode', labelDate:'Date', labelPos:'Position', labelOpp:'Opponent', phOpp:'Team name',
   labelScore:'Score', labelMin:'Minutes on the pitch', labelFormat:'Match format', labelMatchLen:'Match length, min', fmtCustom:'Custom',
-  labelKind:'Match type', labelComment:'Comment', phComment:'What stood out',
+  labelKind:'Match type', labelTournament:'Competition', phTournament:'Competition name',
+  labelVenue:'Home or away', venueHome:'Home', venueAway:'Away', labelRole:'Appearance',
+  labelComment:'Comment', phComment:'What stood out',
   posFwd:'Forward (FW)', posMid:'Midfielder (MF)', posDef:'Defender (DF)', posGk:'Goalkeeper (GK)',
   posShortFwd:'FW', posShortMid:'MF', posShortDef:'DF', posShortGk:'GK',
   pc_GK:'Goalkeeper', pc_CB:'Centre-back', pc_LB:'Left-back', pc_RB:'Right-back',
   pc_LWB:'Left wing-back', pc_RWB:'Right wing-back', pc_CDM:'Defensive midfielder', pc_CM:'Central midfielder',
   pc_CAM:'Attacking midfielder', pc_LM:'Left midfielder', pc_RM:'Right midfielder',
   pc_LW:'Left winger', pc_RW:'Right winger', pc_ST:'Striker', pc_CF:'Centre forward',
-  kindLeague:'League', kindFriendly:'Friendly', kindCup:'Tournament',
-  roleStart:'Started', roleSub:'Substitute',
+  kindLeague:'League', kindFriendly:'Friendly', kindCup:'Cup',
+  roleStart:'Started', roleSub:'Off the bench',
   secActions:'Match actions', secBehavior:'How he played (1–5)',
   saveMatch:'Save match', saveChanges:'Save changes', cancelEdit:'Cancel edit',
   backupBanner:'Data stays on this phone. Export so you do not lose the season.',
@@ -623,15 +640,17 @@ ru:{
   heroOverall:'общая оценка', heroShort:'короткий выход', heroAction:'вклад', heroEffort:'старание',
   liveStart:'Быстрый режим', labelDate:'Дата', labelPos:'Позиция', labelOpp:'Соперник', phOpp:'Название команды',
   labelScore:'Счёт', labelMin:'Минуты на поле', labelFormat:'Формат матча', labelMatchLen:'Длина матча, мин', fmtCustom:'Свой',
-  labelKind:'Тип игры', labelComment:'Комментарий', phComment:'Что запомнилось',
+  labelKind:'Тип игры', labelTournament:'Турнир', phTournament:'Название турнира',
+  labelVenue:'Где играли', venueHome:'Дома', venueAway:'На выезде', labelRole:'Выход',
+  labelComment:'Комментарий', phComment:'Что запомнилось',
   posFwd:'Нападающий (FW)', posMid:'Полузащитник (MF)', posDef:'Защитник (DF)', posGk:'Вратарь (GK)',
   posShortFwd:'Нап (FW)', posShortMid:'ПЗ (MF)', posShortDef:'Защ (DF)', posShortGk:'Врт (GK)',
   pc_GK:'Вратарь', pc_CB:'Центральный защитник', pc_LB:'Левый защитник', pc_RB:'Правый защитник',
   pc_LWB:'Левый вингбек', pc_RWB:'Правый вингбек', pc_CDM:'Опорный полузащитник', pc_CM:'Центральный полузащитник',
   pc_CAM:'Атакующий полузащитник', pc_LM:'Левый полузащитник', pc_RM:'Правый полузащитник',
   pc_LW:'Левый вингер', pc_RW:'Правый вингер', pc_ST:'Нападающий', pc_CF:'Центральный нападающий',
-  kindLeague:'Чемпионат', kindFriendly:'Товарищеский', kindCup:'Турнир',
-  roleStart:'В старте', roleSub:'На замену',
+  kindLeague:'Чемпионат', kindFriendly:'Товарищеский', kindCup:'Кубок',
+  roleStart:'В старте', roleSub:'Со скамейки',
   secActions:'Игровые действия', secBehavior:'Как играл (1–5)',
   saveMatch:'Сохранить матч', saveChanges:'Сохранить изменения', cancelEdit:'Отменить правку',
   backupBanner:'Данные только на этом телефоне. Сделайте экспорт, чтобы не потерять сезон.',
@@ -685,6 +704,35 @@ function pitchPosLabel(code){
   const name = t('pc_'+code);
   return name === 'pc_'+code ? code : `${name} (${code})`;
 }
+function ratingPosOf(code){
+  if(POS_GROUP[code]) return POS_GROUP[code];
+  if(['fwd','mid','def','gk'].includes(code)) return code;
+  return guessPos(code);
+}
+function defaultPitch(){
+  if(POS_CODES.includes(player.primary)) return player.primary;
+  return GROUP_TO_POS[settings.position] || 'RW';
+}
+function orderedPitchCodes(){
+  const pref = [player.primary, ...(player.extra || [])].filter(c => POS_CODES.includes(c));
+  return [...new Set(pref.concat(POS_CODES))];
+}
+function fillPitchSelect(sel, preferred){
+  const want = POS_CODES.includes(preferred) ? preferred : (POS_CODES.includes(sel.value) ? sel.value : defaultPitch());
+  sel.innerHTML = orderedPitchCodes().map(code => `<option value="${code}">${escapeHtml(pitchPosLabel(code))}</option>`).join('');
+  sel.value = POS_CODES.includes(want) ? want : defaultPitch();
+}
+function fillMatchPitchSelects(preferred){
+  fillPitchSelect(document.getElementById('f-position'), preferred);
+  fillPitchSelect(document.getElementById('live-position'), document.getElementById('f-position').value);
+}
+function matchPosDisplay(m){
+  if(POS_CODES.includes(m.pitchPos)) return pitchPosLabel(m.pitchPos);
+  if(POS_CODES.includes(m.position)) return pitchPosLabel(m.position);
+  return posLabel(ratingPosOf(m.position));
+}
+function venueLabel(v){ return v === 'away' ? t('venueAway') : t('venueHome'); }
+function roleLabel(r){ return r === 'sub' ? t('roleSub') : t('roleStart'); }
 function kindLabel(key){ return ({league:t('kindLeague'), friendly:t('kindFriendly'), cup:t('kindCup')})[key] || key; }
 function applyI18n(){
   const lang = LANGS.includes(settings.lang) ? settings.lang : 'ru';
@@ -703,6 +751,7 @@ function applyI18n(){
   setEditUi(!!editingId);
   applyHeader();
   fillPrimarySelect();
+  fillMatchPitchSelects(document.getElementById('f-position').value);
   renderExtraChips();
 }
 const BASE_RATING = 6.0;
@@ -751,7 +800,11 @@ function emptyForm(){
   BEHAVIOR.forEach(b => behaviors[b.key] = 3);
   return {counts, behaviors};
 }
-function currentPos(){ return document.getElementById('f-position').value || 'fwd'; }
+function currentPitch(){
+  const v = document.getElementById('f-position').value;
+  return POS_CODES.includes(v) ? v : defaultPitch();
+}
+function currentPos(){ return ratingPosOf(document.getElementById('f-position').value || defaultPitch()); }
 function metricsFor(pos){ return METRICS.filter(m => m.positions.includes(pos)); }
 function weightOf(m, pos){ return m.w[pos] ?? 0; }
 function clamp10(n){ return Math.round(Math.max(0, Math.min(10, n)) * 10) / 10; }
@@ -1065,7 +1118,8 @@ function saveMatches(){
 
 function normalizeMatch(m){
   if(!m || typeof m !== 'object') return null;
-  const pos = ['fwd','mid','def','gk'].includes(m.position) ? m.position : guessPos(m.position);
+  const pitchPos = POS_CODES.includes(m.pitchPos) ? m.pitchPos : (POS_CODES.includes(m.position) ? m.position : (GROUP_TO_POS[ratingPosOf(m.position)] || 'RW'));
+  const pos = ratingPosOf(m.pitchPos || m.position);
   const counts = {};
   METRICS.forEach(x => counts[x.key] = Math.max(0, Number(m.counts?.[x.key]) || 0));
   const behaviors = {};
@@ -1086,6 +1140,10 @@ function normalizeMatch(m){
     opponent: String(m.opponent || ''),
     score: String(m.score || ''),
     position: pos,
+    pitchPos,
+    tournament: String(m.tournament || '').slice(0,48),
+    venue: m.venue === 'away' ? 'away' : 'home',
+    role: m.role === 'sub' ? 'sub' : 'start',
     kind,
     format,
     matchLen,
@@ -1110,13 +1168,16 @@ function guessPos(label){
 function persistDraft(){
   sessionStorage.setItem(DRAFT_KEY, JSON.stringify({
     date: document.getElementById('f-date').value,
-    position: currentPos(),
+    position: currentPitch(),
     opponent: document.getElementById('f-opponent').value,
     score: document.getElementById('f-score').value,
     minutes: document.getElementById('f-minutes').value,
     format: document.getElementById('f-format').value,
     matchLen: document.getElementById('f-matchlen').value,
     kind: document.getElementById('f-kind').value,
+    tournament: document.getElementById('f-tournament').value,
+    venue: document.getElementById('f-venue').value,
+    role: document.getElementById('f-role').value,
     comment: document.getElementById('f-comment').value,
     counts: form.counts,
     behaviors: form.behaviors,
@@ -1128,7 +1189,7 @@ function restoreDraft(){
     const d = JSON.parse(sessionStorage.getItem(DRAFT_KEY) || 'null');
     if(!d) return;
     if(d.date) document.getElementById('f-date').value = d.date;
-    if(d.position) document.getElementById('f-position').value = d.position;
+    if(d.position) fillMatchPitchSelects(d.position);
     if(d.opponent) document.getElementById('f-opponent').value = d.opponent;
     if(d.score) document.getElementById('f-score').value = d.score;
     if(d.minutes) document.getElementById('f-minutes').value = d.minutes;
@@ -1136,6 +1197,9 @@ function restoreDraft(){
     if(d.matchLen) document.getElementById('f-matchlen').value = d.matchLen;
     document.getElementById('customLengthWrap').hidden = document.getElementById('f-format').value !== 'custom';
     if(d.kind) document.getElementById('f-kind').value = d.kind;
+    if(d.tournament) document.getElementById('f-tournament').value = d.tournament;
+    if(d.venue) document.getElementById('f-venue').value = d.venue;
+    if(d.role) document.getElementById('f-role').value = d.role;
     if(d.comment) document.getElementById('f-comment').value = d.comment;
     if(d.counts) form.counts = {...form.counts, ...d.counts};
     if(d.behaviors) form.behaviors = {...form.behaviors, ...d.behaviors};
@@ -1176,6 +1240,8 @@ function renderBehaviors(){
 function renderOppList(){
   const names = [...new Set(matches.map(m => m.opponent).filter(Boolean))].sort();
   document.getElementById('oppList').innerHTML = names.map(n => `<option value="${escapeHtml(n)}">`).join('');
+  const tours = [...new Set(matches.map(m => m.tournament).filter(Boolean))].sort();
+  document.getElementById('tourList').innerHTML = tours.map(n => `<option value="${escapeHtml(n)}">`).join('');
 }
 function renderFocusBanner(){
   const el = document.getElementById('focusBanner');
@@ -1238,7 +1304,10 @@ function resetForm(){
   document.getElementById('f-score').value = '';
   document.getElementById('f-comment').value = '';
   document.getElementById('f-kind').value = 'league';
-  document.getElementById('f-position').value = settings.position;
+  document.getElementById('f-tournament').value = '';
+  document.getElementById('f-venue').value = 'home';
+  document.getElementById('f-role').value = 'start';
+  fillMatchPitchSelects(defaultPitch());
   document.getElementById('f-format').value = settings.format || '2x30';
   document.getElementById('f-matchlen').value = settings.minutes;
   syncPlayedDefault(true);
@@ -1255,7 +1324,7 @@ function fillForm(m){
   form.counts = {...emptyForm().counts, ...m.counts};
   form.behaviors = {...emptyForm().behaviors, ...m.behaviors};
   document.getElementById('f-date').value = m.date;
-  document.getElementById('f-position').value = m.position;
+  fillMatchPitchSelects(m.pitchPos || m.position);
   document.getElementById('f-opponent').value = m.opponent;
   document.getElementById('f-score').value = m.score;
   document.getElementById('f-minutes').value = m.minutes;
@@ -1263,6 +1332,9 @@ function fillForm(m){
   document.getElementById('f-matchlen').value = m.matchLen || m.minutes;
   document.getElementById('customLengthWrap').hidden = document.getElementById('f-format').value !== 'custom';
   document.getElementById('f-kind').value = m.kind || 'league';
+  document.getElementById('f-tournament').value = m.tournament || '';
+  document.getElementById('f-venue').value = m.venue === 'away' ? 'away' : 'home';
+  document.getElementById('f-role').value = m.role === 'sub' ? 'sub' : 'start';
   document.getElementById('f-comment').value = m.comment;
   setEditUi(true);
   renderMetrics();
@@ -1284,7 +1356,11 @@ function collectMatch(){
     date: document.getElementById('f-date').value || todayStr(),
     opponent: document.getElementById('f-opponent').value.trim(),
     score: document.getElementById('f-score').value.trim(),
+    pitchPos: currentPitch(),
     position: pos,
+    tournament: document.getElementById('f-tournament').value.trim().slice(0,48),
+    venue: document.getElementById('f-venue').value === 'away' ? 'away' : 'home',
+    role: document.getElementById('f-role').value === 'sub' ? 'sub' : 'start',
     comment: document.getElementById('f-comment').value.trim(),
     minutes: Math.min(120, Math.max(1, Number(document.getElementById('f-minutes').value) || formatLength(document.getElementById('f-format').value, document.getElementById('f-matchlen').value))),
     format: document.getElementById('f-format').value,
@@ -1314,10 +1390,13 @@ document.getElementById('saveBtn').addEventListener('click', () => {
 
 document.getElementById('cancelEditBtn').addEventListener('click', resetForm);
 
-['f-date','f-position','f-opponent','f-score','f-minutes','f-format','f-matchlen','f-kind','f-comment'].forEach(id => {
+['f-date','f-position','f-opponent','f-score','f-minutes','f-format','f-matchlen','f-kind','f-tournament','f-venue','f-role','f-comment'].forEach(id => {
   const el = document.getElementById(id);
   const onChange = () => {
-    if(id === 'f-position'){ renderMetrics(); renderLiveGrid(); }
+    if(id === 'f-position'){
+      document.getElementById('live-position').value = currentPitch();
+      renderMetrics(); renderLiveGrid();
+    }
     if(id === 'f-format'){ syncPlayedDefault(true); }
     if(id === 'f-matchlen' && document.getElementById('f-format').value === 'custom'){
       document.getElementById('f-minutes').value = document.getElementById('f-matchlen').value;
@@ -1352,7 +1431,7 @@ function renderHistory(){
     return `<div class="match-card">
       <div class="match-card-top" onclick="toggleDetails(${m.id})">
         <div class="match-meta">
-          <span class="match-date">${escapeHtml(formatDate(m.date))} · ${escapeHtml(posLabel(m.position))} · ${escapeHtml(kindLabel(m.kind))} · ${escapeHtml((m.format||'').replace('x','×') || t('fmtCustom'))} · ${escapeHtml(t('minLbl', {n:m.minutes}))}</span>
+          <span class="match-date">${escapeHtml(formatDate(m.date))} · ${escapeHtml(matchPosDisplay(m))} · ${escapeHtml(venueLabel(m.venue))} · ${escapeHtml(roleLabel(m.role))} · ${escapeHtml(kindLabel(m.kind))}${m.tournament ? ' · ' + escapeHtml(m.tournament) : ''} · ${escapeHtml((m.format||'').replace('x','×') || t('fmtCustom'))} · ${escapeHtml(t('minLbl', {n:m.minutes}))}</span>
           <span class="match-opp">${escapeHtml(m.opponent || t('unnamed'))}</span>
           <span class="match-score">${m.score ? escapeHtml(t('scoreLbl', {s:m.score})) : ''} · ${escapeHtml(t('heroAction'))} ${Number(m.actionRating).toFixed(1)} · ${escapeHtml(t('heroEffort'))} ${Number(m.effortRating).toFixed(1)}</span>
         </div>
@@ -1544,7 +1623,7 @@ function drawChart(list){
 }
 
 function renderLiveGrid(){
-  const pos = document.getElementById('live-position').value || currentPos();
+  const pos = ratingPosOf(document.getElementById('live-position').value || currentPitch());
   document.getElementById('liveGrid').innerHTML = metricsFor(pos).map(m => {
     const neg = weightOf(m, pos) < 0;
     return `<button class="live-btn ${neg?'neg':''}" type="button" onclick="stepMetric('${m.key}',1)">
@@ -1553,7 +1632,7 @@ function renderLiveGrid(){
   }).join('');
 }
 function openLive(){
-  document.getElementById('live-position').value = currentPos();
+  fillPitchSelect(document.getElementById('live-position'), currentPitch());
   renderLiveGrid();
   document.getElementById('app').classList.add('live-on');
   updateHero();
@@ -1605,7 +1684,6 @@ document.getElementById('saveSettingsBtn').addEventListener('click', () => {
   applyHeader();
   applyI18n();
   if(!editingId){
-    document.getElementById('f-position').value = settings.position;
     document.getElementById('f-format').value = settings.format;
     document.getElementById('f-matchlen').value = settings.minutes;
     syncPlayedDefault(true);
@@ -1653,7 +1731,7 @@ document.getElementById('savePlayerBtn').addEventListener('click', () => {
   saveSettings();
   applyHeader();
   if(!editingId){
-    document.getElementById('f-position').value = settings.position;
+    fillMatchPitchSelects(player.primary);
     renderMetrics();
     renderLiveGrid();
   }
@@ -1719,7 +1797,7 @@ async function shareCard(m){
   wrapText(ctx, ins.focus, 60, 910, 780, 42);
   ctx.fillStyle = '#8D9AB5';
   ctx.font = '600 24px sans-serif';
-  ctx.fillText(`${posLabel(m.position)}  ·  ${t('minLbl', {n: m.minutes})}`, 60, 1120);
+  ctx.fillText(`${matchPosDisplay(m)}  ·  ${venueLabel(m.venue)}  ·  ${roleLabel(m.role)}  ·  ${t('minLbl', {n: m.minutes})}${m.tournament ? '  ·  ' + m.tournament : ''}`, 60, 1120);
 
   const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
   const file = new File([blob], `ffk_${m.date}.png`, {type:'image/png'});
@@ -1749,7 +1827,7 @@ async function shareCard(m){
   fillPrimarySelect();
   applyHeader();
   document.getElementById('f-date').value = todayStr();
-  document.getElementById('f-position').value = settings.position;
+  fillMatchPitchSelects(defaultPitch());
   document.getElementById('f-format').value = settings.format || '2x30';
   document.getElementById('f-matchlen').value = settings.minutes;
   syncPlayedDefault(true);
