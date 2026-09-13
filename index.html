@@ -352,6 +352,22 @@
   .match-details.open{display:block;}
   .match-story{margin-top:10px;}
   .match-story .story-box{margin:0;}
+  .timing-fold{margin:0 0 16px;}
+  .timing-row{
+    width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;
+    padding:12px 14px;border-radius:14px;border:1px solid var(--border);
+    background:var(--surface);color:var(--text);font:inherit;font-weight:800;cursor:pointer;text-align:left;
+  }
+  .timing-chev{color:var(--text-soft);font-size:1.25rem;line-height:1;flex-shrink:0;}
+  .timing-item{
+    margin-top:8px;border:1px solid var(--border);border-radius:12px;background:var(--surface-2);overflow:hidden;
+  }
+  .timing-item summary{
+    padding:12px 14px;cursor:pointer;font-weight:800;list-style:none;
+    display:flex;align-items:center;justify-content:space-between;
+  }
+  .timing-item summary::-webkit-details-marker{display:none;}
+  .timing-item .story-box{margin:0;border:none;border-top:1px solid var(--border);border-radius:0;}
   .story-box{
     margin:12px 0 10px;padding:14px 15px;border-radius:12px;
     background:var(--surface-2);border:1px solid var(--border);
@@ -1000,6 +1016,7 @@ uk:{
   repLate:'Кінцівка: {p}% помилок після {m} хв ({a} з {n}).',
   repGoalsBand:'Голи частіше з {a} по {b} хв: {k} з {n}.',
   repNone:'Немає достатньої вибірки з хвилинами, щоб робити висновок.',
+  repFold:'Звіт за хвилинами',
   hintGk:'Для воротаря важливі сейви, пропущені, виходи, передачі, перехоплення і гра ногами. Повторні сейви і пропущені важать менше за перші.',
   hintFwd:'Для нападника важливі голи, удари, асисти, обводки, гострі паси і відкривання.',
   hintMid:'Для півзахисника важливі передачі, гострі паси, відбори, єдиноборства, втрати і моменти для партнерів.',
@@ -1205,6 +1222,7 @@ pl:{
   repLate:'Końcówka: {p}% błędów po {m} min ({a} z {n}).',
   repGoalsBand:'Gole częściej od {a} do {b} min: {k} z {n}.',
   repNone:'Za mało danych z minutami, żeby wyciągać wniosek.',
+  repFold:'Raport minut',
   hintGk:'Dla bramkarza ważne są interwencje, stracone, wyjścia, podania, przechwyty i gra nogami. Kolejne interwencje i stracone ważą mniej niż pierwsze.',
   hintFwd:'Dla napastnika ważne są gole, strzały, asysty, dryblingi, kluczowe podania i wbiegnięcia.',
   hintMid:'Dla pomocnika ważne są podania, kluczowe podania, odbiory, pojedynki, straty i okazje dla partnerów.',
@@ -1410,6 +1428,7 @@ en:{
   repLate:'Closing spell: {p}% of errors after min {m} ({a} of {n}).',
   repGoalsBand:'Goals more often from {a} to {b} min: {k} of {n}.',
   repNone:'Not enough timed data to draw a conclusion.',
+  repFold:'Minute report',
   hintGk:'For the keeper what matters is saves, goals conceded, claims, passes, interceptions and distribution. Later saves and goals conceded count less than the first.',
   hintFwd:'For a striker what matters is goals, shots, assists, dribbles, key passes and runs in behind.',
   hintMid:'For a midfielder what matters is passes, key passes, tackles, duels, turnovers and chances for teammates.',
@@ -1615,6 +1634,7 @@ ru:{
   repLate:'Концовка: {p}% ошибок после {m} мин ({a} из {n}).',
   repGoalsBand:'Голы чаще с {a} по {b} мин: {k} из {n}.',
   repNone:'Недостаточно данных с минутами, чтобы делать вывод.',
+  repFold:'Отчёт по минутам',
   hintGk:'Для вратаря важны сейвы, пропущенные, выходы, передачи, перехваты и игра ногами. Повторные сейвы и пропущенные весят меньше первых.',
   hintFwd:'Для нападающего важны голы, удары, ассисты, обводки, острые пасы и открывания.',
   hintMid:'Для полузащитника важны передачи, острые пасы, отборы, единоборства, потери и моменты для партнёров.',
@@ -2213,7 +2233,8 @@ function periodStoryLines(list){
 }
 function storyBoxHtml(title, lines){
   if(!lines.length) return '';
-  return `<div class="story-box"><h3>${escapeHtml(title)}</h3>${lines.map(x => `<p>${escapeHtml(x)}</p>`).join('')}</div>`;
+  const head = title ? `<h3>${escapeHtml(title)}</h3>` : '';
+  return `<div class="story-box">${head}${lines.map(x => `<p>${escapeHtml(x)}</p>`).join('')}</div>`;
 }
 function matchStoryHtml(m){
   return storyBoxHtml(t('storyTitle'), matchStoryLines(m));
@@ -2226,14 +2247,32 @@ function yearMatches(){
   const y = todayStr().slice(0, 4);
   return matches.filter(m => String(m.date).slice(0, 4) === y);
 }
+let timingOpen = false;
 function renderTimingBoard(selected){
   const el = document.getElementById('timingBoard');
   if(!el) return;
-  el.innerHTML =
-    storyBoxHtml(t('repTitle', {when: statsPeriodLabel()}), periodStoryLines(selected || [])) +
-    storyBoxHtml(t('repTitle', {when: t('periodMonth')}), periodStoryLines(monthMatches())) +
-    storyBoxHtml(t('repTitle', {when: t('periodYear')}), periodStoryLines(yearMatches())) +
-    storyBoxHtml(t('repTitle', {when: t('cardSeason')}), periodStoryLines(seasonPool()));
+  const items = [
+    [statsPeriodLabel(), selected || []],
+    [t('periodMonth'), monthMatches()],
+    [t('periodYear'), yearMatches()],
+    [t('cardSeason'), seasonPool()]
+  ];
+  el.innerHTML = `<div class="timing-fold">
+      <button type="button" class="timing-row" id="timingToggle">
+        <span>${escapeHtml(t('repFold'))}</span>
+        <span class="timing-chev">${timingOpen ? '▾' : '›'}</span>
+      </button>
+      <div id="timingMenu" ${timingOpen ? '' : 'hidden'}>
+        ${items.map(([when, list]) => `<details class="timing-item">
+          <summary>${escapeHtml(when)}<span class="timing-chev">›</span></summary>
+          ${storyBoxHtml('', periodStoryLines(list))}
+        </details>`).join('')}
+      </div>
+    </div>`;
+  document.getElementById('timingToggle').addEventListener('click', () => {
+    timingOpen = !timingOpen;
+    renderTimingBoard(selected);
+  });
 }
 function reportLines(m){
   const pos = ['fwd','mid','def','gk'].includes(m.position) ? m.position : ratingPosOf(m.position);
