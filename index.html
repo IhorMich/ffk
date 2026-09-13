@@ -349,7 +349,16 @@
   .match-rating.low{color:var(--danger);}
   .match-rating.mid{color:var(--gold);}
   .match-details{display:none;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);font-size:.82rem;color:var(--text-soft);}
-  .match-details.open{display:block;}
+  .story-box{
+    margin:12px 0 10px;padding:14px 15px;border-radius:12px;
+    background:var(--surface-2);border:1px solid var(--border);
+    color:var(--text);font-size:.88rem;font-weight:600;line-height:1.5;
+  }
+  .story-box h3{
+    margin:0 0 10px;font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--text-soft);
+  }
+  .story-box p{margin:0 0 8px;}
+  .story-box p:last-child{margin:0;}
   .card-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;}
   .edit-btn,.del-btn,.share-btn{
     padding:6px 12px;border-radius:10px;font-size:.78rem;font-weight:700;cursor:pointer;
@@ -733,6 +742,7 @@
       </div>
       <div id="seasonBoard"></div>
       <div id="compareBoard"></div>
+      <div id="timingBoard"></div>
       <p class="hint" data-i18n="statsPeriodHint">График и карточки ниже — за выбранный период.</p>
       <div class="period-chips" id="periodChips">
         <div class="chip active" data-range="10" data-i18n="periodLast10">Последние 10</div>
@@ -970,6 +980,27 @@ uk:{
   clockHalf1:'1-й тайм', clockHalf2:'2-й тайм', clockHalfN:'{n}-й тайм',
   eventAt:'{what} · {m} хв матчу',
   kickoffLine:'Початок {clock}',
+  storyTitle:'Розбір за хвилинами',
+  storyNoTime:'У цьому матчі немає запису хвилин. Короткий розбір з’явиться, якщо ставити дії після старту годинника.',
+  storyThin:'Записано лише {n} дій з хвилиною. Цього мало, щоб відрізняти випадковість від тенденції.',
+  storyOpen:'Проти {who}. Початок {kick}. Формат {fmt}.',
+  storyOpenNoKick:'Проти {who}. Формат {fmt}.',
+  storyPlusHalf:'Корисні дії частіше в {half}: {a} з {n} ({p}%). Це вже не один епізод.',
+  storyMinusHalf:'Брак частіше в {half}: {a} з {n} втрат і помилок ({p}%).',
+  storyLateMinus:'З {n} помилок {a} припали на кінцівку (з {m} хв).',
+  storyEarlyPlus:'З {n} корисних дій {a} в перші {m} хвилин — сильний старт.',
+  storyMainPlus:'Найчастіше виходило: {what} ({n}).',
+  storyMainMinus:'Найчастіше ламалося: {what} ({n}).',
+  storyGoals:'Голи на {mins}.',
+  storyEven:'За таймами гра рівна: корисні дії і брак розподілені без явного перекосу.',
+  storyNeedClock:'Щоб розбір був точнішим, у наступному матчі тисни старт і плюси по ходу гри.',
+  repTitle:'Звіт за часом · {when}',
+  repNeed:'Матчів із записом хвилин: {n}. Для звіту мало — поки це може бути випадковість, не закономірність.',
+  repMinusLast:'У {k} з {n} матчів брак частіше в останньому таймі. Разом {a} помилок наприкінці проти {b} на старті. Це повторюється.',
+  repPlusFirst:'Корисні дії частіше в першому таймі: {a} проти {b} за {n} матчів.',
+  repLate:'Кінцівка: {p}% помилок після {m} хв ({a} з {n}).',
+  repGoalsBand:'Голи частіше з {a} по {b} хв: {k} з {n}.',
+  repNone:'Немає достатньої вибірки з хвилинами, щоб робити висновок.',
   hintGk:'Для воротаря важливі сейви, пропущені, виходи, передачі, перехоплення і гра ногами. Повторні сейви і пропущені важать менше за перші.',
   hintFwd:'Для нападника важливі голи, удари, асисти, обводки, гострі паси і відкривання.',
   hintMid:'Для півзахисника важливі передачі, гострі паси, відбори, єдиноборства, втрати і моменти для партнерів.',
@@ -1154,6 +1185,27 @@ pl:{
   clockHalf1:'1. połowa', clockHalf2:'2. połowa', clockHalfN:'{n}. część',
   eventAt:'{what} · {m} min meczu',
   kickoffLine:'Początek {clock}',
+  storyTitle:'Rozbiór według minut',
+  storyNoTime:'W tym meczu nie ma zapisu minut. Krótki opis pojawi się, gdy akcje będą po starcie zegara.',
+  storyThin:'Z minutą zapisano tylko {n} akcji. Za mało, by oddzielić przypadek od tendencji.',
+  storyOpen:'Przeciw {who}. Początek {kick}. Format {fmt}.',
+  storyOpenNoKick:'Przeciw {who}. Format {fmt}.',
+  storyPlusHalf:'Pożyteczne akcje częściej w {half}: {a} z {n} ({p}%). To już nie jeden epizod.',
+  storyMinusHalf:'Błędy częściej w {half}: {a} z {n} strat i pomyłek ({p}%).',
+  storyLateMinus:'Z {n} błędów {a} wypadło na końcówkę (od {m} min).',
+  storyEarlyPlus:'Z {n} pożytecznych akcji {a} w pierwszych {m} minutach — mocny start.',
+  storyMainPlus:'Najczęściej wychodziło: {what} ({n}).',
+  storyMainMinus:'Najczęściej psuło się: {what} ({n}).',
+  storyGoals:'Gole na {mins}.',
+  storyEven:'Po częściach gra równa: plusy i błędy bez wyraźnego przechylenia.',
+  storyNeedClock:'Żeby opis był dokładniejszy, w następnym meczu daj start i plusy w trakcie gry.',
+  repTitle:'Raport czasu · {when}',
+  repNeed:'Meczów z zapisem minut: {n}. Za mało na raport — to jeszcze może być przypadek.',
+  repMinusLast:'W {k} z {n} meczów błędy częściej w ostatniej części. Razem {a} na końcu wobec {b} na starcie. To się powtarza.',
+  repPlusFirst:'Pożyteczne akcje częściej w pierwszej części: {a} wobec {b} w {n} meczach.',
+  repLate:'Końcówka: {p}% błędów po {m} min ({a} z {n}).',
+  repGoalsBand:'Gole częściej od {a} do {b} min: {k} z {n}.',
+  repNone:'Za mało danych z minutami, żeby wyciągać wniosek.',
   hintGk:'Dla bramkarza ważne są interwencje, stracone, wyjścia, podania, przechwyty i gra nogami. Kolejne interwencje i stracone ważą mniej niż pierwsze.',
   hintFwd:'Dla napastnika ważne są gole, strzały, asysty, dryblingi, kluczowe podania i wbiegnięcia.',
   hintMid:'Dla pomocnika ważne są podania, kluczowe podania, odbiory, pojedynki, straty i okazje dla partnerów.',
@@ -1338,6 +1390,27 @@ en:{
   clockHalf1:'1st half', clockHalf2:'2nd half', clockHalfN:'period {n}',
   eventAt:'{what} · {m} min',
   kickoffLine:'Kick-off {clock}',
+  storyTitle:'Minute-by-minute review',
+  storyNoTime:'This match has no minute log. A short review appears when actions are tapped after kick-off.',
+  storyThin:'Only {n} timed actions. Too few to separate a fluke from a pattern.',
+  storyOpen:'v {who}. Kick-off {kick}. Format {fmt}.',
+  storyOpenNoKick:'v {who}. Format {fmt}.',
+  storyPlusHalf:'Useful actions clustered in {half}: {a} of {n} ({p}%). Not a one-off.',
+  storyMinusHalf:'Mistakes clustered in {half}: {a} of {n} turnovers and errors ({p}%).',
+  storyLateMinus:'Of {n} errors, {a} came in the closing spell (from min {m}).',
+  storyEarlyPlus:'Of {n} useful actions, {a} came in the first {m} minutes — a strong start.',
+  storyMainPlus:'Worked most often: {what} ({n}).',
+  storyMainMinus:'Broke down most often: {what} ({n}).',
+  storyGoals:'Goals at {mins}.',
+  storyEven:'Even across periods: useful play and errors are not skewed.',
+  storyNeedClock:'For a sharper review, tap start next match and log actions live.',
+  repTitle:'Timing report · {when}',
+  repNeed:'Matches with a minute log: {n}. Too few for a report — still could be chance.',
+  repMinusLast:'In {k} of {n} matches errors came more in the last period. {a} late vs {b} early. That repeats.',
+  repPlusFirst:'Useful actions more often in the first period: {a} vs {b} across {n} matches.',
+  repLate:'Closing spell: {p}% of errors after min {m} ({a} of {n}).',
+  repGoalsBand:'Goals more often from {a} to {b} min: {k} of {n}.',
+  repNone:'Not enough timed data to draw a conclusion.',
   hintGk:'For the keeper what matters is saves, goals conceded, claims, passes, interceptions and distribution. Later saves and goals conceded count less than the first.',
   hintFwd:'For a striker what matters is goals, shots, assists, dribbles, key passes and runs in behind.',
   hintMid:'For a midfielder what matters is passes, key passes, tackles, duels, turnovers and chances for teammates.',
@@ -1522,6 +1595,27 @@ ru:{
   clockHalf1:'1-й тайм', clockHalf2:'2-й тайм', clockHalfN:'{n}-й тайм',
   eventAt:'{what} · {m} мин матча',
   kickoffLine:'Начало {clock}',
+  storyTitle:'Разбор по минутам',
+  storyNoTime:'В этом матче нет записи минут. Короткий разбор появится, если ставить действия после старта часов.',
+  storyThin:'С минутой записано только {n} действий. Этого мало, чтобы отделить случайность от тенденции.',
+  storyOpen:'Против {who}. Начало {kick}. Формат {fmt}.',
+  storyOpenNoKick:'Против {who}. Формат {fmt}.',
+  storyPlusHalf:'Полезные действия чаще в {half}: {a} из {n} ({p}%). Это уже не один эпизод.',
+  storyMinusHalf:'Брак чаще в {half}: {a} из {n} потерь и ошибок ({p}%).',
+  storyLateMinus:'Из {n} ошибок {a} пришлись на концовку (с {m} мин).',
+  storyEarlyPlus:'Из {n} полезных действий {a} в первые {m} минут — сильный старт.',
+  storyMainPlus:'Чаще всего получалось: {what} ({n}).',
+  storyMainMinus:'Чаще всего ломалось: {what} ({n}).',
+  storyGoals:'Голы на {mins}.',
+  storyEven:'По таймам игра ровная: польза и брак без явного перекоса.',
+  storyNeedClock:'Чтобы разбор был точнее, в следующем матче жми старт и плюсы по ходу игры.',
+  repTitle:'Отчёт по времени · {when}',
+  repNeed:'Матчей с записью минут: {n}. Для отчёта мало — пока это может быть случайность, не закономерность.',
+  repMinusLast:'В {k} из {n} матчей брак чаще в последнем тайме. Всего {a} ошибок в конце против {b} на старте. Это повторяется.',
+  repPlusFirst:'Полезные действия чаще в первом тайме: {a} против {b} за {n} матчей.',
+  repLate:'Концовка: {p}% ошибок после {m} мин ({a} из {n}).',
+  repGoalsBand:'Голы чаще с {a} по {b} мин: {k} из {n}.',
+  repNone:'Недостаточно данных с минутами, чтобы делать вывод.',
   hintGk:'Для вратаря важны сейвы, пропущенные, выходы, передачи, перехваты и игра ногами. Повторные сейвы и пропущенные весят меньше первых.',
   hintFwd:'Для нападающего важны голы, удары, ассисты, обводки, острые пасы и открывания.',
   hintMid:'Для полузащитника важны передачи, острые пасы, отборы, единоборства, потери и моменты для партнёров.',
@@ -1987,6 +2081,158 @@ function goalMinutes(m){
     .filter(ev => ev && ev.key === 'goals')
     .map(ev => Math.max(1, Number(ev.minute) || 1));
 }
+function eventSign(key, pos){
+  const met = METRICS.find(x => x.key === key);
+  if(!met) return 0;
+  const w = weightOf(met, pos);
+  if(w > 0) return 1;
+  if(w < 0) return -1;
+  return 0;
+}
+function timedEvents(m){
+  const pos = ['fwd','mid','def','gk'].includes(m.position) ? m.position : ratingPosOf(m.position || m.pitchPos);
+  const {parts, each} = periodShape(m.format, m.matchLen);
+  const totalMin = Math.max(parts * each, Number(m.matchLen) || 0, Number(m.minutes) || 0, 1);
+  const lateFrom = Math.max(2, totalMin - Math.min(12, Math.max(6, Math.round(each * 0.35))));
+  const earlyTo = Math.min(10, Math.max(6, Math.round(each * 0.4)));
+  return (Array.isArray(m.timeline) ? m.timeline : []).filter(ev => ev && ev.key).map(ev => {
+    const minute = Math.max(1, Number(ev.minute) || 1);
+    const period = Math.min(parts, Math.max(1, Number(ev.period) || Math.floor((minute - 1) / each) + 1));
+    return {key: ev.key, minute, period, parts, each, sign: eventSign(ev.key, pos), late: minute >= lateFrom, early: minute <= earlyTo, lateFrom, earlyTo};
+  });
+}
+function skewPeriod(events, sign, parts){
+  const pool = events.filter(e => e.sign === sign);
+  if(pool.length < 4) return null;
+  const buckets = Array(parts).fill(0);
+  pool.forEach(e => { buckets[e.period - 1]++; });
+  let maxI = 0;
+  buckets.forEach((v, i) => { if(v > buckets[maxI]) maxI = i; });
+  const share = buckets[maxI] / pool.length;
+  if(buckets[maxI] < 3 || share < (1 / parts) + 0.17) return null;
+  return {period: maxI + 1, n: buckets[maxI], total: pool.length, pct: Math.round(share * 100)};
+}
+function edgeShare(events, sign, edge){
+  const pool = events.filter(e => e.sign === sign);
+  if(pool.length < 4) return null;
+  const hit = pool.filter(e => e[edge]).length;
+  if(hit < 3 || hit / pool.length < 0.55) return null;
+  return {n: hit, total: pool.length, from: pool[0].lateFrom, earlyTo: pool[0].earlyTo, pct: Math.round(100 * hit / pool.length)};
+}
+function topKey(events, sign){
+  const map = {};
+  events.filter(e => e.sign === sign).forEach(e => { map[e.key] = (map[e.key] || 0) + 1; });
+  const key = Object.keys(map).sort((a,b)=> map[b] - map[a])[0];
+  if(!key || map[key] < 2) return null;
+  return {key, n: map[key]};
+}
+function goalBand(list){
+  const mins = [];
+  list.forEach(m => goalMinutes(m).forEach(x => mins.push(x)));
+  if(mins.length < 4) return null;
+  const bands = [[1,15,0],[16,30,0],[31,45,0],[46,60,0],[61,90,0]];
+  mins.forEach(m => {
+    const b = bands.find(x => m >= x[0] && m <= x[1]) || bands[bands.length - 1];
+    b[2]++;
+  });
+  bands.sort((a,c)=> c[2] - a[2]);
+  const best = bands[0];
+  if(best[2] < 3 || best[2] / mins.length < 0.45) return null;
+  return {a: best[0], b: best[1], k: best[2], n: mins.length};
+}
+function matchStoryLines(m){
+  const who = m.opponent || t('unnamed');
+  const fmt = formatTag(m.format, m.matchLen);
+  const lines = [];
+  if(m.kickoffClock) lines.push(t('storyOpen', {who, kick: m.kickoffClock, fmt}));
+  else lines.push(t('storyOpenNoKick', {who, fmt}));
+  const ev = timedEvents(m);
+  const goals = goalMinutes(m);
+  if(goals.length) lines.push(t('storyGoals', {mins: goals.map(x => t('minLbl', {n:x})).join(', ')}));
+  if(!ev.length){
+    lines.push(t('storyNoTime'));
+    lines.push(t('storyNeedClock'));
+    return lines;
+  }
+  if(ev.length < 4){
+    lines.push(t('storyThin', {n: ev.length}));
+    return lines;
+  }
+  const parts = ev[0].parts;
+  const plusH = skewPeriod(ev, 1, parts);
+  const minusH = skewPeriod(ev, -1, parts);
+  if(plusH) lines.push(t('storyPlusHalf', {half: halfLabel(plusH.period, m.format, m.matchLen), a: plusH.n, n: plusH.total, p: plusH.pct}));
+  if(minusH) lines.push(t('storyMinusHalf', {half: halfLabel(minusH.period, m.format, m.matchLen), a: minusH.n, n: minusH.total, p: minusH.pct}));
+  const late = edgeShare(ev, -1, 'late');
+  if(late) lines.push(t('storyLateMinus', {n: late.total, a: late.n, m: late.from}));
+  const early = edgeShare(ev, 1, 'early');
+  if(early) lines.push(t('storyEarlyPlus', {n: early.total, a: early.n, m: early.earlyTo}));
+  const mainP = topKey(ev, 1);
+  if(mainP) lines.push(t('storyMainPlus', {what: metricLabel(mainP.key).toLowerCase(), n: mainP.n}));
+  const mainM = topKey(ev, -1);
+  if(mainM) lines.push(t('storyMainMinus', {what: metricLabel(mainM.key).toLowerCase(), n: mainM.n}));
+  if(!plusH && !minusH && !late && !early) lines.push(t('storyEven'));
+  return lines;
+}
+function periodStoryLines(list){
+  const timed = list.filter(m => timedEvents(m).length);
+  if(timed.length < 4){
+    return [t(timed.length ? 'repNeed' : 'repNone', {n: timed.length})];
+  }
+  let used = 0, tilt = 0, firstM = 0, lastM = 0, firstP = 0, lastP = 0;
+  const all = [];
+  timed.forEach(m => {
+    const ev = timedEvents(m);
+    if(ev.length < 3) return;
+    used++;
+    all.push(...ev);
+    const aM = ev.filter(e => e.sign < 0 && e.period === 1).length;
+    const bM = ev.filter(e => e.sign < 0 && e.period === e.parts).length;
+    const aP = ev.filter(e => e.sign > 0 && e.period === 1).length;
+    const bP = ev.filter(e => e.sign > 0 && e.period === e.parts).length;
+    firstM += aM; lastM += bM; firstP += aP; lastP += bP;
+    if(bM > aM) tilt++;
+  });
+  const lines = [];
+  if(used < 4 || firstM + lastM < 10){
+    lines.push(t('repNeed', {n: timed.length}));
+  } else if(tilt / used >= 0.6 && lastM >= firstM * 1.25){
+    lines.push(t('repMinusLast', {k: tilt, n: used, a: lastM, b: firstM}));
+  }
+  if(used >= 4 && firstP + lastP >= 10 && firstP >= lastP * 1.25){
+    lines.push(t('repPlusFirst', {a: firstP, b: lastP, n: used}));
+  }
+  const late = edgeShare(all, -1, 'late');
+  if(late) lines.push(t('repLate', {p: late.pct, m: late.from, a: late.n, n: late.total}));
+  const band = goalBand(timed);
+  if(band) lines.push(t('repGoalsBand', {a: band.a, b: band.b, k: band.k, n: band.n}));
+  if(!lines.length) lines.push(t('storyEven'));
+  return lines;
+}
+function storyBoxHtml(title, lines){
+  if(!lines.length) return '';
+  return `<div class="story-box"><h3>${escapeHtml(title)}</h3>${lines.map(x => `<p>${escapeHtml(x)}</p>`).join('')}</div>`;
+}
+function matchStoryHtml(m){
+  return storyBoxHtml(t('storyTitle'), matchStoryLines(m));
+}
+function monthMatches(){
+  const prefix = todayStr().slice(0, 7);
+  return matches.filter(m => String(m.date).slice(0, 7) === prefix);
+}
+function yearMatches(){
+  const y = todayStr().slice(0, 4);
+  return matches.filter(m => String(m.date).slice(0, 4) === y);
+}
+function renderTimingBoard(selected){
+  const el = document.getElementById('timingBoard');
+  if(!el) return;
+  el.innerHTML =
+    storyBoxHtml(t('repTitle', {when: statsPeriodLabel()}), periodStoryLines(selected || [])) +
+    storyBoxHtml(t('repTitle', {when: t('periodMonth')}), periodStoryLines(monthMatches())) +
+    storyBoxHtml(t('repTitle', {when: t('periodYear')}), periodStoryLines(yearMatches())) +
+    storyBoxHtml(t('repTitle', {when: t('cardSeason')}), periodStoryLines(seasonPool()));
+}
 function reportLines(m){
   const pos = ['fwd','mid','def','gk'].includes(m.position) ? m.position : ratingPosOf(m.position);
   const counts = m.counts || {};
@@ -2020,6 +2266,7 @@ function renderReportHtml(m, compact){
   const vs = `${escapeHtml(m.opponent || t('unnamed'))}${m.score ? ' · ' + escapeHtml(m.score) : ''}`;
   const kick = m.kickoffClock ? escapeHtml(t('kickoffLine', {clock: m.kickoffClock})) : '';
   const meta = `<div class="report-sub"><span>${vs}</span>${kick ? `<span>${kick}</span>` : ''}</div>`;
+  const story = matchStoryHtml(m);
   const head = compact ? meta : `<div class="report-kicker">${escapeHtml(t('reportTitle'))}</div>
     <div class="report-title">${escapeHtml(reportPlayerName(m))} — <span class="n">${fmtNum(m.rating, 1)}</span></div>
     ${meta}
@@ -2027,7 +2274,7 @@ function renderReportHtml(m, compact){
   const body = lines.length
     ? lines.map(x => `<div class="report-line"><span class="ic">${x.icon}</span><span>${escapeHtml(x.text)}</span></div>`).join('')
     : `<div class="report-line">${escapeHtml(t('plusEven'))}</div>`;
-  return `${head}${body}
+  return `${head}${story}${body}
     <div class="report-split">
       <div class="report-pill plus">${fmtSigned(Math.max(0, split.plus), 2)}<small>${escapeHtml(t('actPlus'))}</small></div>
       <div class="report-pill minus">${'−' + fmtNum(Math.abs(split.minus), 2)}<small>${escapeHtml(t('actMinus'))}</small></div>
@@ -3910,6 +4157,7 @@ function renderStats(){
   renderCompare();
   renderPlayerFeed();
   const list = statsMatches();
+  renderTimingBoard(list);
   const grid = document.getElementById('statGrid');
   const heading = document.getElementById('chartHeading');
   heading.textContent = list.length <= 1 ? t('chartTitle') : t('chartLastN', {n: list.length});
