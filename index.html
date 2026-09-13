@@ -759,7 +759,7 @@
         </div>
         <svg id="chartSvg" viewBox="0 0 320 200" role="img" data-i18n-aria="chartAria"></svg>
       </div>
-      <h3 class="period-head" data-i18n="stPeriodCards">За выбранный период</h3>
+      <h3 class="period-head" id="periodHead">За выбранный период</h3>
       <div class="stat-grid" id="statGrid"></div>
       <div id="timingBoard"></div>
       <p class="hint" data-i18n="statsPeriodHint">Карточки выше — за выбранный период.</p>
@@ -4243,6 +4243,7 @@ function renderStats(){
   renderTimingBoard();
   const grid = document.getElementById('statGrid');
   const heading = document.getElementById('chartHeading');
+  document.getElementById('periodHead').textContent = statsPeriodLabel();
   const chartList = chartMatches();
   heading.textContent = chartRange === 'all'
     ? (chartList.length <= 1 ? t('chartTitle') : t('periodAll'))
