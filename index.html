@@ -359,8 +359,7 @@
     background:var(--surface);color:var(--text);font:inherit;font-weight:800;cursor:pointer;text-align:left;
   }
   .timing-chev{color:var(--text-soft);font-size:1.25rem;line-height:1;flex-shrink:0;}
-  .timing-fold .hint{margin:10px 2px 8px;}
-  .timing-fold .period-chips{margin-bottom:10px;}
+  .timing-fold .period-chips{margin:10px 0;}
   .timing-fold .story-box{margin:0;}
   .story-box{
     margin:12px 0 10px;padding:14px 15px;border-radius:12px;
@@ -915,7 +914,7 @@ uk:{
   saveMatch:'Зберегти матч', saveChanges:'Зберегти зміни', cancelEdit:'Скасувати правку',
   backupBanner:'Дані лише на цьому телефоні. Зробіть експорт, щоб не втратити сезон.',
   export:'Експорт', import:'Імпорт', copy:'Копіювати',
-  periodLast10:'Останні 10', periodWeek:'Тиждень', periodMonth:'Місяць', periodYear:'Рік', periodAll:'Весь час',
+  periodLast10:'Останні 10', periodWeek:'Тиждень', period10d:'10 днів', periodMonth:'Місяць', periodYear:'Рік', periodAll:'Весь час',
   chartTitle:'Динаміка оцінки', chartLastN:'Останні {n} матчів', chartAria:'Графік оцінок', chartEmpty:'Поки немає даних',
   sLang:'Мова', sFont:'Шрифт', fontSystem:'Системний', sFormat:'Формат матчу за замовчуванням', sSave:'Зберегти налаштування',
   tabPlayer:'Гравець', tabMatch:'Матч', tabHistory:'Історія', tabStats:'Статистика',
@@ -1010,7 +1009,6 @@ uk:{
   repGoalsBand:'Голи частіше з {a} по {b} хв: {k} з {n}.',
   repNone:'Немає достатньої вибірки з хвилинами, щоб робити висновок.',
   repFold:'Звіт за хвилинами',
-  repHint:'Цей звіт має свій період. Фільтр сезону зверху на нього не впливає.',
   hintGk:'Для воротаря важливі сейви, пропущені, виходи, передачі, перехоплення і гра ногами. Повторні сейви і пропущені важать менше за перші.',
   hintFwd:'Для нападника важливі голи, удари, асисти, обводки, гострі паси і відкривання.',
   hintMid:'Для півзахисника важливі передачі, гострі паси, відбори, єдиноборства, втрати і моменти для партнерів.',
@@ -1122,7 +1120,7 @@ pl:{
   saveMatch:'Zapisz mecz', saveChanges:'Zapisz zmiany', cancelEdit:'Anuluj edycję',
   backupBanner:'Dane są tylko na tym telefonie. Zrób eksport, żeby nie stracić sezonu.',
   export:'Eksport', import:'Import', copy:'Kopiuj',
-  periodLast10:'Ostatnie 10', periodWeek:'Tydzień', periodMonth:'Miesiąc', periodYear:'Rok', periodAll:'Cały czas',
+  periodLast10:'Ostatnie 10', periodWeek:'Tydzień', period10d:'10 dni', periodMonth:'Miesiąc', periodYear:'Rok', periodAll:'Cały czas',
   chartTitle:'Dynamika oceny', chartLastN:'Ostatnie {n} meczów', chartAria:'Wykres ocen', chartEmpty:'Brak danych',
   sLang:'Język', sFont:'Czcionka', fontSystem:'Systemowa', sFormat:'Domyślny format meczu', sSave:'Zapisz ustawienia',
   tabPlayer:'Zawodnik', tabMatch:'Mecz', tabHistory:'Historia', tabStats:'Statystyki',
@@ -1217,7 +1215,6 @@ pl:{
   repGoalsBand:'Gole częściej od {a} do {b} min: {k} z {n}.',
   repNone:'Za mało danych z minutami, żeby wyciągać wniosek.',
   repFold:'Raport minut',
-  repHint:'Ten raport ma własny okres. Filtr sezonu powyżej go nie zmienia.',
   hintGk:'Dla bramkarza ważne są interwencje, stracone, wyjścia, podania, przechwyty i gra nogami. Kolejne interwencje i stracone ważą mniej niż pierwsze.',
   hintFwd:'Dla napastnika ważne są gole, strzały, asysty, dryblingi, kluczowe podania i wbiegnięcia.',
   hintMid:'Dla pomocnika ważne są podania, kluczowe podania, odbiory, pojedynki, straty i okazje dla partnerów.',
@@ -1329,7 +1326,7 @@ en:{
   saveMatch:'Save match', saveChanges:'Save changes', cancelEdit:'Cancel edit',
   backupBanner:'Data stays on this phone. Export so you do not lose the season.',
   export:'Export', import:'Import', copy:'Copy',
-  periodLast10:'Last 10', periodWeek:'Week', periodMonth:'Month', periodYear:'Year', periodAll:'All time',
+  periodLast10:'Last 10', periodWeek:'Week', period10d:'10 days', periodMonth:'Month', periodYear:'Year', periodAll:'All time',
   chartTitle:'Rating trend', chartLastN:'Last {n} matches', chartAria:'Rating chart', chartEmpty:'No data yet',
   sLang:'Language', sFont:'Font', fontSystem:'System', sFormat:'Default match format', sSave:'Save settings',
   tabPlayer:'Player', tabMatch:'Match', tabHistory:'History', tabStats:'Stats',
@@ -1424,7 +1421,6 @@ en:{
   repGoalsBand:'Goals more often from {a} to {b} min: {k} of {n}.',
   repNone:'Not enough timed data to draw a conclusion.',
   repFold:'Minute report',
-  repHint:'This report has its own period. The season filter above does not change it.',
   hintGk:'For the keeper what matters is saves, goals conceded, claims, passes, interceptions and distribution. Later saves and goals conceded count less than the first.',
   hintFwd:'For a striker what matters is goals, shots, assists, dribbles, key passes and runs in behind.',
   hintMid:'For a midfielder what matters is passes, key passes, tackles, duels, turnovers and chances for teammates.',
@@ -1536,7 +1532,7 @@ ru:{
   saveMatch:'Сохранить матч', saveChanges:'Сохранить изменения', cancelEdit:'Отменить правку',
   backupBanner:'Данные только на этом телефоне. Сделайте экспорт, чтобы не потерять сезон.',
   export:'Экспорт', import:'Импорт', copy:'Копировать',
-  periodLast10:'Последние 10', periodWeek:'Неделя', periodMonth:'Месяц', periodYear:'Год', periodAll:'Всё время',
+  periodLast10:'Последние 10', periodWeek:'Неделя', period10d:'10 дней', periodMonth:'Месяц', periodYear:'Год', periodAll:'Всё время',
   chartTitle:'Динамика оценки', chartLastN:'Последние {n} матчей', chartAria:'График оценок', chartEmpty:'Пока нет данных',
   sLang:'Язык', sFont:'Шрифт', fontSystem:'Системный', sFormat:'Формат матча по умолчанию', sSave:'Сохранить настройки',
   tabPlayer:'Игрок', tabMatch:'Матч', tabHistory:'История', tabStats:'Статистика',
@@ -1631,7 +1627,6 @@ ru:{
   repGoalsBand:'Голы чаще с {a} по {b} мин: {k} из {n}.',
   repNone:'Недостаточно данных с минутами, чтобы делать вывод.',
   repFold:'Отчёт по минутам',
-  repHint:'У этого отчёта свой период. Фильтр сезона сверху на него не влияет.',
   hintGk:'Для вратаря важны сейвы, пропущенные, выходы, передачи, перехваты и игра ногами. Повторные сейвы и пропущенные весят меньше первых.',
   hintFwd:'Для нападающего важны голы, удары, ассисты, обводки, острые пасы и открывания.',
   hintMid:'Для полузащитника важны передачи, острые пасы, отборы, единоборства, потери и моменты для партнёров.',
@@ -2244,28 +2239,30 @@ function yearMatches(){
   const y = todayStr().slice(0, 4);
   return matches.filter(m => String(m.date).slice(0, 4) === y);
 }
-function liveSeasonName(){
-  return player.season || currentSeason();
+function daysMatches(n){
+  return matches.filter(m => m.date >= daysAgoStr(n));
 }
 function liveSeasonMatches(){
-  const s = liveSeasonName();
+  const s = currentSeason();
   return sortedMatches().filter(m => matchSeason(m) === s);
 }
 function timingMatches(){
+  if(timingRange === '10d') return daysMatches(10);
   if(timingRange === 'month') return monthMatches();
   if(timingRange === 'year') return yearMatches();
   if(timingRange === 'all') return sortedMatches();
   return liveSeasonMatches();
 }
 let timingOpen = false;
-let timingRange = 'season';
+let timingRange = '10d';
 function renderTimingBoard(){
   const el = document.getElementById('timingBoard');
   if(!el) return;
   const chips = [
-    ['season', liveSeasonName()],
+    ['10d', t('period10d')],
     ['month', t('periodMonth')],
     ['year', t('periodYear')],
+    ['season', currentSeason()],
     ['all', t('periodAll')]
   ].map(([key, lab]) => `<button type="button" class="chip${timingRange === key ? ' active' : ''}" data-timing="${key}">${escapeHtml(lab)}</button>`).join('');
   el.innerHTML = `<div class="timing-fold">
@@ -2274,7 +2271,6 @@ function renderTimingBoard(){
         <span class="timing-chev">${timingOpen ? '▾' : '›'}</span>
       </button>
       <div id="timingMenu" ${timingOpen ? '' : 'hidden'}>
-        <p class="hint">${escapeHtml(t('repHint'))}</p>
         <div class="period-chips" id="timingChips">${chips}</div>
         ${storyBoxHtml('', periodStoryLines(timingMatches()))}
       </div>
@@ -2286,7 +2282,7 @@ function renderTimingBoard(){
   document.getElementById('timingChips')?.addEventListener('click', e => {
     const chip = e.target.closest('[data-timing]');
     if(!chip) return;
-    timingRange = chip.dataset.timing || 'season';
+    timingRange = chip.dataset.timing || '10d';
     timingOpen = true;
     renderTimingBoard();
   });
