@@ -158,7 +158,9 @@
     width:44px;flex-shrink:0;border-radius:14px;border:1px solid var(--border);
     background:var(--surface-2);color:var(--danger);font-size:1.25rem;cursor:pointer;
   }
-  #playerCardBtn{margin:0 0 14px;}
+  #playerCardChips{margin:0 0 16px;}
+  #statsCardBtn,#historyCardBtn{margin:0 0 16px;}
+  button.chip{font:inherit;}
   .cam-badge{right:0;bottom:0;width:30px;height:30px;border-radius:50%;font-size:.78rem;}
   .photo-sheet-back{
     position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:84;border:0;padding:0;
@@ -521,7 +523,13 @@
         <div class="fb-name" id="fbName"></div>
         <div class="fb-meta" id="fbMeta"></div>
       </div>
-      <button class="save-btn" id="playerCardBtn" type="button" data-i18n="playerCardBtn">Карточка игрока</button>
+      <p class="hint" data-i18n="cardHint" style="margin:0 0 8px;">FIFA-карточка за сезон, месяц или последние матчи.</p>
+      <div class="period-chips" id="playerCardChips">
+        <button class="chip" type="button" data-card="season" data-i18n="cardSeason">Сезон</button>
+        <button class="chip" type="button" data-card="month" data-i18n="periodMonth">Месяц</button>
+        <button class="chip" type="button" data-card="10" data-i18n="periodLast10">Последние 10</button>
+        <button class="chip" type="button" data-card="all" data-i18n="periodAll">Всё время</button>
+      </div>
       <div class="pf-card">
         <h3 data-i18n="myPlayers">Мои игроки</h3>
         <div id="rosterList"></div>
@@ -696,6 +704,7 @@
         <label data-i18n="seasonFilter">Сезон</label>
         <select id="historySeason"></select>
       </div>
+      <button class="save-btn" id="historyCardBtn" type="button" data-i18n="cardSeasonBtn">Карточка сезона</button>
       <div id="historyList"></div>
     </div>
 
@@ -714,6 +723,7 @@
         <div class="chip" data-range="year" data-i18n="periodYear">Год</div>
         <div class="chip" data-range="all" data-i18n="periodAll">Всё время</div>
       </div>
+      <button class="save-btn" id="statsCardBtn" type="button" data-i18n="cardPeriodBtn">Карточка периода</button>
       <div class="chart-wrap">
         <h3 id="chartHeading" data-i18n="chartTitle">Динамика общей оценки</h3>
         <svg id="chartSvg" viewBox="0 0 320 200" role="img" data-i18n-aria="chartAria"></svg>
@@ -972,7 +982,8 @@ uk:{
   focusBase:'Важкий матч ({r}). До наступного: прийняв м’яч — віддай пас. Біля своїх воріт не обводь.',
   lastFocus:'Після матчу з <b>{who}</b><br><b>{got}:</b> {plus}<br><b>{next}:</b> {focus}', unnamed:'Без назви',
   scoreLbl:'Рахунок {s}', minLbl:'{n} хв', actionsLbl:'Дії', gotLbl:'Вдалося', focusLbl:'Фокус',
-  cardBtn:'Картка', playerCardBtn:'Картка гравця', editBtn:'Правити', delBtn:'Видалити', noMatches:'Поки немає збережених матчів.', noPeriod:'За цей період матчів немає.',
+  cardBtn:'Картка', playerCardBtn:'Картка гравця', cardHint:'FIFA-картка за сезон, місяць або останні матчі.',
+  cardSeason:'Сезон', cardPeriodBtn:'Картка періоду', cardSeasonBtn:'Картка сезону', editBtn:'Правити', delBtn:'Видалити', noMatches:'Поки немає збережених матчів.', noPeriod:'За цей період матчів немає.',
   reportTitle:'Матч', reportNew:'Новий матч', actPlus:'позитивних дій', actMinus:'негативних дій',
   mn_duels:'єдиноборств',
   mn_goals:'гол|голи|голів', mn_assists:'асист|асисти|асистів', mn_shots:'удар у площину|удари в площину|ударів у площину',
@@ -1142,7 +1153,8 @@ pl:{
   focusBase:'Ciężki mecz ({r}). Do następnego: przyjąłeś — podaj. Przy swojej bramce nie drybluj.',
   lastFocus:'Po meczu z <b>{who}</b><br><b>{got}:</b> {plus}<br><b>{next}:</b> {focus}', unnamed:'Bez nazwy',
   scoreLbl:'Wynik {s}', minLbl:'{n} min', actionsLbl:'Akcje', gotLbl:'Udało się', focusLbl:'Cel',
-  cardBtn:'Karta', playerCardBtn:'Karta zawodnika', editBtn:'Edytuj', delBtn:'Usuń', noMatches:'Nie ma jeszcze zapisanych meczów.', noPeriod:'Brak meczów w tym okresie.',
+  cardBtn:'Karta', playerCardBtn:'Karta zawodnika', cardHint:'Karta FIFA za sezon, miesiąc albo ostatnie mecze.',
+  cardSeason:'Sezon', cardPeriodBtn:'Karta okresu', cardSeasonBtn:'Karta sezonu', editBtn:'Edytuj', delBtn:'Usuń', noMatches:'Nie ma jeszcze zapisanych meczów.', noPeriod:'Brak meczów w tym okresie.',
   reportTitle:'Mecz', reportNew:'Nowy mecz', actPlus:'pozytywnych akcji', actMinus:'negatywnych akcji',
   mn_duels:'pojedynków',
   mn_goals:'gol|gole|goli', mn_assists:'asysta|asysty|asyst', mn_shots:'strzał celny|strzały celne|strzałów celnych',
@@ -1312,7 +1324,8 @@ en:{
   focusBase:'A hard match ({r}). Until next time: receive, then pass. Do not dribble by our goal.',
   lastFocus:'After <b>{who}</b><br><b>{got}:</b> {plus}<br><b>{next}:</b> {focus}', unnamed:'Untitled',
   scoreLbl:'Score {s}', minLbl:'{n} min', actionsLbl:'Actions', gotLbl:'Went well', focusLbl:'Focus',
-  cardBtn:'Match card', playerCardBtn:'Player card', editBtn:'Edit', delBtn:'Delete', noMatches:'No saved matches yet.', noPeriod:'No matches in this period.',
+  cardBtn:'Match card', playerCardBtn:'Player card', cardHint:'FIFA card for the season, month or recent matches.',
+  cardSeason:'Season', cardPeriodBtn:'Period card', cardSeasonBtn:'Season card', editBtn:'Edit', delBtn:'Delete', noMatches:'No saved matches yet.', noPeriod:'No matches in this period.',
   reportTitle:'Match', reportNew:'New match', actPlus:'positive actions', actMinus:'negative actions',
   mn_duels:'duels',
   mn_goals:'goal|goals', mn_assists:'assist|assists', mn_shots:'shot on target|shots on target',
@@ -1482,7 +1495,8 @@ ru:{
   focusBase:'Тяжёлый матч ({r}). До следующего: принял мяч — отдай пас. У своих ворот не обводи.',
   lastFocus:'После матча с <b>{who}</b><br><b>{got}:</b> {plus}<br><b>{next}:</b> {focus}', unnamed:'Без названия',
   scoreLbl:'Счёт {s}', minLbl:'{n} мин', actionsLbl:'Действия', gotLbl:'Получилось', focusLbl:'Фокус',
-  cardBtn:'Карточка', playerCardBtn:'Карточка игрока', editBtn:'Править', delBtn:'Удалить', noMatches:'Пока нет сохранённых матчей.', noPeriod:'За этот период матчей нет.',
+  cardBtn:'Карточка', playerCardBtn:'Карточка игрока', cardHint:'FIFA-карточка за сезон, месяц или последние матчи.',
+  cardSeason:'Сезон', cardPeriodBtn:'Карточка периода', cardSeasonBtn:'Карточка сезона', editBtn:'Править', delBtn:'Удалить', noMatches:'Пока нет сохранённых матчей.', noPeriod:'За этот период матчей нет.',
   reportTitle:'Матч', reportNew:'Новый матч', actPlus:'положительных действий', actMinus:'отрицательных действий',
   mn_duels:'единоборств',
   mn_goals:'гол|гола|голов', mn_assists:'ассист|ассиста|ассистов', mn_shots:'удар в створ|удара в створ|ударов в створ',
@@ -3454,6 +3468,21 @@ function seasonNameLabel(){
   if(currentSeasonFilter === 'current') return player.season || currentSeason();
   return currentSeasonFilter;
 }
+function statsPeriodLabel(){
+  const range = ({
+    '10': t('periodLast10'),
+    '7d': t('periodWeek'),
+    '30d': t('periodMonth'),
+    'year': t('periodYear'),
+    'all': t('periodAll')
+  })[currentRange] || t('periodLast10');
+  if(currentSeasonFilter === 'all' && currentRange === 'all') return t('periodAll');
+  if(currentSeasonFilter === 'all') return range;
+  return seasonNameLabel() + ' · ' + range;
+}
+function sortedMatches(){
+  return [...matches].sort((a,b)=> a.date.localeCompare(b.date) || a.id - b.id);
+}
 function countSum(list, key){
   return list.reduce((a,m)=> a + ((m.counts || {})[key] || 0), 0);
 }
@@ -3797,7 +3826,12 @@ document.getElementById('pOpenSeasonBtn').addEventListener('click', () => {
 document.getElementById('pCloseSeasonBtn').addEventListener('click', () => closeSeason(false));
 document.getElementById('playerHeadBtn').addEventListener('click', () => showView('player'));
 document.getElementById('addPlayerBtn').addEventListener('click', addPlayer);
-document.getElementById('playerCardBtn').addEventListener('click', sharePlayerCard);
+document.getElementById('playerCardChips').addEventListener('click', e => {
+  const chip = e.target.closest('[data-card]');
+  if(chip) sharePlayerCard(chip.dataset.card);
+});
+document.getElementById('statsCardBtn').addEventListener('click', shareStatsCard);
+document.getElementById('historyCardBtn').addEventListener('click', shareHistoryCard);
 document.getElementById('rosterList').addEventListener('click', e => {
   const del = e.target.closest('[data-del]');
   if(del){ e.preventDefault(); e.stopPropagation(); removePlayer(del.dataset.del); return; }
@@ -4047,11 +4081,14 @@ async function exportPngFile(canvas, filename){
 }
 
 let shareBusy = false;
-async function sharePlayerCard(){
+async function shareFutCard(list, period, tag){
   if(shareBusy) return;
+  if(!list || !list.length){
+    showToast(t('noPeriod'));
+    return;
+  }
   shareBusy = true;
   try{
-    const {list} = feedList();
     const pos = ratingPosOf(player.primary);
     const ovr = fifaOvr(list);
     const theme = futTheme(ovr);
@@ -4128,8 +4165,11 @@ async function sharePlayerCard(){
       ctx.textAlign = 'left';
     }
     ctx.fillStyle = theme.muted;
-    ctx.font = canvasFont('700', 22);
-    ctx.fillText('FFK', 86, 286);
+    ctx.font = canvasFont('700', 20);
+    ctx.fillText('FFK', 86, 282);
+    ctx.font = canvasFont('700', 16);
+    const periodLine = String(period || '').slice(0, 28);
+    ctx.fillText(periodLine, 86, 308);
 
     const name = (displayName() || '').toUpperCase();
     pathRoundRect(ctx, 70, 700, w - 140, 78, 16);
@@ -4158,17 +4198,40 @@ async function sharePlayerCard(){
     });
 
     ctx.fillStyle = theme.muted;
-    ctx.font = canvasFont('600', 18);
+    ctx.font = canvasFont('600', 17);
     ctx.textAlign = 'center';
-    const club = [player.team || player.club, player.season].filter(Boolean).join('  ·  ');
-    ctx.fillText((club || 'FFK').slice(0, 42), w / 2, h - 86);
+    const foot = [player.team || player.club, matchCountLabel(list.length)].filter(Boolean).join('  ·  ');
+    ctx.fillText(foot.slice(0, 44), w / 2, h - 86);
     ctx.textAlign = 'left';
 
-    const slug = String(player.firstName || 'player').trim().replace(/\s+/g, '_').slice(0, 24) || 'player';
-    await exportPngFile(canvas, `ffk_card_${slug}.png`);
+    const slug = String(player.firstName || 'player').trim().replace(/\s+/g, '_').slice(0, 18) || 'player';
+    const stamp = String(tag || 'card').replace(/\s+/g, '_').slice(0, 24);
+    await exportPngFile(canvas, `ffk_card_${slug}_${stamp}.png`);
   } finally {
     shareBusy = false;
   }
+}
+function playerCardList(kind){
+  if(kind === 'month') return sortedMatches().filter(m => m.date >= daysAgoStr(30));
+  if(kind === '10') return sortedMatches().slice(-10);
+  if(kind === 'all') return sortedMatches();
+  return feedList().list;
+}
+function playerCardPeriod(kind){
+  if(kind === 'month') return t('periodMonth');
+  if(kind === '10') return t('periodLast10');
+  if(kind === 'all') return t('periodAll');
+  const {season} = feedList();
+  return season ? (player.season || currentSeason()) : t('periodAll');
+}
+function sharePlayerCard(kind){
+  return shareFutCard(playerCardList(kind || 'season'), playerCardPeriod(kind || 'season'), kind || 'season');
+}
+function shareStatsCard(){
+  return shareFutCard(statsMatches(), statsPeriodLabel(), currentRange);
+}
+function shareHistoryCard(){
+  return shareFutCard(seasonPool(), seasonNameLabel(), 'season');
 }
 async function shareCard(m){
   if(shareBusy) return;
