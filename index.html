@@ -751,7 +751,7 @@
       <div id="seasonBoard"></div>
       <div id="compareBoard"></div>
       <div class="chart-wrap">
-        <h3 id="chartHeading" data-i18n="chartTitle">Динамика общей оценки</h3>
+        <h3 id="chartHeading" data-i18n="chartTitle">Динамика оценки</h3>
         <div class="period-chips" id="chartChips">
           <button type="button" class="chip active" data-chart="10" data-i18n="chart10">10 матчей</button>
           <button type="button" class="chip" data-chart="100" data-i18n="chart100">100 матчей</button>
@@ -4242,12 +4242,8 @@ function renderStats(){
   const list = statsMatches();
   renderTimingBoard();
   const grid = document.getElementById('statGrid');
-  const heading = document.getElementById('chartHeading');
   document.getElementById('periodHead').textContent = statsPeriodLabel();
   const chartList = chartMatches();
-  heading.textContent = chartRange === 'all'
-    ? (chartList.length <= 1 ? t('chartTitle') : t('periodAll'))
-    : (chartList.length <= 1 ? t('chartTitle') : t('chartLastN', {n: chartList.length}));
   if(!list.length){
     grid.innerHTML = `<div class="empty" style="grid-column:1/-1;">${escapeHtml(t('noPeriod'))}</div>`;
     drawChart(chartList);
