@@ -477,8 +477,9 @@
     <div class="view" id="view-stats">
       <div class="period-chips" id="periodChips">
         <div class="chip active" data-range="10" data-i18n="periodLast10">Последние 10</div>
+        <div class="chip" data-range="7d" data-i18n="periodWeek">Неделя</div>
         <div class="chip" data-range="30d" data-i18n="periodMonth">Месяц</div>
-        <div class="chip" data-range="90d" data-i18n="period3m">3 месяца</div>
+        <div class="chip" data-range="year" data-i18n="periodYear">Год</div>
         <div class="chip" data-range="all" data-i18n="periodAll">Всё время</div>
       </div>
       <div class="chart-wrap">
@@ -587,7 +588,7 @@ uk:{
   saveMatch:'Зберегти матч', saveChanges:'Зберегти зміни', cancelEdit:'Скасувати правку',
   backupBanner:'Дані лише на цьому телефоні. Зробіть експорт, щоб не втратити сезон.',
   export:'Експорт', import:'Імпорт', copy:'Копіювати',
-  periodLast10:'Останні 10', periodMonth:'Місяць', period3m:'3 місяці', periodAll:'Весь час',
+  periodLast10:'Останні 10', periodWeek:'Тиждень', periodMonth:'Місяць', periodYear:'Рік', periodAll:'Весь час',
   chartTitle:'Динаміка оцінки', chartLastN:'Останні {n} матчів', chartAria:'Графік оцінок', chartEmpty:'Поки немає даних',
   sLang:'Мова', sFormat:'Формат матчу за замовчуванням', sSave:'Зберегти налаштування',
   tabPlayer:'Гравець', tabMatch:'Матч', tabHistory:'Історія', tabStats:'Статистика',
@@ -652,7 +653,7 @@ pl:{
   saveMatch:'Zapisz mecz', saveChanges:'Zapisz zmiany', cancelEdit:'Anuluj edycję',
   backupBanner:'Dane są tylko na tym telefonie. Zrób eksport, żeby nie stracić sezonu.',
   export:'Eksport', import:'Import', copy:'Kopiuj',
-  periodLast10:'Ostatnie 10', periodMonth:'Miesiąc', period3m:'3 miesiące', periodAll:'Cały czas',
+  periodLast10:'Ostatnie 10', periodWeek:'Tydzień', periodMonth:'Miesiąc', periodYear:'Rok', periodAll:'Cały czas',
   chartTitle:'Dynamika oceny', chartLastN:'Ostatnie {n} meczów', chartAria:'Wykres ocen', chartEmpty:'Brak danych',
   sLang:'Język', sFormat:'Domyślny format meczu', sSave:'Zapisz ustawienia',
   tabPlayer:'Zawodnik', tabMatch:'Mecz', tabHistory:'Historia', tabStats:'Statystyki',
@@ -717,7 +718,7 @@ en:{
   saveMatch:'Save match', saveChanges:'Save changes', cancelEdit:'Cancel edit',
   backupBanner:'Data stays on this phone. Export so you do not lose the season.',
   export:'Export', import:'Import', copy:'Copy',
-  periodLast10:'Last 10', periodMonth:'Month', period3m:'3 months', periodAll:'All time',
+  periodLast10:'Last 10', periodWeek:'Week', periodMonth:'Month', periodYear:'Year', periodAll:'All time',
   chartTitle:'Rating trend', chartLastN:'Last {n} matches', chartAria:'Rating chart', chartEmpty:'No data yet',
   sLang:'Language', sFormat:'Default match format', sSave:'Save settings',
   tabPlayer:'Player', tabMatch:'Match', tabHistory:'History', tabStats:'Stats',
@@ -782,7 +783,7 @@ ru:{
   saveMatch:'Сохранить матч', saveChanges:'Сохранить изменения', cancelEdit:'Отменить правку',
   backupBanner:'Данные только на этом телефоне. Сделайте экспорт, чтобы не потерять сезон.',
   export:'Экспорт', import:'Импорт', copy:'Копировать',
-  periodLast10:'Последние 10', periodMonth:'Месяц', period3m:'3 месяца', periodAll:'Всё время',
+  periodLast10:'Последние 10', periodWeek:'Неделя', periodMonth:'Месяц', periodYear:'Год', periodAll:'Всё время',
   chartTitle:'Динамика оценки', chartLastN:'Последние {n} матчей', chartAria:'График оценок', chartEmpty:'Пока нет данных',
   sLang:'Язык', sFormat:'Формат матча по умолчанию', sSave:'Сохранить настройки',
   tabPlayer:'Игрок', tabMatch:'Матч', tabHistory:'История', tabStats:'Статистика',
@@ -1866,7 +1867,11 @@ function statsMatches(){
   const sorted = [...matches].sort((a,b)=> a.date.localeCompare(b.date) || a.id - b.id);
   if(currentRange === '10') return sorted.slice(-10);
   if(currentRange === 'all') return sorted;
-  const days = currentRange === '30d' ? 30 : 90;
+  if(currentRange === 'year'){
+    const y = String(new Date().getFullYear());
+    return sorted.filter(m => String(m.date).startsWith(y));
+  }
+  const days = currentRange === '7d' ? 7 : 30;
   return sorted.filter(m => m.date >= daysAgoStr(days));
 }
 function ratingTrend(list){
