@@ -107,7 +107,19 @@
     background-repeat:no-repeat;background-position:right 12px center;
   }
   .field input[type=date],.field input[type=number]{color-scheme:dark;}
-  .field input[type=file]{padding:9px;font-size:.8rem;}
+  .date-wrap{position:relative;}
+  .date-shown{
+    width:100%;min-height:44px;padding:11px 13px;border:1px solid var(--border);border-radius:12px;
+    background:var(--surface);font-size:.95rem;color:var(--text);font-weight:600;
+    display:flex;align-items:center;pointer-events:none;
+  }
+  .date-shown.empty{color:var(--text-soft);font-weight:600;}
+  .date-wrap input[type=date]{
+    position:absolute;inset:0;opacity:0;width:100%;height:100%;margin:0;padding:0;border:0;
+    font-size:1.1rem;cursor:pointer;
+  }
+  .file-pick{width:auto;margin:0;padding:10px 14px;font-size:.82rem;border-radius:12px;}
+  .file-meta{display:block;font-size:.78rem;color:var(--text-soft);font-weight:600;margin-top:8px;}
   .row2{display:flex;gap:10px;}
   .row2 .field{flex:1;}
   .hint{font-size:.72rem;color:var(--text-soft);margin:-6px 0 12px;font-weight:600;}
@@ -286,7 +298,9 @@
       <div class="photo-box" id="pPhotoBox">Д</div>
       <div class="field">
         <label data-i18n="pPhoto">Фотография</label>
-        <input type="file" id="p-photo" accept="image/*">
+        <input type="file" id="p-photo" accept="image/*" hidden>
+        <button class="ghost-btn file-pick" id="pPickPhotoBtn" type="button" data-i18n="pPickPhoto">Выбрать файл</button>
+        <span class="file-meta" id="pPhotoName"></span>
         <div class="hint" data-i18n="pPhotoHint">Хранится только на этом телефоне.</div>
         <button class="ghost-btn" id="pRemovePhotoBtn" type="button" data-i18n="pRemovePhoto" hidden>Убрать фото</button>
       </div>
@@ -303,7 +317,10 @@
       <div class="row2">
         <div class="field">
           <label data-i18n="pBirth">Дата рождения</label>
-          <input type="date" id="p-birth">
+          <div class="date-wrap">
+            <span class="date-shown empty" id="p-birth-shown"></span>
+            <input type="date" id="p-birth">
+          </div>
         </div>
         <div class="field">
           <label data-i18n="pNumber">Номер</label>
@@ -338,7 +355,10 @@
       <div class="row2">
         <div class="field">
           <label data-i18n="labelDate">Дата</label>
-          <input type="date" id="f-date">
+          <div class="date-wrap">
+            <span class="date-shown" id="f-date-shown"></span>
+            <input type="date" id="f-date">
+          </div>
         </div>
         <div class="field">
           <label data-i18n="labelKind">Тип игры</label>
@@ -551,7 +571,8 @@ uk:{
   kindLeague:'Чемпіонат', kindFriendly:'Товариський', kindCup:'Кубок', kindTournament:'Турнір',
   labelCompLeague:'Назва чемпіонату', phCompLeague:'Назва чемпіонату',
   labelCompCup:'Назва кубка', phCompCup:'Назва кубка',
-  roleStart:'У старті', roleSub:'Зі лавки',
+  labelCompTournament:'Назва турніру',
+  roleStart:'У старті', roleSub:'З лавки',
   secActions:'Ігрові дії', secBehavior:'Як грав (1–5)',
   saveMatch:'Зберегти матч', saveChanges:'Зберегти зміни', cancelEdit:'Скасувати правку',
   backupBanner:'Дані лише на цьому телефоні. Зробіть експорт, щоб не втратити сезон.',
@@ -561,6 +582,7 @@ uk:{
   sLang:'Мова', sFormat:'Формат матчу за замовчуванням', sSave:'Зберегти налаштування',
   tabPlayer:'Гравець', tabMatch:'Матч', tabHistory:'Історія', tabStats:'Статистика',
   pPhoto:'Фото', pPhotoHint:'Зберігається лише на цьому телефоні.', pRemovePhoto:'Прибрати фото',
+  pPickPhoto:'Вибрати файл', pNoFile:'Файл не вибрано', pPhotoReady:'Фото вибрано', phDate:'дд.мм.рррр',
   pFirst:'Ім’я', pLast:'Прізвище', pBirth:'Дата народження', pNumber:'Номер',
   pTeam:'Команда', pClub:'Клуб / академія', pPrimary:'Основна позиція', pExtra:'Додаткові позиції',
   pSeason:'Сезон', pSave:'Зберегти картку', toastPlayer:'Картку гравця збережено',
@@ -577,11 +599,11 @@ uk:{
   mn_goals:'гол|голи|голів', mn_assists:'асист|асисти|асистів', mn_shots:'удар у площину|удари в площину|ударів у площину',
   mn_dribbles:'обводка|обводки|обводок', mn_tackles:'відбір|відбори|відборів', mn_passes:'гострий пас|гострі паси|гострих пасів',
   mn_support:'підтримка|підтримки|підтримок', mn_saves:'сейв|сейви|сейвів', mn_claims:'вихід|виходи|виходів',
-  mn_gkpass:'гра ногами|гри ногами|гри ногами', mn_conceded:'пропущений|пропущені|пропущених',
+  mn_gkpass:'гра ногами|гри ногами|ігор ногами', mn_conceded:'пропущений|пропущені|пропущених',
   mn_losses:'втрата|втрати|втрат', mn_ledtogoal:'втрата → гол суперника|втрати → гол суперника|втрат → гол суперника',
   mn_badpass:'неточний пас|неточні паси|неточних пасів', mn_badtouch:'втрата прийому|втрати прийому|втрат прийому',
   mn_fouls:'фол|фоли|фолів', mn_owngoal:'автогол|автоголи|автоголів',
-  stMatches:'Матчів', stAvg:'Середня загальна', stAction:'Середній вклад', stEffort:'Середнє старання', stVs5:'До останніх 5', stMins:'Хвилин', stGoals:'Голи', stG90:'Голи / 90',
+  stMatches:'Матчів', stAvg:'Середня загальна', stAction:'Середній вклад', stEffort:'Середнє старання', stVs5:'проти останніх 5', stMins:'Хвилин', stGoals:'Голи', stG90:'Голи / 90',
   toastSaveFail:'Не вдалося зберегти', toastSaved:'Матч збережено', toastUpdated:'Матч оновлено', toastDeleted:'Матч видалено',
   toastNothingExport:'Поки нічого експортувати', toastFileSaved:'Файл збережено', toastCopied:'Скопійовано', toastCopyFail:'Не вдалося скопіювати',
   toastAdded:'Додано: {n}', toastNoNew:'Нових матчів немає', toastReadFail:'Не вдалося прочитати файл', toastNoUndo:'Немає що скасувати',
@@ -599,8 +621,8 @@ pl:{
   liveStart:'Tryb szybki', labelDate:'Data', labelPos:'Pozycja', labelOpp:'Rywal', phOpp:'Nazwa drużyny',
   labelScore:'Wynik', labelMin:'Minuty na boisku', labelFormat:'Format meczu', labelMatchLen:'Długość meczu, min', fmtCustom:'Własny',
   labelKind:'Typ meczu', labelTournament:'Turniej', phTournament:'Nazwa turnieju',
-  labelVenue:'Gdzie grali', venueHome:'U siebie', venueAway:'Wyjazd', labelRole:'Wejście',
-  labelComment:'Komentarz', phComment:'Co zapamiętałeś',
+  labelVenue:'Gdzie grali', venueHome:'U siebie', venueAway:'Na wyjeździe', labelRole:'Skład',
+  labelComment:'Komentarz', phComment:'Co zapadło w pamięć',
   posFwd:'Napastnik', posMid:'Pomocnik', posDef:'Obrońca', posGk:'Bramkarz',
   posBasic:'Podstawowe', posExtended:'Lista rozszerzona',
   posShortFwd:'Nap (FW)', posShortMid:'Pom (MF)', posShortDef:'Obr (DF)', posShortGk:'Brk (GK)',
@@ -614,46 +636,48 @@ pl:{
   kindLeague:'Liga', kindFriendly:'Towarzyski', kindCup:'Puchar', kindTournament:'Turniej',
   labelCompLeague:'Nazwa ligi', phCompLeague:'Nazwa ligi',
   labelCompCup:'Nazwa pucharu', phCompCup:'Nazwa pucharu',
+  labelCompTournament:'Nazwa turnieju',
   roleStart:'W składzie', roleSub:'Z ławki',
   secActions:'Akcje meczowe', secBehavior:'Jak grał (1–5)',
   saveMatch:'Zapisz mecz', saveChanges:'Zapisz zmiany', cancelEdit:'Anuluj edycję',
   backupBanner:'Dane są tylko na tym telefonie. Zrób eksport, żeby nie stracić sezonu.',
   export:'Eksport', import:'Import', copy:'Kopiuj',
-  periodWeek:'Tydzień', periodMonth:'Miesiąc', period3m:'3 miesiące', periodAll:'Całość',
+  periodWeek:'Tydzień', periodMonth:'Miesiąc', period3m:'3 miesiące', periodAll:'Cały czas',
   chartTitle:'Dynamika oceny ogólnej', chartAria:'Wykres ocen', chartEmpty:'Brak danych',
   sLang:'Język', sFormat:'Domyślny format meczu', sSave:'Zapisz ustawienia',
   tabPlayer:'Zawodnik', tabMatch:'Mecz', tabHistory:'Historia', tabStats:'Statystyki',
-  pPhoto:'Zdjęcie', pPhotoHint:'Zapisane tylko na tym telefonie.', pRemovePhoto:'Usuń zdjęcie',
+  pPhoto:'Zdjęcie', pPhotoHint:'Przechowywane tylko na tym telefonie.', pRemovePhoto:'Usuń zdjęcie',
+  pPickPhoto:'Wybierz plik', pNoFile:'Nie wybrano pliku', pPhotoReady:'Zdjęcie wybrane', phDate:'dd.mm.rrrr',
   pFirst:'Imię', pLast:'Nazwisko', pBirth:'Data urodzenia', pNumber:'Numer',
-  pTeam:'Zespół', pClub:'Klub / akademia', pPrimary:'Pozycja główna', pExtra:'Pozycje dodatkowe',
+  pTeam:'Drużyna', pClub:'Klub / akademia', pPrimary:'Pozycja główna', pExtra:'Pozycje dodatkowe',
   pSeason:'Sezon', pSave:'Zapisz kartę', toastPlayer:'Karta zawodnika zapisana',
   ageOne:'{n} rok', ageFew:'{n} lata', ageMany:'{n} lat', ageEn:'{n} years',
   liveHint:'Duże przyciski, wygodne na boisku', liveUndo:'Cofnij', liveDone:'Gotowe',
-  hintGk:'Kolejne interwencje i stracone gole waży mniej niż pierwsze. Słaba gra zespołu słabo obniża notę bramkarza.',
+  hintGk:'Kolejne interwencje i stracone gole ważą mniej niż pierwsze. Słaba gra zespołu słabo obniża notę bramkarza.',
   hintOut:'Ocena startuje od 6 i może dojść do 10 za mocny mecz.',
   insightPlus:'Udało się', insightFocus:'Cel na tydzień', plusEven:'równa gra bez wyróżniających akcji', focusDefault:'utrzymać koncentrację przez całe minuty', focusLess:'mniej: {x}',
   lastFocus:'Ostatnio cel: <b>{focus}</b> ({who})', unnamed:'Bez nazwy',
   scoreLbl:'Wynik {s}', minLbl:'{n} min', actionsLbl:'Akcje', gotLbl:'Udało się', focusLbl:'Cel',
-  cardBtn:'Kartka', editBtn:'Edytuj', delBtn:'Usuń', noMatches:'Nie ma jeszcze zapisanych meczów.', noPeriod:'Brak meczów w tym okresie.',
+  cardBtn:'Karta', editBtn:'Edytuj', delBtn:'Usuń', noMatches:'Nie ma jeszcze zapisanych meczów.', noPeriod:'Brak meczów w tym okresie.',
   reportTitle:'Mecz', reportNew:'Nowy mecz', actPlus:'pozytywnych akcji', actMinus:'negatywnych akcji',
   mn_duels:'pojedynków',
   mn_goals:'gol|gole|goli', mn_assists:'asysta|asysty|asyst', mn_shots:'strzał celny|strzały celne|strzałów celnych',
-  mn_dribbles:'drybling|dryblingi|dryblingów', mn_tackles:'odbiór|odbioru|odbiorów', mn_passes:'kluczowe podanie|kluczowe podania|kluczowych podań',
+  mn_dribbles:'drybling|dryblingi|dryblingów', mn_tackles:'odbiór|odbory|odbiorów', mn_passes:'kluczowe podanie|kluczowe podania|kluczowych podań',
   mn_support:'wsparcie|wsparcia|wsparć', mn_saves:'interwencja|interwencje|interwencji', mn_claims:'wyjście|wyjścia|wyjść',
-  mn_gkpass:'gra nogami|gry nogami|gry nogami', mn_conceded:'stracony|stracone|straconych',
+  mn_gkpass:'gra nogami|gry nogami|gier nogami', mn_conceded:'stracony|stracone|straconych',
   mn_losses:'strata|straty|strat', mn_ledtogoal:'strata → gol rywala|straty → gol rywala|strat → gol rywala',
   mn_badpass:'niedokładne podanie|niedokładne podania|niedokładnych podań', mn_badtouch:'strata przy przyjęciu|straty przy przyjęciu|strat przy przyjęciu',
-  mn_fouls:'faul|faule|fauli', mn_owngoal:'samobój|samobój|samobójów',
-  stMatches:'Mecze', stAvg:'Średnia ogólna', stAction:'Średni wkład', stEffort:'Średnie zaangażowanie', stVs5:'Do ostatnich 5', stMins:'Minuty', stGoals:'Gole', stG90:'Gole / 90',
+  mn_fouls:'faul|faule|fauli', mn_owngoal:'gol samobójczy|gole samobójcze|goli samobójczych',
+  stMatches:'Mecze', stAvg:'Średnia ogólna', stAction:'Średni wkład', stEffort:'Średnie zaangażowanie', stVs5:'vs ostatnie 5', stMins:'Minuty', stGoals:'Gole', stG90:'Gole / 90',
   toastSaveFail:'Nie udało się zapisać', toastSaved:'Mecz zapisany', toastUpdated:'Mecz zaktualizowany', toastDeleted:'Mecz usunięty',
   toastNothingExport:'Nie ma nic do eksportu', toastFileSaved:'Plik zapisany', toastCopied:'Skopiowano', toastCopyFail:'Nie udało się skopiować',
   toastAdded:'Dodano: {n}', toastNoNew:'Brak nowych meczów', toastReadFail:'Nie udało się odczytać pliku', toastNoUndo:'Nie ma czego cofnąć',
-  toastSettings:'Ustawienia zapisane', toastCard:'Kartka zapisana',
+  toastSettings:'Ustawienia zapisane', toastCard:'Karta zapisana',
   confirmNoOpp:'Nie podano rywala. Zapisać mecz bez nazwy?', confirmDup:'Podobny mecz tego dnia już jest. Zapisać mimo to?', confirmDel:'Usunąć ten mecz?',
   shareOverall:'/ 10 ogólna', shareVs:'mecz', shareOpp:'rywal',
   m_goals:'Gol', m_assists:'Asysta', m_shots:'Strzał celny', m_dribbles:'Drybling', m_tackles:'Odbiór', m_duelswon:'Pojedynek +',
-  m_passes:'Kluczowe podanie', m_support:'Wsparcie', m_saves:'Interwencja', m_claims:'Wyjście', m_gkpass:'Gra nogami', m_conceded:'Stracony',
-  m_losses:'Strata', m_ledtogoal:'Strata → gol rywala', m_badpass:'Niedokładne podanie', m_badtouch:'Strata przy przyjęciu', m_duelslost:'Pojedynek −', m_fouls:'Faul', m_owngoal:'Samobój',
+  m_passes:'Kluczowe podanie', m_support:'Wsparcie', m_saves:'Interwencja', m_claims:'Wyjście z bramki', m_gkpass:'Gra nogami', m_conceded:'Stracony',
+  m_losses:'Strata', m_ledtogoal:'Strata → gol rywala', m_badpass:'Niedokładne podanie', m_badtouch:'Strata przy przyjęciu', m_duelslost:'Pojedynek −', m_fouls:'Faul', m_owngoal:'Gol samobójczy',
   b_effort:'Zaangażowanie i walka o piłkę', b_team:'Gra zespołowa', b_coach:'Słuchał trenera', b_discipline:'Dyscyplina / szacunek dla sędziego', b_mood:'Nastrój (nie w ocenie)'
 },
 en:{
@@ -662,7 +686,7 @@ en:{
   liveStart:'Quick mode', labelDate:'Date', labelPos:'Position', labelOpp:'Opponent', phOpp:'Team name',
   labelScore:'Score', labelMin:'Minutes on the pitch', labelFormat:'Match format', labelMatchLen:'Match length, min', fmtCustom:'Custom',
   labelKind:'Match type', labelTournament:'Competition', phTournament:'Competition name',
-  labelVenue:'Home or away', venueHome:'Home', venueAway:'Away', labelRole:'Appearance',
+  labelVenue:'Venue', venueHome:'Home', venueAway:'Away', labelRole:'Line-up',
   labelComment:'Comment', phComment:'What stood out',
   posFwd:'Forward', posMid:'Midfielder', posDef:'Defender', posGk:'Goalkeeper',
   posBasic:'Basic', posExtended:'Extended list',
@@ -677,6 +701,7 @@ en:{
   kindLeague:'League', kindFriendly:'Friendly', kindCup:'Cup', kindTournament:'Tournament',
   labelCompLeague:'League name', phCompLeague:'League name',
   labelCompCup:'Cup name', phCompCup:'Cup name',
+  labelCompTournament:'Tournament name',
   roleStart:'Started', roleSub:'Off the bench',
   secActions:'Match actions', secBehavior:'How he played (1–5)',
   saveMatch:'Save match', saveChanges:'Save changes', cancelEdit:'Cancel edit',
@@ -687,6 +712,7 @@ en:{
   sLang:'Language', sFormat:'Default match format', sSave:'Save settings',
   tabPlayer:'Player', tabMatch:'Match', tabHistory:'History', tabStats:'Stats',
   pPhoto:'Photo', pPhotoHint:'Stored only on this phone.', pRemovePhoto:'Remove photo',
+  pPickPhoto:'Choose file', pNoFile:'No file chosen', pPhotoReady:'Photo selected', phDate:'Select date',
   pFirst:'First name', pLast:'Last name', pBirth:'Date of birth', pNumber:'Number',
   pTeam:'Team', pClub:'Club / academy', pPrimary:'Main position', pExtra:'Other positions',
   pSeason:'Season', pSave:'Save player card', toastPlayer:'Player card saved',
@@ -697,7 +723,7 @@ en:{
   insightPlus:'Went well', insightFocus:'Focus this week', plusEven:'a steady game without standout actions', focusDefault:'stay switched on for every minute', focusLess:'fewer: {x}',
   lastFocus:'Last focus: <b>{focus}</b> ({who})', unnamed:'Untitled',
   scoreLbl:'Score {s}', minLbl:'{n} min', actionsLbl:'Actions', gotLbl:'Went well', focusLbl:'Focus',
-  cardBtn:'Card', editBtn:'Edit', delBtn:'Delete', noMatches:'No saved matches yet.', noPeriod:'No matches in this period.',
+  cardBtn:'Match card', editBtn:'Edit', delBtn:'Delete', noMatches:'No saved matches yet.', noPeriod:'No matches in this period.',
   reportTitle:'Match', reportNew:'New match', actPlus:'positive actions', actMinus:'negative actions',
   mn_duels:'duels',
   mn_goals:'goal|goals', mn_assists:'assist|assists', mn_shots:'shot on target|shots on target',
@@ -715,7 +741,7 @@ en:{
   confirmNoOpp:'No opponent entered. Save the match untitled?', confirmDup:'A similar match already exists today. Save anyway?', confirmDel:'Delete this match?',
   shareOverall:'/ 10 overall', shareVs:'match', shareOpp:'opponent',
   m_goals:'Goal', m_assists:'Assist', m_shots:'Shot on target', m_dribbles:'Dribble', m_tackles:'Tackle', m_duelswon:'Duel won',
-  m_passes:'Key pass', m_support:'Support', m_saves:'Save', m_claims:'Claim', m_gkpass:'Distribution', m_conceded:'Conceded',
+  m_passes:'Key pass', m_support:'Support', m_saves:'Save', m_claims:'Claim', m_gkpass:'Distribution', m_conceded:'Goal conceded',
   m_losses:'Turnover', m_ledtogoal:'Turnover leading to a goal', m_badpass:'Incomplete pass', m_badtouch:'Poor first touch', m_duelslost:'Duel lost', m_fouls:'Foul', m_owngoal:'Own goal',
   b_effort:'Work rate and duels', b_team:'Team play', b_coach:'Listened to the coach', b_discipline:'Discipline / respect for the referee', b_mood:'Mood (not in the rating)'
 },
@@ -740,6 +766,7 @@ ru:{
   kindLeague:'Чемпионат', kindFriendly:'Товарищеский', kindCup:'Кубок', kindTournament:'Турнир',
   labelCompLeague:'Название чемпионата', phCompLeague:'Название чемпионата',
   labelCompCup:'Название кубка', phCompCup:'Название кубка',
+  labelCompTournament:'Название турнира',
   roleStart:'В старте', roleSub:'Со скамейки',
   secActions:'Игровые действия', secBehavior:'Как играл (1–5)',
   saveMatch:'Сохранить матч', saveChanges:'Сохранить изменения', cancelEdit:'Отменить правку',
@@ -750,6 +777,7 @@ ru:{
   sLang:'Язык', sFormat:'Формат матча по умолчанию', sSave:'Сохранить настройки',
   tabPlayer:'Игрок', tabMatch:'Матч', tabHistory:'История', tabStats:'Статистика',
   pPhoto:'Фотография', pPhotoHint:'Хранится только на этом телефоне.', pRemovePhoto:'Убрать фото',
+  pPickPhoto:'Выбрать файл', pNoFile:'Файл не выбран', pPhotoReady:'Фото выбрано', phDate:'дд.мм.гггг',
   pFirst:'Имя', pLast:'Фамилия', pBirth:'Дата рождения', pNumber:'Номер',
   pTeam:'Команда', pClub:'Клуб / академия', pPrimary:'Основная позиция', pExtra:'Дополнительные позиции',
   pSeason:'Сезон', pSave:'Сохранить карточку', toastPlayer:'Карточка игрока сохранена',
@@ -805,13 +833,15 @@ function pitchPosLabel(code){
   if(isRoleCode(code)) return posLabel(code);
   if(!isPosCode(code)) return code;
   const name = t('pc_'+code);
-  return name === 'pc_'+code ? code : `${name} (${code})`;
+  if(name === 'pc_'+code) return code;
+  return name === code ? code : `${name} (${code})`;
 }
 function pitchPosLabelShort(code){
   if(isRoleCode(code)) return posLabel(code);
   if(!isPosCode(code)) return code;
   const name = t('ps_'+code);
-  return name === 'ps_'+code ? code : `${name} (${code})`;
+  if(name === 'ps_'+code || name === code) return code;
+  return `${name} (${code})`;
 }
 function ratingPosOf(code){
   if(POS_GROUP[code]) return POS_GROUP[code];
@@ -866,17 +896,18 @@ function syncCompetitionField(){
     label.textContent = t('labelCompCup');
     input.placeholder = t('phCompCup');
   } else {
-    label.textContent = t('phTournament');
+    label.textContent = t('labelCompTournament');
     input.placeholder = t('phTournament');
   }
 }
 function applyI18n(){
   const lang = LANGS.includes(settings.lang) ? settings.lang : 'ru';
-  document.documentElement.lang = lang;
+  document.documentElement.lang = lang === 'en' ? 'en-GB' : lang;
   document.title = t('pageTitle');
   document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
   document.querySelectorAll('[data-i18n-placeholder]').forEach(el => { el.placeholder = t(el.dataset.i18nPlaceholder); });
   document.querySelectorAll('[data-i18n-aria]').forEach(el => { el.setAttribute('aria-label', t(el.dataset.i18nAria)); });
+  document.querySelectorAll('input[type=date]').forEach(el => { el.lang = lang === 'en' ? 'en-GB' : lang; });
   renderMetrics();
   renderBehaviors();
   renderLiveGrid();
@@ -890,6 +921,8 @@ function applyI18n(){
   fillMatchPitchSelects(document.getElementById('f-position').value);
   renderExtraChips();
   syncCompetitionField();
+  syncDateShown();
+  updatePhotoMeta();
   if(lastReportMatch) document.getElementById('reportCard').innerHTML = renderReportHtml(lastReportMatch);
 }
 const BASE_RATING = 6.0;
@@ -1091,7 +1124,34 @@ function daysAgoStr(days){
 function formatDate(iso){
   const [y,m,d] = String(iso||'').split('-');
   if(!y||!m||!d) return iso || '';
+  if(settings.lang === 'en'){
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return `${Number(d)} ${months[Number(m)-1]} ${y}`;
+  }
   return `${d}.${m}.${y}`;
+}
+function syncDateShown(){
+  [['f-date','f-date-shown'],['p-birth','p-birth-shown']].forEach(([id, shownId]) => {
+    const input = document.getElementById(id);
+    const el = document.getElementById(shownId);
+    if(!input || !el) return;
+    const v = input.value;
+    if(!v){
+      el.textContent = t('phDate');
+      el.classList.add('empty');
+    } else {
+      el.textContent = formatDate(v);
+      el.classList.remove('empty');
+    }
+  });
+}
+function updatePhotoMeta(){
+  const el = document.getElementById('pPhotoName');
+  if(!el) return;
+  const file = document.getElementById('p-photo').files[0];
+  if(file) el.textContent = file.name;
+  else if(currentPhoto()) el.textContent = t('pPhotoReady');
+  else el.textContent = t('pNoFile');
 }
 
 function currentSeason(){
@@ -1280,6 +1340,8 @@ function fillPlayerForm(){
   setBadge(document.getElementById('pPhotoBox'), currentPhoto(), initials());
   document.getElementById('pRemovePhotoBtn').hidden = !currentPhoto();
   renderExtraChips();
+  syncDateShown();
+  updatePhotoMeta();
 }
 function collectPlayer(){
   const primary = document.getElementById('p-primary').value;
@@ -1424,7 +1486,7 @@ function renderMetrics(){
   document.getElementById('weightsHint').textContent = pos === 'gk' ? t('hintGk') : t('hintOut');
   document.getElementById('metricsList').innerHTML = metricsFor(pos).map(m => {
     const w = weightOf(m, pos);
-    const shown = (w > 0 ? '+' : '') + String(w);
+    const shown = (w > 0 ? '+' : '') + (settings.lang === 'en' ? String(w) : String(w).replace('.', ','));
     return `<div class="metric-row">
       <div class="metric-name">
         <div class="metric-icon">${m.icon}</div>
@@ -1495,15 +1557,15 @@ function scoresNow(){
 }
 function updateHero(){
   const s = scoresNow();
-  document.getElementById('heroScore').innerHTML = s.overall.toFixed(1) + '<small>/10</small>';
-  document.getElementById('heroAction').textContent = s.action.toFixed(1);
-  document.getElementById('heroEffort').textContent = s.effort.toFixed(1);
+  document.getElementById('heroScore').innerHTML = fmtNum(s.overall, 1) + '<small>/10</small>';
+  document.getElementById('heroAction').textContent = fmtNum(s.action, 1);
+  document.getElementById('heroEffort').textContent = fmtNum(s.effort, 1);
   const minutes = Number(document.getElementById('f-minutes').value) || 60;
   document.getElementById('heroLabel').textContent = minutes < 25 ? t('heroShort') : t('heroOverall');
   const ins = buildInsights(form.counts, form.behaviors, s.pos);
   document.getElementById('insightBox').innerHTML =
     `<b>${escapeHtml(t('insightPlus'))}:</b> ${escapeHtml(ins.plus)}<br><b>${escapeHtml(t('insightFocus'))}:</b> ${escapeHtml(ins.focus)}`;
-  document.getElementById('liveScore').textContent = s.action.toFixed(1);
+  document.getElementById('liveScore').textContent = fmtNum(s.action, 1);
 }
 
 function setEditUi(on){
@@ -1533,6 +1595,7 @@ function resetForm(){
   renderBehaviors();
   renderFocusBanner();
   updateHero();
+  syncDateShown();
   sessionStorage.removeItem(DRAFT_KEY);
 }
 
@@ -1559,6 +1622,7 @@ function fillForm(m){
   renderBehaviors();
   renderFocusBanner();
   updateHero();
+  syncDateShown();
   persistDraft();
 }
 
@@ -1619,6 +1683,7 @@ document.getElementById('cancelEditBtn').addEventListener('click', resetForm);
       renderMetrics(); renderLiveGrid();
     }
     if(id === 'f-kind') syncCompetitionField();
+    if(id === 'f-date') syncDateShown();
     if(id === 'f-format'){ syncPlayedDefault(true); }
     if(id === 'f-matchlen' && document.getElementById('f-format').value === 'custom'){
       document.getElementById('f-minutes').value = document.getElementById('f-matchlen').value;
@@ -1652,9 +1717,9 @@ function renderHistory(){
         <div class="match-meta">
           <span class="match-date">${escapeHtml(formatDate(m.date))} · ${escapeHtml(matchPosDisplay(m))} · ${escapeHtml(venueLabel(m.venue))} · ${escapeHtml(roleLabel(m.role))} · ${escapeHtml(kindLabel(m.kind))}${m.tournament ? ' · ' + escapeHtml(m.tournament) : ''} · ${escapeHtml((m.format||'').replace('x','×') || t('fmtCustom'))} · ${escapeHtml(t('minLbl', {n:m.minutes}))}</span>
           <span class="match-opp">${escapeHtml(m.opponent || t('unnamed'))}</span>
-          <span class="match-score">${m.score ? escapeHtml(t('scoreLbl', {s:m.score})) : ''} · ${escapeHtml(t('heroAction'))} ${Number(m.actionRating).toFixed(1)} · ${escapeHtml(t('heroEffort'))} ${Number(m.effortRating).toFixed(1)}</span>
+          <span class="match-score">${m.score ? escapeHtml(t('scoreLbl', {s:m.score})) : ''} · ${escapeHtml(t('heroAction'))} ${fmtNum(m.actionRating, 1)} · ${escapeHtml(t('heroEffort'))} ${fmtNum(m.effortRating, 1)}</span>
         </div>
-        <div class="match-rating ${ratingClass(m.rating)}">${Number(m.rating).toFixed(1)}</div>
+        <div class="match-rating ${ratingClass(m.rating)}">${fmtNum(m.rating, 1)}</div>
       </div>
       <div class="match-details" id="details-${m.id}">
         ${renderReportHtml(m, true)}
@@ -1804,13 +1869,13 @@ function renderStats(){
   const base = prev.length ? avg(prev.map(m=>m.rating)) : last;
   grid.innerHTML = [
     {num:list.length,lbl:t('stMatches')},
-    {num:avg(list.map(m=>m.rating)).toFixed(1),lbl:t('stAvg')},
-    {num:avg(list.map(m=>m.actionRating)).toFixed(1),lbl:t('stAction')},
-    {num:avg(list.map(m=>m.effortRating)).toFixed(1),lbl:t('stEffort')},
-    {num:(last-base>=0?'+':'')+(last-base).toFixed(1),lbl:t('stVs5')},
+    {num:fmtNum(avg(list.map(m=>m.rating)), 1),lbl:t('stAvg')},
+    {num:fmtNum(avg(list.map(m=>m.actionRating)), 1),lbl:t('stAction')},
+    {num:fmtNum(avg(list.map(m=>m.effortRating)), 1),lbl:t('stEffort')},
+    {num:fmtSigned(last-base, 1),lbl:t('stVs5')},
     {num:minutes,lbl:t('stMins')},
     {num:sum('goals'),lbl:t('stGoals')},
-    {num:minutes?(sum('goals')*90/minutes).toFixed(1):'0',lbl:t('stG90')},
+    {num:minutes?fmtNum(sum('goals')*90/minutes, 1):fmtNum(0, 1),lbl:t('stG90')},
   ].map(c=>`<div class="stat-card"><div class="num">${c.num}</div><div class="lbl">${c.lbl}</div></div>`).join('');
   drawChart(list);
 }
@@ -1930,6 +1995,8 @@ document.getElementById('pExtraChips').addEventListener('click', e => {
   extraSelected = extraSelected.includes(code) ? extraSelected.filter(x => x !== code) : extraSelected.concat(code);
   renderExtraChips();
 });
+document.getElementById('pPickPhotoBtn').addEventListener('click', () => document.getElementById('p-photo').click());
+document.getElementById('p-birth').addEventListener('change', syncDateShown);
 document.getElementById('p-photo').addEventListener('change', async e => {
   const file = e.target.files[0];
   if(!file) return;
@@ -1937,6 +2004,7 @@ document.getElementById('p-photo').addEventListener('change', async e => {
     photoDraft = await compressPhoto(file);
     setBadge(document.getElementById('pPhotoBox'), photoDraft, initials());
     document.getElementById('pRemovePhotoBtn').hidden = false;
+    updatePhotoMeta();
   }catch(err){ showToast(t('toastReadFail')); }
 });
 document.getElementById('pRemovePhotoBtn').addEventListener('click', () => {
@@ -1944,6 +2012,7 @@ document.getElementById('pRemovePhotoBtn').addEventListener('click', () => {
   document.getElementById('p-photo').value = '';
   setBadge(document.getElementById('pPhotoBox'), '', initials());
   document.getElementById('pRemovePhotoBtn').hidden = true;
+  updatePhotoMeta();
 });
 document.getElementById('savePlayerBtn').addEventListener('click', () => {
   player = collectPlayer();
