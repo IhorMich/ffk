@@ -143,6 +143,7 @@
   .save-btn,.ghost-btn,.live-start{
     width:100%;margin-top:12px;padding:15px;border:none;border-radius:16px;font-size:1rem;font-weight:800;cursor:pointer;
   }
+  #savePlayerBtn{margin-bottom:12px;position:relative;z-index:41;}
   .save-btn,.live-start{background:linear-gradient(135deg, var(--accent), var(--violet));color:#08121C;}
   .live-start{margin-top:0;margin-bottom:16px;}
   .ghost-btn{background:var(--surface);color:var(--text);border:1px solid var(--border);}
@@ -1651,13 +1652,15 @@ document.getElementById('savePlayerBtn').addEventListener('click', () => {
   syncSettingsFromPlayer();
   saveSettings();
   applyHeader();
-  fillPlayerForm();
   if(!editingId){
     document.getElementById('f-position').value = settings.position;
     renderMetrics();
     renderLiveGrid();
   }
   showToast(t('toastPlayer'));
+  showView('new');
+  updateHero();
+  window.scrollTo({top:0, behavior:'instant'});
 });
 
 function wrapText(ctx, text, x, y, maxWidth, lineHeight){
