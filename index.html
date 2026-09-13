@@ -61,8 +61,13 @@
   .club-name{font-size:1.08rem;font-weight:800;overflow-wrap:anywhere;}
   .player-name{font-size:.78rem;color:var(--text-soft);font-weight:600;line-height:1.35;overflow-wrap:anywhere;}
   .player-num{
-    margin-left:8px;font-size:.82rem;font-weight:800;color:var(--gold);
+    margin-left:4px;font-size:.82rem;font-weight:800;color:var(--gold);
     background:rgba(245,185,66,.12);padding:2px 8px;border-radius:999px;
+  }
+  .player-avg{
+    margin-left:6px;font-size:.82rem;font-weight:800;color:var(--gold);
+    background:rgba(245,185,66,.12);padding:2px 8px;border-radius:999px;
+    font-variant-numeric:tabular-nums;white-space:nowrap;
   }
   .player-head-top{display:flex;align-items:center;flex-wrap:wrap;gap:4px;}
   .profile-hero{position:relative;margin-bottom:84px;}
@@ -455,6 +460,7 @@
         <div style="min-width:0;flex:1;">
           <div class="player-head-top">
             <div class="club-name" id="playerNameDisplay"></div>
+            <span class="player-avg" id="playerSeasonAvg" hidden></span>
             <span class="player-num" id="playerNumberDisplay" hidden></span>
           </div>
           <div class="player-name" id="playerMetaLine"></div>
@@ -2389,6 +2395,13 @@ function applyHeader(){
   const meta = [age != null ? ageLabel(age) : '', posLine()].filter(Boolean).join(' · ');
   const clubBits = [...new Set([player.team, player.club, player.season].map(x => String(x||'').trim()).filter(Boolean))].join(' · ');
   document.getElementById('playerNameDisplay').textContent = player.firstName || displayName();
+  const avgEl = document.getElementById('playerSeasonAvg');
+  const seasonAvg = avgRating(feedList().list);
+  if(seasonAvg == null) avgEl.hidden = true;
+  else {
+    avgEl.hidden = false;
+    avgEl.textContent = '⭐ ' + fmtNum(seasonAvg, 1);
+  }
   const numEl = document.getElementById('playerNumberDisplay');
   if(no){
     numEl.hidden = false;
