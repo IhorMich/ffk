@@ -961,8 +961,8 @@ uk:{
   liveClockBreak:'Перерва · далі {half} · {fmt}',
   liveClockDone:'Матч закінчено · {fmt}',
   clockHalf1:'1-й тайм', clockHalf2:'2-й тайм', clockHalfN:'{n}-й тайм',
-  eventAt:'{what} · {m} хв ({half}, {clock})',
-  kickoffLine:'Старт {clock} (Варшава)',
+  eventAt:'{what} · {m} хв матчу',
+  kickoffLine:'Початок {clock}',
   hintGk:'Для воротаря важливі сейви, пропущені, виходи, передачі, перехоплення і гра ногами. Повторні сейви і пропущені важать менше за перші.',
   hintFwd:'Для нападника важливі голи, удари, асисти, обводки, гострі паси і відкривання.',
   hintMid:'Для півзахисника важливі передачі, гострі паси, відбори, єдиноборства, втрати і моменти для партнерів.',
@@ -1142,8 +1142,8 @@ pl:{
   liveClockBreak:'Przerwa · dalej {half} · {fmt}',
   liveClockDone:'Mecz zakończony · {fmt}',
   clockHalf1:'1. połowa', clockHalf2:'2. połowa', clockHalfN:'{n}. część',
-  eventAt:'{what} · {m} min ({half}, {clock})',
-  kickoffLine:'Start {clock} (Warszawa)',
+  eventAt:'{what} · {m} min meczu',
+  kickoffLine:'Początek {clock}',
   hintGk:'Dla bramkarza ważne są interwencje, stracone, wyjścia, podania, przechwyty i gra nogami. Kolejne interwencje i stracone ważą mniej niż pierwsze.',
   hintFwd:'Dla napastnika ważne są gole, strzały, asysty, dryblingi, kluczowe podania i wbiegnięcia.',
   hintMid:'Dla pomocnika ważne są podania, kluczowe podania, odbiory, pojedynki, straty i okazje dla partnerów.',
@@ -1323,8 +1323,8 @@ en:{
   liveClockBreak:'Break · next {half} · {fmt}',
   liveClockDone:'Full time · {fmt}',
   clockHalf1:'1st half', clockHalf2:'2nd half', clockHalfN:'period {n}',
-  eventAt:'{what} · {m} min ({half}, {clock})',
-  kickoffLine:'Kick-off {clock} (Warsaw)',
+  eventAt:'{what} · {m} min',
+  kickoffLine:'Kick-off {clock}',
   hintGk:'For the keeper what matters is saves, goals conceded, claims, passes, interceptions and distribution. Later saves and goals conceded count less than the first.',
   hintFwd:'For a striker what matters is goals, shots, assists, dribbles, key passes and runs in behind.',
   hintMid:'For a midfielder what matters is passes, key passes, tackles, duels, turnovers and chances for teammates.',
@@ -1504,8 +1504,8 @@ ru:{
   liveClockBreak:'Перерыв · дальше {half} · {fmt}',
   liveClockDone:'Матч окончен · {fmt}',
   clockHalf1:'1-й тайм', clockHalf2:'2-й тайм', clockHalfN:'{n}-й тайм',
-  eventAt:'{what} · {m} мин ({half}, {clock})',
-  kickoffLine:'Старт {clock} (Варшава)',
+  eventAt:'{what} · {m} мин матча',
+  kickoffLine:'Начало {clock}',
   hintGk:'Для вратаря важны сейвы, пропущенные, выходы, передачи, перехваты и игра ногами. Повторные сейвы и пропущенные весят меньше первых.',
   hintFwd:'Для нападающего важны голы, удары, ассисты, обводки, острые пасы и открывания.',
   hintMid:'Для полузащитника важны передачи, острые пасы, отборы, единоборства, потери и моменты для партнёров.',
@@ -1860,7 +1860,8 @@ function clockStamp(now){
   const period = Math.min(parts, Math.max(1, Number(matchClock.period) || 1));
   const playMin = periodPlayNow(now) / 60000;
   const minute = Math.max(1, Math.floor(playMin));
-  return {clock: warsawClock(now), period, minute, playMin, each, parts};
+  const matchMin = Math.max(1, Math.floor(playingMs(now) / 60000));
+  return {clock: warsawClock(now), period, minute, matchMin, playMin, each, parts};
 }
 function hydrateClock(raw){
   const base = emptyClock();
@@ -1967,18 +1968,6 @@ function actionSplit(counts, pos){
 }
 function reportLines(m){
   const pos = ['fwd','mid','def','gk'].includes(m.position) ? m.position : ratingPosOf(m.position);
-  const timeline = Array.isArray(m.timeline) ? m.timeline : [];
-  if(timeline.length){
-    return timeline.map(ev => {
-      const met = METRICS.find(x => x.key === ev.key);
-      const what = met ? metricLabel(met.key) : ev.key;
-      const half = halfLabel(ev.period || 1, m.format, m.matchLen);
-      return {
-        icon: met ? met.icon : '•',
-        text: t('eventAt', {what, m: ev.minute || 1, half, clock: ev.clock || ''})
-      };
-    });
-  }
   const counts = m.counts || {};
   const lines = [];
   let duelsDone = false;
@@ -2002,10 +1991,12 @@ function reportPlayerName(m){
 function renderReportHtml(m, compact){
   const split = actionSplit(m.counts, m.position);
   const lines = reportLines(m);
-  const kick = m.kickoffClock ? `<div class="report-sub">${escapeHtml(t('kickoffLine', {clock: m.kickoffClock}))}</div>` : '';
-  const head = compact ? '' : `<div class="report-kicker">${escapeHtml(t('reportTitle'))}</div>
+  const vs = `${escapeHtml(m.opponent || t('unnamed'))}${m.score ? ' · ' + escapeHtml(m.score) : ''}`;
+  const kick = m.kickoffClock ? escapeHtml(t('kickoffLine', {clock: m.kickoffClock})) : '';
+  const meta = `<div class="report-sub"><span>${vs}</span>${kick ? `<span>${kick}</span>` : ''}</div>`;
+  const head = compact ? meta : `<div class="report-kicker">${escapeHtml(t('reportTitle'))}</div>
     <div class="report-title">${escapeHtml(reportPlayerName(m))} — <span class="n">${fmtNum(m.rating, 1)}</span></div>
-    ${kick}
+    ${meta}
     <div class="report-sub"><span>${escapeHtml(t('heroAction'))} ${fmtNum(m.actionRating, 1)}</span><span>${escapeHtml(t('heroEffort'))} ${fmtNum(m.effortRating, 1)}</span></div>`;
   const body = lines.length
     ? lines.map(x => `<div class="report-line"><span class="ic">${x.icon}</span><span>${escapeHtml(x.text)}</span></div>`).join('')
@@ -3112,7 +3103,7 @@ function normalizeTimeline(raw){
       at: Number(ev.at) || 0,
       minute: Math.max(1, Number(ev.minute) || 1),
       period: Math.max(1, Number(ev.period) || 1),
-      clock: String(ev.clock || '').slice(0, 8)
+      inPeriod: Math.max(1, Number(ev.inPeriod) || Number(ev.minute) || 1)
     });
   });
   return out;
@@ -3240,7 +3231,7 @@ window.stepMetric = function(key, dir){
     if(phase === 'idle' || phase === 'break') startMatchClock();
     if(matchClock.startedAt){
       const stamp = clockStamp();
-      matchClock.events.push({key, at: Date.now(), minute: stamp.minute, period: stamp.period, clock: stamp.clock});
+      matchClock.events.push({key, at: Date.now(), minute: stamp.matchMin, period: stamp.period, inPeriod: stamp.minute});
     }
   } else {
     const i = liveStack.lastIndexOf(key);
@@ -4587,9 +4578,12 @@ async function shareCard(m){
   ctx.fillStyle = theme.muted;
   ctx.font = canvasFont('700', 24);
   ctx.fillText(`${formatDate(m.date)}  ·  ${m.opponent || t('shareVs')}  ·  ${m.score || '—'}`, 70, 286);
-  ctx.fillText(`${t('heroAction')} ${fmtNum(m.actionRating, 1)}    ${t('heroEffort')} ${fmtNum(m.effortRating, 1)}`, 70, 326);
+  ctx.fillText(m.kickoffClock ? t('kickoffLine', {clock: m.kickoffClock}) : `${t('heroAction')} ${fmtNum(m.actionRating, 1)}    ${t('heroEffort')} ${fmtNum(m.effortRating, 1)}`, 70, 326);
+  if(m.kickoffClock){
+    ctx.fillText(`${t('heroAction')} ${fmtNum(m.actionRating, 1)}    ${t('heroEffort')} ${fmtNum(m.effortRating, 1)}`, 70, 366);
+  }
 
-  let y = 400;
+  let y = m.kickoffClock ? 430 : 400;
   ctx.font = canvasFont('700', 30);
   if(!lines.length){
     ctx.fillStyle = theme.plate;
