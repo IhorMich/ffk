@@ -431,7 +431,8 @@
   .dyn-table .up{color:var(--accent);}
   .dyn-table .down{color:var(--danger);}
   .dyn-hint{font-size:.72rem;color:var(--text-soft);font-weight:600;padding:0 16px 14px;}
-  .period-head{margin:8px 0 10px;font-size:.7rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--text-soft);}
+  .period-head{margin:8px 0 8px;font-size:.7rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--text-soft);}
+  #periodChips{margin-bottom:12px;}
   .compare-board{margin-top:14px;}
   .cmp-table{width:100%;border-collapse:collapse;}
   .cmp-table td{padding:12px 16px;border-top:1px solid var(--border);font-weight:800;font-variant-numeric:tabular-nums;}
@@ -760,17 +761,14 @@
         <svg id="chartSvg" viewBox="0 0 320 200" role="img" data-i18n-aria="chartAria"></svg>
       </div>
       <h3 class="period-head" id="periodHead">За выбранный период</h3>
-      <div class="stat-grid" id="statGrid"></div>
-      <div id="timingBoard"></div>
-      <p class="hint" data-i18n="statsPeriodHint">Карточки выше — за выбранный период.</p>
       <div class="period-chips" id="periodChips">
-        <div class="chip active" data-range="10" data-i18n="periodLast10">Последние 10</div>
-        <div class="chip" data-range="7d" data-i18n="periodWeek">Неделя</div>
-        <div class="chip" data-range="30d" data-i18n="periodMonth">Месяц</div>
-        <div class="chip" data-range="year" data-i18n="periodYear">Год</div>
-        <div class="chip" data-range="all" data-i18n="periodAll">Всё время</div>
+        <button type="button" class="chip active" data-range="10" data-i18n="chart10">10 матчей</button>
+        <button type="button" class="chip" data-range="100" data-i18n="chart100">100 матчей</button>
+        <button type="button" class="chip" data-range="all" data-i18n="periodAll">Всё время</button>
       </div>
+      <div class="stat-grid" id="statGrid"></div>
       <button class="save-btn" id="statsCardBtn" type="button" data-i18n="cardPeriodBtn">Карточка периода</button>
+      <div id="timingBoard"></div>
     </div>
 
     <div class="view" id="view-settings">
@@ -3965,7 +3963,7 @@ function loadFilters(){
   try{
     const f = JSON.parse(localStorage.getItem(FILTER_KEY) || '{}');
     if(f.season === 'all' || f.season === 'current' || /^\d{4}\/\d{2}$/.test(String(f.season || ''))) currentSeasonFilter = f.season;
-    if(['10','7d','30d','year','all'].includes(f.range)) currentRange = f.range;
+    if(['10','100','all'].includes(f.range)) currentRange = f.range;
     if(['10','100','all'].includes(f.chart)) chartRange = f.chart;
   }catch(e){}
 }
@@ -4051,13 +4049,8 @@ function chartMatches(){
 function statsMatches(){
   const sorted = seasonPool();
   if(currentRange === '10') return sorted.slice(-10);
-  if(currentRange === 'all') return sorted;
-  if(currentRange === 'year'){
-    const y = String(new Date().getFullYear());
-    return sorted.filter(m => String(m.date).startsWith(y));
-  }
-  const days = currentRange === '7d' ? 7 : 30;
-  return sorted.filter(m => m.date >= daysAgoStr(days));
+  if(currentRange === '100') return sorted.slice(-100);
+  return sorted;
 }
 function ratingTrend(list){
   if(list.length < 2) return 0;
@@ -4087,12 +4080,10 @@ function seasonNameLabel(){
 }
 function statsPeriodLabel(){
   const range = ({
-    '10': t('periodLast10'),
-    '7d': t('periodWeek'),
-    '30d': t('periodMonth'),
-    'year': t('periodYear'),
+    '10': t('chart10'),
+    '100': t('chart100'),
     'all': t('periodAll')
-  })[currentRange] || t('periodLast10');
+  })[currentRange] || t('chart10');
   if(currentSeasonFilter === 'all'){
     if(currentRange === 'all') return t('seasonAll');
     return t('seasonAll') + ' · ' + range;
