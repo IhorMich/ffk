@@ -450,7 +450,9 @@
     margin:0 0 12px;padding:12px;border-radius:14px;border:1px solid var(--border);
     background:var(--surface);color:var(--text);font:inherit;font-weight:800;cursor:pointer;width:100%;
   }
-  .live-kick.go{background:linear-gradient(135deg, var(--accent), var(--violet));color:#08121C;border-color:transparent;}
+  .match-clock-bar{margin:0 0 16px;}
+  #formKickBtn{margin:8px 0 0;}
+  #formClock{margin:0;}
   .live-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
   .live-btn{
     min-height:92px;border-radius:16px;border:1px solid var(--border);
@@ -597,6 +599,10 @@
     </div>
     <div class="view active" id="view-new">
       <button class="live-start" id="liveStartBtn" type="button" data-i18n="liveStart">Быстрый режим</button>
+      <div class="match-clock-bar">
+        <div class="live-clock" id="formClock"></div>
+        <button class="live-kick go" id="formKickBtn" type="button" data-i18n="liveKick">Старт матча</button>
+      </div>
       <div class="banner" id="focusBanner" hidden></div>
       <div class="row2">
         <div class="field">
@@ -1711,6 +1717,7 @@ function applyI18n(){
   updatePhotoMeta();
   renderRoster();
   if(lastReportMatch) document.getElementById('reportCard').innerHTML = renderReportHtml(lastReportMatch);
+  renderLiveClock();
 }
 const BASE_RATING = 6.0;
 
@@ -3167,8 +3174,8 @@ window.stepMetric = function(key, dir){
   if(live) live.textContent = next;
   if(dir === 1){
     liveStack.push(key);
-    if(document.getElementById('app').classList.contains('live-on')){
-      if(!matchClock.startedAt) startMatchClock();
+    if(!matchClock.startedAt) startMatchClock();
+    if(matchClock.startedAt){
       const stamp = clockStamp();
       matchClock.events.push({key, at: Date.now(), minute: stamp.minute, period: stamp.period, clock: stamp.clock});
     }
@@ -3280,6 +3287,8 @@ function fillForm(m){
   updateHero();
   syncDateShown();
   persistDraft();
+  renderLiveClock();
+  if(matchClock.startedAt && !matchClock.pausedAt) startClockTick();
 }
 
 function collectMatch(){
@@ -3439,6 +3448,8 @@ function showView(name){
   if(name === 'report' && lastReportMatch) document.getElementById('reportCard').innerHTML = renderReportHtml(lastReportMatch);
   if(name === 'history') renderHistory();
   if(name === 'stats') renderStats();
+  renderLiveClock();
+  if(matchClock.startedAt) startClockTick();
   try{ sessionStorage.setItem(VIEW_KEY, name === 'report' ? 'history' : name); }catch(e){}
 }
 function restoreView(){
@@ -3890,30 +3901,34 @@ function startClockTick(){
   liveClockTimer = setInterval(renderLiveClock, 1000);
 }
 function renderLiveClock(){
-  const el = document.getElementById('liveClock');
-  const btn = document.getElementById('liveKickBtn');
-  if(!el || !btn) return;
   const now = Date.now();
-  if(!matchClock.startedAt){
-    el.classList.remove('on');
-    el.textContent = t('liveClockWait', {clock: warsawClock(now)});
-    btn.textContent = t('liveKick');
-    btn.classList.add('go');
-    return;
+  const stamp = matchClock.startedAt ? clockStamp(now) : null;
+  const half = stamp ? halfLabel(stamp.period) : '';
+  let text = t('liveClockWait', {clock: warsawClock(now)});
+  let btnText = t('liveKick');
+  let running = false;
+  let paused = false;
+  if(matchClock.startedAt && matchClock.pausedAt){
+    text = t('liveClockPause', {clock: warsawClock(now), m: stamp.minute, half});
+    btnText = t('liveResume');
+    paused = true;
+  } else if(matchClock.startedAt){
+    text = t('liveClockRun', {clock: stamp.clock, m: stamp.minute, half});
+    btnText = t('livePause');
+    running = true;
   }
-  const stamp = clockStamp(now);
-  const half = halfLabel(stamp.period);
-  if(matchClock.pausedAt){
-    el.classList.remove('on');
-    el.textContent = t('liveClockPause', {clock: warsawClock(now), m: stamp.minute, half});
-    btn.textContent = t('liveResume');
-    btn.classList.add('go');
-    return;
-  }
-  el.classList.add('on');
-  el.textContent = t('liveClockRun', {clock: stamp.clock, m: stamp.minute, half});
-  btn.textContent = t('livePause');
-  btn.classList.remove('go');
+  ['liveClock','formClock'].forEach(id => {
+    const el = document.getElementById(id);
+    if(!el) return;
+    el.textContent = text;
+    el.classList.toggle('on', running);
+  });
+  ['liveKickBtn','formKickBtn'].forEach(id => {
+    const btn = document.getElementById(id);
+    if(!btn) return;
+    btn.textContent = btnText;
+    btn.classList.toggle('go', !running);
+  });
 }
 function startMatchClock(){
   const now = Date.now();
@@ -3945,14 +3960,16 @@ function openLive(){
 }
 function closeLive(){
   document.getElementById('app').classList.remove('live-on');
-  stopClockTick();
   document.getElementById('f-position').value = document.getElementById('live-position').value;
   renderMetrics();
   updateHero();
+  renderLiveClock();
+  if(matchClock.startedAt && !matchClock.pausedAt) startClockTick();
   persistDraft();
 }
 document.getElementById('liveStartBtn').addEventListener('click', openLive);
 document.getElementById('liveKickBtn').addEventListener('click', toggleMatchClock);
+document.getElementById('formKickBtn').addEventListener('click', toggleMatchClock);
 document.getElementById('liveDoneBtn').addEventListener('click', closeLive);
 document.getElementById('live-position').addEventListener('change', () => {
   document.getElementById('f-position').value = document.getElementById('live-position').value;
