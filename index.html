@@ -308,10 +308,11 @@
   .insight{background:var(--surface);border:1px solid var(--border);}
   .insight b{color:var(--accent);}
   .report{
-    background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:18px 16px 16px;
+    background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:22px 20px 20px;
   }
+  #view-report .report{padding:26px 22px 24px;min-height:440px;}
   .report-kicker{font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--text-soft);}
-  .report-title{font-size:1.5rem;font-weight:800;margin:6px 0 8px;line-height:1.2;}
+  .report-title{font-size:1.7rem;font-weight:800;margin:6px 0 10px;line-height:1.2;}
   .report-title .n{color:var(--gold);}
   .report-sub{display:flex;justify-content:space-between;gap:10px;color:var(--text-soft);font-size:.78rem;font-weight:700;margin-bottom:12px;}
   .report-line{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);font-weight:700;font-size:.95rem;}
@@ -1978,6 +1979,11 @@ function actionSplit(counts, pos){
   });
   return {plus: Math.round(plus * 100) / 100, minus: Math.round(minus * 100) / 100};
 }
+function goalMinutes(m){
+  return (Array.isArray(m.timeline) ? m.timeline : [])
+    .filter(ev => ev && ev.key === 'goals')
+    .map(ev => Math.max(1, Number(ev.minute) || 1));
+}
 function reportLines(m){
   const pos = ['fwd','mid','def','gk'].includes(m.position) ? m.position : ratingPosOf(m.position);
   const counts = m.counts || {};
@@ -1993,7 +1999,12 @@ function reportLines(m){
     }
     const n = counts[met.key] || 0;
     if(!n) return;
-    lines.push({icon: met.icon, text: `${n} ${metricNoun(met.key, n)}`});
+    let extra = '';
+    if(met.key === 'goals'){
+      const mins = goalMinutes(m);
+      if(mins.length) extra = ' · ' + mins.map(x => t('minLbl', {n:x})).join(', ');
+    }
+    lines.push({icon: met.icon, text: `${n} ${metricNoun(met.key, n)}${extra}`});
   });
   return lines;
 }
@@ -4561,76 +4572,82 @@ async function shareCard(m){
   const photo = await loadCanvasImage(currentPhoto() || player.photo);
   const ovr = Math.round(Math.min(99, Math.max(45, Number(m.rating) * 10)));
   const theme = futTheme(ovr);
-  const {canvas, ctx, w} = makeHiCanvas(900, Math.max(1180, 430 + lines.length * 52 + 280));
-  const h = canvas.height / 2;
+  const rows = Math.max(1, Math.ceil((lines.length || 1) / 2));
+  const w = 1280, h = Math.max(840, 460 + rows * 50 + 130);
+  const {canvas, ctx} = makeHiCanvas(w, h);
   ctx.fillStyle = '#070B14';
   ctx.fillRect(0, 0, w, h);
   const bg = ctx.createLinearGradient(0, 0, w, h);
   bg.addColorStop(0, theme.paper[0]);
   bg.addColorStop(1, theme.paper[1]);
-  pathRoundRect(ctx, 28, 28, w - 56, h - 56, 28);
+  pathRoundRect(ctx, 18, 18, w - 36, h - 36, 10);
   ctx.fillStyle = bg;
   ctx.fill();
-  pathRoundRect(ctx, 28, 28, w - 56, h - 56, 28);
+  pathRoundRect(ctx, 18, 18, w - 36, h - 36, 10);
   ctx.strokeStyle = theme.foil;
-  ctx.lineWidth = 8;
+  ctx.lineWidth = 6;
   ctx.stroke();
 
+  const left = 52, top = 52;
   if(photo){
+    pathRoundRect(ctx, left, top, 168, 210, 8);
     ctx.save();
-    ctx.beginPath();
-    ctx.arc(120, 130, 64, 0, Math.PI * 2);
     ctx.clip();
-    drawCovered(ctx, photo, 56, 66, 128, 128);
+    drawCovered(ctx, photo, left, top, 168, 210);
     ctx.restore();
-    ctx.beginPath();
-    ctx.arc(120, 130, 66, 0, Math.PI * 2);
+    pathRoundRect(ctx, left, top, 168, 210, 8);
     ctx.strokeStyle = theme.foil;
-    ctx.lineWidth = 4;
+    ctx.lineWidth = 3;
     ctx.stroke();
   }
+  const tx = photo ? 248 : left;
   ctx.fillStyle = theme.muted;
   ctx.font = canvasFont('800', 22);
-  ctx.fillText('FFK  ·  ' + t('reportTitle').toUpperCase(), photo ? 210 : 70, 88);
+  ctx.fillText('FFK  ·  ' + t('reportTitle').toUpperCase(), tx, 82);
   ctx.fillStyle = theme.plate;
-  ctx.font = canvasFont('900', 48);
-  ctx.fillText(String(reportPlayerName(m)).slice(0, 18), photo ? 210 : 70, 148);
-  ctx.font = canvasFont('900', 72);
-  ctx.fillText(fmtNum(m.rating, 1), photo ? 210 : 70, 230);
+  ctx.font = canvasFont('900', 52);
+  ctx.fillText(String(reportPlayerName(m)).slice(0, 22), tx, 148);
+  ctx.font = canvasFont('900', 84);
+  ctx.fillText(fmtNum(m.rating, 1), tx, 242);
   ctx.fillStyle = theme.muted;
-  ctx.font = canvasFont('700', 24);
-  ctx.fillText(`${formatDate(m.date)}  ·  ${m.opponent || t('shareVs')}  ·  ${m.score || '—'}`, 70, 286);
-  ctx.fillText(m.kickoffClock ? t('kickoffLine', {clock: m.kickoffClock}) : `${t('heroAction')} ${fmtNum(m.actionRating, 1)}    ${t('heroEffort')} ${fmtNum(m.effortRating, 1)}`, 70, 326);
+  ctx.font = canvasFont('700', 26);
+  ctx.fillText(`${formatDate(m.date)}  ·  ${m.opponent || t('shareVs')}  ·  ${m.score || '—'}`, tx, 292);
   if(m.kickoffClock){
-    ctx.fillText(`${t('heroAction')} ${fmtNum(m.actionRating, 1)}    ${t('heroEffort')} ${fmtNum(m.effortRating, 1)}`, 70, 366);
+    ctx.fillText(t('kickoffLine', {clock: m.kickoffClock}), tx, 330);
   }
+  ctx.fillText(`${t('heroAction')} ${fmtNum(m.actionRating, 1)}    ${t('heroEffort')} ${fmtNum(m.effortRating, 1)}`, tx, m.kickoffClock ? 368 : 330);
 
-  let y = m.kickoffClock ? 430 : 400;
-  ctx.font = canvasFont('700', 30);
+  const col1 = 52;
+  const col2 = 660;
+  let y1 = 430, y2 = 430;
+  ctx.font = canvasFont('700', 32);
   if(!lines.length){
     ctx.fillStyle = theme.plate;
-    ctx.fillText(t('plusEven'), 70, y);
-    y += 50;
+    ctx.fillText(t('plusEven'), col1, y1);
+    y1 += 48;
   } else {
-    lines.forEach(line => {
+    lines.forEach((line, i) => {
+      const x = i % 2 === 0 ? col1 : col2;
+      let y = i % 2 === 0 ? y1 : y2;
       ctx.fillStyle = theme.plate;
-      ctx.fillText(`${line.icon}   ${line.text}`, 70, y);
-      y += 50;
+      ctx.fillText(`${line.icon}   ${line.text}`.slice(0, 42), x, y);
+      if(i % 2 === 0) y1 += 48;
+      else y2 += 48;
     });
   }
-  y += 24;
+  let y = Math.max(y1, y2) + 28;
   ctx.fillStyle = '#22D3A6';
-  ctx.font = canvasFont('800', 40);
-  ctx.fillText(fmtSigned(split.plus, 2), 70, y);
+  ctx.font = canvasFont('800', 44);
+  ctx.fillText(fmtSigned(split.plus, 2), col1, y);
   ctx.fillStyle = theme.muted;
-  ctx.font = canvasFont('700', 20);
-  ctx.fillText(t('actPlus'), 70, y + 34);
+  ctx.font = canvasFont('700', 22);
+  ctx.fillText(t('actPlus'), col1, y + 36);
   ctx.fillStyle = '#FB6767';
-  ctx.font = canvasFont('800', 40);
-  ctx.fillText('−' + fmtNum(Math.abs(split.minus), 2), 470, y);
+  ctx.font = canvasFont('800', 44);
+  ctx.fillText('−' + fmtNum(Math.abs(split.minus), 2), col2, y);
   ctx.fillStyle = theme.muted;
-  ctx.font = canvasFont('700', 20);
-  ctx.fillText(t('actMinus'), 470, y + 34);
+  ctx.font = canvasFont('700', 22);
+  ctx.fillText(t('actMinus'), col2, y + 36);
 
   await exportPngFile(canvas, `ffk_${m.date}.png`);
   } finally {
