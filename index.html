@@ -467,7 +467,7 @@
     display:none;position:fixed;inset:0;background:var(--bg);z-index:70;overflow:auto;
     padding:16px 16px 28px;max-width:480px;margin:0 auto;width:100%;
   }
-  .app.live-on > .live{display:flex;flex-direction:column;}
+  .app.live-on .live,#app.live-on ~ .live{display:flex;flex-direction:column;}
   .live-head{
     display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;
     position:sticky;top:0;z-index:2;padding-bottom:8px;background:var(--bg);
@@ -564,7 +564,6 @@
       <div class="fb-id">
         <div class="fb-name" id="fbName"></div>
         <div class="fb-meta" id="fbMeta"></div>
-      </div>
       </div>
       <div class="pf-card">
         <h3 data-i18n="myPlayers">Мои игроки</h3>
