@@ -96,6 +96,42 @@
     box-shadow:0 8px 24px rgba(0,0,0,.35);
   }
   .photo-box img{width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;}
+  .fb-id{text-align:center;margin:4px 0 18px;}
+  .fb-name{font-size:1.45rem;font-weight:800;line-height:1.15;overflow-wrap:anywhere;}
+  .fb-meta{margin-top:6px;font-size:.82rem;color:var(--text-soft);font-weight:600;line-height:1.4;overflow-wrap:anywhere;}
+  .pf-card{
+    background:var(--surface);border:1px solid var(--border);border-radius:20px;
+    padding:16px;margin-bottom:12px;
+  }
+  .pf-rate{font-size:2.5rem;font-weight:800;line-height:1;color:var(--gold);font-variant-numeric:tabular-nums;}
+  .pf-rate small{display:block;margin-top:6px;font-size:.78rem;color:var(--text-soft);font-weight:700;}
+  .pf-trend{margin-top:8px;font-size:.88rem;font-weight:800;}
+  .pf-trend.up{color:var(--accent);}
+  .pf-trend.down{color:var(--danger);}
+  .pf-grid{display:grid;grid-template-columns:1.1fr 1fr 1fr;gap:8px;margin-top:14px;}
+  .pf-kpi{background:var(--surface-2);border-radius:14px;padding:10px 8px;text-align:center;}
+  .pf-kpi .n{font-size:1.15rem;font-weight:800;font-variant-numeric:tabular-nums;}
+  .pf-kpi .l{font-size:.68rem;color:var(--text-soft);font-weight:700;margin-top:3px;}
+  .pf-card h3{margin:0 0 8px;font-size:.7rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--text-soft);}
+  .pf-row{
+    display:flex;justify-content:space-between;align-items:center;gap:10px;
+    padding:10px 0;border-bottom:1px solid var(--border);font-weight:800;
+  }
+  .pf-row:last-child{border-bottom:0;}
+  .pf-row .ic{width:28px;text-align:center;flex-shrink:0;}
+  .pf-lab{display:flex;align-items:center;gap:8px;min-width:0;}
+  .pf-row .g{font-variant-numeric:tabular-nums;color:var(--accent);}
+  .pf-row.bad .g{color:var(--danger);}
+  .card-edit{
+    margin:16px 0 8px;border:1px solid var(--border);border-radius:18px;
+    background:var(--surface);padding:4px 14px 14px;
+  }
+  .card-edit > summary{
+    cursor:pointer;font-weight:800;padding:14px 2px;list-style:none;
+  }
+  .card-edit > summary::-webkit-details-marker{display:none;}
+  .card-edit > summary::after{content:' ▾';color:var(--text-soft);font-size:.8rem;}
+  .card-edit[open] > summary::after{content:' ▴';}
   .cam-badge{right:0;bottom:0;width:30px;height:30px;border-radius:50%;font-size:.78rem;}
   .photo-sheet-back{
     position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:84;border:0;padding:0;
@@ -453,6 +489,13 @@
         <input type="file" id="p-photo" accept="image/jpeg,image/png,image/webp,image/gif,image/heic,image/heif,.jpg,.jpeg,.png,.webp,.gif,.heic,.heif" hidden>
         <input type="file" id="p-cover" accept="image/jpeg,image/png,image/webp,image/gif,image/heic,image/heif,.jpg,.jpeg,.png,.webp,.gif,.heic,.heif" hidden>
       </div>
+      <div class="fb-id">
+        <div class="fb-name" id="fbName"></div>
+        <div class="fb-meta" id="fbMeta"></div>
+      </div>
+      <div id="playerFeed"></div>
+      <details class="card-edit">
+        <summary data-i18n="pEditCard">Редактировать карточку</summary>
       <div class="hint" data-i18n="pPhotoHint" style="text-align:center;margin:0 0 16px;">Нажмите на фото или фон, чтобы сменить.</div>
       <div class="row2">
         <div class="field">
@@ -501,6 +544,7 @@
         <button class="ghost-btn" id="pCloseSeasonBtn" type="button" data-i18n="pCloseSeason" hidden>Закрыть сезон</button>
       </div>
       <button class="save-btn" id="savePlayerBtn" type="button" data-i18n="pSave">Сохранить карточку</button>
+      </details>
     </div>
     <div class="view active" id="view-new">
       <button class="live-start" id="liveStartBtn" type="button" data-i18n="liveStart">Быстрый режим</button>
@@ -814,6 +858,11 @@ uk:{
   toastSeasonOpened:'Сезон {s} відкрито', toastSeasonClosed:'Сезон {s} закрито',
   seasonClosed:'{s} · закритий',
   pSave:'Зберегти картку', toastPlayer:'Картку гравця збережено',
+  pEditCard:'Редагувати картку',
+  pfSeasonAvg:'середня за сезон', pfAllAvg:'середня за весь час',
+  pfTrend:'{n} за останні {k} матчів', pfLast:'Останній матч', pfSeason:'Сезон',
+  pfStrengths:'Сильні сторони', pfFocus:'Потребують уваги',
+  pfEmpty:'Зіграй матчі — тут з’явиться футбольний профіль.',
   seasonFilter:'Сезон', seasonCurrent:'{s} · поточний', seasonAll:'Усі сезони',
   ageOne:'{n} рік', ageFew:'{n} роки', ageMany:'{n} років', ageEn:'{n} years',
   matchOne:'{n} матч', matchFew:'{n} матчі', matchMany:'{n} матчів', matchEn:'{n} matches',
@@ -956,6 +1005,11 @@ pl:{
   toastSeasonOpened:'Sezon {s} otwarty', toastSeasonClosed:'Sezon {s} zamknięty',
   seasonClosed:'{s} · zamknięty',
   pSave:'Zapisz kartę', toastPlayer:'Karta zawodnika zapisana',
+  pEditCard:'Edytuj kartę',
+  pfSeasonAvg:'średnia za sezon', pfAllAvg:'średnia za cały czas',
+  pfTrend:'{n} w ostatnich {k} meczach', pfLast:'Ostatni mecz', pfSeason:'Sezon',
+  pfStrengths:'Mocne strony', pfFocus:'Do poprawy',
+  pfEmpty:'Zagraj mecze — tutaj pojawi się profil piłkarski.',
   seasonFilter:'Sezon', seasonCurrent:'{s} · bieżący', seasonAll:'Wszystkie sezony',
   ageOne:'{n} rok', ageFew:'{n} lata', ageMany:'{n} lat', ageEn:'{n} years',
   matchOne:'{n} mecz', matchFew:'{n} mecze', matchMany:'{n} meczów', matchEn:'{n} matches',
@@ -1098,6 +1152,11 @@ en:{
   toastSeasonOpened:'Season {s} opened', toastSeasonClosed:'Season {s} closed',
   seasonClosed:'{s} · closed',
   pSave:'Save player card', toastPlayer:'Player card saved',
+  pEditCard:'Edit player card',
+  pfSeasonAvg:'season average', pfAllAvg:'all-time average',
+  pfTrend:'{n} over the last {k} matches', pfLast:'Last match', pfSeason:'Season',
+  pfStrengths:'Strengths', pfFocus:'Needs work',
+  pfEmpty:'Play matches — a football profile will show up here.',
   seasonFilter:'Season', seasonCurrent:'{s} · current', seasonAll:'All seasons',
   ageOne:'{n} year', ageFew:'{n} years', ageMany:'{n} years', ageEn:'{n} years',
   matchOne:'{n} match', matchFew:'{n} matches', matchMany:'{n} matches', matchEn:'{n} matches',
@@ -1240,6 +1299,11 @@ ru:{
   toastSeasonOpened:'Сезон {s} открыт', toastSeasonClosed:'Сезон {s} закрыт',
   seasonClosed:'{s} · закрыт',
   pSave:'Сохранить карточку', toastPlayer:'Карточка игрока сохранена',
+  pEditCard:'Редактировать карточку',
+  pfSeasonAvg:'средняя за сезон', pfAllAvg:'средняя за всё время',
+  pfTrend:'{n} за последние {k} матчей', pfLast:'Последний матч', pfSeason:'Сезон',
+  pfStrengths:'Сильные стороны', pfFocus:'Требуют внимания',
+  pfEmpty:'Сыграй матчи — здесь появится футбольный профиль.',
   seasonFilter:'Сезон', seasonCurrent:'{s} · текущий', seasonAll:'Все сезоны',
   ageOne:'{n} год', ageFew:'{n} года', ageMany:'{n} лет', ageEn:'{n} years',
   matchOne:'{n} матч', matchFew:'{n} матча', matchMany:'{n} матчей', matchEn:'{n} matches',
@@ -2245,6 +2309,80 @@ function setBadge(el, photo, fallback){
     el.textContent = fallback;
   }
 }
+const GRADE_TYPICAL = {
+  goals:0.6, assists:0.5, shots:1.2, dribbles:2.2, openings:2, chances:1.2,
+  passes:1.5, buildpass:6, tackles:2.5, interceptions:2, clearances:2, blocks:1.2,
+  duelswon:4, support:2, saves:3, claims:1.5, gkpass:4,
+  losses:3.4, ledtogoal:0.35, badpass:2.4, badtouch:1.4, duelslost:3, fouls:1.2,
+  owngoal:0.2, conceded:1.4
+};
+function metricGrade(avg, key, w){
+  const typical = GRADE_TYPICAL[key] || 2;
+  if(w >= 0) return clamp10(4 + 6 * (1 - Math.exp(-avg / typical)));
+  return clamp10(10 - 6 * (1 - Math.exp(-avg / typical)));
+}
+function feedList(){
+  const s = player.season || currentSeason();
+  const season = [...matches].filter(m => matchSeason(m) === s).sort((a,b)=> a.date.localeCompare(b.date) || a.id - b.id);
+  if(season.length) return {list: season, season: true};
+  const all = [...matches].sort((a,b)=> a.date.localeCompare(b.date) || a.id - b.id);
+  return {list: all, season: false};
+}
+function lastFiveDelta(list){
+  if(list.length < 3) return null;
+  const n = Math.min(5, list.length);
+  const last = list.slice(-n);
+  const prev = list.slice(0, -n).slice(-5);
+  if(!prev.length) return null;
+  return {d: avgRating(last) - avgRating(prev), k: last.length};
+}
+function renderPlayerFeed(){
+  const el = document.getElementById('playerFeed');
+  if(!el) return;
+  const {list, season} = feedList();
+  if(!list.length){
+    el.innerHTML = `<div class="pf-card"><div class="empty" style="padding:8px 0;">${escapeHtml(t('pfEmpty'))}</div></div>`;
+    return;
+  }
+  const avg = avgRating(list);
+  const last = list[list.length - 1];
+  const trend = lastFiveDelta(list);
+  const trendHtml = trend
+    ? `<div class="pf-trend ${trend.d >= 0.05 ? 'up' : (trend.d <= -0.05 ? 'down' : '')}">${trend.d >= 0 ? '📈 ' : '📉 '}${escapeHtml(t('pfTrend', {n: fmtSigned(trend.d, 2), k: trend.k}))}</div>`
+    : '';
+  const goals = countSum(list, 'goals');
+  const assists = countSum(list, 'assists');
+  const posCounts = {};
+  list.forEach(m => {
+    const p = ['fwd','mid','def','gk'].includes(m.position) ? m.position : ratingPosOf(m.position);
+    posCounts[p] = (posCounts[p]||0)+1;
+  });
+  const mainPos = Object.keys(posCounts).sort((a,b)=> posCounts[b]-posCounts[a])[0] || 'fwd';
+  const grades = METRICS.map(m => {
+    const w = weightOf(m, mainPos);
+    if(!w) return null;
+    const total = countSum(list, m.key);
+    const minN = w < 0 ? 3 : (m.key === 'goals' || m.key === 'assists' ? 2 : 4);
+    if(total < minN) return null;
+    return {m, w, total, grade: metricGrade(total / list.length, m.key, w)};
+  }).filter(Boolean);
+  const strengths = grades.filter(g => g.w > 0).sort((a,b)=> b.grade - a.grade).slice(0, 3);
+  const weakNeg = grades.filter(g => g.w < 0).sort((a,b)=> a.grade - b.grade).slice(0, 2);
+  const weakPos = grades.filter(g => g.w > 0 && g.grade < 6.6).sort((a,b)=> a.grade - b.grade);
+  const focus = (weakNeg.length ? weakNeg : weakPos).slice(0, 2);
+  const row = (g, bad) => `<div class="pf-row${bad ? ' bad' : ''}"><span class="pf-lab"><span class="ic">${g.m.icon}</span>${escapeHtml(metricLabel(g.m.key))}</span><span class="g">${fmtNum(g.grade, 1)}</span></div>`;
+  el.innerHTML = `<div class="pf-card">
+      <div class="pf-rate">${fmtNum(avg, 2)}<small>${escapeHtml(season ? t('pfSeasonAvg') : t('pfAllAvg'))}</small></div>
+      ${trendHtml}
+      <div class="pf-grid">
+        <div class="pf-kpi"><div class="n">${fmtNum(last.rating, 1)}</div><div class="l">${escapeHtml(t('pfLast'))}</div></div>
+        <div class="pf-kpi"><div class="n">${list.length}</div><div class="l">${escapeHtml(t('pfSeason'))}</div></div>
+        <div class="pf-kpi"><div class="n">${goals} · ${assists}</div><div class="l">⚽ · 🎯</div></div>
+      </div>
+    </div>
+    ${strengths.length ? `<div class="pf-card"><h3>${escapeHtml(t('pfStrengths'))}</h3>${strengths.map(g => row(g, false)).join('')}</div>` : ''}
+    ${focus.length ? `<div class="pf-card"><h3>${escapeHtml(t('pfFocus'))}</h3>${focus.map(g => row(g, true)).join('')}</div>` : ''}`;
+}
 function applyHeader(){
   const no = shirtNo();
   const age = ageYears(player.birthDate);
@@ -2259,6 +2397,11 @@ function applyHeader(){
   document.getElementById('playerMetaLine').textContent = meta;
   document.getElementById('playerClubLine').textContent = clubBits;
   setBadge(document.getElementById('clubBadge'), player.photo, initials());
+  const fbName = document.getElementById('fbName');
+  const fbMeta = document.getElementById('fbMeta');
+  if(fbName) fbName.textContent = displayName();
+  if(fbMeta) fbMeta.textContent = [no ? ((settings.lang === 'en' ? '#' : '№') + no) : '', posLine(), clubBits].filter(Boolean).join(' · ');
+  renderPlayerFeed();
 }
 function fillPrimarySelect(){
   const sel = document.getElementById('p-primary');
@@ -3080,6 +3223,7 @@ function renderCompare(){
 function renderStats(){
   renderSeasonBoard();
   renderCompare();
+  renderPlayerFeed();
   const list = statsMatches();
   const grid = document.getElementById('statGrid');
   const heading = document.getElementById('chartHeading');
@@ -3454,6 +3598,7 @@ async function shareCard(m){
   document.getElementById('f-matchlen').value = settings.minutes;
   syncPlayedDefault(true);
   loadMatches();
+  applyHeader();
   restoreDraft();
   applyI18n();
   renderOppList();
