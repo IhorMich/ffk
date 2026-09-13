@@ -869,6 +869,7 @@ const DRAFT_KEY = 'ffk_draft';
 const VIEW_KEY = 'ffk_view';
 const EXPORT_KEY = 'ffk_last_export';
 const SETTINGS_KEY = 'ffk_settings';
+const FILTER_KEY = 'ffk_filters_v1';
 const PLAYER_KEY = 'ffk_player_v1';
 const ROSTER_KEY = 'ffk_roster_v1';
 const MAX_PLAYERS = 8;
@@ -3228,6 +3229,7 @@ function applyPlayerContext(){
   saveSettings();
   lastReportMatch = null;
   currentSeasonFilter = 'current';
+  saveFilters();
   document.getElementById('app').classList.remove('live-on');
   resetForm(true);
   restoreDraft();
@@ -3959,6 +3961,31 @@ document.getElementById('importFile').addEventListener('change', async (e) => {
 let currentRange = '10';
 let chartRange = '10';
 let currentSeasonFilter = 'current';
+function loadFilters(){
+  try{
+    const f = JSON.parse(localStorage.getItem(FILTER_KEY) || '{}');
+    if(f.season === 'all' || f.season === 'current' || /^\d{4}\/\d{2}$/.test(String(f.season || ''))) currentSeasonFilter = f.season;
+    if(['10','7d','30d','year','all'].includes(f.range)) currentRange = f.range;
+    if(['10','100','all'].includes(f.chart)) chartRange = f.chart;
+  }catch(e){}
+}
+function saveFilters(){
+  try{
+    localStorage.setItem(FILTER_KEY, JSON.stringify({
+      season: currentSeasonFilter,
+      range: currentRange,
+      chart: chartRange
+    }));
+  }catch(e){}
+}
+function syncFilterChips(){
+  document.querySelectorAll('#periodChips .chip').forEach(c => {
+    c.classList.toggle('active', c.dataset.range === currentRange);
+  });
+  document.querySelectorAll('#chartChips .chip').forEach(c => {
+    c.classList.toggle('active', c.dataset.chart === chartRange);
+  });
+}
 function knownSeasons(){
   const set = new Set();
   matches.forEach(m => { const s = matchSeason(m); if(s) set.add(s); });
@@ -3975,7 +4002,10 @@ function fillSeasonSelects(){
     const sel = document.getElementById(id);
     if(!sel) return;
     sel.innerHTML = html;
-    if(![...sel.options].some(o => o.value === currentSeasonFilter)) currentSeasonFilter = 'current';
+    if(![...sel.options].some(o => o.value === currentSeasonFilter)){
+      currentSeasonFilter = 'current';
+      saveFilters();
+    }
     sel.value = currentSeasonFilter;
   });
 }
@@ -3988,6 +4018,7 @@ function seasonPool(){
 ['statsSeason','historySeason'].forEach(id => {
   document.getElementById(id).addEventListener('change', e => {
     currentSeasonFilter = e.target.value;
+    saveFilters();
     fillSeasonSelects();
     renderHistory();
     renderStats();
@@ -3999,6 +4030,7 @@ document.getElementById('periodChips').addEventListener('click', e => {
   document.querySelectorAll('#periodChips .chip').forEach(c=>c.classList.remove('active'));
   chip.classList.add('active');
   currentRange = chip.dataset.range || '10';
+  saveFilters();
   renderStats();
 });
 document.getElementById('chartChips').addEventListener('click', e => {
@@ -4007,6 +4039,7 @@ document.getElementById('chartChips').addEventListener('click', e => {
   document.querySelectorAll('#chartChips .chip').forEach(c=>c.classList.remove('active'));
   chip.classList.add('active');
   chartRange = chip.dataset.chart || '10';
+  saveFilters();
   renderStats();
 });
 function chartMatches(){
@@ -4060,8 +4093,11 @@ function statsPeriodLabel(){
     'year': t('periodYear'),
     'all': t('periodAll')
   })[currentRange] || t('periodLast10');
-  if(currentSeasonFilter === 'all' && currentRange === 'all') return t('periodAll');
-  if(currentSeasonFilter === 'all') return range;
+  if(currentSeasonFilter === 'all'){
+    if(currentRange === 'all') return t('seasonAll');
+    return t('seasonAll') + ' · ' + range;
+  }
+  if(currentRange === 'all') return seasonNameLabel();
   return seasonNameLabel() + ' · ' + range;
 }
 function sortedMatches(){
@@ -4502,7 +4538,7 @@ document.getElementById('reportStoryBtn').addEventListener('click', () => {
 });
 document.getElementById('pOpenSeasonBtn').addEventListener('click', () => {
   const s = document.getElementById('p-season').value.trim() || nextSeasonLabel(player.season || currentSeason());
-  if(openSeason(s)) currentSeasonFilter = 'current';
+  if(openSeason(s)){ currentSeasonFilter = 'current'; saveFilters(); }
 });
 document.getElementById('pCloseSeasonBtn').addEventListener('click', () => closeSeason(false));
 document.getElementById('playerHeadBtn').addEventListener('click', () => showView('player'));
@@ -5008,6 +5044,7 @@ async function shareCard(m){
 
 (function init(){
   loadSettings();
+  loadFilters();
   applyFont();
   loadPlayer();
   fillPrimarySelect();
@@ -5018,6 +5055,7 @@ async function shareCard(m){
   document.getElementById('f-matchlen').value = settings.minutes;
   syncPlayedDefault(true);
   loadMatches();
+  syncFilterChips();
   applyHeader();
   restoreDraft();
   applyI18n();
