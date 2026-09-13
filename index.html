@@ -38,15 +38,36 @@
       radial-gradient(90% 90% at 100% 0%, rgba(124,92,252,.25) 0%, rgba(124,92,252,0) 55%),
       var(--bg);
   }
+  .topbar.compact{padding-bottom:8px;}
   .club-row{display:flex;align-items:center;gap:12px;}
+  .club-row-main{display:flex;align-items:center;gap:12px;min-width:0;flex:1;cursor:pointer;text-align:left;background:none;border:none;color:inherit;padding:0;font:inherit;}
   .club-badge{
-    width:46px;height:46px;border-radius:14px;
+    width:56px;height:56px;border-radius:16px;
     background:linear-gradient(135deg, var(--accent), var(--violet));
     display:flex;align-items:center;justify-content:center;
-    font-weight:900;font-size:.8rem;color:#08121C;flex-shrink:0;
+    font-weight:900;font-size:.9rem;color:#08121C;flex-shrink:0;object-fit:cover;
   }
-  .club-name{font-size:1.05rem;font-weight:800;}
-  .player-name{font-size:.8rem;color:var(--text-soft);font-weight:600;}
+  .club-badge img{width:100%;height:100%;object-fit:cover;border-radius:16px;display:block;}
+  .club-name{font-size:1.08rem;font-weight:800;}
+  .player-name{font-size:.78rem;color:var(--text-soft);font-weight:600;line-height:1.35;}
+  .player-num{
+    margin-left:8px;font-size:.82rem;font-weight:800;color:var(--gold);
+    background:rgba(245,185,66,.12);padding:2px 8px;border-radius:999px;
+  }
+  .player-head-top{display:flex;align-items:center;flex-wrap:wrap;gap:4px;}
+  .photo-box{
+    width:96px;height:96px;border-radius:22px;overflow:hidden;background:var(--surface-2);
+    border:1px solid var(--border);display:flex;align-items:center;justify-content:center;
+    font-weight:900;font-size:1.6rem;color:var(--accent);margin-bottom:12px;
+  }
+  .photo-box img{width:100%;height:100%;object-fit:cover;}
+  .pos-chips{display:flex;flex-wrap:wrap;gap:6px;}
+  .pos-chip{
+    padding:7px 10px;border-radius:10px;border:1px solid var(--border);
+    background:var(--surface);color:var(--text);font-size:.75rem;font-weight:800;cursor:pointer;
+  }
+  .pos-chip.on{background:var(--accent);color:#08121C;border-color:transparent;}
+  .pos-chip.main{background:var(--gold);color:#08121C;border-color:transparent;}
   .icon-btn{
     margin-left:auto;width:40px;height:40px;border-radius:12px;border:1px solid var(--border);
     background:var(--surface);color:var(--text);font-size:1.1rem;cursor:pointer;
@@ -84,6 +105,7 @@
     background-repeat:no-repeat;background-position:right 12px center;
   }
   .field input[type=date],.field input[type=number]{color-scheme:dark;}
+  .field input[type=file]{padding:9px;font-size:.8rem;}
   .row2{display:flex;gap:10px;}
   .row2 .field{flex:1;}
   .hint{font-size:.72rem;color:var(--text-soft);margin:-6px 0 12px;font-weight:600;}
@@ -201,11 +223,17 @@
 <div class="app" id="app">
   <div class="topbar">
     <div class="club-row">
-      <div class="club-badge" id="clubBadge">FFK</div>
-      <div>
-        <div class="club-name" id="clubName">FFK</div>
-        <div class="player-name" id="playerNameDisplay"></div>
-      </div>
+      <button class="club-row-main" id="playerHeadBtn" type="button">
+        <div class="club-badge" id="clubBadge">Д</div>
+        <div style="min-width:0;flex:1;">
+          <div class="player-head-top">
+            <div class="club-name" id="playerNameDisplay"></div>
+            <span class="player-num" id="playerNumberDisplay" hidden></span>
+          </div>
+          <div class="player-name" id="playerMetaLine"></div>
+          <div class="player-name" id="playerClubLine"></div>
+        </div>
+      </button>
       <button class="icon-btn" id="settingsBtn" type="button" data-i18n-aria="settingsAria">⚙</button>
     </div>
     <div class="hero" id="heroBlock">
@@ -221,6 +249,56 @@
   </div>
 
   <div class="content">
+    <div class="view" id="view-player">
+      <div class="photo-box" id="pPhotoBox">Д</div>
+      <div class="field">
+        <label data-i18n="pPhoto">Фотография</label>
+        <input type="file" id="p-photo" accept="image/*">
+        <div class="hint" data-i18n="pPhotoHint">Хранится только на этом телефоне.</div>
+        <button class="ghost-btn" id="pRemovePhotoBtn" type="button" data-i18n="pRemovePhoto" hidden>Убрать фото</button>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label data-i18n="pFirst">Имя</label>
+          <input type="text" id="p-first" maxlength="24">
+        </div>
+        <div class="field">
+          <label data-i18n="pLast">Фамилия</label>
+          <input type="text" id="p-last" maxlength="32">
+        </div>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label data-i18n="pBirth">Дата рождения</label>
+          <input type="date" id="p-birth">
+        </div>
+        <div class="field">
+          <label data-i18n="pNumber">Номер</label>
+          <input type="number" id="p-number" min="1" max="99" inputmode="numeric">
+        </div>
+      </div>
+      <div class="field">
+        <label data-i18n="pTeam">Команда</label>
+        <input type="text" id="p-team" maxlength="40">
+      </div>
+      <div class="field">
+        <label data-i18n="pClub">Клуб / академия</label>
+        <input type="text" id="p-club" maxlength="40">
+      </div>
+      <div class="field">
+        <label data-i18n="pPrimary">Основная позиция</label>
+        <select id="p-primary"></select>
+      </div>
+      <div class="field">
+        <label data-i18n="pExtra">Дополнительные позиции</label>
+        <div class="pos-chips" id="pExtraChips"></div>
+      </div>
+      <div class="field">
+        <label data-i18n="pSeason">Сезон</label>
+        <input type="text" id="p-season" maxlength="16" placeholder="2026/27">
+      </div>
+      <button class="save-btn" id="savePlayerBtn" type="button" data-i18n="pSave">Сохранить карточку</button>
+    </div>
     <div class="view active" id="view-new">
       <button class="live-start" id="liveStartBtn" type="button" data-i18n="liveStart">Быстрый режим</button>
       <div class="banner" id="focusBanner" hidden></div>
@@ -334,23 +412,6 @@
         </select>
       </div>
       <div class="field">
-        <label data-i18n="sClub">Клуб</label>
-        <input type="text" id="s-club" maxlength="24">
-      </div>
-      <div class="field">
-        <label data-i18n="sPlayer">Игрок</label>
-        <input type="text" id="s-player" maxlength="40">
-      </div>
-      <div class="field">
-        <label data-i18n="sPos">Позиция по умолчанию</label>
-        <select id="s-position">
-          <option value="fwd" data-i18n="posFwd">Нападающий</option>
-          <option value="mid" data-i18n="posMid">Полузащитник</option>
-          <option value="def" data-i18n="posDef">Защитник</option>
-          <option value="gk" data-i18n="posGk">Вратарь</option>
-        </select>
-      </div>
-      <div class="field">
         <label data-i18n="sFormat">Формат матча по умолчанию</label>
         <select id="s-format">
           <option value="3x15">3×15</option>
@@ -372,6 +433,7 @@
   </div>
 
   <div class="tabbar" id="tabbar">
+    <button class="tabbtn" data-view="player" type="button" data-i18n="tabPlayer">Игрок</button>
     <button class="tabbtn active" data-view="new" type="button" data-i18n="tabMatch">Матч</button>
     <button class="tabbtn" data-view="history" type="button" data-i18n="tabHistory">История</button>
     <button class="tabbtn" data-view="stats" type="button" data-i18n="tabStats">Статистика</button>
@@ -405,6 +467,14 @@ const LEGACY_KEY = 'football_matches';
 const DRAFT_KEY = 'ffk_draft';
 const EXPORT_KEY = 'ffk_last_export';
 const SETTINGS_KEY = 'ffk_settings';
+const PLAYER_KEY = 'ffk_player_v1';
+const POS_CODES = ['GK','CB','LB','RB','LWB','RWB','CDM','CM','CAM','LM','RM','LW','RW','ST','CF'];
+const POS_GROUP = {
+  GK:'gk', CB:'def', LB:'def', RB:'def', LWB:'def', RWB:'def',
+  CDM:'mid', CM:'mid', CAM:'mid', LM:'mid', RM:'mid',
+  LW:'fwd', RW:'fwd', ST:'fwd', CF:'fwd'
+};
+const GROUP_TO_POS = {gk:'GK', def:'CB', mid:'CM', fwd:'RW'};
 const LANGS = ['uk','pl','en','ru'];
 const I18N = {
 uk:{
@@ -423,8 +493,13 @@ uk:{
   export:'Експорт', import:'Імпорт', copy:'Копіювати',
   periodWeek:'Тиждень', periodMonth:'Місяць', period3m:'3 місяці', periodAll:'Весь час',
   chartTitle:'Динаміка загальної оцінки', chartAria:'Графік оцінок', chartEmpty:'Поки немає даних',
-  sLang:'Мова', sClub:'Клуб', sPlayer:'Гравець', sPos:'Позиція за замовчуванням', sFormat:'Формат матчу за замовчуванням', sSave:'Зберегти налаштування',
-  tabMatch:'Матч', tabHistory:'Історія', tabStats:'Статистика',
+  sLang:'Мова', sFormat:'Формат матчу за замовчуванням', sSave:'Зберегти налаштування',
+  tabPlayer:'Гравець', tabMatch:'Матч', tabHistory:'Історія', tabStats:'Статистика',
+  pPhoto:'Фото', pPhotoHint:'Зберігається лише на цьому телефоні.', pRemovePhoto:'Прибрати фото',
+  pFirst:'Ім’я', pLast:'Прізвище', pBirth:'Дата народження', pNumber:'Номер',
+  pTeam:'Команда', pClub:'Клуб / академія', pPrimary:'Основна позиція', pExtra:'Додаткові позиції',
+  pSeason:'Сезон', pSave:'Зберегти картку', toastPlayer:'Картку гравця збережено',
+  ageOne:'{n} рік', ageFew:'{n} роки', ageMany:'{n} років', ageEn:'{n} years',
   liveHint:'Великі кнопки, зручно на полі', liveUndo:'Скасувати', liveDone:'Готово',
   hintGk:'Повторні сейви і пропущені важать менше за перші. Командний провал слабо б’є по воротарю.',
   hintOut:'Оцінка починається з 6 і може дійти до 10 за сильний матч.',
@@ -460,8 +535,13 @@ pl:{
   export:'Eksport', import:'Import', copy:'Kopiuj',
   periodWeek:'Tydzień', periodMonth:'Miesiąc', period3m:'3 miesiące', periodAll:'Całość',
   chartTitle:'Dynamika oceny ogólnej', chartAria:'Wykres ocen', chartEmpty:'Brak danych',
-  sLang:'Język', sClub:'Klub', sPlayer:'Zawodnik', sPos:'Domyślna pozycja', sFormat:'Domyślny format meczu', sSave:'Zapisz ustawienia',
-  tabMatch:'Mecz', tabHistory:'Historia', tabStats:'Statystyki',
+  sLang:'Język', sFormat:'Domyślny format meczu', sSave:'Zapisz ustawienia',
+  tabPlayer:'Zawodnik', tabMatch:'Mecz', tabHistory:'Historia', tabStats:'Statystyki',
+  pPhoto:'Zdjęcie', pPhotoHint:'Zapisane tylko na tym telefonie.', pRemovePhoto:'Usuń zdjęcie',
+  pFirst:'Imię', pLast:'Nazwisko', pBirth:'Data urodzenia', pNumber:'Numer',
+  pTeam:'Zespół', pClub:'Klub / akademia', pPrimary:'Pozycja główna', pExtra:'Pozycje dodatkowe',
+  pSeason:'Sezon', pSave:'Zapisz kartę', toastPlayer:'Karta zawodnika zapisana',
+  ageOne:'{n} rok', ageFew:'{n} lata', ageMany:'{n} lat', ageEn:'{n} years',
   liveHint:'Duże przyciski, wygodne na boisku', liveUndo:'Cofnij', liveDone:'Gotowe',
   hintGk:'Kolejne interwencje i stracone gole waży mniej niż pierwsze. Słaba gra zespołu słabo obniża notę bramkarza.',
   hintOut:'Ocena startuje od 6 i może dojść do 10 za mocny mecz.',
@@ -497,8 +577,13 @@ en:{
   export:'Export', import:'Import', copy:'Copy',
   periodWeek:'Week', periodMonth:'Month', period3m:'3 months', periodAll:'All time',
   chartTitle:'Overall rating trend', chartAria:'Rating chart', chartEmpty:'No data yet',
-  sLang:'Language', sClub:'Club', sPlayer:'Player', sPos:'Default position', sFormat:'Default match format', sSave:'Save settings',
-  tabMatch:'Match', tabHistory:'History', tabStats:'Stats',
+  sLang:'Language', sFormat:'Default match format', sSave:'Save settings',
+  tabPlayer:'Player', tabMatch:'Match', tabHistory:'History', tabStats:'Stats',
+  pPhoto:'Photo', pPhotoHint:'Stored only on this phone.', pRemovePhoto:'Remove photo',
+  pFirst:'First name', pLast:'Last name', pBirth:'Date of birth', pNumber:'Number',
+  pTeam:'Team', pClub:'Club / academy', pPrimary:'Main position', pExtra:'Other positions',
+  pSeason:'Season', pSave:'Save player card', toastPlayer:'Player card saved',
+  ageOne:'{n} year', ageFew:'{n} years', ageMany:'{n} years', ageEn:'{n} years',
   liveHint:'Big buttons, easy on the pitch', liveUndo:'Undo', liveDone:'Done',
   hintGk:'Later saves and goals conceded count less than the first. A team collapse barely hits the keeper rating.',
   hintOut:'The rating starts at 6 and can reach 10 after a strong match.',
@@ -534,8 +619,13 @@ ru:{
   export:'Экспорт', import:'Импорт', copy:'Копировать',
   periodWeek:'Неделя', periodMonth:'Месяц', period3m:'3 месяца', periodAll:'Всё время',
   chartTitle:'Динамика общей оценки', chartAria:'График оценок', chartEmpty:'Пока нет данных',
-  sLang:'Язык', sClub:'Клуб', sPlayer:'Игрок', sPos:'Позиция по умолчанию', sFormat:'Формат матча по умолчанию', sSave:'Сохранить настройки',
-  tabMatch:'Матч', tabHistory:'История', tabStats:'Статистика',
+  sLang:'Язык', sFormat:'Формат матча по умолчанию', sSave:'Сохранить настройки',
+  tabPlayer:'Игрок', tabMatch:'Матч', tabHistory:'История', tabStats:'Статистика',
+  pPhoto:'Фотография', pPhotoHint:'Хранится только на этом телефоне.', pRemovePhoto:'Убрать фото',
+  pFirst:'Имя', pLast:'Фамилия', pBirth:'Дата рождения', pNumber:'Номер',
+  pTeam:'Команда', pClub:'Клуб / академия', pPrimary:'Основная позиция', pExtra:'Дополнительные позиции',
+  pSeason:'Сезон', pSave:'Сохранить карточку', toastPlayer:'Карточка игрока сохранена',
+  ageOne:'{n} год', ageFew:'{n} года', ageMany:'{n} лет', ageEn:'{n} years',
   liveHint:'Крупные кнопки, удобно на поле', liveUndo:'Отменить', liveDone:'Готово',
   hintGk:'Повторные сейвы и пропущенные весят меньше первых. Командный провал слабо бьёт по вратарю.',
   hintOut:'Оценка начинается с 6 и может дойти до 10 за сильный матч.',
@@ -587,6 +677,8 @@ function applyI18n(){
   renderStats();
   updateHero();
   setEditUi(!!editingId);
+  applyHeader();
+  renderExtraChips();
 }
 const BASE_RATING = 6.0;
 
@@ -619,7 +711,10 @@ const BEHAVIOR = [
   {key:'mood', inRating:false},
 ];
 
-let settings = {club:'FFK', player:'Данило Михайлюк', position:'fwd', format:'2x30', minutes:'60', lang:'ru'};
+let settings = {club:'FC FFK', player:'Данило Михайлюк', position:'fwd', format:'2x30', minutes:'60', lang:'ru'};
+let player = defaultPlayer();
+let extraSelected = [];
+let photoDraft;
 let matches = [];
 let editingId = null;
 let form = emptyForm();
@@ -714,11 +809,63 @@ function formatDate(iso){
   return `${d}.${m}.${y}`;
 }
 
+function currentSeason(){
+  const d = new Date();
+  const y = d.getFullYear();
+  const start = d.getMonth() >= 6 ? y : y - 1;
+  return start + '/' + String((start + 1) % 100).padStart(2, '0');
+}
+function defaultPlayer(){
+  return {
+    firstName:'Данило', lastName:'Михайлюк', birthDate:'', photo:'',
+    team:'', club:'FC FFK', number:'', primary:'RW', extra:['CM'], season: currentSeason()
+  };
+}
+function displayName(){
+  return [player.firstName, player.lastName].filter(Boolean).join(' ').trim() || settings.player || '—';
+}
+function shirtNo(){
+  const n = String(player.number || '').replace(/\D/g,'');
+  return n ? String(Math.min(99, Math.max(1, Number(n)))) : '';
+}
+function posLine(){
+  const extra = (player.extra || []).filter(p => POS_CODES.includes(p) && p !== player.primary);
+  return [player.primary, ...extra].filter(p => POS_CODES.includes(p)).join(' / ');
+}
+function ageYears(iso){
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(iso || '')) return null;
+  const [y,m,d] = iso.split('-').map(Number);
+  const now = new Date();
+  let age = now.getFullYear() - y;
+  if((now.getMonth()+1 < m) || (now.getMonth()+1 === m && now.getDate() < d)) age--;
+  return age < 0 ? 0 : age;
+}
+function ageLabel(n){
+  const lang = LANGS.includes(settings.lang) ? settings.lang : 'ru';
+  if(lang === 'en') return t(n === 1 ? 'ageOne' : 'ageEn', {n});
+  const n10 = n % 10, n100 = n % 100;
+  const form = (n10 === 1 && n100 !== 11) ? 'ageOne' : (n10 >= 2 && n10 <= 4 && (n100 < 10 || n100 >= 20) ? 'ageFew' : 'ageMany');
+  return t(form, {n});
+}
+function initials(){
+  const a = (player.firstName || '').trim().charAt(0);
+  const b = (player.lastName || '').trim().charAt(0);
+  return ((a + b) || (player.club || 'FFK').slice(0,2) || 'FF').toUpperCase();
+}
+function matchPosFromCode(code){
+  return POS_GROUP[code] || settings.position || 'fwd';
+}
+function syncSettingsFromPlayer(){
+  settings.player = displayName();
+  settings.club = player.club || settings.club;
+  settings.position = matchPosFromCode(player.primary);
+}
+
 function loadSettings(){
   try{
     const s = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}');
     settings = {
-      club: String(s.club || 'FFK').slice(0,24),
+      club: String(s.club || 'FC FFK').slice(0,40),
       player: String(s.player || 'Данило Михайлюк').slice(0,40),
       position: ['fwd','mid','def','gk'].includes(s.position) ? s.position : 'fwd',
       format: (FORMAT_MIN[s.format] || s.format === 'custom') ? s.format : (Object.keys(FORMAT_MIN).find(k => FORMAT_MIN[k] === Number(s.minutes)) || '2x30'),
@@ -731,18 +878,158 @@ function loadSettings(){
 function saveSettings(){
   localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
 }
+function splitLegacyName(full){
+  const parts = String(full || '').trim().split(/\s+/).filter(Boolean);
+  return {firstName: parts[0] || '', lastName: parts.slice(1).join(' ')};
+}
+function loadPlayer(){
+  try{
+    const raw = localStorage.getItem(PLAYER_KEY);
+    if(raw){
+      player = normalizePlayer(JSON.parse(raw));
+    } else {
+      const name = splitLegacyName(settings.player);
+      player = normalizePlayer({
+        firstName: name.firstName || defaultPlayer().firstName,
+        lastName: name.lastName,
+        club: settings.club === 'FFK' ? 'FC FFK' : (settings.club || 'FC FFK'),
+        primary: GROUP_TO_POS[settings.position] || 'RW',
+        extra: settings.position === 'fwd' ? ['CM'] : [],
+        season: currentSeason()
+      });
+      savePlayer();
+    }
+  }catch(e){ player = defaultPlayer(); }
+  extraSelected = [...(player.extra || [])];
+  syncSettingsFromPlayer();
+}
+function normalizePlayer(p){
+  const d = defaultPlayer();
+  if(!p || typeof p !== 'object') return d;
+  const primary = POS_CODES.includes(p.primary) ? p.primary : d.primary;
+  const extra = Array.isArray(p.extra) ? [...new Set(p.extra.filter(x => POS_CODES.includes(x) && x !== primary))] : [];
+  const num = String(p.number ?? '').replace(/\D/g,'');
+  return {
+    firstName: String(p.firstName || '').slice(0,24),
+    lastName: String(p.lastName || '').slice(0,32),
+    birthDate: /^\d{4}-\d{2}-\d{2}$/.test(p.birthDate || '') ? p.birthDate : '',
+    photo: String(p.photo || '').startsWith('data:image/') ? p.photo : '',
+    team: String(p.team || '').slice(0,40),
+    club: String(p.club || d.club).slice(0,40),
+    number: num ? String(Math.min(99, Number(num))) : '',
+    primary,
+    extra,
+    season: String(p.season || currentSeason()).slice(0,16)
+  };
+}
+function savePlayer(){
+  try{
+    localStorage.setItem(PLAYER_KEY, JSON.stringify({...player, photo: player.photo}));
+  }catch(e){
+    try{
+      const slim = {...player, photo:''};
+      localStorage.setItem(PLAYER_KEY, JSON.stringify(slim));
+      player.photo = '';
+      showToast(t('toastSaveFail'));
+    }catch(err){ showToast(t('toastSaveFail')); }
+  }
+}
+function setBadge(el, photo, fallback){
+  el.replaceChildren();
+  if(photo){
+    const img = document.createElement('img');
+    img.alt = '';
+    img.src = photo;
+    el.appendChild(img);
+  } else {
+    el.textContent = fallback;
+  }
+}
 function applyHeader(){
-  const club = settings.club || 'FFK';
-  document.getElementById('clubName').textContent = club;
-  document.getElementById('clubBadge').textContent = club.slice(0,3).toUpperCase();
-  document.getElementById('playerNameDisplay').textContent = settings.player;
+  const no = shirtNo();
+  const age = ageYears(player.birthDate);
+  const meta = [age != null ? ageLabel(age) : '', posLine()].filter(Boolean).join(' · ');
+  const clubBits = [...new Set([player.team, player.club, player.season].map(x => String(x||'').trim()).filter(Boolean))].join(' · ');
+  document.getElementById('playerNameDisplay').textContent = player.firstName || displayName();
+  const numEl = document.getElementById('playerNumberDisplay');
+  if(no){
+    numEl.hidden = false;
+    numEl.textContent = (settings.lang === 'en' ? '#' : '№') + no;
+  } else numEl.hidden = true;
+  document.getElementById('playerMetaLine').textContent = meta;
+  document.getElementById('playerClubLine').textContent = clubBits;
+  setBadge(document.getElementById('clubBadge'), player.photo, initials());
+}
+function fillPrimarySelect(){
+  const sel = document.getElementById('p-primary');
+  sel.innerHTML = POS_CODES.map(code => `<option value="${code}">${code}</option>`).join('');
+  sel.value = POS_CODES.includes(player.primary) ? player.primary : 'RW';
+}
+function renderExtraChips(){
+  const primary = document.getElementById('p-primary')?.value || player.primary;
+  extraSelected = extraSelected.filter(x => x !== primary);
+  document.getElementById('pExtraChips').innerHTML = POS_CODES.filter(c => c !== primary).map(code => {
+    const on = extraSelected.includes(code) ? 'on' : '';
+    return `<button type="button" class="pos-chip ${on}" data-pos="${code}">${code}</button>`;
+  }).join('');
+}
+function currentPhoto(){ return photoDraft === undefined ? player.photo : photoDraft; }
+function fillPlayerForm(){
+  fillPrimarySelect();
+  extraSelected = [...(player.extra || [])];
+  photoDraft = undefined;
+  document.getElementById('p-first').value = player.firstName;
+  document.getElementById('p-last').value = player.lastName;
+  document.getElementById('p-birth').value = player.birthDate;
+  document.getElementById('p-number').value = player.number;
+  document.getElementById('p-team').value = player.team;
+  document.getElementById('p-club').value = player.club;
+  document.getElementById('p-season').value = player.season;
+  document.getElementById('p-photo').value = '';
+  setBadge(document.getElementById('pPhotoBox'), currentPhoto(), initials());
+  document.getElementById('pRemovePhotoBtn').hidden = !currentPhoto();
+  renderExtraChips();
+}
+function collectPlayer(){
+  const primary = document.getElementById('p-primary').value;
+  return normalizePlayer({
+    firstName: document.getElementById('p-first').value.trim(),
+    lastName: document.getElementById('p-last').value.trim(),
+    birthDate: document.getElementById('p-birth').value,
+    photo: currentPhoto(),
+    team: document.getElementById('p-team').value.trim(),
+    club: document.getElementById('p-club').value.trim() || 'FC FFK',
+    number: document.getElementById('p-number').value,
+    primary,
+    extra: extraSelected.filter(x => x !== primary),
+    season: document.getElementById('p-season').value.trim() || currentSeason()
+  });
+}
+function compressPhoto(file){
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      const size = 256;
+      const canvas = document.createElement('canvas');
+      canvas.width = size; canvas.height = size;
+      const ctx = canvas.getContext('2d');
+      const s = Math.min(img.width, img.height);
+      ctx.drawImage(img, (img.width-s)/2, (img.height-s)/2, s, s, 0, 0, size, size);
+      URL.revokeObjectURL(url);
+      resolve(canvas.toDataURL('image/jpeg', 0.72));
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('img')); };
+    img.src = url;
+  });
 }
 
 function loadMatches(){
   try{
     const raw = localStorage.getItem(STORAGE_KEY) || localStorage.getItem(LEGACY_KEY);
     const parsed = raw ? JSON.parse(raw) : [];
-    matches = Array.isArray(parsed) ? parsed.map(normalizeMatch).filter(Boolean) : [];
+    const list = Array.isArray(parsed) ? parsed : (Array.isArray(parsed.matches) ? parsed.matches : []);
+    matches = list.map(normalizeMatch).filter(Boolean);
   }catch(e){ matches = []; }
 }
 function saveMatches(){
@@ -768,7 +1055,7 @@ function normalizeMatch(m){
   const effort = effortScore(behaviors);
   return {
     id: Number(m.id) || Date.now(),
-    player: String(m.player || settings.player),
+    player: String(m.player || displayName()),
     date: /^\d{4}-\d{2}-\d{2}$/.test(m.date) ? m.date : todayStr(),
     opponent: String(m.opponent || ''),
     score: String(m.score || ''),
@@ -786,9 +1073,11 @@ function normalizeMatch(m){
 }
 function guessPos(label){
   const s = String(label||'');
-  if(/вратар/i.test(s) || s==='gk') return 'gk';
-  if(/защит/i.test(s) || s==='def') return 'def';
-  if(/полузащ/i.test(s) || s==='mid') return 'mid';
+  const code = s.toUpperCase();
+  if(POS_GROUP[code]) return POS_GROUP[code];
+  if(/вратар|воротар|bramk|goalkeep|\bgk\b/i.test(s)) return 'gk';
+  if(/защит|захис|obroń|obron|\bdef\b/i.test(s)) return 'def';
+  if(/полузащ|півзахис|pomoc|\bmid\b/i.test(s)) return 'mid';
   return 'fwd';
 }
 
@@ -965,7 +1254,7 @@ function collectMatch(){
   const effort = effortScore(behaviors);
   return {
     id: editingId || Date.now(),
-    player: settings.player,
+    player: displayName(),
     date: document.getElementById('f-date').value || todayStr(),
     opponent: document.getElementById('f-opponent').value.trim(),
     score: document.getElementById('f-score').value.trim(),
@@ -1082,14 +1371,25 @@ function showView(name){
   document.querySelectorAll('.tabbtn').forEach(b => b.classList.toggle('active', b.dataset.view === name));
   document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id === 'view-'+name));
   document.getElementById('heroBlock').style.display = (name === 'new') ? 'grid' : 'none';
+  document.querySelector('.topbar').classList.toggle('compact', name !== 'new');
+  if(name === 'player') fillPlayerForm();
   if(name === 'history') renderHistory();
   if(name === 'stats') renderStats();
 }
 
+function exportPayload(){
+  return {
+    version: 3,
+    exportedAt: new Date().toISOString(),
+    player,
+    settings: {lang: settings.lang, format: settings.format, minutes: settings.minutes, position: settings.position},
+    matches
+  };
+}
 function downloadMatches(){
-  if(!matches.length){ showToast(t('toastNothingExport')); return; }
-  const blob = new Blob([JSON.stringify(matches, null, 2)], {type:'application/json'});
-  const filename = `ffk_matches_${todayStr()}.json`;
+  if(!matches.length && !player.firstName){ showToast(t('toastNothingExport')); return; }
+  const blob = new Blob([JSON.stringify(exportPayload(), null, 2)], {type:'application/json'});
+  const filename = `ffk_${todayStr()}.json`;
   const file = new File([blob], filename, {type:'application/json'});
   if(navigator.canShare && navigator.canShare({files:[file]})){
     navigator.share({files:[file], title:'FFK'}).then(() => {
@@ -1114,7 +1414,7 @@ document.getElementById('exportBtn').addEventListener('click', downloadMatches);
 document.getElementById('importBtn').addEventListener('click', () => document.getElementById('importFile').click());
 document.getElementById('copyBtn').addEventListener('click', async () => {
   try{
-    await navigator.clipboard.writeText(JSON.stringify(matches, null, 2));
+    await navigator.clipboard.writeText(JSON.stringify(exportPayload(), null, 2));
     localStorage.setItem(EXPORT_KEY, todayStr());
     renderHistory();
     showToast(t('toastCopied'));
@@ -1125,16 +1425,32 @@ document.getElementById('importFile').addEventListener('change', async (e) => {
   if(!file) return;
   try{
     const imported = JSON.parse(await file.text());
-    if(!Array.isArray(imported)) throw new Error('bad');
+    const bundle = Array.isArray(imported) ? {matches: imported} : imported;
+    if(bundle.player && typeof bundle.player === 'object'){
+      player = normalizePlayer({...player, ...bundle.player});
+      extraSelected = [...(player.extra || [])];
+      savePlayer();
+      syncSettingsFromPlayer();
+      if(bundle.settings && typeof bundle.settings === 'object'){
+        if(LANGS.includes(bundle.settings.lang)) settings.lang = bundle.settings.lang;
+        if(bundle.settings.format) settings.format = bundle.settings.format;
+        if(bundle.settings.minutes) settings.minutes = String(bundle.settings.minutes);
+      }
+      saveSettings();
+      applyHeader();
+      applyI18n();
+    }
+    const incoming = Array.isArray(bundle.matches) ? bundle.matches : (Array.isArray(imported) ? imported : []);
+    if(!incoming.length && !bundle.player) throw new Error('bad');
     const ids = new Set(matches.map(m => m.id));
     let added = 0;
-    imported.forEach(raw => {
+    incoming.forEach(raw => {
       const m = normalizeMatch(raw);
       if(!m || ids.has(m.id)) return;
       matches.push(m); ids.add(m.id); added++;
     });
     saveMatches(); renderHistory(); renderStats(); renderOppList();
-    showToast(added ? t('toastAdded', {n: added}) : t('toastNoNew'));
+    showToast(added ? t('toastAdded', {n: added}) : (bundle.player ? t('toastPlayer') : t('toastNoNew')));
   }catch(err){ showToast(t('toastReadFail')); }
   e.target.value = '';
 });
@@ -1238,9 +1554,6 @@ document.getElementById('live-position').addEventListener('change', () => {
 });
 
 document.getElementById('settingsBtn').addEventListener('click', () => {
-  document.getElementById('s-club').value = settings.club;
-  document.getElementById('s-player').value = settings.player;
-  document.getElementById('s-position').value = settings.position;
   document.getElementById('s-format').value = settings.format || '2x30';
   document.getElementById('s-minutes').value = settings.minutes;
   document.getElementById('s-custom-wrap').hidden = (settings.format !== 'custom');
@@ -1259,9 +1572,6 @@ document.getElementById('s-format').addEventListener('change', () => {
   }
 });
 document.getElementById('saveSettingsBtn').addEventListener('click', () => {
-  settings.club = document.getElementById('s-club').value.trim() || 'FFK';
-  settings.player = document.getElementById('s-player').value.trim() || settings.player;
-  settings.position = document.getElementById('s-position').value;
   settings.format = document.getElementById('s-format').value;
   settings.minutes = String(formatLength(settings.format, document.getElementById('s-minutes').value));
   settings.lang = document.getElementById('s-lang').value;
@@ -1282,6 +1592,47 @@ document.getElementById('saveSettingsBtn').addEventListener('click', () => {
 
 document.querySelectorAll('.tabbtn').forEach(btn => {
   btn.addEventListener('click', () => showView(btn.dataset.view));
+});
+
+document.getElementById('playerHeadBtn').addEventListener('click', () => showView('player'));
+document.getElementById('p-primary').addEventListener('change', renderExtraChips);
+document.getElementById('pExtraChips').addEventListener('click', e => {
+  const chip = e.target.closest('.pos-chip');
+  if(!chip) return;
+  const code = chip.dataset.pos;
+  extraSelected = extraSelected.includes(code) ? extraSelected.filter(x => x !== code) : extraSelected.concat(code);
+  renderExtraChips();
+});
+document.getElementById('p-photo').addEventListener('change', async e => {
+  const file = e.target.files[0];
+  if(!file) return;
+  try{
+    photoDraft = await compressPhoto(file);
+    setBadge(document.getElementById('pPhotoBox'), photoDraft, initials());
+    document.getElementById('pRemovePhotoBtn').hidden = false;
+  }catch(err){ showToast(t('toastReadFail')); }
+});
+document.getElementById('pRemovePhotoBtn').addEventListener('click', () => {
+  photoDraft = '';
+  document.getElementById('p-photo').value = '';
+  setBadge(document.getElementById('pPhotoBox'), '', initials());
+  document.getElementById('pRemovePhotoBtn').hidden = true;
+});
+document.getElementById('savePlayerBtn').addEventListener('click', () => {
+  player = collectPlayer();
+  extraSelected = [...player.extra];
+  photoDraft = undefined;
+  savePlayer();
+  syncSettingsFromPlayer();
+  saveSettings();
+  applyHeader();
+  fillPlayerForm();
+  if(!editingId){
+    document.getElementById('f-position').value = settings.position;
+    renderMetrics();
+    renderLiveGrid();
+  }
+  showToast(t('toastPlayer'));
 });
 
 function wrapText(ctx, text, x, y, maxWidth, lineHeight){
@@ -1309,7 +1660,7 @@ async function shareCard(m){
   ctx.fillRect(0,0,900,1200);
   ctx.fillStyle = '#22D3A6';
   ctx.font = '800 36px sans-serif';
-  ctx.fillText(settings.club || 'FFK', 60, 90);
+  ctx.fillText(player.club || 'FFK', 60, 90);
   ctx.fillStyle = '#EDF1F7';
   ctx.font = '700 42px sans-serif';
   ctx.fillText(m.player, 60, 150);
@@ -1366,6 +1717,8 @@ async function shareCard(m){
 
 (function init(){
   loadSettings();
+  loadPlayer();
+  fillPrimarySelect();
   applyHeader();
   document.getElementById('f-date').value = todayStr();
   document.getElementById('f-position').value = settings.position;
