@@ -339,6 +339,7 @@
             <option value="2x30">2×30</option>
             <option value="2x35">2×35</option>
             <option value="2x40">2×40</option>
+            <option value="2x45">2×45</option>
             <option value="custom" data-i18n="fmtCustom">Свой</option>
           </select>
         </div>
@@ -421,6 +422,7 @@
           <option value="2x30">2×30</option>
           <option value="2x35">2×35</option>
           <option value="2x40">2×40</option>
+          <option value="2x45">2×45</option>
           <option value="custom" data-i18n="fmtCustom">Свой</option>
         </select>
       </div>
@@ -753,7 +755,7 @@ function metricsFor(pos){ return METRICS.filter(m => m.positions.includes(pos));
 function weightOf(m, pos){ return m.w[pos] ?? 0; }
 function clamp10(n){ return Math.round(Math.max(0, Math.min(10, n)) * 10) / 10; }
 
-const FORMAT_MIN = { '3x15':45, '3x20':60, '3x25':75, '2x25':50, '2x30':60, '2x35':70, '2x40':80 };
+const FORMAT_MIN = { '3x15':45, '3x20':60, '3x25':75, '2x25':50, '2x30':60, '2x35':70, '2x40':80, '2x45':90 };
 function formatLength(id, custom){
   if(id === 'custom') return Math.min(120, Math.max(1, Number(custom) || 60));
   return FORMAT_MIN[id] || 60;
