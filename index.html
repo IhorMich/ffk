@@ -158,7 +158,7 @@
     width:44px;flex-shrink:0;border-radius:14px;border:1px solid var(--border);
     background:var(--surface-2);color:var(--danger);font-size:1.25rem;cursor:pointer;
   }
-  #playerCardChips{margin:0 0 16px;}
+  #playerFeed{margin-top:4px;}
   #statsCardBtn,#historyCardBtn{margin:0 0 16px;}
   button.chip{font:inherit;}
   .cam-badge{right:0;bottom:0;width:30px;height:30px;border-radius:50%;font-size:.78rem;}
@@ -350,6 +350,8 @@
   .match-rating.mid{color:var(--gold);}
   .match-details{display:none;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);font-size:.82rem;color:var(--text-soft);}
   .match-details.open{display:block;}
+  .match-story{margin-top:10px;}
+  .match-story .story-box{margin:0;}
   .story-box{
     margin:12px 0 10px;padding:14px 15px;border-radius:12px;
     background:var(--surface-2);border:1px solid var(--border);
@@ -547,12 +549,6 @@
         <div class="fb-name" id="fbName"></div>
         <div class="fb-meta" id="fbMeta"></div>
       </div>
-      <p class="hint" data-i18n="cardHint" style="margin:0 0 8px;">FIFA-карточка за сезон, месяц или последние матчи.</p>
-      <div class="period-chips" id="playerCardChips">
-        <button class="chip" type="button" data-card="season" data-i18n="cardSeason">Сезон</button>
-        <button class="chip" type="button" data-card="month" data-i18n="periodMonth">Месяц</button>
-        <button class="chip" type="button" data-card="10" data-i18n="periodLast10">Последние 10</button>
-        <button class="chip" type="button" data-card="all" data-i18n="periodAll">Всё время</button>
       </div>
       <div class="pf-card">
         <h3 data-i18n="myPlayers">Мои игроки</h3>
@@ -716,7 +712,9 @@
 
     <div class="view" id="view-report">
       <div class="report" id="reportCard"></div>
+      <div id="reportStory" hidden></div>
       <button class="save-btn" id="reportShareBtn" type="button" data-i18n="cardBtn">Карточка</button>
+      <button class="ghost-btn" id="reportStoryBtn" type="button" data-i18n="storyTitle">Разбор по минутам</button>
       <button class="ghost-btn" id="reportDoneBtn" type="button" data-i18n="reportNew">Новый матч</button>
     </div>
 
@@ -1840,7 +1838,10 @@ function applyI18n(){
   syncDateShown();
   updatePhotoMeta();
   renderRoster();
-  if(lastReportMatch) document.getElementById('reportCard').innerHTML = renderReportHtml(lastReportMatch);
+  if(lastReportMatch){
+    document.getElementById('reportCard').innerHTML = renderReportHtml(lastReportMatch);
+    document.getElementById('reportStory').innerHTML = matchStoryHtml(lastReportMatch);
+  }
   renderLiveClock();
 }
 const BASE_RATING = 6.0;
@@ -2267,7 +2268,6 @@ function renderReportHtml(m, compact){
   const vs = `${escapeHtml(m.opponent || t('unnamed'))}${m.score ? ' · ' + escapeHtml(m.score) : ''}`;
   const kick = m.kickoffClock ? escapeHtml(t('kickoffLine', {clock: m.kickoffClock})) : '';
   const meta = `<div class="report-sub"><span>${vs}</span>${kick ? `<span>${kick}</span>` : ''}</div>`;
-  const story = matchStoryHtml(m);
   const head = compact ? meta : `<div class="report-kicker">${escapeHtml(t('reportTitle'))}</div>
     <div class="report-title">${escapeHtml(reportPlayerName(m))} — <span class="n">${fmtNum(m.rating, 1)}</span></div>
     ${meta}
@@ -2275,7 +2275,7 @@ function renderReportHtml(m, compact){
   const body = lines.length
     ? lines.map(x => `<div class="report-line"><span class="ic">${x.icon}</span><span>${escapeHtml(x.text)}</span></div>`).join('')
     : `<div class="report-line">${escapeHtml(t('plusEven'))}</div>`;
-  return `${head}${story}${body}
+  return `${head}${body}
     <div class="report-split">
       <div class="report-pill plus">${fmtSigned(Math.max(0, split.plus), 2)}<small>${escapeHtml(t('actPlus'))}</small></div>
       <div class="report-pill minus">${'−' + fmtNum(Math.abs(split.minus), 2)}<small>${escapeHtml(t('actMinus'))}</small></div>
@@ -3759,15 +3759,21 @@ function renderHistory(){
         ${m.comment ? `<div>${escapeHtml(m.comment)}</div>` : ''}
         <div class="card-actions">
           <button class="share-btn" type="button" onclick="shareMatch(${m.id})">${escapeHtml(t('cardBtn'))}</button>
+          <button class="share-btn" type="button" onclick="toggleStory(${m.id})">${escapeHtml(t('storyTitle'))}</button>
           <button class="edit-btn" type="button" onclick="editMatch(${m.id})">${escapeHtml(t('editBtn'))}</button>
           <button class="del-btn" type="button" onclick="deleteMatch(${m.id})">${escapeHtml(t('delBtn'))}</button>
         </div>
+        <div class="match-story" id="story-${m.id}" hidden>${matchStoryHtml(m)}</div>
       </div>
     </div>`;
   }).join('');
 }
 
 window.toggleDetails = function(id){ document.getElementById('details-'+id)?.classList.toggle('open'); };
+window.toggleStory = function(id){
+  const el = document.getElementById('story-'+id);
+  if(el) el.hidden = !el.hidden;
+};
 window.editMatch = function(id){
   const m = matches.find(x => x.id === id);
   if(!m) return;
@@ -3796,7 +3802,10 @@ function showView(name){
   document.getElementById('heroBlock').style.display = (name === 'new') ? 'grid' : 'none';
   document.querySelector('.topbar').classList.toggle('compact', name !== 'new');
   if(name === 'player') fillPlayerForm();
-  if(name === 'report' && lastReportMatch) document.getElementById('reportCard').innerHTML = renderReportHtml(lastReportMatch);
+  if(name === 'report' && lastReportMatch){
+    document.getElementById('reportCard').innerHTML = renderReportHtml(lastReportMatch);
+    document.getElementById('reportStory').innerHTML = matchStoryHtml(lastReportMatch);
+  }
   if(name === 'history') renderHistory();
   if(name === 'stats') renderStats();
   renderLiveClock();
@@ -4412,7 +4421,10 @@ document.getElementById('reportDoneBtn').addEventListener('click', () => {
 document.getElementById('reportShareBtn').addEventListener('click', () => {
   if(lastReportMatch) shareCard(lastReportMatch);
 });
-
+document.getElementById('reportStoryBtn').addEventListener('click', () => {
+  const el = document.getElementById('reportStory');
+  el.hidden = !el.hidden;
+});
 document.getElementById('pOpenSeasonBtn').addEventListener('click', () => {
   const s = document.getElementById('p-season').value.trim() || nextSeasonLabel(player.season || currentSeason());
   if(openSeason(s)) currentSeasonFilter = 'current';
@@ -4420,10 +4432,6 @@ document.getElementById('pOpenSeasonBtn').addEventListener('click', () => {
 document.getElementById('pCloseSeasonBtn').addEventListener('click', () => closeSeason(false));
 document.getElementById('playerHeadBtn').addEventListener('click', () => showView('player'));
 document.getElementById('addPlayerBtn').addEventListener('click', addPlayer);
-document.getElementById('playerCardChips').addEventListener('click', e => {
-  const chip = e.target.closest('[data-card]');
-  if(chip) sharePlayerCard(chip.dataset.card);
-});
 document.getElementById('statsCardBtn').addEventListener('click', shareStatsCard);
 document.getElementById('historyCardBtn').addEventListener('click', shareHistoryCard);
 document.getElementById('rosterList').addEventListener('click', e => {
