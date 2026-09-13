@@ -64,7 +64,7 @@
   .pos-chips{display:flex;flex-wrap:wrap;gap:6px;}
   .pos-chip{
     padding:7px 10px;border-radius:10px;border:1px solid var(--border);
-    background:var(--surface);color:var(--text);font-size:.75rem;font-weight:800;cursor:pointer;
+    background:var(--surface);color:var(--text);font-size:.7rem;font-weight:700;cursor:pointer;line-height:1.25;text-align:left;
   }
   .pos-chip.on{background:var(--accent);color:#08121C;border-color:transparent;}
   .pos-chip.main{background:var(--gold);color:#08121C;border-color:transparent;}
@@ -310,10 +310,10 @@
         <div class="field">
           <label data-i18n="labelPos">Позиция</label>
           <select id="f-position">
-            <option value="fwd" data-i18n="posFwd">Нападающий</option>
-            <option value="mid" data-i18n="posMid">Полузащитник</option>
-            <option value="def" data-i18n="posDef">Защитник</option>
-            <option value="gk" data-i18n="posGk">Вратарь</option>
+            <option value="fwd" data-i18n="posFwd">Нападающий (FW)</option>
+            <option value="mid" data-i18n="posMid">Полузащитник (MF)</option>
+            <option value="def" data-i18n="posDef">Защитник (DF)</option>
+            <option value="gk" data-i18n="posGk">Вратарь (GK)</option>
           </select>
         </div>
       </div>
@@ -447,10 +447,10 @@
       <div class="live-score" id="liveScore">6.0</div>
     </div>
     <select id="live-position" style="width:auto;padding:10px 12px;border-radius:12px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-weight:700;">
-      <option value="fwd" data-i18n="posShortFwd">Нап</option>
-      <option value="mid" data-i18n="posShortMid">ПЗ</option>
-      <option value="def" data-i18n="posShortDef">Защ</option>
-      <option value="gk" data-i18n="posShortGk">Врт</option>
+      <option value="fwd" data-i18n="posShortFwd">Нап (FW)</option>
+      <option value="mid" data-i18n="posShortMid">ПЗ (MF)</option>
+      <option value="def" data-i18n="posShortDef">Защ (DF)</option>
+      <option value="gk" data-i18n="posShortGk">Врт (GK)</option>
     </select>
   </div>
   <div class="live-grid" id="liveGrid"></div>
@@ -483,8 +483,12 @@ uk:{
   liveStart:'Швидкий режим', labelDate:'Дата', labelPos:'Позиція', labelOpp:'Суперник', phOpp:'Назва команди',
   labelScore:'Рахунок', labelMin:'Хвилини на полі', labelFormat:'Формат матчу', labelMatchLen:'Довжина матчу, хв', fmtCustom:'Свій',
   labelKind:'Тип гри', labelComment:'Коментар', phComment:'Що запам’яталось',
-  posFwd:'Нападник', posMid:'Півзахисник', posDef:'Захисник', posGk:'Воротар',
-  posShortFwd:'Нап', posShortMid:'ПЗ', posShortDef:'Зах', posShortGk:'Врт',
+  posFwd:'Нападник (FW)', posMid:'Півзахисник (MF)', posDef:'Захисник (DF)', posGk:'Воротар (GK)',
+  posShortFwd:'Нап (FW)', posShortMid:'ПЗ (MF)', posShortDef:'Зах (DF)', posShortGk:'Врт (GK)',
+  pc_GK:'Воротар', pc_CB:'Центральний захисник', pc_LB:'Лівий захисник', pc_RB:'Правий захисник',
+  pc_LWB:'Лівий вінгбек', pc_RWB:'Правий вінгбек', pc_CDM:'Опорний півзахисник', pc_CM:'Центральний півзахисник',
+  pc_CAM:'Атакувальний півзахисник', pc_LM:'Лівий півзахисник', pc_RM:'Правий півзахисник',
+  pc_LW:'Лівий вінгер', pc_RW:'Правий вінгер', pc_ST:'Нападник', pc_CF:'Центральний нападник',
   kindLeague:'Чемпіонат', kindFriendly:'Товариський', kindCup:'Турнір',
   roleStart:'У старті', roleSub:'На заміну',
   secActions:'Ігрові дії', secBehavior:'Як грав (1–5)',
@@ -525,8 +529,12 @@ pl:{
   liveStart:'Tryb szybki', labelDate:'Data', labelPos:'Pozycja', labelOpp:'Rywal', phOpp:'Nazwa drużyny',
   labelScore:'Wynik', labelMin:'Minuty na boisku', labelFormat:'Format meczu', labelMatchLen:'Długość meczu, min', fmtCustom:'Własny',
   labelKind:'Typ meczu', labelComment:'Komentarz', phComment:'Co zapamiętałeś',
-  posFwd:'Napastnik', posMid:'Pomocnik', posDef:'Obrońca', posGk:'Bramkarz',
-  posShortFwd:'Nap', posShortMid:'Pom', posShortDef:'Obr', posShortGk:'Brk',
+  posFwd:'Napastnik (FW)', posMid:'Pomocnik (MF)', posDef:'Obrońca (DF)', posGk:'Bramkarz (GK)',
+  posShortFwd:'Nap (FW)', posShortMid:'Pom (MF)', posShortDef:'Obr (DF)', posShortGk:'Brk (GK)',
+  pc_GK:'Bramkarz', pc_CB:'Środkowy obrońca', pc_LB:'Lewy obrońca', pc_RB:'Prawy obrońca',
+  pc_LWB:'Lewy wahadłowy', pc_RWB:'Prawy wahadłowy', pc_CDM:'Defensywny pomocnik', pc_CM:'Środkowy pomocnik',
+  pc_CAM:'Ofensywny pomocnik', pc_LM:'Lewy pomocnik', pc_RM:'Prawy pomocnik',
+  pc_LW:'Lewy skrzydłowy', pc_RW:'Prawy skrzydłowy', pc_ST:'Napastnik', pc_CF:'Środkowy napastnik',
   kindLeague:'Liga', kindFriendly:'Towarzyski', kindCup:'Turniej',
   roleStart:'W składzie', roleSub:'Zmiana',
   secActions:'Akcje meczowe', secBehavior:'Jak grał (1–5)',
@@ -567,8 +575,12 @@ en:{
   liveStart:'Quick mode', labelDate:'Date', labelPos:'Position', labelOpp:'Opponent', phOpp:'Team name',
   labelScore:'Score', labelMin:'Minutes on the pitch', labelFormat:'Match format', labelMatchLen:'Match length, min', fmtCustom:'Custom',
   labelKind:'Match type', labelComment:'Comment', phComment:'What stood out',
-  posFwd:'Forward', posMid:'Midfielder', posDef:'Defender', posGk:'Goalkeeper',
+  posFwd:'Forward (FW)', posMid:'Midfielder (MF)', posDef:'Defender (DF)', posGk:'Goalkeeper (GK)',
   posShortFwd:'FW', posShortMid:'MF', posShortDef:'DF', posShortGk:'GK',
+  pc_GK:'Goalkeeper', pc_CB:'Centre-back', pc_LB:'Left-back', pc_RB:'Right-back',
+  pc_LWB:'Left wing-back', pc_RWB:'Right wing-back', pc_CDM:'Defensive midfielder', pc_CM:'Central midfielder',
+  pc_CAM:'Attacking midfielder', pc_LM:'Left midfielder', pc_RM:'Right midfielder',
+  pc_LW:'Left winger', pc_RW:'Right winger', pc_ST:'Striker', pc_CF:'Centre forward',
   kindLeague:'League', kindFriendly:'Friendly', kindCup:'Tournament',
   roleStart:'Started', roleSub:'Substitute',
   secActions:'Match actions', secBehavior:'How he played (1–5)',
@@ -609,8 +621,12 @@ ru:{
   liveStart:'Быстрый режим', labelDate:'Дата', labelPos:'Позиция', labelOpp:'Соперник', phOpp:'Название команды',
   labelScore:'Счёт', labelMin:'Минуты на поле', labelFormat:'Формат матча', labelMatchLen:'Длина матча, мин', fmtCustom:'Свой',
   labelKind:'Тип игры', labelComment:'Комментарий', phComment:'Что запомнилось',
-  posFwd:'Нападающий', posMid:'Полузащитник', posDef:'Защитник', posGk:'Вратарь',
-  posShortFwd:'Нап', posShortMid:'ПЗ', posShortDef:'Защ', posShortGk:'Врт',
+  posFwd:'Нападающий (FW)', posMid:'Полузащитник (MF)', posDef:'Защитник (DF)', posGk:'Вратарь (GK)',
+  posShortFwd:'Нап (FW)', posShortMid:'ПЗ (MF)', posShortDef:'Защ (DF)', posShortGk:'Врт (GK)',
+  pc_GK:'Вратарь', pc_CB:'Центральный защитник', pc_LB:'Левый защитник', pc_RB:'Правый защитник',
+  pc_LWB:'Левый вингбек', pc_RWB:'Правый вингбек', pc_CDM:'Опорный полузащитник', pc_CM:'Центральный полузащитник',
+  pc_CAM:'Атакующий полузащитник', pc_LM:'Левый полузащитник', pc_RM:'Правый полузащитник',
+  pc_LW:'Левый вингер', pc_RW:'Правый вингер', pc_ST:'Нападающий', pc_CF:'Центральный нападающий',
   kindLeague:'Чемпионат', kindFriendly:'Товарищеский', kindCup:'Турнир',
   roleStart:'В старте', roleSub:'На замену',
   secActions:'Игровые действия', secBehavior:'Как играл (1–5)',
@@ -661,6 +677,11 @@ function t(key, vars){
 function metricLabel(key){ return t('m_'+key); }
 function behaviorLabel(key){ return t('b_'+key); }
 function posLabel(key){ return ({fwd:t('posFwd'), mid:t('posMid'), def:t('posDef'), gk:t('posGk')})[key] || key; }
+function pitchPosLabel(code){
+  if(!POS_CODES.includes(code)) return code;
+  const name = t('pc_'+code);
+  return name === 'pc_'+code ? code : `${name} (${code})`;
+}
 function kindLabel(key){ return ({league:t('kindLeague'), friendly:t('kindFriendly'), cup:t('kindCup')})[key] || key; }
 function applyI18n(){
   const lang = LANGS.includes(settings.lang) ? settings.lang : 'ru';
@@ -678,6 +699,7 @@ function applyI18n(){
   updateHero();
   setEditUi(!!editingId);
   applyHeader();
+  fillPrimarySelect();
   renderExtraChips();
 }
 const BASE_RATING = 6.0;
@@ -830,7 +852,7 @@ function shirtNo(){
 }
 function posLine(){
   const extra = (player.extra || []).filter(p => POS_CODES.includes(p) && p !== player.primary);
-  return [player.primary, ...extra].filter(p => POS_CODES.includes(p)).join(' / ');
+  return [player.primary, ...extra].filter(p => POS_CODES.includes(p)).map(pitchPosLabel).join(' / ');
 }
 function ageYears(iso){
   if(!/^\d{4}-\d{2}-\d{2}$/.test(iso || '')) return null;
@@ -962,15 +984,16 @@ function applyHeader(){
 }
 function fillPrimarySelect(){
   const sel = document.getElementById('p-primary');
-  sel.innerHTML = POS_CODES.map(code => `<option value="${code}">${code}</option>`).join('');
-  sel.value = POS_CODES.includes(player.primary) ? player.primary : 'RW';
+  const cur = POS_CODES.includes(sel.value) ? sel.value : (POS_CODES.includes(player.primary) ? player.primary : 'RW');
+  sel.innerHTML = POS_CODES.map(code => `<option value="${code}">${escapeHtml(pitchPosLabel(code))}</option>`).join('');
+  sel.value = cur;
 }
 function renderExtraChips(){
   const primary = document.getElementById('p-primary')?.value || player.primary;
   extraSelected = extraSelected.filter(x => x !== primary);
   document.getElementById('pExtraChips').innerHTML = POS_CODES.filter(c => c !== primary).map(code => {
     const on = extraSelected.includes(code) ? 'on' : '';
-    return `<button type="button" class="pos-chip ${on}" data-pos="${code}">${code}</button>`;
+    return `<button type="button" class="pos-chip ${on}" data-pos="${code}">${escapeHtml(pitchPosLabel(code))}</button>`;
   }).join('');
 }
 function currentPhoto(){ return photoDraft === undefined ? player.photo : photoDraft; }
