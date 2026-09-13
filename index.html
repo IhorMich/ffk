@@ -37,6 +37,10 @@
     background:var(--bg);color:var(--text);min-height:100vh;
   }
   .app{max-width:480px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;}
+  @media (min-width:720px){
+    .app{max-width:580px;}
+    .tabbar{max-width:552px;}
+  }
   .topbar{
     padding:18px 18px 16px;
     background:
@@ -61,14 +65,17 @@
     background:rgba(245,185,66,.12);padding:2px 8px;border-radius:999px;
   }
   .player-head-top{display:flex;align-items:center;flex-wrap:wrap;gap:4px;}
-  .profile-hero{position:relative;margin-bottom:72px;}
+  .profile-hero{position:relative;margin-bottom:84px;}
   .profile-cover{
-    display:block;width:100%;height:148px;padding:0;border:0;border-radius:20px;overflow:hidden;
+    display:block;width:100%;height:210px;padding:0;border:0;border-radius:20px;overflow:hidden;
     cursor:pointer;position:relative;color:inherit;
     background:
       radial-gradient(120% 90% at 20% 20%, rgba(34,211,166,.35) 0%, transparent 55%),
       radial-gradient(90% 80% at 90% 80%, rgba(124,92,252,.32) 0%, transparent 50%),
       var(--surface-2);
+  }
+  @media (min-width:720px){
+    .profile-cover{height:280px;border-radius:24px;}
   }
   .profile-cover img{width:100%;height:100%;object-fit:cover;display:block;}
   .cam-chip,.cam-badge{
@@ -78,14 +85,14 @@
   }
   .cam-chip{right:10px;bottom:10px;width:34px;height:34px;border-radius:50%;font-size:.9rem;}
   .avatar-pin{
-    position:absolute;left:50%;bottom:-56px;transform:translateX(-50%);
-    width:112px;height:112px;
+    position:absolute;left:50%;bottom:-64px;transform:translateX(-50%);
+    width:128px;height:128px;
   }
   .photo-box{
-    position:relative;width:112px;height:112px;border-radius:50%;overflow:hidden;padding:0;margin:0;
+    position:relative;width:128px;height:128px;border-radius:50%;overflow:hidden;padding:0;margin:0;
     background:linear-gradient(135deg, var(--accent), var(--violet));
     border:4px solid var(--bg);display:flex;align-items:center;justify-content:center;
-    font-weight:900;font-size:1.7rem;color:#08121C;cursor:pointer;
+    font-weight:900;font-size:1.85rem;color:#08121C;cursor:pointer;
     box-shadow:0 8px 24px rgba(0,0,0,.35);
   }
   .photo-box img{width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;}
@@ -105,6 +112,26 @@
   .photo-sheet button:active{background:var(--surface-2);}
   .photo-sheet .sheet-mute{font-weight:600;font-size:.88rem;color:var(--text-soft);}
   .photo-sheet .sheet-danger{font-weight:700;font-size:.88rem;color:var(--danger);}
+  .crop-modal{
+    position:fixed;inset:0;z-index:90;background:rgba(8,14,24,.82);
+    display:flex;align-items:center;justify-content:center;padding:16px;
+  }
+  .crop-modal[hidden]{display:none !important;}
+  .crop-card{
+    width:min(440px,100%);background:var(--surface);border:1px solid var(--border);
+    border-radius:20px;padding:14px 14px 12px;
+  }
+  .crop-hint{font-size:.82rem;font-weight:600;color:var(--text-soft);margin:0 0 10px;text-align:center;}
+  .crop-stage{
+    position:relative;width:100%;height:300px;border-radius:16px;overflow:hidden;
+    background:#000;touch-action:none;cursor:grab;user-select:none;
+  }
+  .crop-stage.cover{height:168px;}
+  .crop-stage:active{cursor:grabbing;}
+  .crop-stage canvas{width:100%;height:100%;display:block;}
+  .crop-zoom{width:100%;margin:12px 0 8px;}
+  .crop-actions{display:flex;gap:8px;}
+  .crop-actions .ghost-btn,.crop-actions .save-btn{width:auto;flex:1;margin:0;padding:12px;}
   .pos-chips{display:flex;flex-wrap:wrap;gap:6px;}
   .pos-group-title{width:100%;font-size:.72rem;font-weight:800;color:var(--text-soft);letter-spacing:.02em;margin:8px 0 2px;}
   .pos-chips .pos-group-title:first-child{margin-top:0;}
@@ -369,8 +396,8 @@
           <button class="photo-box" id="pPhotoBox" type="button" data-i18n-aria="pPhotoAria">Д</button>
           <span class="cam-badge" aria-hidden="true">📷</span>
         </div>
-        <input type="file" id="p-photo" accept="image/*" hidden>
-        <input type="file" id="p-cover" accept="image/*" hidden>
+        <input type="file" id="p-photo" accept="image/jpeg,image/png,image/webp,image/gif,image/heic,image/heif,.jpg,.jpeg,.png,.webp,.gif,.heic,.heif" hidden>
+        <input type="file" id="p-cover" accept="image/jpeg,image/png,image/webp,image/gif,image/heic,image/heif,.jpg,.jpeg,.png,.webp,.gif,.heic,.heif" hidden>
       </div>
       <div class="hint" data-i18n="pPhotoHint" style="text-align:center;margin:0 0 16px;">Нажмите на фото или фон, чтобы сменить.</div>
       <div class="row2">
@@ -618,6 +645,19 @@
     <button type="button" id="photoSheetCancel" class="sheet-mute" data-i18n="pSheetCancel">Отмена</button>
   </div>
 
+  <div class="crop-modal" id="cropModal" hidden>
+    <div class="crop-card">
+      <p class="crop-hint" data-i18n="cropHint">Перетащите фото и выберите, что будет видно.</p>
+      <div class="crop-stage" id="cropStage">
+        <canvas id="cropCanvas"></canvas>
+      </div>
+      <input class="crop-zoom" id="cropZoom" type="range" min="100" max="280" value="100" aria-label="zoom">
+      <div class="crop-actions">
+        <button class="ghost-btn" id="cropCancelBtn" type="button" data-i18n="pSheetCancel">Отмена</button>
+        <button class="save-btn" id="cropOkBtn" type="button" data-i18n="cropDone">Готово</button>
+      </div>
+    </div>
+  </div>
   <div class="live" id="livePad">
   <div class="live-head">
     <div>
@@ -695,6 +735,9 @@ uk:{
   pPhoto:'Фото', pPhotoHint:'Натисніть на фото або фон, щоб змінити.',
   pRemovePhoto:'Прибрати', pPickPhoto:'Вибрати фото', pPickCover:'Вибрати фон',
   pPhotoAria:'Фото гравця', pCoverAria:'Фон картки', pSheetCancel:'Скасувати',
+  cropHint:'Перетягніть фото і виберіть, що буде видно.', cropDone:'Готово',
+  toastHeic:'Це фото телефон зберігає у форматі, який браузер не відкриває. Збережіть як JPG і спробуйте знову.',
+  toastPhotoFail:'Не вдалося відкрити фото. Спробуйте інший файл або JPG/PNG.',
   pNoFile:'Файл не вибрано', pPhotoReady:'Фото вибрано', phDate:'дд.мм.рррр',
   pFirst:'Ім’я', pLast:'Прізвище', pBirth:'Дата народження', pNumber:'Номер',
   pTeam:'Команда', pClub:'Клуб / академія', pPrimary:'Основна позиція', pExtra:'Додаткові позиції',
@@ -805,6 +848,9 @@ pl:{
   pPhoto:'Zdjęcie', pPhotoHint:'Dotknij zdjęcia lub tła, żeby zmienić.',
   pRemovePhoto:'Usuń', pPickPhoto:'Wybierz zdjęcie', pPickCover:'Wybierz tło',
   pPhotoAria:'Zdjęcie zawodnika', pCoverAria:'Tło karty', pSheetCancel:'Anuluj',
+  cropHint:'Przeciągnij zdjęcie i wybierz, co ma być widać.', cropDone:'Gotowe',
+  toastHeic:'Ten telefon trzyma zdjęcie w formacie, którego przeglądarka nie otwiera. Zapisz jako JPG i spróbuj ponownie.',
+  toastPhotoFail:'Nie udało się otworzyć zdjęcia. Spróbuj innego pliku albo JPG/PNG.',
   pNoFile:'Nie wybrano pliku', pPhotoReady:'Zdjęcie wybrane', phDate:'dd.mm.rrrr',
   pFirst:'Imię', pLast:'Nazwisko', pBirth:'Data urodzenia', pNumber:'Numer',
   pTeam:'Drużyna', pClub:'Klub / akademia', pPrimary:'Pozycja główna', pExtra:'Pozycje dodatkowe',
@@ -915,6 +961,9 @@ en:{
   pPhoto:'Photo', pPhotoHint:'Tap the photo or cover to change it.',
   pRemovePhoto:'Remove', pPickPhoto:'Choose photo', pPickCover:'Choose cover',
   pPhotoAria:'Player photo', pCoverAria:'Card cover', pSheetCancel:'Cancel',
+  cropHint:'Drag the photo and choose which part will be visible.', cropDone:'Done',
+  toastHeic:'This photo is in a format the browser cannot open. Save it as JPG and try again.',
+  toastPhotoFail:'Could not open the photo. Try another file, or JPG/PNG.',
   pNoFile:'No file chosen', pPhotoReady:'Photo selected', phDate:'Select date',
   pFirst:'First name', pLast:'Last name', pBirth:'Date of birth', pNumber:'Number',
   pTeam:'Team', pClub:'Club / academy', pPrimary:'Main position', pExtra:'Other positions',
@@ -1025,6 +1074,9 @@ ru:{
   pPhoto:'Фотография', pPhotoHint:'Нажмите на фото или фон, чтобы сменить.',
   pRemovePhoto:'Убрать', pPickPhoto:'Выбрать фото', pPickCover:'Выбрать фон',
   pPhotoAria:'Фото игрока', pCoverAria:'Фон карточки', pSheetCancel:'Отмена',
+  cropHint:'Перетащите фото и выберите, что будет видно.', cropDone:'Готово',
+  toastHeic:'Это фото телефон хранит в формате, который браузер не открывает. Сохраните как JPG и попробуйте снова.',
+  toastPhotoFail:'Не удалось открыть фото. Попробуйте другой файл или JPG/PNG.',
   pNoFile:'Файл не выбран', pPhotoReady:'Фото выбрано', phDate:'дд.мм.гггг',
   pFirst:'Имя', pLast:'Фамилия', pBirth:'Дата рождения', pNumber:'Номер',
   pTeam:'Команда', pClub:'Клуб / академия', pPrimary:'Основная позиция', pExtra:'Дополнительные позиции',
@@ -1528,7 +1580,159 @@ function openPhotoSheet(target){
   document.getElementById('photoSheetBack').hidden = false;
 }
 function pickPhotoFile(){
-  document.getElementById(photoSheetTarget === 'cover' ? 'p-cover' : 'p-photo').click();
+  const el = document.getElementById(photoSheetTarget === 'cover' ? 'p-cover' : 'p-photo');
+  el.value = '';
+  el.click();
+}
+let cropState = null;
+function isHeicFile(file){
+  const s = ((file && file.type) || '') + ' ' + ((file && file.name) || '');
+  return /hei[cf]/i.test(s);
+}
+function fileToImage(file){
+  return new Promise((resolve, reject) => {
+    const fail = () => reject(new Error('img'));
+    const fromUrl = (url, revoke) => {
+      const img = new Image();
+      img.onload = () => {
+        if(revoke) URL.revokeObjectURL(url);
+        if(!img.width) return fail();
+        resolve(img);
+      };
+      img.onerror = () => {
+        if(revoke) URL.revokeObjectURL(url);
+        fail();
+      };
+      img.src = url;
+    };
+    const fromReader = () => {
+      const reader = new FileReader();
+      reader.onload = () => fromUrl(reader.result, false);
+      reader.onerror = fail;
+      reader.readAsDataURL(file);
+    };
+    const shrink = bmp => {
+      const canvas = document.createElement('canvas');
+      const max = 2400;
+      const k = Math.min(1, max / Math.max(bmp.width, bmp.height));
+      canvas.width = Math.max(1, Math.round(bmp.width * k));
+      canvas.height = Math.max(1, Math.round(bmp.height * k));
+      canvas.getContext('2d').drawImage(bmp, 0, 0, canvas.width, canvas.height);
+      if(bmp.close) bmp.close();
+      fromUrl(canvas.toDataURL('image/jpeg', 0.92), false);
+    };
+    if(typeof createImageBitmap === 'function'){
+      createImageBitmap(file).then(shrink).catch(() => {
+        const url = URL.createObjectURL(file);
+        const img = new Image();
+        img.onload = () => { URL.revokeObjectURL(url); if(!img.width) return fail(); resolve(img); };
+        img.onerror = () => { URL.revokeObjectURL(url); fromReader(); };
+        img.src = url;
+      });
+    } else {
+      fromReader();
+    }
+  });
+}
+function cropWindow(st){
+  const {vw, vh, target} = st;
+  if(target === 'cover'){
+    const w = vw * 0.94, h = vh * 0.86;
+    return {x:(vw-w)/2, y:(vh-h)/2, w, h, round:false};
+  }
+  const r = Math.min(vw, vh) * 0.42;
+  return {x:vw/2-r, y:vh/2-r, w:r*2, h:r*2, round:true};
+}
+function clampCrop(){
+  const st = cropState;
+  if(!st) return;
+  const win = cropWindow(st);
+  const w = st.img.width * st.scale, h = st.img.height * st.scale;
+  st.ox = Math.min(win.x, Math.max(win.x + win.w - w, st.ox));
+  st.oy = Math.min(win.y, Math.max(win.y + win.h - h, st.oy));
+}
+function renderCrop(){
+  const st = cropState;
+  if(!st) return;
+  const canvas = document.getElementById('cropCanvas');
+  const stage = document.getElementById('cropStage');
+  const vw = stage.clientWidth, vh = stage.clientHeight;
+  st.vw = vw; st.vh = vh;
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  canvas.width = Math.round(vw * dpr);
+  canvas.height = Math.round(vh * dpr);
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.fillStyle = '#0B1220';
+  ctx.fillRect(0, 0, vw, vh);
+  ctx.drawImage(st.img, st.ox, st.oy, st.img.width * st.scale, st.img.height * st.scale);
+  const win = cropWindow(st);
+  ctx.fillStyle = 'rgba(0,0,0,.5)';
+  ctx.beginPath();
+  ctx.rect(0, 0, vw, vh);
+  if(win.round){
+    ctx.arc(vw/2, vh/2, win.w/2, 0, Math.PI * 2);
+  } else {
+    ctx.rect(win.x, win.y, win.w, win.h);
+  }
+  ctx.fill('evenodd');
+  ctx.strokeStyle = 'rgba(34,211,166,.9)';
+  ctx.lineWidth = 2;
+  if(win.round){
+    ctx.beginPath();
+    ctx.arc(vw/2, vh/2, win.w/2, 0, Math.PI * 2);
+    ctx.stroke();
+  } else {
+    ctx.strokeRect(win.x, win.y, win.w, win.h);
+  }
+}
+function applyCropZoom(keepCenter){
+  const st = cropState;
+  if(!st) return;
+  const win = cropWindow(st);
+  const imgCx = keepCenter ? (win.x + win.w/2 - st.ox) / st.scale : st.img.width/2;
+  const imgCy = keepCenter ? (win.y + win.h/2 - st.oy) / st.scale : st.img.height/2;
+  const z = Number(document.getElementById('cropZoom').value) / 100;
+  st.minScale = Math.max(win.w / st.img.width, win.h / st.img.height);
+  st.scale = st.minScale * z;
+  st.ox = win.x + win.w/2 - imgCx * st.scale;
+  st.oy = win.y + win.h/2 - imgCy * st.scale;
+  clampCrop();
+  renderCrop();
+}
+function openCrop(img, target){
+  cropState = {img, target, ox:0, oy:0, scale:1, minScale:1, vw:300, vh:300, drag:null};
+  const stage = document.getElementById('cropStage');
+  stage.classList.toggle('cover', target === 'cover');
+  document.getElementById('cropZoom').value = '100';
+  document.getElementById('cropModal').hidden = false;
+  requestAnimationFrame(() => applyCropZoom(false));
+}
+function closeCrop(){
+  cropState = null;
+  document.getElementById('cropModal').hidden = true;
+}
+function exportCrop(){
+  const st = cropState;
+  const win = cropWindow(st);
+  const sx = (win.x - st.ox) / st.scale;
+  const sy = (win.y - st.oy) / st.scale;
+  const sw = win.w / st.scale;
+  const sh = win.h / st.scale;
+  const out = document.createElement('canvas');
+  if(st.target === 'cover'){ out.width = 960; out.height = 360; }
+  else { out.width = 320; out.height = 320; }
+  out.getContext('2d').drawImage(st.img, sx, sy, sw, sh, 0, 0, out.width, out.height);
+  return out.toDataURL('image/jpeg', 0.82);
+}
+async function beginCrop(file, target){
+  if(!file) return;
+  try{
+    const img = await fileToImage(file);
+    openCrop(img, target);
+  }catch(err){
+    showToast(t(isHeicFile(file) ? 'toastHeic' : 'toastPhotoFail'));
+  }
 }
 
 function currentSeason(){
@@ -1856,21 +2060,13 @@ function collectPlayer(){
   });
 }
 function compressImage(file, w, h){
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    const url = URL.createObjectURL(file);
-    img.onload = () => {
-      const canvas = document.createElement('canvas');
-      canvas.width = w; canvas.height = h;
-      const ctx = canvas.getContext('2d');
-      const scale = Math.max(w / img.width, h / img.height);
-      const sw = w / scale, sh = h / scale;
-      ctx.drawImage(img, (img.width - sw) / 2, (img.height - sh) / 2, sw, sh, 0, 0, w, h);
-      URL.revokeObjectURL(url);
-      resolve(canvas.toDataURL('image/jpeg', 0.72));
-    };
-    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('img')); };
-    img.src = url;
+  return fileToImage(file).then(img => {
+    const canvas = document.createElement('canvas');
+    canvas.width = w; canvas.height = h;
+    const scale = Math.max(w / img.width, h / img.height);
+    const dw = img.width * scale, dh = img.height * scale;
+    canvas.getContext('2d').drawImage(img, (w-dw)/2, (h-dh)/2, dw, dh);
+    return canvas.toDataURL('image/jpeg', 0.82);
   });
 }
 function compressPhoto(file){ return compressImage(file, 256, 256); }
@@ -2632,22 +2828,59 @@ document.getElementById('photoSheetClear').addEventListener('click', () => {
 document.getElementById('photoSheetCancel').addEventListener('click', closePhotoSheet);
 document.getElementById('photoSheetBack').addEventListener('click', closePhotoSheet);
 document.getElementById('p-birth').addEventListener('change', syncDateShown);
-document.getElementById('p-photo').addEventListener('change', async e => {
+document.getElementById('p-photo').addEventListener('change', e => {
   const file = e.target.files[0];
-  if(!file) return;
-  try{
-    photoDraft = await compressPhoto(file);
-    setBadge(document.getElementById('pPhotoBox'), photoDraft, initials());
-  }catch(err){ showToast(t('toastReadFail')); }
+  e.target.value = '';
+  beginCrop(file, 'photo');
 });
-document.getElementById('p-cover').addEventListener('change', async e => {
+document.getElementById('p-cover').addEventListener('change', e => {
   const file = e.target.files[0];
-  if(!file) return;
-  try{
-    coverDraft = await compressCover(file);
+  e.target.value = '';
+  beginCrop(file, 'cover');
+});
+document.getElementById('cropCancelBtn').addEventListener('click', closeCrop);
+document.getElementById('cropOkBtn').addEventListener('click', () => {
+  if(!cropState) return;
+  const data = exportCrop();
+  if(cropState.target === 'cover'){
+    coverDraft = data;
     setCoverPreview();
-  }catch(err){ showToast(t('toastReadFail')); }
+  } else {
+    photoDraft = data;
+    setBadge(document.getElementById('pPhotoBox'), photoDraft, initials());
+  }
+  closeCrop();
 });
+document.getElementById('cropZoom').addEventListener('input', () => applyCropZoom(true));
+(function bindCropDrag(){
+  const stage = document.getElementById('cropStage');
+  const pos = e => {
+    const t = e.touches ? e.touches[0] : e;
+    return {x:t.clientX, y:t.clientY};
+  };
+  stage.addEventListener('pointerdown', e => {
+    if(!cropState) return;
+    stage.setPointerCapture(e.pointerId);
+    cropState.drag = {x:e.clientX, y:e.clientY, ox:cropState.ox, oy:cropState.oy};
+  });
+  stage.addEventListener('pointermove', e => {
+    if(!cropState || !cropState.drag) return;
+    cropState.ox = cropState.drag.ox + (e.clientX - cropState.drag.x);
+    cropState.oy = cropState.drag.oy + (e.clientY - cropState.drag.y);
+    clampCrop();
+    renderCrop();
+  });
+  const end = () => { if(cropState) cropState.drag = null; };
+  stage.addEventListener('pointerup', end);
+  stage.addEventListener('pointercancel', end);
+  stage.addEventListener('wheel', e => {
+    if(!cropState) return;
+    e.preventDefault();
+    const z = document.getElementById('cropZoom');
+    z.value = String(Math.min(280, Math.max(100, Number(z.value) + (e.deltaY < 0 ? 8 : -8))));
+    applyCropZoom(true);
+  }, {passive:false});
+})();
 document.getElementById('savePlayerBtn').addEventListener('click', () => {
   player = collectPlayer();
   extraSelected = [...player.extra];
