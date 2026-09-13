@@ -450,6 +450,7 @@
     margin:0 0 12px;padding:12px;border-radius:14px;border:1px solid var(--border);
     background:var(--surface);color:var(--text);font:inherit;font-weight:800;cursor:pointer;width:100%;
   }
+  .live-kick:disabled{opacity:.55;cursor:default;}
   .match-clock-bar{margin:0 0 16px;}
   #formKickBtn{margin:8px 0 0;}
   #formClock{margin:0;}
@@ -953,9 +954,12 @@ uk:{
   matchOne:'{n} матч', matchFew:'{n} матчі', matchMany:'{n} матчів', matchEn:'{n} matches',
   liveHint:'Великі кнопки, зручно на полі', liveUndo:'Скасувати', liveDone:'Готово',
   liveKick:'Старт матчу', livePause:'Перерва', liveResume:'Продовжити',
-  liveClockWait:'Зараз {clock} (Варшава). Натисни старт — гол запишеться з хвилиною.',
-  liveClockRun:'{clock} · {m} хв · {half}',
+  clockEndPeriod:'Кінець: {half}', clockNextPeriod:'{half}', liveEndMatch:'Кінець матчу', liveMatchOver:'Матч закінчено',
+  liveClockWait:'Формат {fmt}. Зараз {clock} (Варшава). Старт — перший тайм.',
+  liveClockRun:'{clock} · {m} з {len} хв · {half} · {fmt}',
   liveClockPause:'Пауза {clock} · {m} хв · {half}',
+  liveClockBreak:'Перерва · далі {half} · {fmt}',
+  liveClockDone:'Матч закінчено · {fmt}',
   clockHalf1:'1-й тайм', clockHalf2:'2-й тайм', clockHalfN:'{n}-й тайм',
   eventAt:'{what} · {m} хв ({half}, {clock})',
   kickoffLine:'Старт {clock} (Варшава)',
@@ -1131,9 +1135,12 @@ pl:{
   matchOne:'{n} mecz', matchFew:'{n} mecze', matchMany:'{n} meczów', matchEn:'{n} matches',
   liveHint:'Duże przyciski, wygodne na boisku', liveUndo:'Cofnij', liveDone:'Gotowe',
   liveKick:'Start meczu', livePause:'Przerwa', liveResume:'Wznów',
-  liveClockWait:'Teraz {clock} (Warszawa). Start — gol zapisze się z minutą.',
-  liveClockRun:'{clock} · {m} min · {half}',
+  clockEndPeriod:'Koniec: {half}', clockNextPeriod:'{half}', liveEndMatch:'Koniec meczu', liveMatchOver:'Mecz zakończony',
+  liveClockWait:'Format {fmt}. Teraz {clock} (Warszawa). Start — pierwsza część.',
+  liveClockRun:'{clock} · {m} z {len} min · {half} · {fmt}',
   liveClockPause:'Pauza {clock} · {m} min · {half}',
+  liveClockBreak:'Przerwa · dalej {half} · {fmt}',
+  liveClockDone:'Mecz zakończony · {fmt}',
   clockHalf1:'1. połowa', clockHalf2:'2. połowa', clockHalfN:'{n}. część',
   eventAt:'{what} · {m} min ({half}, {clock})',
   kickoffLine:'Start {clock} (Warszawa)',
@@ -1309,9 +1316,12 @@ en:{
   matchOne:'{n} match', matchFew:'{n} matches', matchMany:'{n} matches', matchEn:'{n} matches',
   liveHint:'Big buttons, easy on the pitch', liveUndo:'Undo', liveDone:'Done',
   liveKick:'Kick-off', livePause:'Half-time', liveResume:'Resume',
-  liveClockWait:'Now {clock} (Warsaw). Tap start — a goal is saved with the minute.',
-  liveClockRun:'{clock} · {m} min · {half}',
+  clockEndPeriod:'End {half}', clockNextPeriod:'{half}', liveEndMatch:'Full time', liveMatchOver:'Match over',
+  liveClockWait:'Format {fmt}. Now {clock} (Warsaw). Start — first period.',
+  liveClockRun:'{clock} · {m}/{len} min · {half} · {fmt}',
   liveClockPause:'Paused {clock} · {m} min · {half}',
+  liveClockBreak:'Break · next {half} · {fmt}',
+  liveClockDone:'Full time · {fmt}',
   clockHalf1:'1st half', clockHalf2:'2nd half', clockHalfN:'period {n}',
   eventAt:'{what} · {m} min ({half}, {clock})',
   kickoffLine:'Kick-off {clock} (Warsaw)',
@@ -1487,9 +1497,12 @@ ru:{
   matchOne:'{n} матч', matchFew:'{n} матча', matchMany:'{n} матчей', matchEn:'{n} matches',
   liveHint:'Крупные кнопки, удобно на поле', liveUndo:'Отменить', liveDone:'Готово',
   liveKick:'Старт матча', livePause:'Перерыв', liveResume:'Продолжить',
-  liveClockWait:'Сейчас {clock} (Варшава). Нажми старт — гол запишется с минутой.',
-  liveClockRun:'{clock} · {m} мин · {half}',
+  clockEndPeriod:'Конец: {half}', clockNextPeriod:'{half}', liveEndMatch:'Конец матча', liveMatchOver:'Матч окончен',
+  liveClockWait:'Формат {fmt}. Сейчас {clock} (Варшава). Старт — первый тайм.',
+  liveClockRun:'{clock} · {m} из {len} мин · {half} · {fmt}',
   liveClockPause:'Пауза {clock} · {m} мин · {half}',
+  liveClockBreak:'Перерыв · дальше {half} · {fmt}',
+  liveClockDone:'Матч окончен · {fmt}',
   clockHalf1:'1-й тайм', clockHalf2:'2-й тайм', clockHalfN:'{n}-й тайм',
   eventAt:'{what} · {m} мин ({half}, {clock})',
   kickoffLine:'Старт {clock} (Варшава)',
@@ -1772,7 +1785,7 @@ let matchClock = emptyClock();
 let liveClockTimer = 0;
 const WARSAW_TZ = 'Europe/Warsaw';
 function emptyClock(){
-  return {startedAt:null, pausedAt:null, pauseMs:0, events:[]};
+  return {startedAt:null, pausedAt:null, pauseMs:0, events:[], period:1, phase:'idle', periodPlayMs:0, periodRunAt:null, playMs:0};
 }
 
 function emptyForm(){
@@ -1795,12 +1808,23 @@ function formatLength(id, custom){
   if(id === 'custom') return Math.min(120, Math.max(1, Number(custom) || 60));
   return FORMAT_MIN[id] || 60;
 }
-function periodShape(){
-  const fmt = document.getElementById('f-format')?.value || '2x30';
+function periodShape(fmt, custom){
+  fmt = fmt || document.getElementById('f-format')?.value || '2x30';
+  if(custom === undefined) custom = document.getElementById('f-matchlen')?.value;
   const m = String(fmt).match(/^(\d+)x(\d+)$/);
   if(m) return {parts: Number(m[1]), each: Number(m[2])};
-  const len = formatLength(fmt, document.getElementById('f-matchlen')?.value);
+  const len = formatLength(fmt, custom);
   return {parts: 2, each: Math.max(1, Math.round(len / 2))};
+}
+function formatTag(fmt, custom){
+  const {parts, each} = periodShape(fmt, custom);
+  return parts + '×' + each;
+}
+function clockPhase(){
+  if(matchClock.phase) return matchClock.phase;
+  if(!matchClock.startedAt) return 'idle';
+  if(matchClock.pausedAt) return 'break';
+  return 'run';
 }
 function warsawClock(ms){
   try{
@@ -1810,25 +1834,68 @@ function warsawClock(ms){
     return String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
   }
 }
-function halfLabel(n){
-  const {parts} = periodShape();
+function halfLabel(n, fmt, custom){
+  const {parts} = periodShape(fmt, custom);
+  n = Math.max(1, Number(n) || 1);
+  if(parts !== 2) return t('clockHalfN', {n});
   if(n === 1) return t('clockHalf1');
   if(n === 2) return t('clockHalf2');
-  return t('clockHalfN', {n: Math.min(n, parts)});
+  return t('clockHalfN', {n});
+}
+function periodPlayNow(now){
+  now = now || Date.now();
+  let ms = Number(matchClock.periodPlayMs) || 0;
+  if(clockPhase() === 'run' && matchClock.periodRunAt) ms += Math.max(0, now - matchClock.periodRunAt);
+  return Math.max(0, ms);
 }
 function playingMs(now){
-  if(!matchClock.startedAt) return 0;
-  const end = matchClock.pausedAt || now;
-  return Math.max(0, end - matchClock.startedAt - (matchClock.pauseMs || 0));
+  now = now || Date.now();
+  const frozen = Number(matchClock.playMs) || 0;
+  if(clockPhase() === 'run') return frozen + periodPlayNow(now);
+  return frozen + (Number(matchClock.periodPlayMs) || 0);
 }
 function clockStamp(now){
   now = now || Date.now();
   const {parts, each} = periodShape();
-  const playMin = playingMs(now) / 60000;
-  const period = Math.min(parts, Math.max(1, Math.floor(playMin / each) + 1));
-  const rawIn = playMin - (period - 1) * each;
-  const minute = Math.max(1, Math.floor(rawIn));
-  return {clock: warsawClock(now), period, minute, playMin};
+  const period = Math.min(parts, Math.max(1, Number(matchClock.period) || 1));
+  const playMin = periodPlayNow(now) / 60000;
+  const minute = Math.max(1, Math.floor(playMin));
+  return {clock: warsawClock(now), period, minute, playMin, each, parts};
+}
+function hydrateClock(raw){
+  const base = emptyClock();
+  if(!raw || typeof raw !== 'object') return base;
+  const events = Array.isArray(raw.events) ? raw.events : [];
+  if(raw.phase){
+    return {
+      startedAt: Number(raw.startedAt) || null,
+      pausedAt: Number(raw.pausedAt) || null,
+      pauseMs: Number(raw.pauseMs) || 0,
+      events,
+      period: Math.max(1, Number(raw.period) || 1),
+      phase: raw.phase,
+      periodPlayMs: Number(raw.periodPlayMs) || 0,
+      periodRunAt: Number(raw.periodRunAt) || null,
+      playMs: Number(raw.playMs) || 0
+    };
+  }
+  const startedAt = Number(raw.startedAt) || null;
+  if(!startedAt) return {...base, events};
+  const pausedAt = Number(raw.pausedAt) || null;
+  const pauseMs = Number(raw.pauseMs) || 0;
+  const end = pausedAt || Date.now();
+  const played = Math.max(0, end - startedAt - pauseMs);
+  const {parts, each} = periodShape();
+  const eachMs = each * 60000;
+  const period = Math.min(parts, Math.max(1, Math.floor(played / eachMs) + 1));
+  const periodPlayMs = played - (period - 1) * eachMs;
+  const phase = pausedAt ? (period >= parts && periodPlayMs >= eachMs * 0.95 ? 'done' : 'break') : 'run';
+  return {
+    startedAt, pausedAt, pauseMs: 0, events,
+    period, phase, periodPlayMs,
+    periodRunAt: phase === 'run' ? Date.now() - periodPlayMs : null,
+    playMs: (period - 1) * eachMs
+  };
 }
 function syncPlayedDefault(fromSettings){
   const fmt = document.getElementById('f-format').value;
@@ -1905,7 +1972,7 @@ function reportLines(m){
     return timeline.map(ev => {
       const met = METRICS.find(x => x.key === ev.key);
       const what = met ? metricLabel(met.key) : ev.key;
-      const half = halfLabel(ev.period || 1);
+      const half = halfLabel(ev.period || 1, m.format, m.matchLen);
       return {
         icon: met ? met.icon : '•',
         text: t('eventAt', {what, m: ev.minute || 1, half, clock: ev.clock || ''})
@@ -3102,12 +3169,7 @@ function restoreDraft(){
     if(d.behaviors) form.behaviors = {...form.behaviors, ...d.behaviors};
     if(d.editingId){ editingId = d.editingId; setEditUi(true); }
     if(d.matchClock && typeof d.matchClock === 'object'){
-      matchClock = {
-        startedAt: Number(d.matchClock.startedAt) || null,
-        pausedAt: Number(d.matchClock.pausedAt) || null,
-        pauseMs: Number(d.matchClock.pauseMs) || 0,
-        events: Array.isArray(d.matchClock.events) ? d.matchClock.events : []
-      };
+      matchClock = hydrateClock(d.matchClock);
     }
   }catch(e){}
 }
@@ -3174,7 +3236,8 @@ window.stepMetric = function(key, dir){
   if(live) live.textContent = next;
   if(dir === 1){
     liveStack.push(key);
-    if(!matchClock.startedAt) startMatchClock();
+    const phase = clockPhase();
+    if(phase === 'idle' || phase === 'break') startMatchClock();
     if(matchClock.startedAt){
       const stamp = clockStamp();
       matchClock.events.push({key, at: Date.now(), minute: stamp.minute, period: stamp.period, clock: stamp.clock});
@@ -3273,12 +3336,12 @@ function fillForm(m){
   document.getElementById('f-venue').value = m.venue === 'away' ? 'away' : 'home';
   document.getElementById('f-role').value = m.role === 'sub' ? 'sub' : 'start';
   document.getElementById('f-comment').value = m.comment;
-  matchClock = {
+  matchClock = hydrateClock({
     startedAt: m.kickoffAt || null,
-    pausedAt: null,
-    pauseMs: 0,
-    events: Array.isArray(m.timeline) ? m.timeline.slice() : []
-  };
+    events: Array.isArray(m.timeline) ? m.timeline.slice() : [],
+    phase: m.kickoffAt ? 'done' : 'idle',
+    period: periodShape(m.format, m.matchLen).parts
+  });
   syncCompetitionField();
   setEditUi(true);
   renderMetrics();
@@ -3288,7 +3351,7 @@ function fillForm(m){
   syncDateShown();
   persistDraft();
   renderLiveClock();
-  if(matchClock.startedAt && !matchClock.pausedAt) startClockTick();
+  if(clockPhase() === 'run') startClockTick();
 }
 
 function collectMatch(){
@@ -3361,9 +3424,10 @@ document.getElementById('cancelEditBtn').addEventListener('click', resetForm);
     }
     if(id === 'f-kind') syncCompetitionField();
     if(id === 'f-date') syncDateShown();
-    if(id === 'f-format'){ syncPlayedDefault(true); }
+    if(id === 'f-format'){ syncPlayedDefault(true); renderLiveClock(); }
     if(id === 'f-matchlen' && document.getElementById('f-format').value === 'custom'){
       document.getElementById('f-minutes').value = document.getElementById('f-matchlen').value;
+      renderLiveClock();
     }
     updateHero(); persistDraft();
   };
@@ -3449,7 +3513,7 @@ function showView(name){
   if(name === 'history') renderHistory();
   if(name === 'stats') renderStats();
   renderLiveClock();
-  if(matchClock.startedAt) startClockTick();
+  if(clockPhase() === 'run') startClockTick();
   try{ sessionStorage.setItem(VIEW_KEY, name === 'report' ? 'history' : name); }catch(e){}
 }
 function restoreView(){
@@ -3902,19 +3966,25 @@ function startClockTick(){
 }
 function renderLiveClock(){
   const now = Date.now();
+  const phase = clockPhase();
   const stamp = matchClock.startedAt ? clockStamp(now) : null;
-  const half = stamp ? halfLabel(stamp.period) : '';
-  let text = t('liveClockWait', {clock: warsawClock(now)});
+  const fmt = formatTag();
+  const {parts} = periodShape();
+  let text = t('liveClockWait', {clock: warsawClock(now), fmt});
   let btnText = t('liveKick');
   let running = false;
-  let paused = false;
-  if(matchClock.startedAt && matchClock.pausedAt){
-    text = t('liveClockPause', {clock: warsawClock(now), m: stamp.minute, half});
-    btnText = t('liveResume');
-    paused = true;
-  } else if(matchClock.startedAt){
-    text = t('liveClockRun', {clock: stamp.clock, m: stamp.minute, half});
-    btnText = t('livePause');
+  if(phase === 'done'){
+    text = t('liveClockDone', {fmt});
+    btnText = t('liveMatchOver');
+  } else if(phase === 'break'){
+    const next = halfLabel((Number(matchClock.period) || 1) + 1);
+    text = t('liveClockBreak', {half: next, fmt});
+    btnText = t('clockNextPeriod', {half: next});
+  } else if(phase === 'run' && stamp){
+    const half = halfLabel(stamp.period);
+    text = t('liveClockRun', {clock: stamp.clock, m: stamp.minute, len: stamp.each, half, fmt});
+    if(stamp.period >= parts) btnText = t('liveEndMatch');
+    else btnText = t('clockEndPeriod', {half});
     running = true;
   }
   ['liveClock','formClock'].forEach(id => {
@@ -3927,28 +3997,50 @@ function renderLiveClock(){
     const btn = document.getElementById(id);
     if(!btn) return;
     btn.textContent = btnText;
+    btn.disabled = phase === 'done';
     btn.classList.toggle('go', !running);
   });
 }
 function startMatchClock(){
   const now = Date.now();
-  if(matchClock.pausedAt){
-    matchClock.pauseMs += now - matchClock.pausedAt;
-    matchClock.pausedAt = null;
-  } else if(!matchClock.startedAt){
-    matchClock.startedAt = now;
+  const phase = clockPhase();
+  if(phase === 'done') return;
+  if(phase === 'break'){
+    matchClock.period = (Number(matchClock.period) || 1) + 1;
+    matchClock.periodPlayMs = 0;
+    matchClock.playMs = Number(matchClock.playMs) || 0;
+  } else if(phase !== 'run'){
+    matchClock.startedAt = matchClock.startedAt || now;
+    matchClock.period = 1;
+    matchClock.periodPlayMs = 0;
+    matchClock.playMs = 0;
   }
+  matchClock.phase = 'run';
+  matchClock.periodRunAt = now;
+  matchClock.pausedAt = null;
   startClockTick();
   renderLiveClock();
   persistDraft();
 }
+function endCurrentPeriod(){
+  const now = Date.now();
+  const played = periodPlayNow(now);
+  matchClock.playMs = (Number(matchClock.playMs) || 0) + played;
+  matchClock.periodPlayMs = played;
+  matchClock.periodRunAt = null;
+  matchClock.pausedAt = now;
+  const {parts} = periodShape();
+  const period = Number(matchClock.period) || 1;
+  matchClock.phase = period < parts ? 'break' : 'done';
+  if(matchClock.phase === 'done') stopClockTick();
+  renderLiveClock();
+  persistDraft();
+}
 function toggleMatchClock(){
-  if(!matchClock.startedAt || matchClock.pausedAt) startMatchClock();
-  else {
-    matchClock.pausedAt = Date.now();
-    renderLiveClock();
-    persistDraft();
-  }
+  const phase = clockPhase();
+  if(phase === 'done') return;
+  if(phase === 'idle' || phase === 'break') startMatchClock();
+  else if(phase === 'run') endCurrentPeriod();
 }
 function openLive(){
   fillPitchSelect(document.getElementById('live-position'), currentPitch());
@@ -3956,7 +4048,7 @@ function openLive(){
   document.getElementById('app').classList.add('live-on');
   updateHero();
   renderLiveClock();
-  if(matchClock.startedAt && !matchClock.pausedAt) startClockTick();
+  if(clockPhase() === 'run') startClockTick();
 }
 function closeLive(){
   document.getElementById('app').classList.remove('live-on');
@@ -3964,7 +4056,7 @@ function closeLive(){
   renderMetrics();
   updateHero();
   renderLiveClock();
-  if(matchClock.startedAt && !matchClock.pausedAt) startClockTick();
+  if(clockPhase() === 'run') startClockTick();
   persistDraft();
 }
 document.getElementById('liveStartBtn').addEventListener('click', openLive);
