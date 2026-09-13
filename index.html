@@ -127,6 +127,7 @@
   .pf-lab{display:flex;align-items:center;gap:8px;min-width:0;}
   .pf-row .g{font-variant-numeric:tabular-nums;color:var(--accent);}
   .pf-row.bad .g{color:var(--danger);}
+  .pf-coach p{margin:0;font-size:.9rem;font-weight:600;line-height:1.45;}
   .card-edit{
     margin:16px 0 8px;border:1px solid var(--border);border-radius:18px;
     background:var(--surface);padding:4px 14px 14px;
@@ -902,7 +903,24 @@ uk:{
   toastTooManyPlayers:'Можна додати не більше {n} гравців',
   pfSeasonAvg:'середня за сезон', pfAllAvg:'середня за весь час',
   pfTrend:'{n} за останні {k} матчів', pfLast:'Останній матч', pfSeason:'Сезон',
-  pfStrengths:'Сильні сторони', pfFocus:'Потребують уваги',
+  pfStrengths:'Сильні сторони', pfFocus:'Зони розвитку',
+  pfCoach:'Розбір',
+  pf_dribbles:'Обводка', pf_tackles:'Відбір', pf_passes:'Гострі передачі',
+  pf_losses:'Втрати', pf_badpass:'Неточні передачі', pf_duelslost:'Програні єдиноборства',
+  pf_duelswon:'Виграні єдиноборства', pf_goals:'Голи', pf_assists:'Асисти',
+  pf_shots:'Удари в площину', pf_badtouch:'Втрати прийому', pf_interceptions:'Перехоплення',
+  coachDribbleLoss:'За останні {n} матчів {name} частіше успішно обігрує суперників, але втрат після обводок побільшало. Після обіграшу одразу вирішуй: пас товаришу чи удар, не веди м’яч ще раз.',
+  coachPassBad:'За останні {n} матчів {name} частіше віддає гострі передачі, але неточних пасів теж більше. Перед пасом підніми голову: якщо гострого варіанта немає — віддай найближчому.',
+  coachTackleLoss:'За останні {n} матчів {name} частіше відбирає м’яч, але втрат побільшало. Після відбору одразу простий пас, не обводь на місці.',
+  coachDuels:'За останні {n} матчів {name} частіше програє єдиноборства. Підходь раніше і закривай суперника тілом, не рукою.',
+  coachFinish:'За останні {n} матчів {name} частіше б’є по воротах, але голів не додалося. Бий раніше і цілися ближче до штанги.',
+  coachDribbleGood:'За останні {n} матчів {name} частіше обігрує суперників і при цьому не втрачає м’яч частіше. Тримайся цього: обводка ближче до чужих воріт, не біля своїх.',
+  coachLoss:'За останні {n} матчів у {name} побільшало втрат. Прийняв — одразу пас товаришу. Не крутись, коли суперник поруч.',
+  coachBadtouch:'За останні {n} матчів {name} частіше губить м’яч на прийомі. Приймай у вільне місце, не в ноги супернику.',
+  coachNowDribbleLoss:'{name} добре обігрує суперників, але після обводки часто втрачає м’яч. Після обіграшу одразу пас або удар.',
+  coachNowPair:'{name} сильний у цьому: {plus}. Зона розвитку — {minus}. На тренуванні зроби акцент саме на цьому.',
+  coachNowPlus:'Сильна сторона {name} зараз — {plus}. Запам’ятай, як це виходить, і роби так само.',
+  coachNowMinus:'Зона розвитку для {name} — {minus}. На наступній грі зверни на це увагу з перших хвилин.',
   pfEmpty:'Зіграй матчі — тут з’явиться футбольний профіль.',
   seasonFilter:'Сезон', seasonCurrent:'{s} · поточний', seasonAll:'Усі сезони',
   ageOne:'{n} рік', ageFew:'{n} роки', ageMany:'{n} років', ageEn:'{n} years',
@@ -1055,7 +1073,24 @@ pl:{
   toastTooManyPlayers:'Można dodać najwyżej {n} zawodników',
   pfSeasonAvg:'średnia za sezon', pfAllAvg:'średnia za cały czas',
   pfTrend:'{n} w ostatnich {k} meczach', pfLast:'Ostatni mecz', pfSeason:'Sezon',
-  pfStrengths:'Mocne strony', pfFocus:'Do poprawy',
+  pfStrengths:'Mocne strony', pfFocus:'Strefy rozwoju',
+  pfCoach:'Rozbiór gry',
+  pf_dribbles:'Drybling', pf_tackles:'Odbiór', pf_passes:'Kluczowe podania',
+  pf_losses:'Straty', pf_badpass:'Niedokładne podania', pf_duelslost:'Przegrane pojedynki',
+  pf_duelswon:'Wygrane pojedynki', pf_goals:'Gole', pf_assists:'Asysty',
+  pf_shots:'Strzały celne', pf_badtouch:'Straty przy przyjęciu', pf_interceptions:'Przechwyty',
+  coachDribbleLoss:'W ostatnich {n} meczach {name} częściej wygrywa drybling, ale strat po objeściu przybyło. Po minięciu rywala od razu zdecyduj: podanie albo strzał, nie prowadź piłki dalej.',
+  coachPassBad:'W ostatnich {n} meczach {name} częściej gra kluczowe podania, ale niedokładnych też jest więcej. Przed podaniem podnieś głowę: jeśli nie ma ostrego wariantu, oddaj najbliższemu.',
+  coachTackleLoss:'W ostatnich {n} meczach {name} częściej odbiera piłkę, ale strat przybyło. Po odbiorze od razu proste podanie, nie drybluj w miejscu.',
+  coachDuels:'W ostatnich {n} meczach {name} częściej przegrywa pojedynki. Dochodź wcześniej i zasłaniaj rywala ciałem, nie ręką.',
+  coachFinish:'W ostatnich {n} meczach {name} częściej strzela, ale goli nie przybyło. Strzelaj wcześniej i celuj bliżej słupka.',
+  coachDribbleGood:'W ostatnich {n} meczach {name} częściej mija rywali i nie traci piłki częściej. Tak trzymaj: drybling bliżej bramki rywala, nie przy własnej.',
+  coachLoss:'W ostatnich {n} meczach {name} częściej traci piłkę. Przyjąłeś — od razu podaj. Nie kręć się, gdy rywal jest blisko.',
+  coachBadtouch:'W ostatnich {n} meczach {name} częściej traci piłkę przy przyjęciu. Przyjmuj w wolne miejsce, nie w nogi rywala.',
+  coachNowDribbleLoss:'{name} dobrze mija rywali, ale po dryblingu często traci piłkę. Po objeściu od razu podanie albo strzał.',
+  coachNowPair:'Mocna strona {name} to {plus}. Strefa rozwoju — {minus}. Na treningu połóż nacisk właśnie na to.',
+  coachNowPlus:'Mocna strona {name} teraz to {plus}. Zapamiętaj, jak to wychodzi, i rób tak samo.',
+  coachNowMinus:'Strefa rozwoju dla {name} to {minus}. W następnym meczu zwróć na to uwagę od pierwszych minut.',
   pfEmpty:'Zagraj mecze — tutaj pojawi się profil piłkarski.',
   seasonFilter:'Sezon', seasonCurrent:'{s} · bieżący', seasonAll:'Wszystkie sezony',
   ageOne:'{n} rok', ageFew:'{n} lata', ageMany:'{n} lat', ageEn:'{n} years',
@@ -1208,7 +1243,24 @@ en:{
   toastTooManyPlayers:'You can add up to {n} players',
   pfSeasonAvg:'season average', pfAllAvg:'all-time average',
   pfTrend:'{n} over the last {k} matches', pfLast:'Last match', pfSeason:'Season',
-  pfStrengths:'Strengths', pfFocus:'Needs work',
+  pfStrengths:'Strengths', pfFocus:'Development areas',
+  pfCoach:'What it means',
+  pf_dribbles:'Dribbles', pf_tackles:'Tackles', pf_passes:'Key passes',
+  pf_losses:'Turnovers', pf_badpass:'Incomplete passes', pf_duelslost:'Duels lost',
+  pf_duelswon:'Duels won', pf_goals:'Goals', pf_assists:'Assists',
+  pf_shots:'Shots on target', pf_badtouch:'First-touch turnovers', pf_interceptions:'Interceptions',
+  coachDribbleLoss:'Over the last {n} matches {name} has beaten his man more often, but turnovers after dribbles have gone up. After the take-on, decide at once: pass or shoot — do not keep running with the ball.',
+  coachPassBad:'Over the last {n} matches {name} plays more key passes, but incomplete ones have risen too. Look up before you pass: if the sharp ball is not on, give it to the nearest teammate.',
+  coachTackleLoss:'Over the last {n} matches {name} wins the ball more often, but turnovers have risen. After the tackle, play a simple pass — do not dribble on the spot.',
+  coachDuels:'Over the last {n} matches {name} is losing more duels. Arrive earlier and use the body, not the arm.',
+  coachFinish:'Over the last {n} matches {name} shoots more often, but the goals have not followed. Shoot earlier and aim closer to the post.',
+  coachDribbleGood:'Over the last {n} matches {name} beats his man more often without turning the ball over more. Keep that: dribble closer to their goal, not your own.',
+  coachLoss:'Over the last {n} matches {name} is giving the ball away more. Receive, then pass. Do not spin if a defender is tight.',
+  coachBadtouch:'Over the last {n} matches {name} loses the ball more on the first touch. Take it into space, not into the opponent’s feet.',
+  coachNowDribbleLoss:'{name} beats players well, but often loses the ball after the dribble. After the take-on, pass or shoot straight away.',
+  coachNowPair:'{name} is strong at {plus}. The development area is {minus}. Make that the focus in training.',
+  coachNowPlus:'{name}’s current strength is {plus}. Remember how that feels and do it again.',
+  coachNowMinus:'The development area for {name} is {minus}. In the next match, watch this from the first minute.',
   pfEmpty:'Play matches — a football profile will show up here.',
   seasonFilter:'Season', seasonCurrent:'{s} · current', seasonAll:'All seasons',
   ageOne:'{n} year', ageFew:'{n} years', ageMany:'{n} years', ageEn:'{n} years',
@@ -1361,7 +1413,24 @@ ru:{
   toastTooManyPlayers:'Можно добавить не больше {n} игроков',
   pfSeasonAvg:'средняя за сезон', pfAllAvg:'средняя за всё время',
   pfTrend:'{n} за последние {k} матчей', pfLast:'Последний матч', pfSeason:'Сезон',
-  pfStrengths:'Сильные стороны', pfFocus:'Требуют внимания',
+  pfStrengths:'Сильные стороны', pfFocus:'Зоны развития',
+  pfCoach:'Разбор',
+  pf_dribbles:'Обводка', pf_tackles:'Отбор', pf_passes:'Острые передачи',
+  pf_losses:'Потери', pf_badpass:'Неточные передачи', pf_duelslost:'Проигранные единоборства',
+  pf_duelswon:'Выигранные единоборства', pf_goals:'Голы', pf_assists:'Ассисты',
+  pf_shots:'Удары в створ', pf_badtouch:'Потери приёма', pf_interceptions:'Перехваты',
+  coachDribbleLoss:'За последние {n} матчей {name} стал чаще успешно обыгрывать соперников, но потерь после обводок стало больше. После обыгрыша сразу решай: пас товарищу или удар, не веди мяч ещё раз.',
+  coachPassBad:'За последние {n} матчей {name} чаще отдаёт острые передачи, но неточных пасов тоже больше. Перед пасом подними голову: если острого варианта нет — отдай ближайшему.',
+  coachTackleLoss:'За последние {n} матчей {name} чаще отбирает мяч, но потерь стало больше. После отбора сразу простой пас, не обводи на месте.',
+  coachDuels:'За последние {n} матчей {name} чаще проигрывает единоборства. Подходи раньше и закрывай соперника телом, не рукой.',
+  coachFinish:'За последние {n} матчей {name} чаще бьёт по воротам, но голов не прибавилось. Бей раньше и целься ближе к штанге.',
+  coachDribbleGood:'За последние {n} матчей {name} чаще обыгрывает соперников и при этом не теряет мяч чаще. Так держать: обводка ближе к чужим воротам, не у своих.',
+  coachLoss:'За последние {n} матчей у {name} стало больше потерь. Принял — сразу пас товарищу. Не крутись, когда соперник рядом.',
+  coachBadtouch:'За последние {n} матчей {name} чаще теряет мяч на приёме. Принимай в свободное место, не в ноги сопернику.',
+  coachNowDribbleLoss:'{name} хорошо обыгрывает соперников, но после обводки часто теряет мяч. После обыгрыша сразу пас или удар.',
+  coachNowPair:'Сильная сторона {name} — {plus}. Зона развития — {minus}. На тренировке сделай акцент именно на этом.',
+  coachNowPlus:'Сильная сторона {name} сейчас — {plus}. Запомни, как это получается, и делай так же.',
+  coachNowMinus:'Зона развития для {name} — {minus}. В следующей игре обрати на это внимание с первых минут.',
   pfEmpty:'Сыграй матчи — здесь появится футбольный профиль.',
   seasonFilter:'Сезон', seasonCurrent:'{s} · текущий', seasonAll:'Все сезоны',
   ageOne:'{n} год', ageFew:'{n} года', ageMany:'{n} лет', ageEn:'{n} years',
@@ -1483,6 +1552,10 @@ function canvasFont(weight, size){
   return weight + ' ' + size + 'px ' + (getComputedStyle(document.body).fontFamily || 'sans-serif');
 }
 function metricLabel(key){ return t('m_'+key); }
+function profileMetricLabel(key){
+  const custom = t('pf_'+key);
+  return (!custom || custom === 'pf_'+key) ? metricLabel(key) : custom;
+}
 function behaviorLabel(key){ return t('b_'+key); }
 function posLabel(key){ return ({fwd:t('posFwd'), mid:t('posMid'), def:t('posDef'), gk:t('posGk')})[key] || key; }
 function isRoleCode(code){ return ROLE_CODES.includes(code); }
@@ -2392,7 +2465,6 @@ function loadPlayer(){
   }
   extraSelected = [...(player.extra || [])];
   syncSettingsFromPlayer();
-  return migrated;
 }
 function normalizePlayer(p, id){
   const d = defaultPlayer();
@@ -2474,6 +2546,51 @@ function lastFiveDelta(list){
   if(!prev.length) return null;
   return {d: avgRating(last) - avgRating(prev), k: last.length};
 }
+function ratePerMatch(list, key){
+  return list.length ? countSum(list, key) / list.length : 0;
+}
+function metricRose(now, prev, key, abs){
+  const a = ratePerMatch(now, key), b = ratePerMatch(prev, key);
+  const floor = abs != null ? abs : (key === 'goals' || key === 'assists' || key === 'ledtogoal' ? 0.18 : 0.35);
+  return (a - b) >= floor || (b >= 0.2 && a >= b * 1.22);
+}
+function metricFlat(now, prev, key, abs){
+  return Math.abs(ratePerMatch(now, key) - ratePerMatch(prev, key)) < (abs || 0.28);
+}
+function coachWindows(list){
+  if(list.length < 6) return null;
+  const k = Math.min(8, Math.max(4, Math.floor(list.length / 2)));
+  const now = list.slice(-k);
+  const prev = list.slice(0, -k).slice(-Math.max(k, 4));
+  if(prev.length < 3) return null;
+  return {n: now.length, now, prev};
+}
+function firstName(){
+  return (player.firstName || '').trim() || displayName();
+}
+function profileCoachNote(list, strengths, focus){
+  const name = firstName();
+  const win = coachWindows(list);
+  const plusKey = strengths[0]?.m.key;
+  const minusKey = focus[0]?.m.key;
+  if(win){
+    const {n, now, prev} = win;
+    const vars = {name, n};
+    if(metricRose(now, prev, 'dribbles') && metricRose(now, prev, 'losses')) return t('coachDribbleLoss', vars);
+    if(metricRose(now, prev, 'passes') && metricRose(now, prev, 'badpass', 0.28)) return t('coachPassBad', vars);
+    if(metricRose(now, prev, 'tackles') && metricRose(now, prev, 'losses')) return t('coachTackleLoss', vars);
+    if(metricRose(now, prev, 'duelslost', 0.3) && !metricRose(now, prev, 'duelswon', 0.45)) return t('coachDuels', vars);
+    if(metricRose(now, prev, 'shots', 0.28) && !metricRose(now, prev, 'goals', 0.12)) return t('coachFinish', vars);
+    if(metricRose(now, prev, 'dribbles') && (metricFlat(now, prev, 'losses') || ratePerMatch(now, 'losses') < ratePerMatch(prev, 'losses'))) return t('coachDribbleGood', vars);
+    if(metricRose(now, prev, 'badtouch', 0.25)) return t('coachBadtouch', vars);
+    if(metricRose(now, prev, 'losses')) return t('coachLoss', vars);
+  }
+  if(plusKey === 'dribbles' && (minusKey === 'losses' || minusKey === 'badtouch')) return t('coachNowDribbleLoss', {name});
+  if(plusKey && minusKey) return t('coachNowPair', {name, plus: profileMetricLabel(plusKey).toLowerCase(), minus: profileMetricLabel(minusKey).toLowerCase()});
+  if(plusKey) return t('coachNowPlus', {name, plus: profileMetricLabel(plusKey).toLowerCase()});
+  if(minusKey) return t('coachNowMinus', {name, minus: profileMetricLabel(minusKey).toLowerCase()});
+  return '';
+}
 function renderPlayerFeed(){
   const el = document.getElementById('playerFeed');
   if(!el) return;
@@ -2505,10 +2622,11 @@ function renderPlayerFeed(){
     return {m, w, total, grade: metricGrade(total / list.length, m.key, w)};
   }).filter(Boolean);
   const strengths = grades.filter(g => g.w > 0).sort((a,b)=> b.grade - a.grade).slice(0, 3);
-  const weakNeg = grades.filter(g => g.w < 0).sort((a,b)=> a.grade - b.grade).slice(0, 2);
+  const weakNeg = grades.filter(g => g.w < 0).sort((a,b)=> a.grade - b.grade).slice(0, 3);
   const weakPos = grades.filter(g => g.w > 0 && g.grade < 6.6).sort((a,b)=> a.grade - b.grade);
-  const focus = (weakNeg.length ? weakNeg : weakPos).slice(0, 2);
-  const row = (g, bad) => `<div class="pf-row${bad ? ' bad' : ''}"><span class="pf-lab"><span class="ic">${g.m.icon}</span>${escapeHtml(metricLabel(g.m.key))}</span><span class="g">${fmtNum(g.grade, 1)}</span></div>`;
+  const focus = (weakNeg.length ? weakNeg : weakPos).slice(0, 3);
+  const row = (g, bad) => `<div class="pf-row${bad ? ' bad' : ''}"><span class="pf-lab"><span class="ic">${g.m.icon}</span>${escapeHtml(profileMetricLabel(g.m.key))}</span><span class="g">${fmtNum(g.grade, 1)}</span></div>`;
+  const note = profileCoachNote(list, strengths, focus);
   el.innerHTML = `<div class="pf-card">
       <div class="pf-rate">${fmtNum(avg, 2)}<small>${escapeHtml(season ? t('pfSeasonAvg') : t('pfAllAvg'))}</small></div>
       ${trendHtml}
@@ -2519,7 +2637,8 @@ function renderPlayerFeed(){
       </div>
     </div>
     ${strengths.length ? `<div class="pf-card"><h3>${escapeHtml(t('pfStrengths'))}</h3>${strengths.map(g => row(g, false)).join('')}</div>` : ''}
-    ${focus.length ? `<div class="pf-card"><h3>${escapeHtml(t('pfFocus'))}</h3>${focus.map(g => row(g, true)).join('')}</div>` : ''}`;
+    ${focus.length ? `<div class="pf-card"><h3>${escapeHtml(t('pfFocus'))}</h3>${focus.map(g => row(g, true)).join('')}</div>` : ''}
+    ${note ? `<div class="pf-card pf-coach"><h3>${escapeHtml(t('pfCoach'))}</h3><p>${escapeHtml(note)}</p></div>` : ''}`;
 }
 function applyHeader(){
   const no = shirtNo();
