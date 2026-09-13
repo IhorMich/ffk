@@ -62,6 +62,8 @@
   }
   .photo-box img{width:100%;height:100%;object-fit:cover;}
   .pos-chips{display:flex;flex-wrap:wrap;gap:6px;}
+  .pos-group-title{width:100%;font-size:.72rem;font-weight:800;color:var(--text-soft);letter-spacing:.02em;margin:8px 0 2px;}
+  .pos-chips .pos-group-title:first-child{margin-top:0;}
   .pos-chip{
     padding:7px 10px;border-radius:10px;border:1px solid var(--border);
     background:var(--surface);color:var(--text);font-size:.7rem;font-weight:700;cursor:pointer;line-height:1.25;text-align:left;
@@ -518,6 +520,7 @@ const DRAFT_KEY = 'ffk_draft';
 const EXPORT_KEY = 'ffk_last_export';
 const SETTINGS_KEY = 'ffk_settings';
 const PLAYER_KEY = 'ffk_player_v1';
+const ROLE_CODES = ['gk','def','mid','fwd'];
 const POS_CODES = ['GK','CB','LB','RB','LWB','RWB','CDM','CM','CAM','LM','RM','LW','RW','ST','CF'];
 const POS_GROUP = {
   GK:'gk', CB:'def', LB:'def', RB:'def', LWB:'def', RWB:'def',
@@ -535,7 +538,8 @@ uk:{
   labelKind:'Тип гри', labelTournament:'Турнір', phTournament:'Назва турніру',
   labelVenue:'Де грали', venueHome:'Вдома', venueAway:'На виїзді', labelRole:'Вихід',
   labelComment:'Коментар', phComment:'Що запам’яталось',
-  posFwd:'Нападник (FW)', posMid:'Півзахисник (MF)', posDef:'Захисник (DF)', posGk:'Воротар (GK)',
+  posFwd:'Нападник', posMid:'Півзахисник', posDef:'Захисник', posGk:'Воротар',
+  posBasic:'Основні', posExtended:'Розширений список',
   posShortFwd:'Нап (FW)', posShortMid:'ПЗ (MF)', posShortDef:'Зах (DF)', posShortGk:'Врт (GK)',
   pc_GK:'Воротар', pc_CB:'Центральний захисник', pc_LB:'Лівий захисник', pc_RB:'Правий захисник',
   pc_LWB:'Лівий вінгбек', pc_RWB:'Правий вінгбек', pc_CDM:'Опорний півзахисник', pc_CM:'Центральний півзахисник',
@@ -597,7 +601,8 @@ pl:{
   labelKind:'Typ meczu', labelTournament:'Turniej', phTournament:'Nazwa turnieju',
   labelVenue:'Gdzie grali', venueHome:'U siebie', venueAway:'Wyjazd', labelRole:'Wejście',
   labelComment:'Komentarz', phComment:'Co zapamiętałeś',
-  posFwd:'Napastnik (FW)', posMid:'Pomocnik (MF)', posDef:'Obrońca (DF)', posGk:'Bramkarz (GK)',
+  posFwd:'Napastnik', posMid:'Pomocnik', posDef:'Obrońca', posGk:'Bramkarz',
+  posBasic:'Podstawowe', posExtended:'Lista rozszerzona',
   posShortFwd:'Nap (FW)', posShortMid:'Pom (MF)', posShortDef:'Obr (DF)', posShortGk:'Brk (GK)',
   pc_GK:'Bramkarz', pc_CB:'Środkowy obrońca', pc_LB:'Lewy obrońca', pc_RB:'Prawy obrońca',
   pc_LWB:'Lewy wahadłowy', pc_RWB:'Prawy wahadłowy', pc_CDM:'Defensywny pomocnik', pc_CM:'Środkowy pomocnik',
@@ -659,7 +664,8 @@ en:{
   labelKind:'Match type', labelTournament:'Competition', phTournament:'Competition name',
   labelVenue:'Home or away', venueHome:'Home', venueAway:'Away', labelRole:'Appearance',
   labelComment:'Comment', phComment:'What stood out',
-  posFwd:'Forward (FW)', posMid:'Midfielder (MF)', posDef:'Defender (DF)', posGk:'Goalkeeper (GK)',
+  posFwd:'Forward', posMid:'Midfielder', posDef:'Defender', posGk:'Goalkeeper',
+  posBasic:'Basic', posExtended:'Extended list',
   posShortFwd:'FW', posShortMid:'MF', posShortDef:'DF', posShortGk:'GK',
   pc_GK:'Goalkeeper', pc_CB:'Centre-back', pc_LB:'Left-back', pc_RB:'Right-back',
   pc_LWB:'Left wing-back', pc_RWB:'Right wing-back', pc_CDM:'Defensive midfielder', pc_CM:'Central midfielder',
@@ -721,7 +727,8 @@ ru:{
   labelKind:'Тип игры', labelTournament:'Турнир', phTournament:'Название турнира',
   labelVenue:'Где играли', venueHome:'Дома', venueAway:'На выезде', labelRole:'Выход',
   labelComment:'Комментарий', phComment:'Что запомнилось',
-  posFwd:'Нападающий (FW)', posMid:'Полузащитник (MF)', posDef:'Защитник (DF)', posGk:'Вратарь (GK)',
+  posFwd:'Нападающий', posMid:'Полузащитник', posDef:'Защитник', posGk:'Вратарь',
+  posBasic:'Основные', posExtended:'Расширенный список',
   posShortFwd:'Нап (FW)', posShortMid:'ПЗ (MF)', posShortDef:'Защ (DF)', posShortGk:'Врт (GK)',
   pc_GK:'Вратарь', pc_CB:'Центральный защитник', pc_LB:'Левый защитник', pc_RB:'Правый защитник',
   pc_LWB:'Левый вингбек', pc_RWB:'Правый вингбек', pc_CDM:'Опорный полузащитник', pc_CM:'Центральный полузащитник',
@@ -791,41 +798,52 @@ function t(key, vars){
 function metricLabel(key){ return t('m_'+key); }
 function behaviorLabel(key){ return t('b_'+key); }
 function posLabel(key){ return ({fwd:t('posFwd'), mid:t('posMid'), def:t('posDef'), gk:t('posGk')})[key] || key; }
+function isRoleCode(code){ return ROLE_CODES.includes(code); }
+function isPosCode(code){ return POS_CODES.includes(code); }
+function isPitchCode(code){ return isRoleCode(code) || isPosCode(code); }
 function pitchPosLabel(code){
-  if(!POS_CODES.includes(code)) return code;
+  if(isRoleCode(code)) return posLabel(code);
+  if(!isPosCode(code)) return code;
   const name = t('pc_'+code);
   return name === 'pc_'+code ? code : `${name} (${code})`;
 }
 function pitchPosLabelShort(code){
-  if(!POS_CODES.includes(code)) return code;
+  if(isRoleCode(code)) return posLabel(code);
+  if(!isPosCode(code)) return code;
   const name = t('ps_'+code);
   return name === 'ps_'+code ? code : `${name} (${code})`;
 }
 function ratingPosOf(code){
   if(POS_GROUP[code]) return POS_GROUP[code];
-  if(['fwd','mid','def','gk'].includes(code)) return code;
+  if(isRoleCode(code)) return code;
   return guessPos(code);
 }
 function defaultPitch(){
-  if(POS_CODES.includes(player.primary)) return player.primary;
-  return GROUP_TO_POS[settings.position] || 'RW';
+  if(isPitchCode(player.primary)) return player.primary;
+  return isRoleCode(settings.position) ? settings.position : 'fwd';
 }
 function orderedPitchCodes(){
-  const pref = [player.primary, ...(player.extra || [])].filter(c => POS_CODES.includes(c));
+  const pref = [player.primary, ...(player.extra || [])].filter(c => isPosCode(c));
   return [...new Set(pref.concat(POS_CODES))];
 }
-function fillPitchSelect(sel, preferred){
-  const want = POS_CODES.includes(preferred) ? preferred : (POS_CODES.includes(sel.value) ? sel.value : defaultPitch());
-  sel.innerHTML = orderedPitchCodes().map(code => `<option value="${code}">${escapeHtml(pitchPosLabelShort(code))}</option>`).join('');
-  sel.value = POS_CODES.includes(want) ? want : defaultPitch();
+function posSelectHtml(short){
+  const lab = code => escapeHtml(short ? pitchPosLabelShort(code) : pitchPosLabel(code));
+  const roles = ROLE_CODES.map(code => `<option value="${code}">${lab(code)}</option>`).join('');
+  const details = orderedPitchCodes().map(code => `<option value="${code}">${lab(code)}</option>`).join('');
+  return `<optgroup label="${escapeHtml(t('posBasic'))}">${roles}</optgroup><optgroup label="${escapeHtml(t('posExtended'))}">${details}</optgroup>`;
+}
+function fillPitchSelect(sel, preferred, short){
+  const want = isPitchCode(preferred) ? preferred : (isPitchCode(sel.value) ? sel.value : defaultPitch());
+  sel.innerHTML = posSelectHtml(short !== false);
+  sel.value = isPitchCode(want) ? want : defaultPitch();
 }
 function fillMatchPitchSelects(preferred){
-  fillPitchSelect(document.getElementById('f-position'), preferred);
-  fillPitchSelect(document.getElementById('live-position'), document.getElementById('f-position').value);
+  fillPitchSelect(document.getElementById('f-position'), preferred, true);
+  fillPitchSelect(document.getElementById('live-position'), document.getElementById('f-position').value, true);
 }
 function matchPosDisplay(m){
-  if(POS_CODES.includes(m.pitchPos)) return pitchPosLabel(m.pitchPos);
-  if(POS_CODES.includes(m.position)) return pitchPosLabel(m.position);
+  if(isPitchCode(m.pitchPos)) return pitchPosLabel(m.pitchPos);
+  if(isPitchCode(m.position)) return pitchPosLabel(m.position);
   return posLabel(ratingPosOf(m.position));
 }
 function venueLabel(v){ return v === 'away' ? t('venueAway') : t('venueHome'); }
@@ -923,7 +941,7 @@ function emptyForm(){
 }
 function currentPitch(){
   const v = document.getElementById('f-position').value;
-  return POS_CODES.includes(v) ? v : defaultPitch();
+  return isPitchCode(v) ? v : defaultPitch();
 }
 function currentPos(){ return ratingPosOf(document.getElementById('f-position').value || defaultPitch()); }
 function metricsFor(pos){ return METRICS.filter(m => m.positions.includes(pos)); }
@@ -1096,8 +1114,8 @@ function shirtNo(){
   return n ? String(Math.min(99, Math.max(1, Number(n)))) : '';
 }
 function posLine(){
-  const extra = (player.extra || []).filter(p => POS_CODES.includes(p) && p !== player.primary);
-  return [player.primary, ...extra].filter(p => POS_CODES.includes(p)).map(pitchPosLabel).join(' / ');
+  const extra = (player.extra || []).filter(p => isPitchCode(p) && p !== player.primary);
+  return [player.primary, ...extra].filter(p => isPitchCode(p)).map(pitchPosLabel).join(' / ');
 }
 function ageYears(iso){
   if(!/^\d{4}-\d{2}-\d{2}$/.test(iso || '')) return null;
@@ -1120,6 +1138,7 @@ function initials(){
   return ((a + b) || (player.club || 'FFK').slice(0,2) || 'FF').toUpperCase();
 }
 function matchPosFromCode(code){
+  if(isRoleCode(code)) return code;
   return POS_GROUP[code] || settings.position || 'fwd';
 }
 function syncSettingsFromPlayer(){
@@ -1173,8 +1192,8 @@ function loadPlayer(){
 function normalizePlayer(p){
   const d = defaultPlayer();
   if(!p || typeof p !== 'object') return d;
-  const primary = POS_CODES.includes(p.primary) ? p.primary : d.primary;
-  const extra = Array.isArray(p.extra) ? [...new Set(p.extra.filter(x => POS_CODES.includes(x) && x !== primary))] : [];
+  const primary = isPitchCode(p.primary) ? p.primary : d.primary;
+  const extra = Array.isArray(p.extra) ? [...new Set(p.extra.filter(x => isPitchCode(x) && x !== primary))] : [];
   const num = String(p.number ?? '').replace(/\D/g,'');
   return {
     firstName: String(p.firstName || '').slice(0,24),
@@ -1229,17 +1248,21 @@ function applyHeader(){
 }
 function fillPrimarySelect(){
   const sel = document.getElementById('p-primary');
-  const cur = POS_CODES.includes(sel.value) ? sel.value : (POS_CODES.includes(player.primary) ? player.primary : 'RW');
-  sel.innerHTML = POS_CODES.map(code => `<option value="${code}">${escapeHtml(pitchPosLabel(code))}</option>`).join('');
-  sel.value = cur;
+  const cur = isPitchCode(sel.value) ? sel.value : (isPitchCode(player.primary) ? player.primary : 'fwd');
+  fillPitchSelect(sel, cur, false);
+}
+function posChipHtml(code){
+  const on = extraSelected.includes(code) ? 'on' : '';
+  return `<button type="button" class="pos-chip ${on}" data-pos="${code}">${escapeHtml(isRoleCode(code) ? posLabel(code) : pitchPosLabelShort(code))}</button>`;
 }
 function renderExtraChips(){
   const primary = document.getElementById('p-primary')?.value || player.primary;
   extraSelected = extraSelected.filter(x => x !== primary);
-  document.getElementById('pExtraChips').innerHTML = POS_CODES.filter(c => c !== primary).map(code => {
-    const on = extraSelected.includes(code) ? 'on' : '';
-    return `<button type="button" class="pos-chip ${on}" data-pos="${code}">${escapeHtml(pitchPosLabel(code))}</button>`;
-  }).join('');
+  const roles = ROLE_CODES.filter(c => c !== primary).map(posChipHtml).join('');
+  const details = POS_CODES.filter(c => c !== primary).map(posChipHtml).join('');
+  document.getElementById('pExtraChips').innerHTML =
+    `<div class="pos-group-title">${escapeHtml(t('posBasic'))}</div>${roles}` +
+    `<div class="pos-group-title">${escapeHtml(t('posExtended'))}</div>${details}`;
 }
 function currentPhoto(){ return photoDraft === undefined ? player.photo : photoDraft; }
 function fillPlayerForm(){
@@ -1307,7 +1330,7 @@ function saveMatches(){
 
 function normalizeMatch(m){
   if(!m || typeof m !== 'object') return null;
-  const pitchPos = POS_CODES.includes(m.pitchPos) ? m.pitchPos : (POS_CODES.includes(m.position) ? m.position : (GROUP_TO_POS[ratingPosOf(m.position)] || 'RW'));
+  const pitchPos = isPitchCode(m.pitchPos) ? m.pitchPos : (isPitchCode(m.position) ? m.position : (ratingPosOf(m.position) || 'fwd'));
   const pos = ratingPosOf(m.pitchPos || m.position);
   const counts = {};
   METRICS.forEach(x => counts[x.key] = Math.max(0, Number(m.counts?.[x.key]) || 0));
