@@ -305,6 +305,44 @@
   .stat-card .num.up{color:var(--accent);}
   .stat-card .num.down{color:var(--danger);}
   .stat-card .lbl{font-size:.72rem;color:var(--text-soft);font-weight:600;margin-top:2px;}
+  .season-board{
+    margin-bottom:18px;border:1px solid var(--border);border-radius:22px;overflow:hidden;
+    background:var(--surface);
+  }
+  .season-head{
+    padding:18px 16px 16px;
+    background:
+      radial-gradient(90% 120% at 0% 0%, rgba(34,211,166,.22) 0%, transparent 55%),
+      radial-gradient(80% 100% at 100% 0%, rgba(124,92,252,.2) 0%, transparent 50%),
+      var(--surface-2);
+  }
+  .season-kicker{font-size:.7rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--text-soft);}
+  .season-name{font-size:1.15rem;font-weight:800;margin:4px 0 12px;}
+  .season-avg{font-size:2.6rem;font-weight:800;line-height:1;color:var(--gold);font-variant-numeric:tabular-nums;}
+  .season-avg small{display:block;margin-top:6px;font-size:.78rem;color:var(--text-soft);font-weight:700;}
+  .kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);}
+  .kpi-cell{background:var(--surface);padding:12px 14px;}
+  .kpi-cell:nth-child(5) .n,.kpi-cell:nth-child(6) .n{color:var(--gold);}
+  .kpi-cell .n{font-size:1.15rem;font-weight:800;font-variant-numeric:tabular-nums;}
+  .kpi-cell .l{font-size:.72rem;color:var(--text-soft);font-weight:600;margin-top:2px;}
+  .board-block{padding:16px 16px 6px;}
+  .board-block h3{margin:0 0 10px;font-size:.7rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--text-soft);}
+  .act-row{
+    display:flex;justify-content:flex-start;align-items:baseline;gap:10px;
+    padding:9px 0;border-bottom:1px solid var(--border);font-weight:700;
+  }
+  .act-row:last-child{border-bottom:0;}
+  .act-row .n{color:var(--accent);font-variant-numeric:tabular-nums;font-size:1.05rem;min-width:2.4em;}
+  .act-row.bad .n{color:var(--danger);}
+  .dyn-table{width:100%;border-collapse:collapse;margin-bottom:10px;}
+  .dyn-table th,.dyn-table td{padding:9px 4px;text-align:right;font-size:.82rem;font-weight:700;}
+  .dyn-table th:first-child,.dyn-table td:first-child{text-align:left;color:var(--text-soft);font-weight:600;}
+  .dyn-table th{color:var(--text-soft);font-size:.68rem;text-transform:uppercase;letter-spacing:.04em;}
+  .dyn-table td{font-variant-numeric:tabular-nums;border-top:1px solid var(--border);}
+  .dyn-table .up{color:var(--accent);}
+  .dyn-table .down{color:var(--danger);}
+  .dyn-hint{font-size:.72rem;color:var(--text-soft);font-weight:600;padding:0 16px 14px;}
+  .period-head{margin:8px 0 10px;font-size:.7rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--text-soft);}
   .chart-wrap{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:18px;}
   .chart-wrap h3{margin:0 0 12px;font-size:.82rem;color:var(--text-soft);font-weight:700;}
   .chart-wrap svg{display:block;width:100%;height:200px;}
@@ -572,6 +610,8 @@
         <label data-i18n="seasonFilter">Сезон</label>
         <select id="statsSeason"></select>
       </div>
+      <div id="seasonBoard"></div>
+      <p class="hint" data-i18n="statsPeriodHint">График и карточки ниже — за выбранный период.</p>
       <div class="period-chips" id="periodChips">
         <div class="chip active" data-range="10" data-i18n="periodLast10">Последние 10</div>
         <div class="chip" data-range="7d" data-i18n="periodWeek">Неделя</div>
@@ -583,6 +623,7 @@
         <h3 id="chartHeading" data-i18n="chartTitle">Динамика общей оценки</h3>
         <svg id="chartSvg" viewBox="0 0 320 200" role="img" data-i18n-aria="chartAria"></svg>
       </div>
+      <h3 class="period-head" data-i18n="stPeriodCards">За выбранный период</h3>
       <div class="stat-grid" id="statGrid"></div>
     </div>
 
@@ -804,6 +845,15 @@ uk:{
   mn_badpass:'неточний пас|неточні паси|неточних пасів', mn_badtouch:'втрата прийому|втрати прийому|втрат прийому',
   mn_fouls:'фол|фоли|фолів', mn_owngoal:'автогол|автоголи|автоголів',
   stMatches:'Матчів', stAvg:'Середня оцінка', stBest:'Найкращий матч', stWorst:'Найгірший', stTrend:'Тренд', stAction:'Середній вклад', stEffort:'Середнє старання', stMins:'Хвилин', stGoals:'Голи', stG90:'Голи / 90',
+  mn_matches:'матч|матчі|матчів', mn_starts:'старт|старти|стартів', mn_subs:'вихід з лавки|виходи з лавки|виходів з лавки', mn_mins:'хвилина|хвилини|хвилин',
+  act_dribbles:'успішна обводка|успішні обводки|успішних обводок',
+  act_duelswon:'вигране єдиноборство|виграні єдиноборства|виграних єдиноборств',
+  stSeasonTitle:'Статистика сезону', stSeasonAvg:'середня оцінка', stActions:'Дії', stDynamics:'Динаміка',
+  stDynMetric:'Показник', stDynStart:'Початок', stDynNow:'Зараз',
+  stDynHint:'Перші {n} і останні {n} матчів сезону',
+  statsPeriodHint:'Графік і картки нижче — за обраний період.',
+  stPeriodCards:'За обраний період',
+  dyn_rating:'Рейтинг', dyn_dribbles:'Обводки', dyn_tackles:'Відбори', dyn_losses:'Втрати', dyn_duels:'Єдиноборства',
   toastSaveFail:'Не вдалося зберегти', toastSaved:'Матч збережено', toastUpdated:'Матч оновлено', toastDeleted:'Матч видалено',
   toastNothingExport:'Поки нічого експортувати', toastFileSaved:'Файл збережено', toastCopied:'Скопійовано', toastCopyFail:'Не вдалося скопіювати',
   toastAdded:'Додано: {n}', toastNoNew:'Нових матчів немає', toastReadFail:'Не вдалося прочитати файл', toastNoUndo:'Немає що скасувати',
@@ -918,6 +968,15 @@ pl:{
   mn_badpass:'niedokładne podanie|niedokładne podania|niedokładnych podań', mn_badtouch:'strata przy przyjęciu|straty przy przyjęciu|strat przy przyjęciu',
   mn_fouls:'faul|faule|fauli', mn_owngoal:'gol samobójczy|gole samobójcze|goli samobójczych',
   stMatches:'Mecze', stAvg:'Średnia ocena', stBest:'Najlepszy mecz', stWorst:'Najsłabszy', stTrend:'Trend', stAction:'Średni wkład', stEffort:'Średnie zaangażowanie', stMins:'Minuty', stGoals:'Gole', stG90:'Gole / 90',
+  mn_matches:'mecz|mecze|meczów', mn_starts:'start|starty|startów', mn_subs:'wejście z ławki|wejścia z ławki|wejść z ławki', mn_mins:'minuta|minuty|minut',
+  act_dribbles:'udany drybling|udane dryblingi|udanych dryblingów',
+  act_duelswon:'wygrany pojedynek|wygrane pojedynki|wygranych pojedynków',
+  stSeasonTitle:'Statystyka sezonu', stSeasonAvg:'średnia ocena', stActions:'Akcje', stDynamics:'Dynamika',
+  stDynMetric:'Wskaźnik', stDynStart:'Początek', stDynNow:'Teraz',
+  stDynHint:'Pierwsze {n} i ostatnie {n} meczów sezonu',
+  statsPeriodHint:'Wykres i karty poniżej — za wybrany okres.',
+  stPeriodCards:'Za wybrany okres',
+  dyn_rating:'Ocena', dyn_dribbles:'Dryblingi', dyn_tackles:'Odbiory', dyn_losses:'Straty', dyn_duels:'Pojedynki',
   toastSaveFail:'Nie udało się zapisać', toastSaved:'Mecz zapisany', toastUpdated:'Mecz zaktualizowany', toastDeleted:'Mecz usunięty',
   toastNothingExport:'Nie ma nic do eksportu', toastFileSaved:'Plik zapisany', toastCopied:'Skopiowano', toastCopyFail:'Nie udało się skopiować',
   toastAdded:'Dodano: {n}', toastNoNew:'Brak nowych meczów', toastReadFail:'Nie udało się odczytać pliku', toastNoUndo:'Nie ma czego cofnąć',
@@ -1032,6 +1091,15 @@ en:{
   mn_badpass:'incomplete pass|incomplete passes', mn_badtouch:'poor first touch|poor first touches',
   mn_fouls:'foul|fouls', mn_owngoal:'own goal|own goals',
   stMatches:'Matches', stAvg:'Average rating', stBest:'Best match', stWorst:'Worst', stTrend:'Trend', stAction:'Average impact', stEffort:'Average effort', stMins:'Minutes', stGoals:'Goals', stG90:'Goals / 90',
+  mn_matches:'match|matches', mn_starts:'start|starts', mn_subs:'bench appearance|bench appearances', mn_mins:'minute|minutes',
+  act_dribbles:'successful dribble|successful dribbles',
+  act_duelswon:'duel won|duels won',
+  stSeasonTitle:'Season stats', stSeasonAvg:'average rating', stActions:'Actions', stDynamics:'Trend',
+  stDynMetric:'Metric', stDynStart:'Start', stDynNow:'Now',
+  stDynHint:'First {n} vs last {n} matches of the season',
+  statsPeriodHint:'The chart and cards below use the selected period.',
+  stPeriodCards:'Selected period',
+  dyn_rating:'Rating', dyn_dribbles:'Dribbles', dyn_tackles:'Tackles', dyn_losses:'Turnovers', dyn_duels:'Duels',
   toastSaveFail:'Could not save', toastSaved:'Match saved', toastUpdated:'Match updated', toastDeleted:'Match deleted',
   toastNothingExport:'Nothing to export yet', toastFileSaved:'File saved', toastCopied:'Copied', toastCopyFail:'Could not copy',
   toastAdded:'Added: {n}', toastNoNew:'No new matches', toastReadFail:'Could not read the file', toastNoUndo:'Nothing to undo',
@@ -1146,6 +1214,15 @@ ru:{
   mn_badpass:'неточный пас|неточных паса|неточных пасов', mn_badtouch:'потеря приёма|потери приёма|потерь приёма',
   mn_fouls:'фол|фола|фолов', mn_owngoal:'автогол|автогола|автоголов',
   stMatches:'Матчей', stAvg:'Средняя оценка', stBest:'Лучший матч', stWorst:'Худший', stTrend:'Тренд', stAction:'Средний вклад', stEffort:'Среднее старание', stMins:'Минут', stGoals:'Голы', stG90:'Голы / 90',
+  mn_matches:'матч|матча|матчей', mn_starts:'старт|старта|стартов', mn_subs:'выход со скамейки|выхода со скамейки|выходов со скамейки', mn_mins:'минута|минуты|минут',
+  act_dribbles:'успешная обводка|успешные обводки|успешных обводок',
+  act_duelswon:'выигранное единоборство|выигранных единоборства|выигранных единоборств',
+  stSeasonTitle:'Статистика сезона', stSeasonAvg:'средняя оценка', stActions:'Действия', stDynamics:'Динамика',
+  stDynMetric:'Показатель', stDynStart:'Начало', stDynNow:'Сейчас',
+  stDynHint:'Первые {n} и последние {n} матчей сезона',
+  statsPeriodHint:'График и карточки ниже — за выбранный период.',
+  stPeriodCards:'За выбранный период',
+  dyn_rating:'Рейтинг', dyn_dribbles:'Обводки', dyn_tackles:'Отборы', dyn_losses:'Потери', dyn_duels:'Единоборства',
   toastSaveFail:'Не удалось сохранить', toastSaved:'Матч сохранён', toastUpdated:'Матч обновлён', toastDeleted:'Матч удалён',
   toastNothingExport:'Пока нечего экспортировать', toastFileSaved:'Файл сохранён', toastCopied:'Скопировано', toastCopyFail:'Не удалось скопировать',
   toastAdded:'Добавлено: {n}', toastNoNew:'Новых матчей нет', toastReadFail:'Не удалось прочитать файл', toastNoUndo:'Нечего отменять',
@@ -2671,7 +2748,125 @@ function ratingTrend(list){
   const avg = arr => arr.reduce((a,b)=>a+b,0)/arr.length;
   return avg(list.slice(mid).map(m=>m.rating)) - avg(list.slice(0, mid).map(m=>m.rating));
 }
+function fmtInt(n){
+  const s = String(Math.round(Number(n) || 0));
+  const sep = settings.lang === 'en' ? ',' : '\u00a0';
+  return s.replace(/\B(?=(\d{3})+(?!\d))/g, sep);
+}
+function declined(n, key){
+  const parts = String(t(key) || '').split('|').filter(Boolean);
+  if(!parts.length) return '';
+  if(settings.lang === 'en') return n === 1 ? parts[0] : (parts[1] || parts[0]);
+  return parts[slavicForm(n)] || parts[0];
+}
+function countPhrase(n, key){
+  return fmtInt(n) + ' ' + declined(n, key);
+}
+function seasonNameLabel(){
+  if(currentSeasonFilter === 'all') return t('periodAll');
+  if(currentSeasonFilter === 'current') return player.season || currentSeason();
+  return currentSeasonFilter;
+}
+function countSum(list, key){
+  return list.reduce((a,m)=> a + ((m.counts || {})[key] || 0), 0);
+}
+function avgPerMatch(list, key){
+  if(!list.length) return 0;
+  return countSum(list, key) / list.length;
+}
+function duelPct(list){
+  const w = countSum(list, 'duelswon');
+  const l = countSum(list, 'duelslost');
+  if(w + l === 0) return null;
+  return 100 * w / (w + l);
+}
+function seasonWindows(list){
+  const n = list.length;
+  if(n < 4) return null;
+  const w = n >= 10 ? 5 : (n >= 6 ? Math.floor(n / 2) : 2);
+  return {start: list.slice(0, w), now: list.slice(-w), w};
+}
+function dynCls(now, start, invert){
+  const d = now - start;
+  if(Math.abs(d) < 0.05) return '';
+  const better = invert ? d < 0 : d > 0;
+  return better ? 'up' : 'down';
+}
+function renderSeasonBoard(){
+  const el = document.getElementById('seasonBoard');
+  const list = seasonPool();
+  const name = seasonNameLabel();
+  if(!list.length){
+    el.innerHTML = `<article class="season-board"><div class="season-head">
+      <div class="season-kicker">${escapeHtml(t('stSeasonTitle'))}</div>
+      <div class="season-name">${escapeHtml(name)}</div>
+    </div><div class="empty" style="padding:18px 16px;">${escapeHtml(t('noPeriod'))}</div></article>`;
+    return;
+  }
+  const avg = list.reduce((a,m)=>a+m.rating,0)/list.length;
+  const starts = list.filter(m => m.role !== 'sub').length;
+  const subs = list.length - starts;
+  const minutes = list.reduce((a,m)=>a+(m.minutes||0),0);
+  const kpis = [
+    [list.length, 'mn_matches'],
+    [starts, 'mn_starts'],
+    [subs, 'mn_subs'],
+    [minutes, 'mn_mins'],
+    [countSum(list,'goals'), 'mn_goals'],
+    [countSum(list,'assists'), 'mn_assists']
+  ].map(([n,key]) => `<div class="kpi-cell"><div class="n">${fmtInt(n)}</div><div class="l">${escapeHtml(declined(n, key))}</div></div>`).join('');
+  const acts = [
+    ['dribbles', 'act_dribbles', false],
+    ['tackles', 'mn_tackles', false],
+    ['duelswon', 'act_duelswon', false],
+    ['passes', 'mn_passes', false],
+    ['losses', 'mn_losses', true]
+  ].map(([key, noun, bad]) => {
+    const n = countSum(list, key);
+    return `<div class="act-row${bad ? ' bad' : ''}"><span class="n">${fmtInt(n)}</span><span>${escapeHtml(declined(n, noun))}</span></div>`;
+  }).join('');
+  const win = seasonWindows(list);
+  let dyn = '';
+  if(win){
+    const mean = arr => arr.reduce((a,m)=>a+m.rating,0)/arr.length;
+    const r0 = mean(win.start), r1 = mean(win.now);
+    const d0 = avgPerMatch(win.start,'dribbles'), d1 = avgPerMatch(win.now,'dribbles');
+    const t0 = avgPerMatch(win.start,'tackles'), t1 = avgPerMatch(win.now,'tackles');
+    const l0 = avgPerMatch(win.start,'losses'), l1 = avgPerMatch(win.now,'losses');
+    const p0 = duelPct(win.start), p1 = duelPct(win.now);
+    const pct = (v, digits) => v == null ? '—' : fmtNum(v, digits) + '%';
+    const rows = [
+      [t('dyn_rating'), fmtNum(r0,1), fmtNum(r1,1), dynCls(r1,r0,false)],
+      [t('dyn_dribbles'), fmtNum(d0,1), fmtNum(d1,1), dynCls(d1,d0,false)],
+      [t('dyn_tackles'), fmtNum(t0,1), fmtNum(t1,1), dynCls(t1,t0,false)],
+      [t('dyn_losses'), fmtNum(l0,1), fmtNum(l1,1), dynCls(l1,l0,true)],
+      [t('dyn_duels'), pct(p0,0), pct(p1,0), (p0 == null || p1 == null) ? '' : dynCls(p1,p0,false)]
+    ].map(r => `<tr><td>${escapeHtml(r[0])}</td><td>${r[1]}</td><td class="${r[3]}">${r[2]}</td></tr>`).join('');
+    dyn = `<div class="board-block">
+      <h3>${escapeHtml(t('stDynamics'))}</h3>
+      <table class="dyn-table">
+        <thead><tr><th>${escapeHtml(t('stDynMetric'))}</th><th>${escapeHtml(t('stDynStart'))}</th><th>${escapeHtml(t('stDynNow'))}</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+    <p class="dyn-hint">${escapeHtml(t('stDynHint', {n: win.w}))}</p>`;
+  }
+  el.innerHTML = `<article class="season-board">
+    <div class="season-head">
+      <div class="season-kicker">${escapeHtml(t('stSeasonTitle'))}</div>
+      <div class="season-name">${escapeHtml(name)}</div>
+      <div class="season-avg">${escapeHtml(fmtNum(avg, 2))}<small>${escapeHtml(t('stSeasonAvg'))}</small></div>
+    </div>
+    <div class="kpi-grid">${kpis}</div>
+    <div class="board-block">
+      <h3>${escapeHtml(t('stActions'))}</h3>
+      ${acts}
+    </div>
+    ${dyn}
+  </article>`;
+}
 function renderStats(){
+  renderSeasonBoard();
   const list = statsMatches();
   const grid = document.getElementById('statGrid');
   const heading = document.getElementById('chartHeading');
