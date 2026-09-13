@@ -345,6 +345,14 @@
   .dyn-table .down{color:var(--danger);}
   .dyn-hint{font-size:.72rem;color:var(--text-soft);font-weight:600;padding:0 16px 14px;}
   .period-head{margin:8px 0 10px;font-size:.7rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--text-soft);}
+  .compare-board{margin-top:14px;}
+  .cmp-table{width:100%;border-collapse:collapse;}
+  .cmp-table td{padding:12px 16px;border-top:1px solid var(--border);font-weight:800;font-variant-numeric:tabular-nums;}
+  .cmp-table td:last-child{text-align:right;font-size:1.15rem;}
+  .cmp-table .cmp-name{display:block;color:var(--text);}
+  .cmp-table .cmp-n{display:block;font-size:.7rem;color:var(--text-soft);font-weight:600;margin-top:2px;}
+  .cmp-table .up{color:var(--accent);}
+  .cmp-table .down{color:var(--danger);}
   .chart-wrap{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:18px;}
   .chart-wrap h3{margin:0 0 12px;font-size:.82rem;color:var(--text-soft);font-weight:700;}
   .chart-wrap svg{display:block;width:100%;height:200px;}
@@ -619,6 +627,7 @@
         <select id="statsSeason"></select>
       </div>
       <div id="seasonBoard"></div>
+      <div id="compareBoard"></div>
       <p class="hint" data-i18n="statsPeriodHint">График и карточки ниже — за выбранный период.</p>
       <div class="period-chips" id="periodChips">
         <div class="chip active" data-range="10" data-i18n="periodLast10">Последние 10</div>
@@ -877,6 +886,8 @@ uk:{
   statsPeriodHint:'Графік і картки нижче — за обраний період.',
   stPeriodCards:'За обраний період',
   dyn_rating:'Рейтинг', dyn_dribbles:'Обводки', dyn_tackles:'Відбори', dyn_losses:'Втрати', dyn_duels:'Єдиноборства',
+  cmpTitle:'Порівняння', cmpAll:'Весь час', cmpLast10:'Останні 10', cmpLastN:'Останні {n}', cmpSeason:'Сезон',
+  cmpPos:'Позиції', cmpSeasons:'Сезони', cmpTeams:'Команди',
   toastSaveFail:'Не вдалося зберегти', toastSaved:'Матч збережено', toastUpdated:'Матч оновлено', toastDeleted:'Матч видалено',
   toastNothingExport:'Поки нічого експортувати', toastFileSaved:'Файл збережено', toastCopied:'Скопійовано', toastCopyFail:'Не вдалося скопіювати',
   toastAdded:'Додано: {n}', toastNoNew:'Нових матчів немає', toastReadFail:'Не вдалося прочитати файл', toastNoUndo:'Немає що скасувати',
@@ -1017,6 +1028,8 @@ pl:{
   statsPeriodHint:'Wykres i karty poniżej — za wybrany okres.',
   stPeriodCards:'Za wybrany okres',
   dyn_rating:'Ocena', dyn_dribbles:'Dryblingi', dyn_tackles:'Odbiory', dyn_losses:'Straty', dyn_duels:'Pojedynki',
+  cmpTitle:'Porównanie', cmpAll:'Cały czas', cmpLast10:'Ostatnie 10', cmpLastN:'Ostatnie {n}', cmpSeason:'Sezon',
+  cmpPos:'Pozycje', cmpSeasons:'Sezony', cmpTeams:'Drużyny',
   toastSaveFail:'Nie udało się zapisać', toastSaved:'Mecz zapisany', toastUpdated:'Mecz zaktualizowany', toastDeleted:'Mecz usunięty',
   toastNothingExport:'Nie ma nic do eksportu', toastFileSaved:'Plik zapisany', toastCopied:'Skopiowano', toastCopyFail:'Nie udało się skopiować',
   toastAdded:'Dodano: {n}', toastNoNew:'Brak nowych meczów', toastReadFail:'Nie udało się odczytać pliku', toastNoUndo:'Nie ma czego cofnąć',
@@ -1157,6 +1170,8 @@ en:{
   statsPeriodHint:'The chart and cards below use the selected period.',
   stPeriodCards:'Selected period',
   dyn_rating:'Rating', dyn_dribbles:'Dribbles', dyn_tackles:'Tackles', dyn_losses:'Turnovers', dyn_duels:'Duels',
+  cmpTitle:'Compare', cmpAll:'All time', cmpLast10:'Last 10', cmpLastN:'Last {n}', cmpSeason:'Season',
+  cmpPos:'Positions', cmpSeasons:'Seasons', cmpTeams:'Teams',
   toastSaveFail:'Could not save', toastSaved:'Match saved', toastUpdated:'Match updated', toastDeleted:'Match deleted',
   toastNothingExport:'Nothing to export yet', toastFileSaved:'File saved', toastCopied:'Copied', toastCopyFail:'Could not copy',
   toastAdded:'Added: {n}', toastNoNew:'No new matches', toastReadFail:'Could not read the file', toastNoUndo:'Nothing to undo',
@@ -1297,6 +1312,8 @@ ru:{
   statsPeriodHint:'График и карточки ниже — за выбранный период.',
   stPeriodCards:'За выбранный период',
   dyn_rating:'Рейтинг', dyn_dribbles:'Обводки', dyn_tackles:'Отборы', dyn_losses:'Потери', dyn_duels:'Единоборства',
+  cmpTitle:'Сравнение', cmpAll:'Всё время', cmpLast10:'Последние 10', cmpLastN:'Последние {n}', cmpSeason:'Сезон',
+  cmpPos:'Позиции', cmpSeasons:'Сезоны', cmpTeams:'Команды',
   toastSaveFail:'Не удалось сохранить', toastSaved:'Матч сохранён', toastUpdated:'Матч обновлён', toastDeleted:'Матч удалён',
   toastNothingExport:'Пока нечего экспортировать', toastFileSaved:'Файл сохранён', toastCopied:'Скопировано', toastCopyFail:'Не удалось скопировать',
   toastAdded:'Добавлено: {n}', toastNoNew:'Новых матчей нет', toastReadFail:'Не удалось прочитать файл', toastNoUndo:'Нечего отменять',
@@ -2356,6 +2373,7 @@ function normalizeMatch(m){
     score: String(m.score || ''),
     position: pos,
     pitchPos,
+    team: String(m.team || player.team || player.club || '').trim().slice(0,40),
     tournament: String(m.tournament || '').slice(0,48),
     venue: m.venue === 'away' ? 'away' : 'home',
     role: m.role === 'sub' ? 'sub' : 'start',
@@ -2601,6 +2619,7 @@ function collectMatch(){
     matchLen: formatLength(document.getElementById('f-format').value, document.getElementById('f-matchlen').value),
     kind: document.getElementById('f-kind').value,
     season: (editingId && matches.find(x => x.id === editingId)?.season) || (seasonIsOpen() ? (player.season || seasonFromDate(document.getElementById('f-date').value)) : seasonFromDate(document.getElementById('f-date').value)),
+    team: (editingId && matches.find(x => x.id === editingId)?.team) || player.team || player.club || '',
     counts, behaviors,
     actionRating: action,
     effortRating: effort,
@@ -2988,8 +3007,79 @@ function renderSeasonBoard(){
     ${dyn}
   </article>`;
 }
+function avgRating(list){
+  if(!list.length) return null;
+  return list.reduce((a,m)=>a+m.rating,0)/list.length;
+}
+function groupedAvgs(list, keyFn){
+  const map = new Map();
+  list.forEach(m => {
+    const k = keyFn(m);
+    if(!k) return;
+    if(!map.has(k)) map.set(k, []);
+    map.get(k).push(m);
+  });
+  return [...map.entries()]
+    .map(([key, arr]) => ({key, n: arr.length, avg: avgRating(arr), list: arr}))
+    .sort((a,b) => b.n - a.n || b.avg - a.avg);
+}
+function matchPosKey(m){
+  if(isPitchCode(m.pitchPos)) return m.pitchPos;
+  if(isPitchCode(m.position)) return m.position;
+  return ratingPosOf(m.position) || '';
+}
+function cmpRow(label, list, vs){
+  const avg = avgRating(list);
+  if(avg == null) return '';
+  const cls = vs == null || list.length < 2 ? '' : dynCls(avg, vs, false);
+  return `<tr><td><span class="cmp-name">${escapeHtml(label)}</span><span class="cmp-n">${escapeHtml(matchCountLabel(list.length))}</span></td><td class="${cls}">${fmtNum(avg, 2)}</td></tr>`;
+}
+function cmpSection(title, rows){
+  if(!rows) return '';
+  return `<div class="board-block"><h3>${escapeHtml(title)}</h3><table class="cmp-table"><tbody>${rows}</tbody></table></div>`;
+}
+function renderCompare(){
+  const el = document.getElementById('compareBoard');
+  const all = [...matches].sort((a,b)=> a.date.localeCompare(b.date) || a.id - b.id);
+  if(!all.length){
+    el.innerHTML = '';
+    return;
+  }
+  const career = avgRating(all);
+  const last = all.slice(-Math.min(10, all.length));
+  const seasonName = player.season || currentSeason();
+  const seasonList = all.filter(m => matchSeason(m) === seasonName);
+  const who = (player.firstName || displayName() || '—').trim();
+  const lastLbl = last.length === 10 ? t('cmpLast10') : t('cmpLastN', {n: last.length});
+  let main = cmpRow(lastLbl, last, career);
+  if(seasonList.length) main += cmpRow(`${t('cmpSeason')} ${seasonName}`, seasonList, career);
+  const posGroups = groupedAvgs(all, matchPosKey).filter(g => g.key);
+  const posRows = posGroups.length > 1
+    ? posGroups.map(g => cmpRow(isPitchCode(g.key) ? pitchPosLabel(g.key) : posLabel(g.key), g.list, career)).join('')
+    : '';
+  const seasonGroups = groupedAvgs(all, m => matchSeason(m)).filter(g => g.key);
+  const seasonRows = seasonGroups.length > 1
+    ? seasonGroups.map(g => cmpRow(g.key, g.list, career)).join('')
+    : '';
+  const teamGroups = groupedAvgs(all, m => String(m.team || '').trim()).filter(g => g.key);
+  const teamRows = teamGroups.length > 1
+    ? teamGroups.map(g => cmpRow(g.key, g.list, career)).join('')
+    : '';
+  el.innerHTML = `<article class="season-board compare-board">
+    <div class="season-head">
+      <div class="season-kicker">${escapeHtml(t('cmpTitle'))}</div>
+      <div class="season-name">${escapeHtml(who)}</div>
+      <div class="season-avg">${fmtNum(career, 2)}<small>${escapeHtml(t('cmpAll'))}</small></div>
+    </div>
+    <table class="cmp-table"><tbody>${main}</tbody></table>
+    ${cmpSection(t('cmpPos'), posRows)}
+    ${cmpSection(t('cmpSeasons'), seasonRows)}
+    ${cmpSection(t('cmpTeams'), teamRows)}
+  </article>`;
+}
 function renderStats(){
   renderSeasonBoard();
+  renderCompare();
   const list = statsMatches();
   const grid = document.getElementById('statGrid');
   const heading = document.getElementById('chartHeading');
