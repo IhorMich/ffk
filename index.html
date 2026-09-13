@@ -48,12 +48,12 @@
   .club-row{display:flex;align-items:center;gap:12px;}
   .club-row-main{display:flex;align-items:center;gap:12px;min-width:0;flex:1;cursor:pointer;text-align:left;background:none;border:none;color:inherit;padding:0;font:inherit;}
   .club-badge{
-    width:56px;height:56px;border-radius:16px;
+    width:56px;height:56px;border-radius:50%;
     background:linear-gradient(135deg, var(--accent), var(--violet));
     display:flex;align-items:center;justify-content:center;
     font-weight:900;font-size:.9rem;color:#08121C;flex-shrink:0;object-fit:cover;
   }
-  .club-badge img{width:100%;height:100%;object-fit:cover;border-radius:16px;display:block;}
+  .club-badge img{width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;}
   .club-name{font-size:1.08rem;font-weight:800;overflow-wrap:anywhere;}
   .player-name{font-size:.78rem;color:var(--text-soft);font-weight:600;line-height:1.35;overflow-wrap:anywhere;}
   .player-num{
@@ -61,12 +61,50 @@
     background:rgba(245,185,66,.12);padding:2px 8px;border-radius:999px;
   }
   .player-head-top{display:flex;align-items:center;flex-wrap:wrap;gap:4px;}
-  .photo-box{
-    width:96px;height:96px;border-radius:22px;overflow:hidden;background:var(--surface-2);
-    border:1px solid var(--border);display:flex;align-items:center;justify-content:center;
-    font-weight:900;font-size:1.6rem;color:var(--accent);margin-bottom:12px;
+  .profile-hero{position:relative;margin-bottom:72px;}
+  .profile-cover{
+    display:block;width:100%;height:148px;padding:0;border:0;border-radius:20px;overflow:hidden;
+    cursor:pointer;position:relative;color:inherit;
+    background:
+      radial-gradient(120% 90% at 20% 20%, rgba(34,211,166,.35) 0%, transparent 55%),
+      radial-gradient(90% 80% at 90% 80%, rgba(124,92,252,.32) 0%, transparent 50%),
+      var(--surface-2);
   }
-  .photo-box img{width:100%;height:100%;object-fit:cover;}
+  .profile-cover img{width:100%;height:100%;object-fit:cover;display:block;}
+  .cam-chip,.cam-badge{
+    position:absolute;display:flex;align-items:center;justify-content:center;
+    background:rgba(11,18,32,.78);border:2px solid var(--bg);color:#fff;
+    pointer-events:none;z-index:1;
+  }
+  .cam-chip{right:10px;bottom:10px;width:34px;height:34px;border-radius:50%;font-size:.9rem;}
+  .avatar-pin{
+    position:absolute;left:50%;bottom:-56px;transform:translateX(-50%);
+    width:112px;height:112px;
+  }
+  .photo-box{
+    position:relative;width:112px;height:112px;border-radius:50%;overflow:hidden;padding:0;margin:0;
+    background:linear-gradient(135deg, var(--accent), var(--violet));
+    border:4px solid var(--bg);display:flex;align-items:center;justify-content:center;
+    font-weight:900;font-size:1.7rem;color:#08121C;cursor:pointer;
+    box-shadow:0 8px 24px rgba(0,0,0,.35);
+  }
+  .photo-box img{width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;}
+  .cam-badge{right:0;bottom:0;width:30px;height:30px;border-radius:50%;font-size:.78rem;}
+  .photo-sheet-back{
+    position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:84;border:0;padding:0;
+  }
+  .photo-sheet{
+    position:fixed;left:50%;bottom:88px;transform:translateX(-50%);
+    width:calc(100% - 28px);max-width:452px;z-index:85;
+    background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:6px;
+  }
+  .photo-sheet button{
+    width:100%;padding:14px 12px;border:0;background:none;color:var(--text);
+    font:inherit;font-weight:800;cursor:pointer;border-radius:12px;
+  }
+  .photo-sheet button:active{background:var(--surface-2);}
+  .photo-sheet .sheet-mute{font-weight:600;font-size:.88rem;color:var(--text-soft);}
+  .photo-sheet .sheet-danger{font-weight:700;font-size:.88rem;color:var(--danger);}
   .pos-chips{display:flex;flex-wrap:wrap;gap:6px;}
   .pos-group-title{width:100%;font-size:.72rem;font-weight:800;color:var(--text-soft);letter-spacing:.02em;margin:8px 0 2px;}
   .pos-chips .pos-group-title:first-child{margin-top:0;}
@@ -322,15 +360,19 @@
 
   <div class="content">
     <div class="view" id="view-player">
-      <div class="photo-box" id="pPhotoBox">Д</div>
-      <div class="field">
-        <label data-i18n="pPhoto">Фотография</label>
+      <div class="profile-hero">
+        <button class="profile-cover" id="pCoverBtn" type="button" data-i18n-aria="pCoverAria">
+          <img id="pCoverImg" alt="" hidden>
+          <span class="cam-chip" aria-hidden="true">📷</span>
+        </button>
+        <div class="avatar-pin" id="pPhotoWrap">
+          <button class="photo-box" id="pPhotoBox" type="button" data-i18n-aria="pPhotoAria">Д</button>
+          <span class="cam-badge" aria-hidden="true">📷</span>
+        </div>
         <input type="file" id="p-photo" accept="image/*" hidden>
-        <button class="ghost-btn file-pick" id="pPickPhotoBtn" type="button" data-i18n="pPickPhoto">Выбрать файл</button>
-        <span class="file-meta" id="pPhotoName"></span>
-        <div class="hint" data-i18n="pPhotoHint">Хранится только на этом телефоне.</div>
-        <button class="ghost-btn" id="pRemovePhotoBtn" type="button" data-i18n="pRemovePhoto" hidden>Убрать фото</button>
+        <input type="file" id="p-cover" accept="image/*" hidden>
       </div>
+      <div class="hint" data-i18n="pPhotoHint" style="text-align:center;margin:0 0 16px;">Нажмите на фото или фон, чтобы сменить.</div>
       <div class="row2">
         <div class="field">
           <label data-i18n="pFirst">Имя</label>
@@ -569,6 +611,12 @@
     <button class="tabbtn" data-view="stats" type="button" data-i18n="tabStats">Статистика</button>
   </div>
   <div class="toast" id="toast"></div>
+  <button class="photo-sheet-back" id="photoSheetBack" type="button" hidden></button>
+  <div class="photo-sheet" id="photoSheet" hidden>
+    <button type="button" id="photoSheetPick">Выбрать фото</button>
+    <button type="button" id="photoSheetClear" class="sheet-danger" hidden data-i18n="pRemovePhoto">Убрать</button>
+    <button type="button" id="photoSheetCancel" class="sheet-mute" data-i18n="pSheetCancel">Отмена</button>
+  </div>
 
   <div class="live" id="livePad">
   <div class="live-head">
@@ -644,8 +692,10 @@ uk:{
   chartTitle:'Динаміка оцінки', chartLastN:'Останні {n} матчів', chartAria:'Графік оцінок', chartEmpty:'Поки немає даних',
   sLang:'Мова', sFont:'Шрифт', fontSystem:'Системний', sFormat:'Формат матчу за замовчуванням', sSave:'Зберегти налаштування',
   tabPlayer:'Гравець', tabMatch:'Матч', tabHistory:'Історія', tabStats:'Статистика',
-  pPhoto:'Фото', pPhotoHint:'Зберігається лише на цьому телефоні.', pRemovePhoto:'Прибрати фото',
-  pPickPhoto:'Вибрати файл', pNoFile:'Файл не вибрано', pPhotoReady:'Фото вибрано', phDate:'дд.мм.рррр',
+  pPhoto:'Фото', pPhotoHint:'Натисніть на фото або фон, щоб змінити.',
+  pRemovePhoto:'Прибрати', pPickPhoto:'Вибрати фото', pPickCover:'Вибрати фон',
+  pPhotoAria:'Фото гравця', pCoverAria:'Фон картки', pSheetCancel:'Скасувати',
+  pNoFile:'Файл не вибрано', pPhotoReady:'Фото вибрано', phDate:'дд.мм.рррр',
   pFirst:'Ім’я', pLast:'Прізвище', pBirth:'Дата народження', pNumber:'Номер',
   pTeam:'Команда', pClub:'Клуб / академія', pPrimary:'Основна позиція', pExtra:'Додаткові позиції',
   pSeason:'Сезон', pOpenSeason:'Відкрити сезон', pCloseSeason:'Закрити сезон',
@@ -752,8 +802,10 @@ pl:{
   chartTitle:'Dynamika oceny', chartLastN:'Ostatnie {n} meczów', chartAria:'Wykres ocen', chartEmpty:'Brak danych',
   sLang:'Język', sFont:'Czcionka', fontSystem:'Systemowa', sFormat:'Domyślny format meczu', sSave:'Zapisz ustawienia',
   tabPlayer:'Zawodnik', tabMatch:'Mecz', tabHistory:'Historia', tabStats:'Statystyki',
-  pPhoto:'Zdjęcie', pPhotoHint:'Przechowywane tylko na tym telefonie.', pRemovePhoto:'Usuń zdjęcie',
-  pPickPhoto:'Wybierz plik', pNoFile:'Nie wybrano pliku', pPhotoReady:'Zdjęcie wybrane', phDate:'dd.mm.rrrr',
+  pPhoto:'Zdjęcie', pPhotoHint:'Dotknij zdjęcia lub tła, żeby zmienić.',
+  pRemovePhoto:'Usuń', pPickPhoto:'Wybierz zdjęcie', pPickCover:'Wybierz tło',
+  pPhotoAria:'Zdjęcie zawodnika', pCoverAria:'Tło karty', pSheetCancel:'Anuluj',
+  pNoFile:'Nie wybrano pliku', pPhotoReady:'Zdjęcie wybrane', phDate:'dd.mm.rrrr',
   pFirst:'Imię', pLast:'Nazwisko', pBirth:'Data urodzenia', pNumber:'Numer',
   pTeam:'Drużyna', pClub:'Klub / akademia', pPrimary:'Pozycja główna', pExtra:'Pozycje dodatkowe',
   pSeason:'Sezon', pOpenSeason:'Otwórz sezon', pCloseSeason:'Zamknij sezon',
@@ -860,8 +912,10 @@ en:{
   chartTitle:'Rating trend', chartLastN:'Last {n} matches', chartAria:'Rating chart', chartEmpty:'No data yet',
   sLang:'Language', sFont:'Font', fontSystem:'System', sFormat:'Default match format', sSave:'Save settings',
   tabPlayer:'Player', tabMatch:'Match', tabHistory:'History', tabStats:'Stats',
-  pPhoto:'Photo', pPhotoHint:'Stored only on this phone.', pRemovePhoto:'Remove photo',
-  pPickPhoto:'Choose file', pNoFile:'No file chosen', pPhotoReady:'Photo selected', phDate:'Select date',
+  pPhoto:'Photo', pPhotoHint:'Tap the photo or cover to change it.',
+  pRemovePhoto:'Remove', pPickPhoto:'Choose photo', pPickCover:'Choose cover',
+  pPhotoAria:'Player photo', pCoverAria:'Card cover', pSheetCancel:'Cancel',
+  pNoFile:'No file chosen', pPhotoReady:'Photo selected', phDate:'Select date',
   pFirst:'First name', pLast:'Last name', pBirth:'Date of birth', pNumber:'Number',
   pTeam:'Team', pClub:'Club / academy', pPrimary:'Main position', pExtra:'Other positions',
   pSeason:'Season', pOpenSeason:'Open season', pCloseSeason:'Close season',
@@ -968,8 +1022,10 @@ ru:{
   chartTitle:'Динамика оценки', chartLastN:'Последние {n} матчей', chartAria:'График оценок', chartEmpty:'Пока нет данных',
   sLang:'Язык', sFont:'Шрифт', fontSystem:'Системный', sFormat:'Формат матча по умолчанию', sSave:'Сохранить настройки',
   tabPlayer:'Игрок', tabMatch:'Матч', tabHistory:'История', tabStats:'Статистика',
-  pPhoto:'Фотография', pPhotoHint:'Хранится только на этом телефоне.', pRemovePhoto:'Убрать фото',
-  pPickPhoto:'Выбрать файл', pNoFile:'Файл не выбран', pPhotoReady:'Фото выбрано', phDate:'дд.мм.гггг',
+  pPhoto:'Фотография', pPhotoHint:'Нажмите на фото или фон, чтобы сменить.',
+  pRemovePhoto:'Убрать', pPickPhoto:'Выбрать фото', pPickCover:'Выбрать фон',
+  pPhotoAria:'Фото игрока', pCoverAria:'Фон карточки', pSheetCancel:'Отмена',
+  pNoFile:'Файл не выбран', pPhotoReady:'Фото выбрано', phDate:'дд.мм.гггг',
   pFirst:'Имя', pLast:'Фамилия', pBirth:'Дата рождения', pNumber:'Номер',
   pTeam:'Команда', pClub:'Клуб / академия', pPrimary:'Основная позиция', pExtra:'Дополнительные позиции',
   pSeason:'Сезон', pOpenSeason:'Открыть сезон', pCloseSeason:'Закрыть сезон',
@@ -1216,6 +1272,8 @@ let settings = {club:'FC FFK', player:'Данило Михайлюк', position:
 let player = defaultPlayer();
 let extraSelected = [];
 let photoDraft;
+let coverDraft;
+let photoSheetTarget = 'photo';
 let lastReportMatch = null;
 let matches = [];
 let editingId = null;
@@ -1442,13 +1500,35 @@ function syncDateShown(){
     }
   });
 }
-function updatePhotoMeta(){
-  const el = document.getElementById('pPhotoName');
-  if(!el) return;
-  const file = document.getElementById('p-photo').files[0];
-  if(file) el.textContent = file.name;
-  else if(currentPhoto()) el.textContent = t('pPhotoReady');
-  else el.textContent = t('pNoFile');
+function updatePhotoMeta(){ setCoverPreview(); }
+function currentPhoto(){ return photoDraft === undefined ? player.photo : photoDraft; }
+function currentCover(){ return coverDraft === undefined ? (player.cover || '') : coverDraft; }
+function setCoverPreview(){
+  const img = document.getElementById('pCoverImg');
+  if(!img) return;
+  const cover = currentCover();
+  if(cover){
+    img.hidden = false;
+    img.src = cover;
+  } else {
+    img.hidden = true;
+    img.removeAttribute('src');
+  }
+}
+function closePhotoSheet(){
+  document.getElementById('photoSheet').hidden = true;
+  document.getElementById('photoSheetBack').hidden = true;
+}
+function openPhotoSheet(target){
+  photoSheetTarget = target;
+  const has = target === 'cover' ? !!currentCover() : !!currentPhoto();
+  document.getElementById('photoSheetPick').textContent = t(target === 'cover' ? 'pPickCover' : 'pPickPhoto');
+  document.getElementById('photoSheetClear').hidden = !has;
+  document.getElementById('photoSheet').hidden = false;
+  document.getElementById('photoSheetBack').hidden = false;
+}
+function pickPhotoFile(){
+  document.getElementById(photoSheetTarget === 'cover' ? 'p-cover' : 'p-photo').click();
 }
 
 function currentSeason(){
@@ -1571,7 +1651,7 @@ function maybePromptSeasonClose(){
 }
 function defaultPlayer(){
   return {
-    firstName:'Данило', lastName:'Михайлюк', birthDate:'', photo:'',
+    firstName:'Данило', lastName:'Михайлюк', birthDate:'', photo:'', cover:'',
     team:'', club:'FC FFK', number:'', primary:'RW', extra:['CM'], season: currentSeason(), seasonOpen: true
   };
 }
@@ -1671,6 +1751,7 @@ function normalizePlayer(p){
     lastName: String(p.lastName || '').slice(0,32),
     birthDate: /^\d{4}-\d{2}-\d{2}$/.test(p.birthDate || '') ? p.birthDate : '',
     photo: String(p.photo || '').startsWith('data:image/') ? p.photo : '',
+    cover: String(p.cover || '').startsWith('data:image/') ? p.cover : '',
     team: String(p.team || '').slice(0,40),
     club: String(p.club || d.club).slice(0,40),
     number: num ? String(Math.min(99, Number(num))) : '',
@@ -1682,12 +1763,13 @@ function normalizePlayer(p){
 }
 function savePlayer(){
   try{
-    localStorage.setItem(PLAYER_KEY, JSON.stringify({...player, photo: player.photo}));
+    localStorage.setItem(PLAYER_KEY, JSON.stringify({...player, photo: player.photo, cover: player.cover}));
   }catch(e){
     try{
-      const slim = {...player, photo:''};
+      const slim = {...player, photo:'', cover:''};
       localStorage.setItem(PLAYER_KEY, JSON.stringify(slim));
       player.photo = '';
+      player.cover = '';
       showToast(t('toastSaveFail'));
     }catch(err){ showToast(t('toastSaveFail')); }
   }
@@ -1736,11 +1818,11 @@ function renderExtraChips(){
     `<div class="pos-group-title">${escapeHtml(t('posBasic'))}</div>${roles}` +
     `<div class="pos-group-title">${escapeHtml(t('posExtended'))}</div>${details}`;
 }
-function currentPhoto(){ return photoDraft === undefined ? player.photo : photoDraft; }
 function fillPlayerForm(){
   fillPrimarySelect();
   extraSelected = [...(player.extra || [])];
   photoDraft = undefined;
+  coverDraft = undefined;
   document.getElementById('p-first').value = player.firstName;
   document.getElementById('p-last').value = player.lastName;
   document.getElementById('p-birth').value = player.birthDate;
@@ -1749,11 +1831,11 @@ function fillPlayerForm(){
   document.getElementById('p-club').value = player.club;
   document.getElementById('p-season').value = seasonIsOpen() ? (player.season || currentSeason()) : nextSeasonLabel(player.season || currentSeason());
   document.getElementById('p-photo').value = '';
+  document.getElementById('p-cover').value = '';
   setBadge(document.getElementById('pPhotoBox'), currentPhoto(), initials());
-  document.getElementById('pRemovePhotoBtn').hidden = !currentPhoto();
+  setCoverPreview();
   renderExtraChips();
   syncDateShown();
-  updatePhotoMeta();
   syncSeasonUi();
 }
 function collectPlayer(){
@@ -1763,6 +1845,7 @@ function collectPlayer(){
     lastName: document.getElementById('p-last').value.trim(),
     birthDate: document.getElementById('p-birth').value,
     photo: currentPhoto(),
+    cover: currentCover(),
     team: document.getElementById('p-team').value.trim(),
     club: document.getElementById('p-club').value.trim() || 'FC FFK',
     number: document.getElementById('p-number').value,
@@ -1772,17 +1855,17 @@ function collectPlayer(){
     seasonOpen: player.seasonOpen !== false
   });
 }
-function compressPhoto(file){
+function compressImage(file, w, h){
   return new Promise((resolve, reject) => {
     const img = new Image();
     const url = URL.createObjectURL(file);
     img.onload = () => {
-      const size = 256;
       const canvas = document.createElement('canvas');
-      canvas.width = size; canvas.height = size;
+      canvas.width = w; canvas.height = h;
       const ctx = canvas.getContext('2d');
-      const s = Math.min(img.width, img.height);
-      ctx.drawImage(img, (img.width-s)/2, (img.height-s)/2, s, s, 0, 0, size, size);
+      const scale = Math.max(w / img.width, h / img.height);
+      const sw = w / scale, sh = h / scale;
+      ctx.drawImage(img, (img.width - sw) / 2, (img.height - sh) / 2, sw, sh, 0, 0, w, h);
       URL.revokeObjectURL(url);
       resolve(canvas.toDataURL('image/jpeg', 0.72));
     };
@@ -1790,6 +1873,8 @@ function compressPhoto(file){
     img.src = url;
   });
 }
+function compressPhoto(file){ return compressImage(file, 256, 256); }
+function compressCover(file){ return compressImage(file, 720, 270); }
 
 function loadMatches(){
   try{
@@ -2523,7 +2608,29 @@ document.getElementById('pExtraChips').addEventListener('click', e => {
   extraSelected = extraSelected.includes(code) ? extraSelected.filter(x => x !== code) : extraSelected.concat(code);
   renderExtraChips();
 });
-document.getElementById('pPickPhotoBtn').addEventListener('click', () => document.getElementById('p-photo').click());
+document.getElementById('pPhotoWrap').addEventListener('click', () => {
+  if(currentPhoto()) openPhotoSheet('photo');
+  else { photoSheetTarget = 'photo'; pickPhotoFile(); }
+});
+document.getElementById('pCoverBtn').addEventListener('click', () => {
+  if(currentCover()) openPhotoSheet('cover');
+  else { photoSheetTarget = 'cover'; pickPhotoFile(); }
+});
+document.getElementById('photoSheetPick').addEventListener('click', () => { closePhotoSheet(); pickPhotoFile(); });
+document.getElementById('photoSheetClear').addEventListener('click', () => {
+  if(photoSheetTarget === 'cover'){
+    coverDraft = '';
+    document.getElementById('p-cover').value = '';
+    setCoverPreview();
+  } else {
+    photoDraft = '';
+    document.getElementById('p-photo').value = '';
+    setBadge(document.getElementById('pPhotoBox'), '', initials());
+  }
+  closePhotoSheet();
+});
+document.getElementById('photoSheetCancel').addEventListener('click', closePhotoSheet);
+document.getElementById('photoSheetBack').addEventListener('click', closePhotoSheet);
 document.getElementById('p-birth').addEventListener('change', syncDateShown);
 document.getElementById('p-photo').addEventListener('change', async e => {
   const file = e.target.files[0];
@@ -2531,21 +2638,21 @@ document.getElementById('p-photo').addEventListener('change', async e => {
   try{
     photoDraft = await compressPhoto(file);
     setBadge(document.getElementById('pPhotoBox'), photoDraft, initials());
-    document.getElementById('pRemovePhotoBtn').hidden = false;
-    updatePhotoMeta();
   }catch(err){ showToast(t('toastReadFail')); }
 });
-document.getElementById('pRemovePhotoBtn').addEventListener('click', () => {
-  photoDraft = '';
-  document.getElementById('p-photo').value = '';
-  setBadge(document.getElementById('pPhotoBox'), '', initials());
-  document.getElementById('pRemovePhotoBtn').hidden = true;
-  updatePhotoMeta();
+document.getElementById('p-cover').addEventListener('change', async e => {
+  const file = e.target.files[0];
+  if(!file) return;
+  try{
+    coverDraft = await compressCover(file);
+    setCoverPreview();
+  }catch(err){ showToast(t('toastReadFail')); }
 });
 document.getElementById('savePlayerBtn').addEventListener('click', () => {
   player = collectPlayer();
   extraSelected = [...player.extra];
   photoDraft = undefined;
+  coverDraft = undefined;
   savePlayer();
   syncSettingsFromPlayer();
   saveSettings();
