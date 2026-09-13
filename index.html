@@ -11,7 +11,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link id="appFontLink" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap">
+<link id="appFontLink" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%230B1220'/%3E%3Ctext x='50' y='64' font-size='40' font-family='Arial' font-weight='900' text-anchor='middle' fill='%2322D3A6'%3EFFK%3C/text%3E%3C/svg%3E">
 <title>FFK — Оценка матча</title>
 <style>
@@ -26,7 +26,27 @@
     --violet:#7C5CFC;
     --gold:#F5B942;
     --danger:#FB6767;
-    --font:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --ink:#08121C;
+    --tabbar:rgba(20,31,53,.92);
+    --hero:rgba(255,255,255,.045);
+    --font:"Plus Jakarta Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    color-scheme:dark;
+  }
+  html[data-theme="light"]{
+    --bg:#F3F5FA;
+    --surface:#FFFFFF;
+    --surface-2:#E8EDF6;
+    --border:rgba(15,23,42,.10);
+    --text:#0F172A;
+    --text-soft:#64748B;
+    --accent:#0F9F7A;
+    --violet:#6D4DE8;
+    --gold:#C48512;
+    --danger:#E24B4B;
+    --ink:#08121C;
+    --tabbar:rgba(255,255,255,.92);
+    --hero:rgba(15,23,42,.04);
+    color-scheme:light;
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
   html,body{margin:0;padding:0;}
@@ -207,11 +227,13 @@
   .pos-chip.on{background:var(--accent);color:#08121C;border-color:transparent;}
   .pos-chip.main{background:var(--gold);color:#08121C;border-color:transparent;}
   .icon-btn{
-    margin-left:auto;width:40px;height:40px;border-radius:12px;border:1px solid var(--border);
+    width:40px;height:40px;border-radius:12px;border:1px solid var(--border);
     background:var(--surface);color:var(--text);font-size:1.1rem;cursor:pointer;
   }
+  .top-actions{display:flex;gap:8px;margin-left:auto;flex-shrink:0;align-items:center;}
+  .live-head .top-actions{margin-left:0;}
   .hero{
-    margin-top:16px;background:rgba(255,255,255,.045);
+    margin-top:16px;background:var(--hero);
     border:1px solid var(--border);border-radius:20px;padding:14px 16px;
     display:grid;grid-template-columns:1.1fr 1fr;gap:12px;align-items:center;
   }
@@ -447,7 +469,7 @@
   .chart-wrap svg{display:block;width:100%;height:200px;}
   .tabbar{
     position:fixed;left:50%;transform:translateX(-50%);bottom:14px;
-    width:calc(100% - 28px);max-width:452px;background:rgba(20,31,53,.92);
+    width:calc(100% - 28px);max-width:452px;background:var(--tabbar);
     backdrop-filter:blur(10px);display:flex;border:1px solid var(--border);
     border-radius:20px;z-index:40;padding:6px;
   }
@@ -456,7 +478,7 @@
     align-items:center;gap:3px;font-size:.68rem;font-weight:700;color:var(--text-soft);cursor:pointer;border-radius:14px;
     line-height:1.2;white-space:normal;overflow:hidden;
   }
-  .tabbtn.active{color:var(--bg);background:linear-gradient(135deg, var(--accent), var(--violet));}
+  .tabbtn.active{color:var(--ink);background:linear-gradient(135deg, var(--accent), var(--violet));}
   .app.live-on .tabbar,.app.live-on .topbar,.app.live-on .content{display:none;}
   .live{
     display:none;position:fixed;inset:0;background:var(--bg);z-index:70;overflow:auto;
@@ -528,7 +550,10 @@
           <div class="player-name" id="playerClubLine"></div>
         </div>
       </button>
-      <button class="icon-btn" id="settingsBtn" type="button" data-i18n-aria="settingsAria">⚙</button>
+      <div class="top-actions">
+        <button class="icon-btn theme-toggle" id="themeBtn" type="button" data-i18n-aria="themeAria">☀</button>
+        <button class="icon-btn" id="settingsBtn" type="button" data-i18n-aria="settingsAria">⚙</button>
+      </div>
     </div>
     <div class="hero" id="heroBlock">
       <div>
@@ -729,13 +754,6 @@
     </div>
 
     <div class="view" id="view-history">
-      <div class="banner warn" id="backupBanner" hidden data-i18n="backupBanner">Данные только на этом телефоне. Сделайте экспорт, чтобы не потерять сезон.</div>
-      <div class="backup-row">
-        <button class="backup-btn" id="exportBtn" type="button" data-i18n="export">Экспорт</button>
-        <button class="backup-btn" id="importBtn" type="button" data-i18n="import">Импорт</button>
-        <button class="backup-btn" id="copyBtn" type="button" data-i18n="copy">Копировать</button>
-        <input type="file" id="importFile" accept="application/json" hidden>
-      </div>
       <div class="field">
         <label data-i18n="seasonFilter">Сезон</label>
         <select id="historySeason"></select>
@@ -790,19 +808,6 @@
         </select>
       </div>
       <div class="field">
-        <label data-i18n="sFont">Шрифт</label>
-        <select id="s-font">
-          <option value="inter">Inter</option>
-          <option value="manrope">Manrope</option>
-          <option value="rubik">Rubik</option>
-          <option value="nunito">Nunito</option>
-          <option value="source">Source Sans 3</option>
-          <option value="plex">IBM Plex Sans</option>
-          <option value="onest">Onest</option>
-          <option value="system" data-i18n="fontSystem">Системный</option>
-        </select>
-      </div>
-      <div class="field">
         <label data-i18n="sFormat">Формат матча по умолчанию</label>
         <select id="s-format">
           <option value="3x15">3×15</option>
@@ -821,6 +826,14 @@
         <input type="number" id="s-minutes" min="1" max="120" value="60">
       </div>
       <button class="save-btn" id="saveSettingsBtn" type="button" data-i18n="sSave">Сохранить настройки</button>
+      <h3 class="period-head" data-i18n="sBackup">Данные на телефоне</h3>
+      <p class="hint" id="backupBanner" hidden data-i18n="backupBanner">Данные только на этом телефоне. Сделайте экспорт, чтобы не потерять сезон.</p>
+      <div class="backup-row">
+        <button class="backup-btn" id="exportBtn" type="button" data-i18n="export">Экспорт</button>
+        <button class="backup-btn" id="importBtn" type="button" data-i18n="import">Импорт</button>
+        <button class="backup-btn" id="copyBtn" type="button" data-i18n="copy">Копировать</button>
+        <input type="file" id="importFile" accept="application/json" hidden>
+      </div>
     </div>
   </div>
 
@@ -858,7 +871,10 @@
       <div class="live-score" id="liveScore">6.0</div>
       <div class="live-clock" id="liveClock"></div>
     </div>
-    <select id="live-position" style="width:auto;max-width:62%;padding:10px 12px;border-radius:12px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-weight:700;font-size:.78rem;font-family:inherit;"></select>
+    <div class="top-actions">
+      <button class="icon-btn theme-toggle" id="liveThemeBtn" type="button" data-i18n-aria="themeAria">☀</button>
+      <select id="live-position" style="width:auto;max-width:62%;padding:10px 12px;border-radius:12px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-weight:700;font-size:.78rem;font-family:inherit;"></select>
+    </div>
   </div>
   <button class="live-kick go" id="liveKickBtn" type="button" data-i18n="liveKick">Старт матча</button>
   <div class="live-grid" id="liveGrid"></div>
@@ -889,19 +905,10 @@ const POS_GROUP = {
 const GROUP_TO_POS = {gk:'GK', def:'CB', mid:'CM', fwd:'RW'};
 const LANGS = ['uk','pl','en','ru'];
 const FONT_FALLBACK = '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif';
-const FONTS = {
-  inter:{stack:'"Inter",'+FONT_FALLBACK, href:'https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap'},
-  manrope:{stack:'"Manrope",'+FONT_FALLBACK, href:'https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap'},
-  rubik:{stack:'"Rubik",'+FONT_FALLBACK, href:'https://fonts.googleapis.com/css2?family=Rubik:wght@400;600;700;800&display=swap'},
-  nunito:{stack:'"Nunito",'+FONT_FALLBACK, href:'https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap'},
-  source:{stack:'"Source Sans 3",'+FONT_FALLBACK, href:'https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700;800&display=swap'},
-  plex:{stack:'"IBM Plex Sans",'+FONT_FALLBACK, href:'https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600;700&display=swap'},
-  onest:{stack:'"Onest",'+FONT_FALLBACK, href:'https://fonts.googleapis.com/css2?family=Onest:wght@400;600;700;800&display=swap'},
-  system:{stack:FONT_FALLBACK, href:''}
-};
+const APP_FONT = '"Plus Jakarta Sans",' + FONT_FALLBACK;
 const I18N = {
 uk:{
-  pageTitle:'FFK — оцінка матчу', settingsAria:'Налаштування',
+  pageTitle:'FFK — оцінка матчу', settingsAria:'Налаштування', themeAria:'Тема',
   heroOverall:'загальна оцінка', heroShort:'короткий вихід', heroAction:'вклад', heroEffort:'старання',
   liveStart:'Швидкий режим', labelDate:'Дата', labelPos:'Позиція', labelOpp:'Суперник', phOpp:'Назва команди',
   labelScore:'Рахунок', labelMin:'Хвилини на полі', labelFormat:'Формат матчу', labelMatchLen:'Довжина матчу, хв', fmtCustom:'Свій',
@@ -929,7 +936,7 @@ uk:{
   export:'Експорт', import:'Імпорт', copy:'Копіювати',
   periodLast10:'Останні 10', periodWeek:'Тиждень', period10d:'10 днів', periodMonth:'Місяць', periodYear:'Рік', periodAll:'Весь час',
   chartTitle:'Динаміка оцінки', chartLastN:'Останні {n} матчів', chart10:'10 матчів', chart100:'100 матчів', chartAria:'Графік оцінок', chartEmpty:'Поки немає даних',
-  sLang:'Мова', sFont:'Шрифт', fontSystem:'Системний', sFormat:'Формат матчу за замовчуванням', sSave:'Зберегти налаштування',
+  sLang:'Мова', sBackup:'Дані на телефоні', sFormat:'Формат матчу за замовчуванням', sSave:'Зберегти налаштування',
   tabPlayer:'Гравець', tabMatch:'Матч', tabHistory:'Історія', tabStats:'Статистика',
   pPhoto:'Фото', pPhotoHint:'Натисніть на фото або фон, щоб змінити.',
   pRemovePhoto:'Прибрати', pPickPhoto:'Вибрати фото', pPickCover:'Вибрати фон',
@@ -1107,7 +1114,7 @@ uk:{
   b_effort:'Старання і боротьба за м’яч', b_team:'Гра в команді', b_coach:'Слухав тренера', b_discipline:'Дисципліна / повага до судді', b_mood:'Настрій (не в оцінці)'
 },
 pl:{
-  pageTitle:'FFK — ocena meczu', settingsAria:'Ustawienia',
+  pageTitle:'FFK — ocena meczu', settingsAria:'Ustawienia', themeAria:'Motyw',
   heroOverall:'ocena ogólna', heroShort:'krótki występ', heroAction:'wkład', heroEffort:'zaangażowanie',
   liveStart:'Tryb szybki', labelDate:'Data', labelPos:'Pozycja', labelOpp:'Rywal', phOpp:'Nazwa drużyny',
   labelScore:'Wynik', labelMin:'Minuty na boisku', labelFormat:'Format meczu', labelMatchLen:'Długość meczu, min', fmtCustom:'Własny',
@@ -1135,7 +1142,7 @@ pl:{
   export:'Eksport', import:'Import', copy:'Kopiuj',
   periodLast10:'Ostatnie 10', periodWeek:'Tydzień', period10d:'10 dni', periodMonth:'Miesiąc', periodYear:'Rok', periodAll:'Cały czas',
   chartTitle:'Dynamika oceny', chartLastN:'Ostatnie {n} meczów', chart10:'10 meczów', chart100:'100 meczów', chartAria:'Wykres ocen', chartEmpty:'Brak danych',
-  sLang:'Język', sFont:'Czcionka', fontSystem:'Systemowa', sFormat:'Domyślny format meczu', sSave:'Zapisz ustawienia',
+  sLang:'Język', sBackup:'Dane w telefonie', sFormat:'Domyślny format meczu', sSave:'Zapisz ustawienia',
   tabPlayer:'Zawodnik', tabMatch:'Mecz', tabHistory:'Historia', tabStats:'Statystyki',
   pPhoto:'Zdjęcie', pPhotoHint:'Dotknij zdjęcia lub tła, żeby zmienić.',
   pRemovePhoto:'Usuń', pPickPhoto:'Wybierz zdjęcie', pPickCover:'Wybierz tło',
@@ -1313,7 +1320,7 @@ pl:{
   b_effort:'Zaangażowanie i walka o piłkę', b_team:'Gra zespołowa', b_coach:'Słuchał trenera', b_discipline:'Dyscyplina / szacunek dla sędziego', b_mood:'Nastrój (nie w ocenie)'
 },
 en:{
-  pageTitle:'FFK — match rating', settingsAria:'Settings',
+  pageTitle:'FFK — match rating', settingsAria:'Settings', themeAria:'Theme',
   heroOverall:'overall rating', heroShort:'short appearance', heroAction:'impact', heroEffort:'effort',
   liveStart:'Quick mode', labelDate:'Date', labelPos:'Position', labelOpp:'Opponent', phOpp:'Team name',
   labelScore:'Score', labelMin:'Minutes on the pitch', labelFormat:'Match format', labelMatchLen:'Match length, min', fmtCustom:'Custom',
@@ -1341,7 +1348,7 @@ en:{
   export:'Export', import:'Import', copy:'Copy',
   periodLast10:'Last 10', periodWeek:'Week', period10d:'10 days', periodMonth:'Month', periodYear:'Year', periodAll:'All time',
   chartTitle:'Rating trend', chartLastN:'Last {n} matches', chart10:'10 matches', chart100:'100 matches', chartAria:'Rating chart', chartEmpty:'No data yet',
-  sLang:'Language', sFont:'Font', fontSystem:'System', sFormat:'Default match format', sSave:'Save settings',
+  sLang:'Language', sBackup:'Data on this phone', sFormat:'Default match format', sSave:'Save settings',
   tabPlayer:'Player', tabMatch:'Match', tabHistory:'History', tabStats:'Stats',
   pPhoto:'Photo', pPhotoHint:'Tap the photo or cover to change it.',
   pRemovePhoto:'Remove', pPickPhoto:'Choose photo', pPickCover:'Choose cover',
@@ -1519,7 +1526,7 @@ en:{
   b_effort:'Work rate and duels', b_team:'Team play', b_coach:'Listened to the coach', b_discipline:'Discipline / respect for the referee', b_mood:'Mood (not in the rating)'
 },
 ru:{
-  pageTitle:'FFK — Оценка матча', settingsAria:'Настройки',
+  pageTitle:'FFK — Оценка матча', settingsAria:'Настройки', themeAria:'Тема',
   heroOverall:'общая оценка', heroShort:'короткий выход', heroAction:'вклад', heroEffort:'старание',
   liveStart:'Быстрый режим', labelDate:'Дата', labelPos:'Позиция', labelOpp:'Соперник', phOpp:'Название команды',
   labelScore:'Счёт', labelMin:'Минуты на поле', labelFormat:'Формат матча', labelMatchLen:'Длина матча, мин', fmtCustom:'Свой',
@@ -1547,7 +1554,7 @@ ru:{
   export:'Экспорт', import:'Импорт', copy:'Копировать',
   periodLast10:'Последние 10', periodWeek:'Неделя', period10d:'10 дней', periodMonth:'Месяц', periodYear:'Год', periodAll:'Всё время',
   chartTitle:'Динамика оценки', chartLastN:'Последние {n} матчей', chart10:'10 матчей', chart100:'100 матчей', chartAria:'График оценок', chartEmpty:'Пока нет данных',
-  sLang:'Язык', sFont:'Шрифт', fontSystem:'Системный', sFormat:'Формат матча по умолчанию', sSave:'Сохранить настройки',
+  sLang:'Язык', sBackup:'Данные на телефоне', sFormat:'Формат матча по умолчанию', sSave:'Сохранить настройки',
   tabPlayer:'Игрок', tabMatch:'Матч', tabHistory:'История', tabStats:'Статистика',
   pPhoto:'Фотография', pPhotoHint:'Нажмите на фото или фон, чтобы сменить.',
   pRemovePhoto:'Убрать', pPickPhoto:'Выбрать фото', pPickCover:'Выбрать фон',
@@ -1738,20 +1745,30 @@ function t(key, vars){
   return s;
 }
 function applyFont(){
-  const id = FONTS[settings.font] ? settings.font : 'inter';
-  settings.font = id;
-  const f = FONTS[id];
-  document.documentElement.style.setProperty('--font', f.stack);
-  let link = document.getElementById('appFontLink');
-  if(f.href){
-    if(!link){
-      link = document.createElement('link');
-      link.id = 'appFontLink';
-      link.rel = 'stylesheet';
-      document.head.appendChild(link);
-    }
-    if(link.getAttribute('href') !== f.href) link.href = f.href;
-  } else if(link) link.remove();
+  document.documentElement.style.setProperty('--font', APP_FONT);
+}
+function isLightTheme(){ return settings.theme === 'light'; }
+function applyTheme(){
+  const light = isLightTheme();
+  document.documentElement.dataset.theme = light ? 'light' : 'dark';
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if(meta) meta.content = light ? '#F3F5FA' : '#0B1220';
+  const apple = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
+  if(apple) apple.content = light ? 'default' : 'black-translucent';
+  document.querySelectorAll('.theme-toggle').forEach(btn => {
+    btn.textContent = light ? '☾' : '☀';
+    btn.setAttribute('aria-label', t('themeAria'));
+  });
+}
+function toggleTheme(){
+  settings.theme = isLightTheme() ? 'dark' : 'light';
+  saveSettings();
+  applyTheme();
+  if(typeof chartMatches === 'function') drawChart(chartMatches());
+}
+function cssVar(name, fallback){
+  const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  return v || fallback;
 }
 function canvasFont(weight, size){
   return weight + ' ' + size + 'px ' + (getComputedStyle(document.body).fontFamily || 'sans-serif');
@@ -1906,7 +1923,7 @@ const BEHAVIOR = [
   {key:'mood', inRating:false},
 ];
 
-let settings = {club:'FC FFK', player:'Данило Михайлюк', position:'fwd', format:'2x30', minutes:'60', lang:'ru', seasonCloseDeclined:'', font:'inter'};
+let settings = {club:'FC FFK', player:'Данило Михайлюк', position:'fwd', format:'2x30', minutes:'60', lang:'ru', seasonCloseDeclined:'', theme:'dark'};
 let roster = {currentId:'', ids:[]};
 let player = defaultPlayer();
 let extraSelected = [];
@@ -2894,7 +2911,7 @@ function loadSettings(){
       minutes: String(s.minutes || '60'),
       lang: LANGS.includes(s.lang) ? s.lang : detectLang(),
       seasonCloseDeclined: String(s.seasonCloseDeclined || ''),
-      font: FONTS[s.font] ? s.font : 'inter'
+      theme: s.theme === 'light' ? 'light' : 'dark'
     };
     if(!s.lang) saveSettings();
   }catch(e){}
@@ -3797,8 +3814,12 @@ function showToast(msg){
   toastTimer = setTimeout(()=> t.classList.remove('show'), 1800);
 }
 
+function refreshBackupBanner(){
+  const el = document.getElementById('backupBanner');
+  if(el) el.hidden = !(matches.length > 0 && !localStorage.getItem(EXPORT_KEY));
+}
 function renderHistory(){
-  document.getElementById('backupBanner').hidden = !(matches.length > 0 && !localStorage.getItem(EXPORT_KEY));
+  refreshBackupBanner();
   const el = document.getElementById('historyList');
   if(matches.length === 0){
     el.innerHTML = `<div class="empty">${escapeHtml(t('noMatches'))}</div>`;
@@ -3891,7 +3912,7 @@ function exportPayload(){
     version: 3,
     exportedAt: new Date().toISOString(),
     player,
-    settings: {lang: settings.lang, format: settings.format, minutes: settings.minutes, position: settings.position},
+    settings: {lang: settings.lang, format: settings.format, minutes: settings.minutes, position: settings.position, theme: settings.theme},
     matches
   };
 }
@@ -3944,10 +3965,12 @@ document.getElementById('importFile').addEventListener('change', async (e) => {
         if(LANGS.includes(bundle.settings.lang)) settings.lang = bundle.settings.lang;
         if(bundle.settings.format) settings.format = bundle.settings.format;
         if(bundle.settings.minutes) settings.minutes = String(bundle.settings.minutes);
+        if(bundle.settings.theme === 'light' || bundle.settings.theme === 'dark') settings.theme = bundle.settings.theme;
       }
       saveSettings();
       applyHeader();
       applyI18n();
+      applyTheme();
     }
     const incoming = Array.isArray(bundle.matches) ? bundle.matches : (Array.isArray(imported) ? imported : []);
     if(!incoming.length && !bundle.player) throw new Error('bad');
@@ -4346,7 +4369,7 @@ function renderStats(){
 function drawChart(list){
   const svg = document.getElementById('chartSvg');
   if(list.length < 1){
-    svg.innerHTML = `<text x="160" y="100" text-anchor="middle" font-size="12" fill="#8D9AB5">${escapeHtml(t('chartEmpty'))}</text>`;
+    svg.innerHTML = `<text x="160" y="100" text-anchor="middle" font-size="12" fill="${cssVar('--text-soft','#8D9AB5')}">${escapeHtml(t('chartEmpty'))}</text>`;
     return;
   }
   const w=320,h=200,padL=36,padR=14,padT=14,padB=30;
@@ -4373,21 +4396,21 @@ function drawChart(list){
     const val = yMin + (yMax-yMin)*(i/ticks);
     const y = yAt(val);
     grid += `<line x1="${padL}" y1="${y.toFixed(1)}" x2="${w-padR}" y2="${y.toFixed(1)}" stroke="rgba(255,255,255,.08)"/>
-      <text x="${padL-6}" y="${y+3}" font-size="9" fill="#8D9AB5" text-anchor="end">${escapeHtml(fmtNum(val, 1))}</text>`;
+      <text x="${padL-6}" y="${y+3}" font-size="9" fill="${cssVar('--text-soft','#8D9AB5')}" text-anchor="end">${escapeHtml(fmtNum(val, 1))}</text>`;
   }
   const xs = list.map((_,i)=> xAt(i));
   const ys = ratings.map(r => yAt(r));
-  const path = list.length === 1 ? '' : `<path d="${xs.map((x,i)=> `${i===0?'M':'L'}${x.toFixed(1)},${ys[i].toFixed(1)}`).join(' ')}" fill="none" stroke="#22D3A6" stroke-width="2.5"/>`;
+  const path = list.length === 1 ? '' : `<path d="${xs.map((x,i)=> `${i===0?'M':'L'}${x.toFixed(1)},${ys[i].toFixed(1)}`).join(' ')}" fill="none" stroke="${cssVar('--accent','#22D3A6')}" stroke-width="2.5"/>`;
   const step = list.length > 10 ? Math.ceil(list.length / 8) : 1;
   const dotStep = list.length > 40 ? Math.ceil(list.length / 40) : 1;
   const dots = xs.map((x,i)=> {
     const last = i === xs.length-1;
     if(!last && i % dotStep) return '';
-    return `<circle cx="${x.toFixed(1)}" cy="${ys[i].toFixed(1)}" r="${last?5:3.5}" fill="${last?'#F5B942':'#22D3A6'}"/>`;
+    return `<circle cx="${x.toFixed(1)}" cy="${ys[i].toFixed(1)}" r="${last?5:3.5}" fill="${last?cssVar('--gold','#F5B942'):cssVar('--accent','#22D3A6')}"/>`;
   }).join('');
   const labels = xs.map((x,i)=> {
     if(i !== 0 && i !== xs.length-1 && i % step) return '';
-    return `<text x="${x.toFixed(1)}" y="${h-8}" font-size="9" fill="#8D9AB5" text-anchor="middle">${i+1}</text>`;
+    return `<text x="${x.toFixed(1)}" y="${h-8}" font-size="9" fill="${cssVar('--text-soft','#8D9AB5')}" text-anchor="middle">${i+1}</text>`;
   }).join('');
   svg.innerHTML = `${grid}${path}${dots}${labels}`;
 }
@@ -4517,23 +4540,19 @@ document.getElementById('live-position').addEventListener('change', () => {
   updateHero();
 });
 
+document.querySelectorAll('.theme-toggle').forEach(btn => btn.addEventListener('click', toggleTheme));
 document.getElementById('settingsBtn').addEventListener('click', () => {
   document.getElementById('s-format').value = settings.format || '2x30';
   document.getElementById('s-minutes').value = settings.minutes;
   document.getElementById('s-custom-wrap').hidden = (settings.format !== 'custom');
   document.getElementById('s-lang').value = settings.lang;
-  document.getElementById('s-font').value = settings.font || 'inter';
+  refreshBackupBanner();
   showView('settings');
 });
 document.getElementById('s-lang').addEventListener('change', () => {
   settings.lang = document.getElementById('s-lang').value;
   saveSettings();
   applyI18n();
-});
-document.getElementById('s-font').addEventListener('change', () => {
-  settings.font = document.getElementById('s-font').value;
-  saveSettings();
-  applyFont();
 });
 document.getElementById('s-format').addEventListener('change', () => {
   document.getElementById('s-custom-wrap').hidden = document.getElementById('s-format').value !== 'custom';
@@ -4545,9 +4564,7 @@ document.getElementById('saveSettingsBtn').addEventListener('click', () => {
   settings.format = document.getElementById('s-format').value;
   settings.minutes = String(formatLength(settings.format, document.getElementById('s-minutes').value));
   settings.lang = document.getElementById('s-lang').value;
-  settings.font = document.getElementById('s-font').value;
   saveSettings();
-  applyFont();
   applyHeader();
   applyI18n();
   if(!editingId){
@@ -5085,6 +5102,7 @@ async function shareCard(m){
   loadSettings();
   loadFilters();
   applyFont();
+  applyTheme();
   loadPlayer();
   fillPrimarySelect();
   applyHeader();
@@ -5098,6 +5116,7 @@ async function shareCard(m){
   applyHeader();
   restoreDraft();
   applyI18n();
+  applyTheme();
   renderOppList();
   maybePromptSeasonClose();
   restoreView();
