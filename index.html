@@ -352,22 +352,16 @@
   .match-details.open{display:block;}
   .match-story{margin-top:10px;}
   .match-story .story-box{margin:0;}
-  .timing-fold{margin:0 0 16px;}
+  .timing-fold{margin:8px 0 20px;}
   .timing-row{
     width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;
     padding:12px 14px;border-radius:14px;border:1px solid var(--border);
     background:var(--surface);color:var(--text);font:inherit;font-weight:800;cursor:pointer;text-align:left;
   }
   .timing-chev{color:var(--text-soft);font-size:1.25rem;line-height:1;flex-shrink:0;}
-  .timing-item{
-    margin-top:8px;border:1px solid var(--border);border-radius:12px;background:var(--surface-2);overflow:hidden;
-  }
-  .timing-item summary{
-    padding:12px 14px;cursor:pointer;font-weight:800;list-style:none;
-    display:flex;align-items:center;justify-content:space-between;
-  }
-  .timing-item summary::-webkit-details-marker{display:none;}
-  .timing-item .story-box{margin:0;border:none;border-top:1px solid var(--border);border-radius:0;}
+  .timing-fold .hint{margin:10px 2px 8px;}
+  .timing-fold .period-chips{margin-bottom:10px;}
+  .timing-fold .story-box{margin:0;}
   .story-box{
     margin:12px 0 10px;padding:14px 15px;border-radius:12px;
     background:var(--surface-2);border:1px solid var(--border);
@@ -756,7 +750,6 @@
       </div>
       <div id="seasonBoard"></div>
       <div id="compareBoard"></div>
-      <div id="timingBoard"></div>
       <p class="hint" data-i18n="statsPeriodHint">График и карточки ниже — за выбранный период.</p>
       <div class="period-chips" id="periodChips">
         <div class="chip active" data-range="10" data-i18n="periodLast10">Последние 10</div>
@@ -772,6 +765,7 @@
       </div>
       <h3 class="period-head" data-i18n="stPeriodCards">За выбранный период</h3>
       <div class="stat-grid" id="statGrid"></div>
+      <div id="timingBoard"></div>
     </div>
 
     <div class="view" id="view-settings">
@@ -1016,6 +1010,7 @@ uk:{
   repGoalsBand:'Голи частіше з {a} по {b} хв: {k} з {n}.',
   repNone:'Немає достатньої вибірки з хвилинами, щоб робити висновок.',
   repFold:'Звіт за хвилинами',
+  repHint:'Цей звіт має свій період. Фільтр сезону зверху на нього не впливає.',
   hintGk:'Для воротаря важливі сейви, пропущені, виходи, передачі, перехоплення і гра ногами. Повторні сейви і пропущені важать менше за перші.',
   hintFwd:'Для нападника важливі голи, удари, асисти, обводки, гострі паси і відкривання.',
   hintMid:'Для півзахисника важливі передачі, гострі паси, відбори, єдиноборства, втрати і моменти для партнерів.',
@@ -1222,6 +1217,7 @@ pl:{
   repGoalsBand:'Gole częściej od {a} do {b} min: {k} z {n}.',
   repNone:'Za mało danych z minutami, żeby wyciągać wniosek.',
   repFold:'Raport minut',
+  repHint:'Ten raport ma własny okres. Filtr sezonu powyżej go nie zmienia.',
   hintGk:'Dla bramkarza ważne są interwencje, stracone, wyjścia, podania, przechwyty i gra nogami. Kolejne interwencje i stracone ważą mniej niż pierwsze.',
   hintFwd:'Dla napastnika ważne są gole, strzały, asysty, dryblingi, kluczowe podania i wbiegnięcia.',
   hintMid:'Dla pomocnika ważne są podania, kluczowe podania, odbiory, pojedynki, straty i okazje dla partnerów.',
@@ -1428,6 +1424,7 @@ en:{
   repGoalsBand:'Goals more often from {a} to {b} min: {k} of {n}.',
   repNone:'Not enough timed data to draw a conclusion.',
   repFold:'Minute report',
+  repHint:'This report has its own period. The season filter above does not change it.',
   hintGk:'For the keeper what matters is saves, goals conceded, claims, passes, interceptions and distribution. Later saves and goals conceded count less than the first.',
   hintFwd:'For a striker what matters is goals, shots, assists, dribbles, key passes and runs in behind.',
   hintMid:'For a midfielder what matters is passes, key passes, tackles, duels, turnovers and chances for teammates.',
@@ -1634,6 +1631,7 @@ ru:{
   repGoalsBand:'Голы чаще с {a} по {b} мин: {k} из {n}.',
   repNone:'Недостаточно данных с минутами, чтобы делать вывод.',
   repFold:'Отчёт по минутам',
+  repHint:'У этого отчёта свой период. Фильтр сезона сверху на него не влияет.',
   hintGk:'Для вратаря важны сейвы, пропущенные, выходы, передачи, перехваты и игра ногами. Повторные сейвы и пропущенные весят меньше первых.',
   hintFwd:'Для нападающего важны голы, удары, ассисты, обводки, острые пасы и открывания.',
   hintMid:'Для полузащитника важны передачи, острые пасы, отборы, единоборства, потери и моменты для партнёров.',
@@ -2246,31 +2244,51 @@ function yearMatches(){
   const y = todayStr().slice(0, 4);
   return matches.filter(m => String(m.date).slice(0, 4) === y);
 }
+function liveSeasonName(){
+  return player.season || currentSeason();
+}
+function liveSeasonMatches(){
+  const s = liveSeasonName();
+  return sortedMatches().filter(m => matchSeason(m) === s);
+}
+function timingMatches(){
+  if(timingRange === 'month') return monthMatches();
+  if(timingRange === 'year') return yearMatches();
+  if(timingRange === 'all') return sortedMatches();
+  return liveSeasonMatches();
+}
 let timingOpen = false;
-function renderTimingBoard(selected){
+let timingRange = 'season';
+function renderTimingBoard(){
   const el = document.getElementById('timingBoard');
   if(!el) return;
-  const items = [
-    [statsPeriodLabel(), selected || []],
-    [t('periodMonth'), monthMatches()],
-    [t('periodYear'), yearMatches()],
-    [t('cardSeason'), seasonPool()]
-  ];
+  const chips = [
+    ['season', liveSeasonName()],
+    ['month', t('periodMonth')],
+    ['year', t('periodYear')],
+    ['all', t('periodAll')]
+  ].map(([key, lab]) => `<button type="button" class="chip${timingRange === key ? ' active' : ''}" data-timing="${key}">${escapeHtml(lab)}</button>`).join('');
   el.innerHTML = `<div class="timing-fold">
       <button type="button" class="timing-row" id="timingToggle">
         <span>${escapeHtml(t('repFold'))}</span>
         <span class="timing-chev">${timingOpen ? '▾' : '›'}</span>
       </button>
       <div id="timingMenu" ${timingOpen ? '' : 'hidden'}>
-        ${items.map(([when, list]) => `<details class="timing-item">
-          <summary>${escapeHtml(when)}<span class="timing-chev">›</span></summary>
-          ${storyBoxHtml('', periodStoryLines(list))}
-        </details>`).join('')}
+        <p class="hint">${escapeHtml(t('repHint'))}</p>
+        <div class="period-chips" id="timingChips">${chips}</div>
+        ${storyBoxHtml('', periodStoryLines(timingMatches()))}
       </div>
     </div>`;
   document.getElementById('timingToggle').addEventListener('click', () => {
     timingOpen = !timingOpen;
-    renderTimingBoard(selected);
+    renderTimingBoard();
+  });
+  document.getElementById('timingChips')?.addEventListener('click', e => {
+    const chip = e.target.closest('[data-timing]');
+    if(!chip) return;
+    timingRange = chip.dataset.timing || 'season';
+    timingOpen = true;
+    renderTimingBoard();
   });
 }
 function reportLines(m){
@@ -4205,7 +4223,7 @@ function renderStats(){
   renderCompare();
   renderPlayerFeed();
   const list = statsMatches();
-  renderTimingBoard(list);
+  renderTimingBoard();
   const grid = document.getElementById('statGrid');
   const heading = document.getElementById('chartHeading');
   heading.textContent = list.length <= 1 ? t('chartTitle') : t('chartLastN', {n: list.length});
