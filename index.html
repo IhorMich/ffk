@@ -215,14 +215,14 @@
       </div>
       <div class="hero-split">
         <div class="hero-mini"><span class="l" data-i18n="heroAction">вклад</span><span class="n" id="heroAction">6.0</span></div>
-        <div class="hero-mini"><span class="l" data-i18n="heroEffort">старание</span><span class="n" id="heroEffort">7.0</span></div>
+        <div class="hero-mini"><span class="l" data-i18n="heroEffort">старание</span><span class="n" id="heroEffort">6.0</span></div>
       </div>
     </div>
   </div>
 
   <div class="content">
     <div class="view active" id="view-new">
-      <button class="live-start" id="liveStartBtn" type="button" data-i18n="liveStart">Идёт матч — записывать действия</button>
+      <button class="live-start" id="liveStartBtn" type="button" data-i18n="liveStart">Быстрый режим</button>
       <div class="banner" id="focusBanner" hidden></div>
       <div class="row2">
         <div class="field">
@@ -247,13 +247,22 @@
         </div>
         <div class="field">
           <label data-i18n="labelScore">Счёт</label>
-          <input type="text" id="f-score" placeholder="2:1">
+          <input type="text" id="f-score" inputmode="text">
         </div>
       </div>
       <div class="row2">
         <div class="field">
-          <label data-i18n="labelMin">Минуты</label>
-          <input type="number" id="f-minutes" min="1" max="120" value="60">
+          <label data-i18n="labelFormat">Формат матча</label>
+          <select id="f-format">
+            <option value="3x15">3×15</option>
+            <option value="3x20">3×20</option>
+            <option value="3x25">3×25</option>
+            <option value="2x25">2×25</option>
+            <option value="2x30">2×30</option>
+            <option value="2x35">2×35</option>
+            <option value="2x40">2×40</option>
+            <option value="custom" data-i18n="fmtCustom">Свой</option>
+          </select>
         </div>
         <div class="field">
           <label data-i18n="labelKind">Тип игры</label>
@@ -264,12 +273,15 @@
           </select>
         </div>
       </div>
-      <div class="field">
-        <label data-i18n="labelRole">Выход</label>
-        <select id="f-role">
-          <option value="start" data-i18n="roleStart">В старте</option>
-          <option value="sub" data-i18n="roleSub">На замену</option>
-        </select>
+      <div class="row2">
+        <div class="field" id="customLengthWrap" hidden>
+          <label data-i18n="labelMatchLen">Длина матча, мин</label>
+          <input type="number" id="f-matchlen" min="1" max="120" value="60">
+        </div>
+        <div class="field">
+          <label data-i18n="labelMin">Минуты на поле</label>
+          <input type="number" id="f-minutes" min="1" max="120" value="60">
+        </div>
       </div>
 
       <div class="section-title" data-i18n="secActions">Игровые действия</div>
@@ -339,13 +351,21 @@
         </select>
       </div>
       <div class="field">
-        <label data-i18n="sMin">Минут в матче по умолчанию</label>
-        <select id="s-minutes">
-          <option value="50">50 (2×25)</option>
-          <option value="60">60 (2×30)</option>
-          <option value="70">70 (2×35)</option>
-          <option value="80">80 (2×40)</option>
+        <label data-i18n="sFormat">Формат матча по умолчанию</label>
+        <select id="s-format">
+          <option value="3x15">3×15</option>
+          <option value="3x20">3×20</option>
+          <option value="3x25">3×25</option>
+          <option value="2x25">2×25</option>
+          <option value="2x30">2×30</option>
+          <option value="2x35">2×35</option>
+          <option value="2x40">2×40</option>
+          <option value="custom" data-i18n="fmtCustom">Свой</option>
         </select>
+      </div>
+      <div class="field" id="s-custom-wrap" hidden>
+        <label data-i18n="labelMatchLen">Длина матча, мин</label>
+        <input type="number" id="s-minutes" min="1" max="120" value="60">
       </div>
       <button class="save-btn" id="saveSettingsBtn" type="button" data-i18n="sSave">Сохранить настройки</button>
     </div>
@@ -390,8 +410,9 @@ const I18N = {
 uk:{
   pageTitle:'FFK — оцінка матчу', settingsAria:'Налаштування',
   heroOverall:'загальна оцінка', heroShort:'короткий вихід', heroAction:'вклад', heroEffort:'старання',
-  liveStart:'Йде матч — записувати дії', labelDate:'Дата', labelPos:'Позиція', labelOpp:'Суперник', phOpp:'Назва команди',
-  labelScore:'Рахунок', labelMin:'Хвилини', labelKind:'Тип гри', labelRole:'Вихід', labelComment:'Коментар', phComment:'Що запам’яталось',
+  liveStart:'Швидкий режим', labelDate:'Дата', labelPos:'Позиція', labelOpp:'Суперник', phOpp:'Назва команди',
+  labelScore:'Рахунок', labelMin:'Хвилини на полі', labelFormat:'Формат матчу', labelMatchLen:'Довжина матчу, хв', fmtCustom:'Свій',
+  labelKind:'Тип гри', labelComment:'Коментар', phComment:'Що запам’яталось',
   posFwd:'Нападник', posMid:'Півзахисник', posDef:'Захисник', posGk:'Воротар',
   posShortFwd:'Нап', posShortMid:'ПЗ', posShortDef:'Зах', posShortGk:'Врт',
   kindLeague:'Чемпіонат', kindFriendly:'Товариський', kindCup:'Турнір',
@@ -402,11 +423,11 @@ uk:{
   export:'Експорт', import:'Імпорт', copy:'Копіювати',
   periodWeek:'Тиждень', periodMonth:'Місяць', period3m:'3 місяці', periodAll:'Весь час',
   chartTitle:'Динаміка загальної оцінки', chartAria:'Графік оцінок', chartEmpty:'Поки немає даних',
-  sLang:'Мова', sClub:'Клуб', sPlayer:'Гравець', sPos:'Позиція за замовчуванням', sMin:'Хвилин у матчі за замовчуванням', sSave:'Зберегти налаштування',
+  sLang:'Мова', sClub:'Клуб', sPlayer:'Гравець', sPos:'Позиція за замовчуванням', sFormat:'Формат матчу за замовчуванням', sSave:'Зберегти налаштування',
   tabMatch:'Матч', tabHistory:'Історія', tabStats:'Статистика',
-  liveHint:'Запис під час гри', liveUndo:'Скасувати', liveDone:'Готово',
-  firstWeight:'1-ше: {w}', hintGk:'Повторні сейви і пропущені важать менше за перші. Командний провал слабо б’є по воротарю.',
-  hintOut:'Перша дія важить більше наступних, щоб 4 голи не давали десятку автоматично.',
+  liveHint:'Великі кнопки, зручно на полі', liveUndo:'Скасувати', liveDone:'Готово',
+  hintGk:'Повторні сейви і пропущені важать менше за перші. Командний провал слабо б’є по воротарю.',
+  hintOut:'Оцінка починається з 6 і може дійти до 10 за сильний матч.',
   insightPlus:'Вдалося', insightFocus:'Фокус на тиждень', plusEven:'рівна гра без яскравих дій', focusDefault:'тримати концентрацію всі хвилини', focusLess:'менше: {x}',
   lastFocus:'Минулого разу фокус: <b>{focus}</b> ({who})', unnamed:'Без назви',
   scoreLbl:'Рахунок {s}', minLbl:'{n} хв', actionsLbl:'Дії', gotLbl:'Вдалося', focusLbl:'Фокус',
@@ -420,14 +441,15 @@ uk:{
   shareOverall:'/ 10 загальна', shareVs:'матч', shareOpp:'суперник',
   m_goals:'Гол', m_assists:'Асист', m_shots:'Удар у площину', m_dribbles:'Обводка', m_tackles:'Відбір', m_duelswon:'Єдиноборство +',
   m_passes:'Гострий пас', m_support:'Підтримка', m_saves:'Сейв', m_claims:'Вихід', m_gkpass:'Гра ногами', m_conceded:'Пропущений',
-  m_losses:'Втрата', m_badpass:'Неточний пас', m_badtouch:'Втрата прийому', m_duelslost:'Єдиноборство −', m_fouls:'Фол', m_owngoal:'Автогол',
+  m_losses:'Втрата', m_ledtogoal:'Втрата → гол суперника', m_badpass:'Неточний пас', m_badtouch:'Втрата прийому', m_duelslost:'Єдиноборство −', m_fouls:'Фол', m_owngoal:'Автогол',
   b_effort:'Старання і боротьба за м’яч', b_team:'Гра в команді', b_coach:'Слухав тренера', b_discipline:'Дисципліна / повага до судді', b_mood:'Настрій (не в оцінці)'
 },
 pl:{
   pageTitle:'FFK — ocena meczu', settingsAria:'Ustawienia',
   heroOverall:'ocena ogólna', heroShort:'krótki występ', heroAction:'wkład', heroEffort:'zaangażowanie',
-  liveStart:'Mecz trwa — zapisuj akcje', labelDate:'Data', labelPos:'Pozycja', labelOpp:'Rywal', phOpp:'Nazwa drużyny',
-  labelScore:'Wynik', labelMin:'Minuty', labelKind:'Typ meczu', labelRole:'Wejście', labelComment:'Komentarz', phComment:'Co zapamiętałeś',
+  liveStart:'Tryb szybki', labelDate:'Data', labelPos:'Pozycja', labelOpp:'Rywal', phOpp:'Nazwa drużyny',
+  labelScore:'Wynik', labelMin:'Minuty na boisku', labelFormat:'Format meczu', labelMatchLen:'Długość meczu, min', fmtCustom:'Własny',
+  labelKind:'Typ meczu', labelComment:'Komentarz', phComment:'Co zapamiętałeś',
   posFwd:'Napastnik', posMid:'Pomocnik', posDef:'Obrońca', posGk:'Bramkarz',
   posShortFwd:'Nap', posShortMid:'Pom', posShortDef:'Obr', posShortGk:'Brk',
   kindLeague:'Liga', kindFriendly:'Towarzyski', kindCup:'Turniej',
@@ -438,11 +460,11 @@ pl:{
   export:'Eksport', import:'Import', copy:'Kopiuj',
   periodWeek:'Tydzień', periodMonth:'Miesiąc', period3m:'3 miesiące', periodAll:'Całość',
   chartTitle:'Dynamika oceny ogólnej', chartAria:'Wykres ocen', chartEmpty:'Brak danych',
-  sLang:'Język', sClub:'Klub', sPlayer:'Zawodnik', sPos:'Domyślna pozycja', sMin:'Domyślne minuty meczu', sSave:'Zapisz ustawienia',
+  sLang:'Język', sClub:'Klub', sPlayer:'Zawodnik', sPos:'Domyślna pozycja', sFormat:'Domyślny format meczu', sSave:'Zapisz ustawienia',
   tabMatch:'Mecz', tabHistory:'Historia', tabStats:'Statystyki',
-  liveHint:'Zapis w trakcie gry', liveUndo:'Cofnij', liveDone:'Gotowe',
-  firstWeight:'1.: {w}', hintGk:'Kolejne interwencje i stracone gole waży mniej niż pierwsze. Słaba gra zespołu słabo obniża notę bramkarza.',
-  hintOut:'Pierwsza akcja waży więcej niż kolejne, żeby 4 gole nie dawały automatycznej dziesiątki.',
+  liveHint:'Duże przyciski, wygodne na boisku', liveUndo:'Cofnij', liveDone:'Gotowe',
+  hintGk:'Kolejne interwencje i stracone gole waży mniej niż pierwsze. Słaba gra zespołu słabo obniża notę bramkarza.',
+  hintOut:'Ocena startuje od 6 i może dojść do 10 za mocny mecz.',
   insightPlus:'Udało się', insightFocus:'Cel na tydzień', plusEven:'równa gra bez wyróżniających akcji', focusDefault:'utrzymać koncentrację przez całe minuty', focusLess:'mniej: {x}',
   lastFocus:'Ostatnio cel: <b>{focus}</b> ({who})', unnamed:'Bez nazwy',
   scoreLbl:'Wynik {s}', minLbl:'{n} min', actionsLbl:'Akcje', gotLbl:'Udało się', focusLbl:'Cel',
@@ -456,14 +478,15 @@ pl:{
   shareOverall:'/ 10 ogólna', shareVs:'mecz', shareOpp:'rywal',
   m_goals:'Gol', m_assists:'Asysta', m_shots:'Strzał celny', m_dribbles:'Drybling', m_tackles:'Odbiór', m_duelswon:'Pojedynek +',
   m_passes:'Kluczowe podanie', m_support:'Wsparcie', m_saves:'Interwencja', m_claims:'Wyjście', m_gkpass:'Gra nogami', m_conceded:'Stracony',
-  m_losses:'Strata', m_badpass:'Niedokładne podanie', m_badtouch:'Strata przy przyjęciu', m_duelslost:'Pojedynek −', m_fouls:'Faul', m_owngoal:'Samobój',
+  m_losses:'Strata', m_ledtogoal:'Strata → gol rywala', m_badpass:'Niedokładne podanie', m_badtouch:'Strata przy przyjęciu', m_duelslost:'Pojedynek −', m_fouls:'Faul', m_owngoal:'Samobój',
   b_effort:'Zaangażowanie i walka o piłkę', b_team:'Gra zespołowa', b_coach:'Słuchał trenera', b_discipline:'Dyscyplina / szacunek dla sędziego', b_mood:'Nastrój (nie w ocenie)'
 },
 en:{
   pageTitle:'FFK — match rating', settingsAria:'Settings',
   heroOverall:'overall rating', heroShort:'short appearance', heroAction:'impact', heroEffort:'effort',
-  liveStart:'Live match — tap actions', labelDate:'Date', labelPos:'Position', labelOpp:'Opponent', phOpp:'Team name',
-  labelScore:'Score', labelMin:'Minutes', labelKind:'Match type', labelRole:'Appearance', labelComment:'Comment', phComment:'What stood out',
+  liveStart:'Quick mode', labelDate:'Date', labelPos:'Position', labelOpp:'Opponent', phOpp:'Team name',
+  labelScore:'Score', labelMin:'Minutes on the pitch', labelFormat:'Match format', labelMatchLen:'Match length, min', fmtCustom:'Custom',
+  labelKind:'Match type', labelComment:'Comment', phComment:'What stood out',
   posFwd:'Forward', posMid:'Midfielder', posDef:'Defender', posGk:'Goalkeeper',
   posShortFwd:'FW', posShortMid:'MF', posShortDef:'DF', posShortGk:'GK',
   kindLeague:'League', kindFriendly:'Friendly', kindCup:'Tournament',
@@ -474,11 +497,11 @@ en:{
   export:'Export', import:'Import', copy:'Copy',
   periodWeek:'Week', periodMonth:'Month', period3m:'3 months', periodAll:'All time',
   chartTitle:'Overall rating trend', chartAria:'Rating chart', chartEmpty:'No data yet',
-  sLang:'Language', sClub:'Club', sPlayer:'Player', sPos:'Default position', sMin:'Default match minutes', sSave:'Save settings',
+  sLang:'Language', sClub:'Club', sPlayer:'Player', sPos:'Default position', sFormat:'Default match format', sSave:'Save settings',
   tabMatch:'Match', tabHistory:'History', tabStats:'Stats',
-  liveHint:'Live recording', liveUndo:'Undo', liveDone:'Done',
-  firstWeight:'1st: {w}', hintGk:'Later saves and goals conceded count less than the first. A team collapse barely hits the keeper rating.',
-  hintOut:'The first action counts more than later ones, so 4 goals do not auto-max the score.',
+  liveHint:'Big buttons, easy on the pitch', liveUndo:'Undo', liveDone:'Done',
+  hintGk:'Later saves and goals conceded count less than the first. A team collapse barely hits the keeper rating.',
+  hintOut:'The rating starts at 6 and can reach 10 after a strong match.',
   insightPlus:'Went well', insightFocus:'Focus this week', plusEven:'a steady game without standout actions', focusDefault:'stay switched on for every minute', focusLess:'fewer: {x}',
   lastFocus:'Last focus: <b>{focus}</b> ({who})', unnamed:'Untitled',
   scoreLbl:'Score {s}', minLbl:'{n} min', actionsLbl:'Actions', gotLbl:'Went well', focusLbl:'Focus',
@@ -492,14 +515,15 @@ en:{
   shareOverall:'/ 10 overall', shareVs:'match', shareOpp:'opponent',
   m_goals:'Goal', m_assists:'Assist', m_shots:'Shot on target', m_dribbles:'Dribble', m_tackles:'Tackle', m_duelswon:'Duel won',
   m_passes:'Key pass', m_support:'Support', m_saves:'Save', m_claims:'Claim', m_gkpass:'Distribution', m_conceded:'Conceded',
-  m_losses:'Turnover', m_badpass:'Incomplete pass', m_badtouch:'Poor first touch', m_duelslost:'Duel lost', m_fouls:'Foul', m_owngoal:'Own goal',
+  m_losses:'Turnover', m_ledtogoal:'Turnover leading to a goal', m_badpass:'Incomplete pass', m_badtouch:'Poor first touch', m_duelslost:'Duel lost', m_fouls:'Foul', m_owngoal:'Own goal',
   b_effort:'Work rate and duels', b_team:'Team play', b_coach:'Listened to the coach', b_discipline:'Discipline / respect for the referee', b_mood:'Mood (not in the rating)'
 },
 ru:{
   pageTitle:'FFK — Оценка матча', settingsAria:'Настройки',
   heroOverall:'общая оценка', heroShort:'короткий выход', heroAction:'вклад', heroEffort:'старание',
-  liveStart:'Идёт матч — записывать действия', labelDate:'Дата', labelPos:'Позиция', labelOpp:'Соперник', phOpp:'Название команды',
-  labelScore:'Счёт', labelMin:'Минуты', labelKind:'Тип игры', labelRole:'Выход', labelComment:'Комментарий', phComment:'Что запомнилось',
+  liveStart:'Быстрый режим', labelDate:'Дата', labelPos:'Позиция', labelOpp:'Соперник', phOpp:'Название команды',
+  labelScore:'Счёт', labelMin:'Минуты на поле', labelFormat:'Формат матча', labelMatchLen:'Длина матча, мин', fmtCustom:'Свой',
+  labelKind:'Тип игры', labelComment:'Комментарий', phComment:'Что запомнилось',
   posFwd:'Нападающий', posMid:'Полузащитник', posDef:'Защитник', posGk:'Вратарь',
   posShortFwd:'Нап', posShortMid:'ПЗ', posShortDef:'Защ', posShortGk:'Врт',
   kindLeague:'Чемпионат', kindFriendly:'Товарищеский', kindCup:'Турнир',
@@ -510,11 +534,11 @@ ru:{
   export:'Экспорт', import:'Импорт', copy:'Копировать',
   periodWeek:'Неделя', periodMonth:'Месяц', period3m:'3 месяца', periodAll:'Всё время',
   chartTitle:'Динамика общей оценки', chartAria:'График оценок', chartEmpty:'Пока нет данных',
-  sLang:'Язык', sClub:'Клуб', sPlayer:'Игрок', sPos:'Позиция по умолчанию', sMin:'Минут в матче по умолчанию', sSave:'Сохранить настройки',
+  sLang:'Язык', sClub:'Клуб', sPlayer:'Игрок', sPos:'Позиция по умолчанию', sFormat:'Формат матча по умолчанию', sSave:'Сохранить настройки',
   tabMatch:'Матч', tabHistory:'История', tabStats:'Статистика',
-  liveHint:'Запись по ходу игры', liveUndo:'Отменить', liveDone:'Готово',
-  firstWeight:'1-е: {w}', hintGk:'Повторные сейвы и пропущенные весят меньше первых. Командный провал слабо бьёт по вратарю.',
-  hintOut:'Первое действие весит больше следующих, чтобы 4 гола не давали десятку автоматически.',
+  liveHint:'Крупные кнопки, удобно на поле', liveUndo:'Отменить', liveDone:'Готово',
+  hintGk:'Повторные сейвы и пропущенные весят меньше первых. Командный провал слабо бьёт по вратарю.',
+  hintOut:'Оценка начинается с 6 и может дойти до 10 за сильный матч.',
   insightPlus:'Получилось', insightFocus:'Фокус на неделю', plusEven:'ровная игра без ярких действий', focusDefault:'держать концентрацию все минуты', focusLess:'меньше: {x}',
   lastFocus:'В прошлый раз фокус: <b>{focus}</b> ({who})', unnamed:'Без названия',
   scoreLbl:'Счёт {s}', minLbl:'{n} мин', actionsLbl:'Действия', gotLbl:'Получилось', focusLbl:'Фокус',
@@ -528,7 +552,7 @@ ru:{
   shareOverall:'/ 10 общая', shareVs:'матч', shareOpp:'соперник',
   m_goals:'Гол', m_assists:'Ассист', m_shots:'Удар в створ', m_dribbles:'Обводка', m_tackles:'Отбор', m_duelswon:'Единоборство +',
   m_passes:'Острый пас', m_support:'Поддержка', m_saves:'Сейв', m_claims:'Выход', m_gkpass:'Игра ногами', m_conceded:'Пропущен',
-  m_losses:'Потеря', m_badpass:'Неточный пас', m_badtouch:'Потеря приёма', m_duelslost:'Единоборство −', m_fouls:'Фол', m_owngoal:'Автогол',
+  m_losses:'Потеря', m_ledtogoal:'Потеря → гол соперника', m_badpass:'Неточный пас', m_badtouch:'Потеря приёма', m_duelslost:'Единоборство −', m_fouls:'Фол', m_owngoal:'Автогол',
   b_effort:'Старание и борьба за мяч', b_team:'Игра в команде', b_coach:'Слушал тренера', b_discipline:'Дисциплина / уважение к судье', b_mood:'Настроение (не в оценке)'
 }
 };
@@ -580,6 +604,7 @@ const METRICS = [
   {key:'gkpass', icon:'👟', positions:['gk'], w:{fwd:0, mid:0, def:0, gk:0.15}},
   {key:'conceded', icon:'📉', positions:['gk'], w:{fwd:0, mid:0, def:0, gk:-0.18}},
   {key:'losses', icon:'✖', positions:['fwd','mid','def'], w:{fwd:-0.2, mid:-0.15, def:-0.1, gk:0}},
+  {key:'ledtogoal', icon:'⛔', positions:['fwd','mid','def','gk'], w:{fwd:-0.8, mid:-0.8, def:-0.85, gk:-0.55}},
   {key:'badpass', icon:'↩', positions:['fwd','mid','def','gk'], w:{fwd:-0.1, mid:-0.15, def:-0.1, gk:-0.15}},
   {key:'badtouch', icon:'🫳', positions:['fwd','mid','def'], w:{fwd:-0.1, mid:-0.1, def:-0.1, gk:0}},
   {key:'duelslost', icon:'🤼', positions:['fwd','mid','def'], w:{fwd:-0.1, mid:-0.15, def:-0.25, gk:0}},
@@ -594,7 +619,7 @@ const BEHAVIOR = [
   {key:'mood', inRating:false},
 ];
 
-let settings = {club:'FFK', player:'Данило Михайлюк', position:'fwd', minutes:'60', lang:'ru'};
+let settings = {club:'FFK', player:'Данило Михайлюк', position:'fwd', format:'2x30', minutes:'60', lang:'ru'};
 let matches = [];
 let editingId = null;
 let form = emptyForm();
@@ -611,27 +636,43 @@ function metricsFor(pos){ return METRICS.filter(m => m.positions.includes(pos));
 function weightOf(m, pos){ return m.w[pos] ?? 0; }
 function clamp10(n){ return Math.round(Math.max(0, Math.min(10, n)) * 10) / 10; }
 
+const FORMAT_MIN = { '3x15':45, '3x20':60, '3x25':75, '2x25':50, '2x30':60, '2x35':70, '2x40':80 };
+function formatLength(id, custom){
+  if(id === 'custom') return Math.min(120, Math.max(1, Number(custom) || 60));
+  return FORMAT_MIN[id] || 60;
+}
+function syncPlayedDefault(fromSettings){
+  const fmt = document.getElementById('f-format').value;
+  const custom = document.getElementById('f-matchlen').value;
+  const len = formatLength(fmt, custom);
+  document.getElementById('customLengthWrap').hidden = fmt !== 'custom';
+  if(fromSettings) document.getElementById('f-minutes').value = String(len);
+}
+function behaviorAvg(behaviors){
+  const rated = BEHAVIOR.filter(b => b.inRating).map(b => Number(behaviors[b.key]) || 3);
+  return rated.reduce((a,b)=>a+b,0) / rated.length;
+}
 function stackedWeight(n, w){
   n = Math.max(0, Math.floor(Number(n)||0));
   if(!n || !w) return 0;
-  const decay = w < 0 ? 0.72 : 0.62;
+  const decay = w < 0 ? 0.75 : 0.88;
   let sum = 0;
   for(let i=0;i<n;i++) sum += w * Math.pow(decay, i);
   return sum;
 }
-
-function actionScore(counts, pos){
+function actionSum(counts, pos){
   let sum = 0;
   metricsFor(pos).forEach(m => sum += stackedWeight(counts[m.key], weightOf(m, pos)));
-  return clamp10(BASE_RATING + sum);
+  return sum;
+}
+function actionScore(counts, pos){
+  return clamp10(BASE_RATING + actionSum(counts, pos));
 }
 function effortScore(behaviors){
-  const rated = BEHAVIOR.filter(b => b.inRating).map(b => Number(behaviors[b.key]) || 3);
-  const avg = rated.reduce((a,b)=>a+b,0) / rated.length;
-  return clamp10(4 + (avg - 1) * 1.5);
+  return clamp10(BASE_RATING + (behaviorAvg(behaviors) - 3) * 2);
 }
 function overallScore(counts, behaviors, pos){
-  return clamp10(0.65 * actionScore(counts, pos) + 0.35 * effortScore(behaviors));
+  return clamp10(BASE_RATING + actionSum(counts, pos) + (behaviorAvg(behaviors) - 3) * 0.5);
 }
 
 function ratingClass(r){
@@ -680,6 +721,7 @@ function loadSettings(){
       club: String(s.club || 'FFK').slice(0,24),
       player: String(s.player || 'Данило Михайлюк').slice(0,40),
       position: ['fwd','mid','def','gk'].includes(s.position) ? s.position : 'fwd',
+      format: (FORMAT_MIN[s.format] || s.format === 'custom') ? s.format : (Object.keys(FORMAT_MIN).find(k => FORMAT_MIN[k] === Number(s.minutes)) || '2x30'),
       minutes: String(s.minutes || '60'),
       lang: LANGS.includes(s.lang) ? s.lang : detectLang()
     };
@@ -719,7 +761,9 @@ function normalizeMatch(m){
     behaviors[b.key] = v >= 1 && v <= 5 ? v : 3;
   });
   const kind = ['league','friendly','cup'].includes(m.kind) ? m.kind : 'league';
-  const minutes = Math.min(120, Math.max(1, Number(m.minutes) || Number(settings.minutes) || 60));
+  const format = (FORMAT_MIN[m.format] || m.format === 'custom') ? m.format : '2x30';
+  const matchLen = formatLength(format, m.matchLen || m.minutes);
+  const minutes = Math.min(120, Math.max(1, Number(m.minutes) || matchLen));
   const action = actionScore(counts, pos);
   const effort = effortScore(behaviors);
   return {
@@ -729,14 +773,15 @@ function normalizeMatch(m){
     opponent: String(m.opponent || ''),
     score: String(m.score || ''),
     position: pos,
-    role: m.role === 'sub' ? 'sub' : 'start',
     kind,
+    format,
+    matchLen,
     minutes,
     comment: String(m.comment || ''),
     counts, behaviors,
     actionRating: action,
     effortRating: effort,
-    rating: clamp10(0.65 * action + 0.35 * effort)
+    rating: overallScore(counts, behaviors, pos)
   };
 }
 function guessPos(label){
@@ -754,7 +799,8 @@ function persistDraft(){
     opponent: document.getElementById('f-opponent').value,
     score: document.getElementById('f-score').value,
     minutes: document.getElementById('f-minutes').value,
-    role: document.getElementById('f-role').value,
+    format: document.getElementById('f-format').value,
+    matchLen: document.getElementById('f-matchlen').value,
     kind: document.getElementById('f-kind').value,
     comment: document.getElementById('f-comment').value,
     counts: form.counts,
@@ -771,7 +817,9 @@ function restoreDraft(){
     if(d.opponent) document.getElementById('f-opponent').value = d.opponent;
     if(d.score) document.getElementById('f-score').value = d.score;
     if(d.minutes) document.getElementById('f-minutes').value = d.minutes;
-    if(d.role) document.getElementById('f-role').value = d.role;
+    if(d.format) document.getElementById('f-format').value = d.format;
+    if(d.matchLen) document.getElementById('f-matchlen').value = d.matchLen;
+    document.getElementById('customLengthWrap').hidden = document.getElementById('f-format').value !== 'custom';
     if(d.kind) document.getElementById('f-kind').value = d.kind;
     if(d.comment) document.getElementById('f-comment').value = d.comment;
     if(d.counts) form.counts = {...form.counts, ...d.counts};
@@ -784,12 +832,10 @@ function renderMetrics(){
   const pos = currentPos();
   document.getElementById('weightsHint').textContent = pos === 'gk' ? t('hintGk') : t('hintOut');
   document.getElementById('metricsList').innerHTML = metricsFor(pos).map(m => {
-    const w = weightOf(m, pos);
-    const sign = w > 0 ? '+' : '';
     return `<div class="metric-row">
       <div class="metric-name">
         <div class="metric-icon">${m.icon}</div>
-        <div>${escapeHtml(metricLabel(m.key))}<span class="metric-weight">${escapeHtml(t('firstWeight', {w: sign+w.toFixed(2)}))}</span></div>
+        <div>${escapeHtml(metricLabel(m.key))}</div>
       </div>
       <div class="stepper">
         <button type="button" onclick="stepMetric('${m.key}',-1)">−</button>
@@ -846,7 +892,7 @@ function scoresNow(){
   const pos = currentPos();
   const action = actionScore(form.counts, pos);
   const effort = effortScore(form.behaviors);
-  return {action, effort, overall: clamp10(0.65*action + 0.35*effort), pos};
+  return {action, effort, overall: overallScore(form.counts, form.behaviors, pos), pos};
 }
 function updateHero(){
   const s = scoresNow();
@@ -874,10 +920,11 @@ function resetForm(){
   document.getElementById('f-opponent').value = '';
   document.getElementById('f-score').value = '';
   document.getElementById('f-comment').value = '';
-  document.getElementById('f-minutes').value = settings.minutes;
-  document.getElementById('f-role').value = 'start';
   document.getElementById('f-kind').value = 'league';
   document.getElementById('f-position').value = settings.position;
+  document.getElementById('f-format').value = settings.format || '2x30';
+  document.getElementById('f-matchlen').value = settings.minutes;
+  syncPlayedDefault(true);
   document.getElementById('f-date').value = todayStr();
   renderMetrics();
   renderBehaviors();
@@ -895,7 +942,9 @@ function fillForm(m){
   document.getElementById('f-opponent').value = m.opponent;
   document.getElementById('f-score').value = m.score;
   document.getElementById('f-minutes').value = m.minutes;
-  document.getElementById('f-role').value = m.role;
+  document.getElementById('f-format').value = m.format || '2x30';
+  document.getElementById('f-matchlen').value = m.matchLen || m.minutes;
+  document.getElementById('customLengthWrap').hidden = document.getElementById('f-format').value !== 'custom';
   document.getElementById('f-kind').value = m.kind || 'league';
   document.getElementById('f-comment').value = m.comment;
   setEditUi(true);
@@ -920,13 +969,14 @@ function collectMatch(){
     score: document.getElementById('f-score').value.trim(),
     position: pos,
     comment: document.getElementById('f-comment').value.trim(),
-    minutes: Math.min(120, Math.max(1, Number(document.getElementById('f-minutes').value) || Number(settings.minutes) || 60)),
-    role: document.getElementById('f-role').value === 'sub' ? 'sub' : 'start',
+    minutes: Math.min(120, Math.max(1, Number(document.getElementById('f-minutes').value) || formatLength(document.getElementById('f-format').value, document.getElementById('f-matchlen').value))),
+    format: document.getElementById('f-format').value,
+    matchLen: formatLength(document.getElementById('f-format').value, document.getElementById('f-matchlen').value),
     kind: document.getElementById('f-kind').value,
     counts, behaviors,
     actionRating: action,
     effortRating: effort,
-    rating: clamp10(0.65 * action + 0.35 * effort)
+    rating: overallScore(counts, behaviors, pos)
   };
 }
 
@@ -947,16 +997,18 @@ document.getElementById('saveBtn').addEventListener('click', () => {
 
 document.getElementById('cancelEditBtn').addEventListener('click', resetForm);
 
-['f-date','f-position','f-opponent','f-score','f-minutes','f-role','f-kind','f-comment'].forEach(id => {
+['f-date','f-position','f-opponent','f-score','f-minutes','f-format','f-matchlen','f-kind','f-comment'].forEach(id => {
   const el = document.getElementById(id);
-  el.addEventListener('input', () => {
+  const onChange = () => {
     if(id === 'f-position'){ renderMetrics(); renderLiveGrid(); }
+    if(id === 'f-format'){ syncPlayedDefault(true); }
+    if(id === 'f-matchlen' && document.getElementById('f-format').value === 'custom'){
+      document.getElementById('f-minutes').value = document.getElementById('f-matchlen').value;
+    }
     updateHero(); persistDraft();
-  });
-  el.addEventListener('change', () => {
-    if(id === 'f-position'){ renderMetrics(); renderLiveGrid(); }
-    updateHero(); persistDraft();
-  });
+  };
+  el.addEventListener('input', onChange);
+  el.addEventListener('change', onChange);
 });
 
 let toastTimer;
@@ -983,7 +1035,7 @@ function renderHistory(){
     return `<div class="match-card">
       <div class="match-card-top" onclick="toggleDetails(${m.id})">
         <div class="match-meta">
-          <span class="match-date">${escapeHtml(formatDate(m.date))} · ${escapeHtml(posLabel(m.position))} · ${escapeHtml(kindLabel(m.kind))} · ${escapeHtml(t('minLbl', {n:m.minutes}))}</span>
+          <span class="match-date">${escapeHtml(formatDate(m.date))} · ${escapeHtml(posLabel(m.position))} · ${escapeHtml(kindLabel(m.kind))} · ${escapeHtml((m.format||'').replace('x','×') || t('fmtCustom'))} · ${escapeHtml(t('minLbl', {n:m.minutes}))}</span>
           <span class="match-opp">${escapeHtml(m.opponent || t('unnamed'))}</span>
           <span class="match-score">${m.score ? escapeHtml(t('scoreLbl', {s:m.score})) : ''} · ${escapeHtml(t('heroAction'))} ${Number(m.actionRating).toFixed(1)} · ${escapeHtml(t('heroEffort'))} ${Number(m.effortRating).toFixed(1)}</span>
         </div>
@@ -1187,7 +1239,9 @@ document.getElementById('settingsBtn').addEventListener('click', () => {
   document.getElementById('s-club').value = settings.club;
   document.getElementById('s-player').value = settings.player;
   document.getElementById('s-position').value = settings.position;
+  document.getElementById('s-format').value = settings.format || '2x30';
   document.getElementById('s-minutes').value = settings.minutes;
+  document.getElementById('s-custom-wrap').hidden = (settings.format !== 'custom');
   document.getElementById('s-lang').value = settings.lang;
   showView('settings');
 });
@@ -1196,18 +1250,27 @@ document.getElementById('s-lang').addEventListener('change', () => {
   saveSettings();
   applyI18n();
 });
+document.getElementById('s-format').addEventListener('change', () => {
+  document.getElementById('s-custom-wrap').hidden = document.getElementById('s-format').value !== 'custom';
+  if(document.getElementById('s-format').value !== 'custom'){
+    document.getElementById('s-minutes').value = String(FORMAT_MIN[document.getElementById('s-format').value] || 60);
+  }
+});
 document.getElementById('saveSettingsBtn').addEventListener('click', () => {
   settings.club = document.getElementById('s-club').value.trim() || 'FFK';
   settings.player = document.getElementById('s-player').value.trim() || settings.player;
   settings.position = document.getElementById('s-position').value;
-  settings.minutes = document.getElementById('s-minutes').value;
+  settings.format = document.getElementById('s-format').value;
+  settings.minutes = String(formatLength(settings.format, document.getElementById('s-minutes').value));
   settings.lang = document.getElementById('s-lang').value;
   saveSettings();
   applyHeader();
   applyI18n();
   if(!editingId){
     document.getElementById('f-position').value = settings.position;
-    document.getElementById('f-minutes').value = settings.minutes;
+    document.getElementById('f-format').value = settings.format;
+    document.getElementById('f-matchlen').value = settings.minutes;
+    syncPlayedDefault(true);
     renderMetrics();
   }
   showToast(t('toastSettings'));
@@ -1304,7 +1367,9 @@ async function shareCard(m){
   applyHeader();
   document.getElementById('f-date').value = todayStr();
   document.getElementById('f-position').value = settings.position;
-  document.getElementById('f-minutes').value = settings.minutes;
+  document.getElementById('f-format').value = settings.format || '2x30';
+  document.getElementById('f-matchlen').value = settings.minutes;
+  syncPlayedDefault(true);
   loadMatches();
   restoreDraft();
   applyI18n();
