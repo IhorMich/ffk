@@ -356,6 +356,8 @@
       <div class="field">
         <label data-i18n="pSeason">Сезон</label>
         <input type="text" id="p-season" maxlength="16" placeholder="2026/27">
+        <div class="hint" data-i18n="pSeasonHint">Каждый матч запоминает сезон. Потом можно открыть 2026/27 отдельно.</div>
+        <button class="ghost-btn" id="pNewSeasonBtn" type="button" data-i18n="pNewSeason">Начать новый сезон</button>
       </div>
       <button class="save-btn" id="savePlayerBtn" type="button" data-i18n="pSave">Сохранить карточку</button>
     </div>
@@ -471,10 +473,18 @@
         <button class="backup-btn" id="copyBtn" type="button" data-i18n="copy">Копировать</button>
         <input type="file" id="importFile" accept="application/json" hidden>
       </div>
+      <div class="field">
+        <label data-i18n="seasonFilter">Сезон</label>
+        <select id="historySeason"></select>
+      </div>
       <div id="historyList"></div>
     </div>
 
     <div class="view" id="view-stats">
+      <div class="field">
+        <label data-i18n="seasonFilter">Сезон</label>
+        <select id="statsSeason"></select>
+      </div>
       <div class="period-chips" id="periodChips">
         <div class="chip active" data-range="10" data-i18n="periodLast10">Последние 10</div>
         <div class="chip" data-range="7d" data-i18n="periodWeek">Неделя</div>
@@ -596,7 +606,9 @@ uk:{
   pPickPhoto:'Вибрати файл', pNoFile:'Файл не вибрано', pPhotoReady:'Фото вибрано', phDate:'дд.мм.рррр',
   pFirst:'Ім’я', pLast:'Прізвище', pBirth:'Дата народження', pNumber:'Номер',
   pTeam:'Команда', pClub:'Клуб / академія', pPrimary:'Основна позиція', pExtra:'Додаткові позиції',
-  pSeason:'Сезон', pSave:'Зберегти картку', toastPlayer:'Картку гравця збережено',
+  pSeason:'Сезон', pSeasonHint:'Кожен матч запам’ятовує сезон. Пізніше можна відкрити 2026/27 окремо.', pNewSeason:'Почати новий сезон', pSave:'Зберегти картку', toastPlayer:'Картку гравця збережено', toastNewSeason:'Сезон {s}. Нові матчі підуть сюди.',
+  confirmNewSeason:'Закрити {from} і почати {to}? Старі матчі залишаться в архіві.',
+  seasonFilter:'Сезон', seasonCurrent:'{s} · поточний', seasonAll:'Усі сезони',
   ageOne:'{n} рік', ageFew:'{n} роки', ageMany:'{n} років', ageEn:'{n} years',
   liveHint:'Великі кнопки, зручно на полі', liveUndo:'Скасувати', liveDone:'Готово',
   hintGk:'Повторні сейви і пропущені важать менше за перші. Командний провал слабо б’є по воротарю.',
@@ -661,7 +673,9 @@ pl:{
   pPickPhoto:'Wybierz plik', pNoFile:'Nie wybrano pliku', pPhotoReady:'Zdjęcie wybrane', phDate:'dd.mm.rrrr',
   pFirst:'Imię', pLast:'Nazwisko', pBirth:'Data urodzenia', pNumber:'Numer',
   pTeam:'Drużyna', pClub:'Klub / akademia', pPrimary:'Pozycja główna', pExtra:'Pozycje dodatkowe',
-  pSeason:'Sezon', pSave:'Zapisz kartę', toastPlayer:'Karta zawodnika zapisana',
+  pSeason:'Sezon', pSeasonHint:'Każdy mecz zapamiętuje sezon. Później można osobno otworzyć 2026/27.', pNewSeason:'Rozpocznij nowy sezon', pSave:'Zapisz kartę', toastPlayer:'Karta zawodnika zapisana', toastNewSeason:'Sezon {s}. Nowe mecze trafią tutaj.',
+  confirmNewSeason:'Zamknąć {from} i zacząć {to}? Stare mecze zostaną w archiwum.',
+  seasonFilter:'Sezon', seasonCurrent:'{s} · bieżący', seasonAll:'Wszystkie sezony',
   ageOne:'{n} rok', ageFew:'{n} lata', ageMany:'{n} lat', ageEn:'{n} years',
   liveHint:'Duże przyciski, wygodne na boisku', liveUndo:'Cofnij', liveDone:'Gotowe',
   hintGk:'Kolejne interwencje i stracone gole ważą mniej niż pierwsze. Słaba gra zespołu słabo obniża notę bramkarza.',
@@ -726,7 +740,9 @@ en:{
   pPickPhoto:'Choose file', pNoFile:'No file chosen', pPhotoReady:'Photo selected', phDate:'Select date',
   pFirst:'First name', pLast:'Last name', pBirth:'Date of birth', pNumber:'Number',
   pTeam:'Team', pClub:'Club / academy', pPrimary:'Main position', pExtra:'Other positions',
-  pSeason:'Season', pSave:'Save player card', toastPlayer:'Player card saved',
+  pSeason:'Season', pSeasonHint:'Each match remembers its season. Later you can open 2026/27 on its own.', pNewSeason:'Start a new season', pSave:'Save player card', toastPlayer:'Player card saved', toastNewSeason:'Season {s}. New matches go here.',
+  confirmNewSeason:'Close {from} and start {to}? Old matches stay in the archive.',
+  seasonFilter:'Season', seasonCurrent:'{s} · current', seasonAll:'All seasons',
   ageOne:'{n} year', ageFew:'{n} years', ageMany:'{n} years', ageEn:'{n} years',
   liveHint:'Big buttons, easy on the pitch', liveUndo:'Undo', liveDone:'Done',
   hintGk:'Later saves and goals conceded count less than the first. A team collapse barely hits the keeper rating.',
@@ -791,7 +807,9 @@ ru:{
   pPickPhoto:'Выбрать файл', pNoFile:'Файл не выбран', pPhotoReady:'Фото выбрано', phDate:'дд.мм.гггг',
   pFirst:'Имя', pLast:'Фамилия', pBirth:'Дата рождения', pNumber:'Номер',
   pTeam:'Команда', pClub:'Клуб / академия', pPrimary:'Основная позиция', pExtra:'Дополнительные позиции',
-  pSeason:'Сезон', pSave:'Сохранить карточку', toastPlayer:'Карточка игрока сохранена',
+  pSeason:'Сезон', pSeasonHint:'Каждый матч запоминает сезон. Потом можно открыть 2026/27 отдельно.', pNewSeason:'Начать новый сезон', pSave:'Сохранить карточку', toastPlayer:'Карточка игрока сохранена', toastNewSeason:'Сезон {s}. Новые матчи пойдут сюда.',
+  confirmNewSeason:'Закрыть {from} и начать {to}? Старые матчи останутся в архиве.',
+  seasonFilter:'Сезон', seasonCurrent:'{s} · текущий', seasonAll:'Все сезоны',
   ageOne:'{n} год', ageFew:'{n} года', ageMany:'{n} лет', ageEn:'{n} years',
   liveHint:'Крупные кнопки, удобно на поле', liveUndo:'Отменить', liveDone:'Готово',
   hintGk:'Повторные сейвы и пропущенные весят меньше первых. Командный провал слабо бьёт по вратарю.',
@@ -923,6 +941,7 @@ function applyI18n(){
   renderBehaviors();
   renderLiveGrid();
   renderFocusBanner();
+  fillSeasonSelects();
   renderHistory();
   renderStats();
   updateHero();
@@ -1171,6 +1190,21 @@ function currentSeason(){
   const start = d.getMonth() >= 6 ? y : y - 1;
   return start + '/' + String((start + 1) % 100).padStart(2, '0');
 }
+function seasonFromDate(iso){
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(iso || '')) return currentSeason();
+  const y = Number(iso.slice(0,4));
+  const mo = Number(iso.slice(5,7));
+  const start = mo >= 7 ? y : y - 1;
+  return start + '/' + String((start + 1) % 100).padStart(2, '0');
+}
+function nextSeasonLabel(s){
+  const m = String(s || currentSeason()).match(/(\d{2,4})\s*\/\s*(\d{2,4})/);
+  const start = m ? Number(m[1].length === 2 ? '20'+m[1] : m[1]) + 1 : new Date().getFullYear();
+  return start + '/' + String((start + 1) % 100).padStart(2, '0');
+}
+function matchSeason(m){
+  return String(m?.season || '').trim() || seasonFromDate(m?.date);
+}
 function defaultPlayer(){
   return {
     firstName:'Данило', lastName:'Михайлюк', birthDate:'', photo:'',
@@ -1393,7 +1427,12 @@ function loadMatches(){
     const raw = localStorage.getItem(STORAGE_KEY) || localStorage.getItem(LEGACY_KEY);
     const parsed = raw ? JSON.parse(raw) : [];
     const list = Array.isArray(parsed) ? parsed : (Array.isArray(parsed.matches) ? parsed.matches : []);
-    matches = list.map(normalizeMatch).filter(Boolean);
+    let dirty = false;
+    matches = list.map(rawMatch => {
+      if(rawMatch && typeof rawMatch === 'object' && !String(rawMatch.season || '').trim()) dirty = true;
+      return normalizeMatch(rawMatch);
+    }).filter(Boolean);
+    if(dirty && matches.length) saveMatches();
   }catch(e){ matches = []; }
 }
 function saveMatches(){
@@ -1416,12 +1455,14 @@ function normalizeMatch(m){
   const format = (FORMAT_MIN[m.format] || m.format === 'custom') ? m.format : '2x30';
   const matchLen = formatLength(format, m.matchLen || m.minutes);
   const minutes = Math.min(120, Math.max(1, Number(m.minutes) || matchLen));
+  const date = /^\d{4}-\d{2}-\d{2}$/.test(m.date) ? m.date : todayStr();
   const action = actionScore(counts, pos);
   const effort = effortScore(behaviors);
   return {
     id: Number(m.id) || Date.now(),
     player: String(m.player || displayName()),
-    date: /^\d{4}-\d{2}-\d{2}$/.test(m.date) ? m.date : todayStr(),
+    date,
+    season: String(m.season || '').trim().slice(0,16) || seasonFromDate(date),
     opponent: String(m.opponent || ''),
     score: String(m.score || ''),
     position: pos,
@@ -1659,6 +1700,7 @@ function collectMatch(){
     format: document.getElementById('f-format').value,
     matchLen: formatLength(document.getElementById('f-format').value, document.getElementById('f-matchlen').value),
     kind: document.getElementById('f-kind').value,
+    season: (editingId && matches.find(x => x.id === editingId)?.season) || (player.season || seasonFromDate(document.getElementById('f-date').value)),
     counts, behaviors,
     actionRating: action,
     effortRating: effort,
@@ -1674,6 +1716,7 @@ document.getElementById('saveBtn').addEventListener('click', () => {
   if(editingId) matches = matches.map(m => m.id === editingId ? row : m);
   else matches.push(row);
   saveMatches();
+  fillSeasonSelects();
   lastReportMatch = row;
   document.getElementById('reportCard').innerHTML = renderReportHtml(row);
   showToast(editingId ? t('toastUpdated') : t('toastSaved'));
@@ -1721,12 +1764,17 @@ function renderHistory(){
     el.innerHTML = `<div class="empty">${escapeHtml(t('noMatches'))}</div>`;
     return;
   }
-  const sorted = [...matches].sort((a,b)=> b.date.localeCompare(a.date) || b.id-a.id);
-  el.innerHTML = sorted.map(m => {
+  const list = [...seasonPool()].reverse();
+  if(!list.length){
+    el.innerHTML = `<div class="empty">${escapeHtml(t('noPeriod'))}</div>`;
+    return;
+  }
+  const showSeason = currentSeasonFilter === 'all';
+  el.innerHTML = list.map(m => {
     return `<div class="match-card">
       <div class="match-card-top" onclick="toggleDetails(${m.id})">
         <div class="match-meta">
-          <span class="match-date">${escapeHtml(formatDate(m.date))} · ${escapeHtml(matchPosDisplay(m))} · ${escapeHtml(venueLabel(m.venue))} · ${escapeHtml(roleLabel(m.role))} · ${escapeHtml(kindLabel(m.kind))}${m.tournament ? ' · ' + escapeHtml(m.tournament) : ''} · ${escapeHtml((m.format||'').replace('x','×') || t('fmtCustom'))} · ${escapeHtml(t('minLbl', {n:m.minutes}))}</span>
+          <span class="match-date">${escapeHtml(formatDate(m.date))}${showSeason ? ' · ' + escapeHtml(matchSeason(m)) : ''} · ${escapeHtml(matchPosDisplay(m))} · ${escapeHtml(venueLabel(m.venue))} · ${escapeHtml(roleLabel(m.role))} · ${escapeHtml(kindLabel(m.kind))}${m.tournament ? ' · ' + escapeHtml(m.tournament) : ''} · ${escapeHtml((m.format||'').replace('x','×') || t('fmtCustom'))} · ${escapeHtml(t('minLbl', {n:m.minutes}))}</span>
           <span class="match-opp">${escapeHtml(m.opponent || t('unnamed'))}</span>
           <span class="match-score">${m.score ? escapeHtml(t('scoreLbl', {s:m.score})) : ''} · ${escapeHtml(t('heroAction'))} ${fmtNum(m.actionRating, 1)} · ${escapeHtml(t('heroEffort'))} ${fmtNum(m.effortRating, 1)}</span>
         </div>
@@ -1757,6 +1805,7 @@ window.deleteMatch = function(id){
   matches = matches.filter(m => m.id !== id);
   saveMatches();
   if(editingId === id) resetForm();
+  fillSeasonSelects();
   renderHistory(); renderStats(); renderOppList(); renderFocusBanner();
   showToast(t('toastDeleted'));
 };
@@ -1848,13 +1897,48 @@ document.getElementById('importFile').addEventListener('change', async (e) => {
       if(!m || ids.has(m.id)) return;
       matches.push(m); ids.add(m.id); added++;
     });
-    saveMatches(); renderHistory(); renderStats(); renderOppList();
+    saveMatches(); fillSeasonSelects(); renderHistory(); renderStats(); renderOppList();
     showToast(added ? t('toastAdded', {n: added}) : (bundle.player ? t('toastPlayer') : t('toastNoNew')));
   }catch(err){ showToast(t('toastReadFail')); }
   e.target.value = '';
 });
 
 let currentRange = '10';
+let currentSeasonFilter = 'current';
+function knownSeasons(){
+  const set = new Set();
+  matches.forEach(m => { const s = matchSeason(m); if(s) set.add(s); });
+  if(player.season) set.add(player.season);
+  return [...set].sort().reverse();
+}
+function fillSeasonSelects(){
+  const current = player.season || currentSeason();
+  const extra = knownSeasons().filter(s => s !== current);
+  const html = `<option value="current">${escapeHtml(t('seasonCurrent', {s: current}))}</option>` +
+    `<option value="all">${escapeHtml(t('seasonAll'))}</option>` +
+    extra.map(s => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('');
+  ['statsSeason','historySeason'].forEach(id => {
+    const sel = document.getElementById(id);
+    if(!sel) return;
+    sel.innerHTML = html;
+    if(![...sel.options].some(o => o.value === currentSeasonFilter)) currentSeasonFilter = 'current';
+    sel.value = currentSeasonFilter;
+  });
+}
+function seasonPool(){
+  const sorted = [...matches].sort((a,b)=> a.date.localeCompare(b.date) || a.id - b.id);
+  if(currentSeasonFilter === 'all') return sorted;
+  const s = currentSeasonFilter === 'current' ? (player.season || currentSeason()) : currentSeasonFilter;
+  return sorted.filter(m => matchSeason(m) === s);
+}
+['statsSeason','historySeason'].forEach(id => {
+  document.getElementById(id).addEventListener('change', e => {
+    currentSeasonFilter = e.target.value;
+    fillSeasonSelects();
+    renderHistory();
+    renderStats();
+  });
+});
 document.getElementById('periodChips').addEventListener('click', e => {
   const chip = e.target.closest('.chip');
   if(!chip) return;
@@ -1864,7 +1948,7 @@ document.getElementById('periodChips').addEventListener('click', e => {
   renderStats();
 });
 function statsMatches(){
-  const sorted = [...matches].sort((a,b)=> a.date.localeCompare(b.date) || a.id - b.id);
+  const sorted = seasonPool();
   if(currentRange === '10') return sorted.slice(-10);
   if(currentRange === 'all') return sorted;
   if(currentRange === 'year'){
@@ -2038,6 +2122,19 @@ document.getElementById('reportShareBtn').addEventListener('click', () => {
   if(lastReportMatch) shareCard(lastReportMatch);
 });
 
+document.getElementById('pNewSeasonBtn').addEventListener('click', () => {
+  const from = document.getElementById('p-season').value.trim() || player.season || currentSeason();
+  const to = nextSeasonLabel(from);
+  if(!confirm(t('confirmNewSeason', {from, to}))) return;
+  document.getElementById('p-season').value = to;
+  player = collectPlayer();
+  extraSelected = [...player.extra];
+  savePlayer();
+  applyHeader();
+  currentSeasonFilter = 'current';
+  fillSeasonSelects();
+  showToast(t('toastNewSeason', {s: to}));
+});
 document.getElementById('playerHeadBtn').addEventListener('click', () => showView('player'));
 document.getElementById('p-primary').addEventListener('change', renderExtraChips);
 document.getElementById('pExtraChips').addEventListener('click', e => {
@@ -2080,6 +2177,7 @@ document.getElementById('savePlayerBtn').addEventListener('click', () => {
     renderLiveGrid();
   }
   showToast(t('toastPlayer'));
+  fillSeasonSelects();
   showView('new');
   updateHero();
   window.scrollTo({top:0, behavior:'instant'});
