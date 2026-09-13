@@ -116,7 +116,7 @@
   .pf-grid{display:grid;grid-template-columns:1.1fr 1fr 1fr;gap:8px;margin-top:14px;}
   .pf-kpi{background:var(--surface-2);border-radius:14px;padding:10px 8px;text-align:center;}
   .pf-kpi .n{font-size:1.15rem;font-weight:800;font-variant-numeric:tabular-nums;}
-  .pf-kpi .l{font-size:.68rem;color:var(--text-soft);font-weight:700;margin-top:3px;}
+  .pf-kpi .l{font-size:.68rem;color:var(--text-soft);font-weight:700;margin-top:3px;line-height:1.25;}
   .pf-card h3{margin:0 0 8px;font-size:.7rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--text-soft);}
   .pf-row{
     display:flex;justify-content:space-between;align-items:center;gap:10px;
@@ -930,6 +930,9 @@ uk:{
   toastTooManyPlayers:'Можна додати не більше {n} гравців',
   pfSeasonAvg:'середня за сезон', pfAllAvg:'середня за весь час',
   pfTrend:'{n} за останні {k} матчів', pfLast:'Останній матч', pfSeason:'Сезон',
+  pfSeason_one:'матч у сезоні', pfSeason_few:'матчі у сезоні', pfSeason_many:'матчів у сезоні',
+  pfAll_one:'матч загалом', pfAll_few:'матчі загалом', pfAll_many:'матчів загалом',
+  pfGA:'голи · асисти',
   pfStrengths:'Сильні сторони', pfFocus:'Зони розвитку',
   pfCoach:'Розбір',
   pf_dribbles:'Обводка', pf_tackles:'Відбір', pf_passes:'Гострі передачі',
@@ -1111,6 +1114,9 @@ pl:{
   toastTooManyPlayers:'Można dodać najwyżej {n} zawodników',
   pfSeasonAvg:'średnia za sezon', pfAllAvg:'średnia za cały czas',
   pfTrend:'{n} w ostatnich {k} meczach', pfLast:'Ostatni mecz', pfSeason:'Sezon',
+  pfSeason_one:'mecz w sezonie', pfSeason_few:'mecze w sezonie', pfSeason_many:'meczów w sezonie',
+  pfAll_one:'mecz łącznie', pfAll_few:'mecze łącznie', pfAll_many:'meczów łącznie',
+  pfGA:'gole · asysty',
   pfStrengths:'Mocne strony', pfFocus:'Strefy rozwoju',
   pfCoach:'Rozbiór gry',
   pf_dribbles:'Drybling', pf_tackles:'Odbiór', pf_passes:'Kluczowe podania',
@@ -1292,6 +1298,9 @@ en:{
   toastTooManyPlayers:'You can add up to {n} players',
   pfSeasonAvg:'season average', pfAllAvg:'all-time average',
   pfTrend:'{n} over the last {k} matches', pfLast:'Last match', pfSeason:'Season',
+  pfSeason_one:'match this season', pfSeason_few:'matches this season', pfSeason_many:'matches this season',
+  pfAll_one:'match all time', pfAll_few:'matches all time', pfAll_many:'matches all time',
+  pfGA:'goals · assists',
   pfStrengths:'Strengths', pfFocus:'Development areas',
   pfCoach:'What it means',
   pf_dribbles:'Dribbles', pf_tackles:'Tackles', pf_passes:'Key passes',
@@ -1473,6 +1482,9 @@ ru:{
   toastTooManyPlayers:'Можно добавить не больше {n} игроков',
   pfSeasonAvg:'средняя за сезон', pfAllAvg:'средняя за всё время',
   pfTrend:'{n} за последние {k} матчей', pfLast:'Последний матч', pfSeason:'Сезон',
+  pfSeason_one:'матч в сезоне', pfSeason_few:'матча в сезоне', pfSeason_many:'матчей в сезоне',
+  pfAll_one:'матч всего', pfAll_few:'матча всего', pfAll_many:'матчей всего',
+  pfGA:'голы · ассисты',
   pfStrengths:'Сильные стороны', pfFocus:'Зоны развития',
   pfCoach:'Разбор',
   pf_dribbles:'Обводка', pf_tackles:'Отбор', pf_passes:'Острые передачи',
@@ -2763,6 +2775,16 @@ function profileCoachNote(list, strengths, focus){
   if(minusKey) return t('coachNowMinus', {name, minus: profileMetricLabel(minusKey).toLowerCase()});
   return '';
 }
+function pfGamesLabel(n, inSeason){
+  const lang = LANGS.includes(settings.lang) ? settings.lang : 'ru';
+  let form = 'many';
+  if(lang === 'en') form = n === 1 ? 'one' : 'many';
+  else {
+    const n10 = n % 10, n100 = n % 100;
+    form = (n10 === 1 && n100 !== 11) ? 'one' : (n10 >= 2 && n10 <= 4 && (n100 < 10 || n100 >= 20) ? 'few' : 'many');
+  }
+  return t((inSeason ? 'pfSeason_' : 'pfAll_') + form);
+}
 function renderPlayerFeed(){
   const el = document.getElementById('playerFeed');
   if(!el) return;
@@ -2804,8 +2826,8 @@ function renderPlayerFeed(){
       ${trendHtml}
       <div class="pf-grid">
         <div class="pf-kpi"><div class="n">${fmtNum(last.rating, 1)}</div><div class="l">${escapeHtml(t('pfLast'))}</div></div>
-        <div class="pf-kpi"><div class="n">${list.length}</div><div class="l">${escapeHtml(t('pfSeason'))}</div></div>
-        <div class="pf-kpi"><div class="n">${goals} · ${assists}</div><div class="l">⚽ · 🎯</div></div>
+        <div class="pf-kpi"><div class="n">${list.length}</div><div class="l">${escapeHtml(pfGamesLabel(list.length, season))}</div></div>
+        <div class="pf-kpi"><div class="n">${goals} · ${assists}</div><div class="l">${escapeHtml(t('pfGA'))}</div></div>
       </div>
     </div>
     ${strengths.length ? `<div class="pf-card"><h3>${escapeHtml(t('pfStrengths'))}</h3>${strengths.map(g => row(g, false)).join('')}</div>` : ''}
