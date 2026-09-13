@@ -1,0 +1,14 @@
+---
+description: Commit and push to origin as soon as the work is ready
+alwaysApply: true
+---
+
+# Always push when ready
+
+When the requested work is complete and the repo has changes:
+
+1. Commit with a concise message that explains why.
+2. Push the current branch to origin immediately (`git push -u origin HEAD` if the branch has no upstream).
+3. Reply with the live URL: https://ihormich.github.io/ffk/
+
+Do not wait for the user to say «пуш». Skip only if there is nothing to commit, or the user explicitly said not to publish.
