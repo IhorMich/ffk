@@ -451,7 +451,9 @@
     margin:0 0 12px;padding:12px;border-radius:14px;border:1px solid var(--border);
     background:var(--surface);color:var(--text);font:inherit;font-weight:800;cursor:pointer;width:100%;
   }
-  .live-kick:disabled{opacity:.55;cursor:default;}
+  .live-kick.go{
+    background:linear-gradient(135deg, var(--accent), var(--violet));color:#08121C;border:none;opacity:1;
+  }
   .match-clock-bar{margin:0 0 16px;}
   #formKickBtn{margin:8px 0 0;}
   #formClock{margin:0;}
@@ -4015,14 +4017,14 @@ function renderLiveClock(){
     const el = document.getElementById(id);
     if(!el) return;
     el.textContent = text;
-    el.classList.toggle('on', running);
+    el.classList.toggle('on', running || phase === 'done');
   });
   ['liveKickBtn','formKickBtn'].forEach(id => {
     const btn = document.getElementById(id);
     if(!btn) return;
     btn.textContent = btnText;
-    btn.disabled = phase === 'done';
-    btn.classList.toggle('go', !running);
+    btn.disabled = false;
+    btn.classList.toggle('go', phase !== 'run');
   });
 }
 function startMatchClock(){
