@@ -832,10 +832,12 @@ function renderMetrics(){
   const pos = currentPos();
   document.getElementById('weightsHint').textContent = pos === 'gk' ? t('hintGk') : t('hintOut');
   document.getElementById('metricsList').innerHTML = metricsFor(pos).map(m => {
+    const w = weightOf(m, pos);
+    const shown = (w > 0 ? '+' : '') + String(w);
     return `<div class="metric-row">
       <div class="metric-name">
         <div class="metric-icon">${m.icon}</div>
-        <div>${escapeHtml(metricLabel(m.key))}</div>
+        <div>${escapeHtml(metricLabel(m.key))}<span class="metric-weight">${shown}</span></div>
       </div>
       <div class="stepper">
         <button type="button" onclick="stepMetric('${m.key}',-1)">−</button>
