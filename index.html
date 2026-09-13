@@ -444,6 +444,13 @@
     position:sticky;top:0;z-index:2;padding-bottom:8px;background:var(--bg);
   }
   .live-score{font-size:2rem;font-weight:800;color:var(--gold);}
+  .live-clock{margin-top:4px;font-size:.82rem;font-weight:800;color:var(--text-soft);line-height:1.35;}
+  .live-clock.on{color:var(--accent);}
+  .live-kick{
+    margin:0 0 12px;padding:12px;border-radius:14px;border:1px solid var(--border);
+    background:var(--surface);color:var(--text);font:inherit;font-weight:800;cursor:pointer;width:100%;
+  }
+  .live-kick.go{background:linear-gradient(135deg, var(--accent), var(--violet));color:#08121C;border-color:transparent;}
   .live-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
   .live-btn{
     min-height:92px;border-radius:16px;border:1px solid var(--border);
@@ -809,9 +816,11 @@
     <div>
       <div class="hint" style="margin:0;" data-i18n="liveHint">Запись по ходу игры</div>
       <div class="live-score" id="liveScore">6.0</div>
+      <div class="live-clock" id="liveClock"></div>
     </div>
     <select id="live-position" style="width:auto;max-width:62%;padding:10px 12px;border-radius:12px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-weight:700;font-size:.78rem;font-family:inherit;"></select>
   </div>
+  <button class="live-kick go" id="liveKickBtn" type="button" data-i18n="liveKick">Старт матча</button>
   <div class="live-grid" id="liveGrid"></div>
   <div class="live-foot">
     <button class="save-btn" id="liveDoneBtn" type="button" data-i18n="liveDone">Готово</button>
@@ -937,6 +946,13 @@ uk:{
   ageOne:'{n} рік', ageFew:'{n} роки', ageMany:'{n} років', ageEn:'{n} years',
   matchOne:'{n} матч', matchFew:'{n} матчі', matchMany:'{n} матчів', matchEn:'{n} matches',
   liveHint:'Великі кнопки, зручно на полі', liveUndo:'Скасувати', liveDone:'Готово',
+  liveKick:'Старт матчу', livePause:'Перерва', liveResume:'Продовжити',
+  liveClockWait:'Зараз {clock} (Варшава). Натисни старт — гол запишеться з хвилиною.',
+  liveClockRun:'{clock} · {m} хв · {half}',
+  liveClockPause:'Пауза {clock} · {m} хв · {half}',
+  clockHalf1:'1-й тайм', clockHalf2:'2-й тайм', clockHalfN:'{n}-й тайм',
+  eventAt:'{what} · {m} хв ({half}, {clock})',
+  kickoffLine:'Старт {clock} (Варшава)',
   hintGk:'Для воротаря важливі сейви, пропущені, виходи, передачі, перехоплення і гра ногами. Повторні сейви і пропущені важать менше за перші.',
   hintFwd:'Для нападника важливі голи, удари, асисти, обводки, гострі паси і відкривання.',
   hintMid:'Для півзахисника важливі передачі, гострі паси, відбори, єдиноборства, втрати і моменти для партнерів.',
@@ -1108,6 +1124,13 @@ pl:{
   ageOne:'{n} rok', ageFew:'{n} lata', ageMany:'{n} lat', ageEn:'{n} years',
   matchOne:'{n} mecz', matchFew:'{n} mecze', matchMany:'{n} meczów', matchEn:'{n} matches',
   liveHint:'Duże przyciski, wygodne na boisku', liveUndo:'Cofnij', liveDone:'Gotowe',
+  liveKick:'Start meczu', livePause:'Przerwa', liveResume:'Wznów',
+  liveClockWait:'Teraz {clock} (Warszawa). Start — gol zapisze się z minutą.',
+  liveClockRun:'{clock} · {m} min · {half}',
+  liveClockPause:'Pauza {clock} · {m} min · {half}',
+  clockHalf1:'1. połowa', clockHalf2:'2. połowa', clockHalfN:'{n}. część',
+  eventAt:'{what} · {m} min ({half}, {clock})',
+  kickoffLine:'Start {clock} (Warszawa)',
   hintGk:'Dla bramkarza ważne są interwencje, stracone, wyjścia, podania, przechwyty i gra nogami. Kolejne interwencje i stracone ważą mniej niż pierwsze.',
   hintFwd:'Dla napastnika ważne są gole, strzały, asysty, dryblingi, kluczowe podania i wbiegnięcia.',
   hintMid:'Dla pomocnika ważne są podania, kluczowe podania, odbiory, pojedynki, straty i okazje dla partnerów.',
@@ -1279,6 +1302,13 @@ en:{
   ageOne:'{n} year', ageFew:'{n} years', ageMany:'{n} years', ageEn:'{n} years',
   matchOne:'{n} match', matchFew:'{n} matches', matchMany:'{n} matches', matchEn:'{n} matches',
   liveHint:'Big buttons, easy on the pitch', liveUndo:'Undo', liveDone:'Done',
+  liveKick:'Kick-off', livePause:'Half-time', liveResume:'Resume',
+  liveClockWait:'Now {clock} (Warsaw). Tap start — a goal is saved with the minute.',
+  liveClockRun:'{clock} · {m} min · {half}',
+  liveClockPause:'Paused {clock} · {m} min · {half}',
+  clockHalf1:'1st half', clockHalf2:'2nd half', clockHalfN:'period {n}',
+  eventAt:'{what} · {m} min ({half}, {clock})',
+  kickoffLine:'Kick-off {clock} (Warsaw)',
   hintGk:'For the keeper what matters is saves, goals conceded, claims, passes, interceptions and distribution. Later saves and goals conceded count less than the first.',
   hintFwd:'For a striker what matters is goals, shots, assists, dribbles, key passes and runs in behind.',
   hintMid:'For a midfielder what matters is passes, key passes, tackles, duels, turnovers and chances for teammates.',
@@ -1450,6 +1480,13 @@ ru:{
   ageOne:'{n} год', ageFew:'{n} года', ageMany:'{n} лет', ageEn:'{n} years',
   matchOne:'{n} матч', matchFew:'{n} матча', matchMany:'{n} матчей', matchEn:'{n} matches',
   liveHint:'Крупные кнопки, удобно на поле', liveUndo:'Отменить', liveDone:'Готово',
+  liveKick:'Старт матча', livePause:'Перерыв', liveResume:'Продолжить',
+  liveClockWait:'Сейчас {clock} (Варшава). Нажми старт — гол запишется с минутой.',
+  liveClockRun:'{clock} · {m} мин · {half}',
+  liveClockPause:'Пауза {clock} · {m} мин · {half}',
+  clockHalf1:'1-й тайм', clockHalf2:'2-й тайм', clockHalfN:'{n}-й тайм',
+  eventAt:'{what} · {m} мин ({half}, {clock})',
+  kickoffLine:'Старт {clock} (Варшава)',
   hintGk:'Для вратаря важны сейвы, пропущенные, выходы, передачи, перехваты и игра ногами. Повторные сейвы и пропущенные весят меньше первых.',
   hintFwd:'Для нападающего важны голы, удары, ассисты, обводки, острые пасы и открывания.',
   hintMid:'Для полузащитника важны передачи, острые пасы, отборы, единоборства, потери и моменты для партнёров.',
@@ -1724,6 +1761,12 @@ let matches = [];
 let editingId = null;
 let form = emptyForm();
 let liveStack = [];
+let matchClock = emptyClock();
+let liveClockTimer = 0;
+const WARSAW_TZ = 'Europe/Warsaw';
+function emptyClock(){
+  return {startedAt:null, pausedAt:null, pauseMs:0, events:[]};
+}
 
 function emptyForm(){
   const counts = {}, behaviors = {};
@@ -1744,6 +1787,41 @@ const FORMAT_MIN = { '3x15':45, '3x20':60, '3x25':75, '2x25':50, '2x30':60, '2x3
 function formatLength(id, custom){
   if(id === 'custom') return Math.min(120, Math.max(1, Number(custom) || 60));
   return FORMAT_MIN[id] || 60;
+}
+function periodShape(){
+  const fmt = document.getElementById('f-format')?.value || '2x30';
+  const m = String(fmt).match(/^(\d+)x(\d+)$/);
+  if(m) return {parts: Number(m[1]), each: Number(m[2])};
+  const len = formatLength(fmt, document.getElementById('f-matchlen')?.value);
+  return {parts: 2, each: Math.max(1, Math.round(len / 2))};
+}
+function warsawClock(ms){
+  try{
+    return new Intl.DateTimeFormat('pl-PL', {timeZone: WARSAW_TZ, hour:'2-digit', minute:'2-digit', hour12:false}).format(new Date(ms));
+  }catch(e){
+    const d = new Date(ms);
+    return String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+  }
+}
+function halfLabel(n){
+  const {parts} = periodShape();
+  if(n === 1) return t('clockHalf1');
+  if(n === 2) return t('clockHalf2');
+  return t('clockHalfN', {n: Math.min(n, parts)});
+}
+function playingMs(now){
+  if(!matchClock.startedAt) return 0;
+  const end = matchClock.pausedAt || now;
+  return Math.max(0, end - matchClock.startedAt - (matchClock.pauseMs || 0));
+}
+function clockStamp(now){
+  now = now || Date.now();
+  const {parts, each} = periodShape();
+  const playMin = playingMs(now) / 60000;
+  const period = Math.min(parts, Math.max(1, Math.floor(playMin / each) + 1));
+  const rawIn = playMin - (period - 1) * each;
+  const minute = Math.max(1, Math.floor(rawIn));
+  return {clock: warsawClock(now), period, minute, playMin};
 }
 function syncPlayedDefault(fromSettings){
   const fmt = document.getElementById('f-format').value;
@@ -1815,6 +1893,18 @@ function actionSplit(counts, pos){
 }
 function reportLines(m){
   const pos = ['fwd','mid','def','gk'].includes(m.position) ? m.position : ratingPosOf(m.position);
+  const timeline = Array.isArray(m.timeline) ? m.timeline : [];
+  if(timeline.length){
+    return timeline.map(ev => {
+      const met = METRICS.find(x => x.key === ev.key);
+      const what = met ? metricLabel(met.key) : ev.key;
+      const half = halfLabel(ev.period || 1);
+      return {
+        icon: met ? met.icon : '•',
+        text: t('eventAt', {what, m: ev.minute || 1, half, clock: ev.clock || ''})
+      };
+    });
+  }
   const counts = m.counts || {};
   const lines = [];
   let duelsDone = false;
@@ -1838,8 +1928,10 @@ function reportPlayerName(m){
 function renderReportHtml(m, compact){
   const split = actionSplit(m.counts, m.position);
   const lines = reportLines(m);
+  const kick = m.kickoffClock ? `<div class="report-sub">${escapeHtml(t('kickoffLine', {clock: m.kickoffClock}))}</div>` : '';
   const head = compact ? '' : `<div class="report-kicker">${escapeHtml(t('reportTitle'))}</div>
     <div class="report-title">${escapeHtml(reportPlayerName(m))} — <span class="n">${fmtNum(m.rating, 1)}</span></div>
+    ${kick}
     <div class="report-sub"><span>${escapeHtml(t('heroAction'))} ${fmtNum(m.actionRating, 1)}</span><span>${escapeHtml(t('heroEffort'))} ${fmtNum(m.effortRating, 1)}</span></div>`;
   const body = lines.length
     ? lines.map(x => `<div class="report-line"><span class="ic">${x.icon}</span><span>${escapeHtml(x.text)}</span></div>`).join('')
@@ -2928,10 +3020,28 @@ function normalizeMatch(m){
     minutes,
     comment: String(m.comment || ''),
     counts, behaviors,
+    timeline: normalizeTimeline(m.timeline),
+    kickoffAt: Number(m.kickoffAt) || 0,
+    kickoffClock: String(m.kickoffClock || '').slice(0, 8),
     actionRating: action,
     effortRating: effort,
     rating: overallScore(counts, behaviors, pos)
   };
+}
+function normalizeTimeline(raw){
+  if(!Array.isArray(raw)) return [];
+  const out = [];
+  raw.slice(0, 80).forEach(ev => {
+    if(!ev || !ev.key) return;
+    out.push({
+      key: String(ev.key),
+      at: Number(ev.at) || 0,
+      minute: Math.max(1, Number(ev.minute) || 1),
+      period: Math.max(1, Number(ev.period) || 1),
+      clock: String(ev.clock || '').slice(0, 8)
+    });
+  });
+  return out;
 }
 function guessPos(label){
   const s = String(label||'');
@@ -2959,7 +3069,8 @@ function persistDraft(){
     comment: document.getElementById('f-comment').value,
     counts: form.counts,
     behaviors: form.behaviors,
-    editingId
+    editingId,
+    matchClock
   }));
 }
 function restoreDraft(){
@@ -2983,6 +3094,14 @@ function restoreDraft(){
     if(d.counts) form.counts = {...form.counts, ...d.counts};
     if(d.behaviors) form.behaviors = {...form.behaviors, ...d.behaviors};
     if(d.editingId){ editingId = d.editingId; setEditUi(true); }
+    if(d.matchClock && typeof d.matchClock === 'object'){
+      matchClock = {
+        startedAt: Number(d.matchClock.startedAt) || null,
+        pausedAt: Number(d.matchClock.pausedAt) || null,
+        pauseMs: Number(d.matchClock.pauseMs) || 0,
+        events: Array.isArray(d.matchClock.events) ? d.matchClock.events : []
+      };
+    }
   }catch(e){}
 }
 
@@ -3046,10 +3165,19 @@ window.stepMetric = function(key, dir){
   if(el) el.textContent = next;
   const live = document.getElementById('live-cnt-'+key);
   if(live) live.textContent = next;
-  if(dir === 1) liveStack.push(key);
-  else {
+  if(dir === 1){
+    liveStack.push(key);
+    if(document.getElementById('app').classList.contains('live-on')){
+      if(!matchClock.startedAt) startMatchClock();
+      const stamp = clockStamp();
+      matchClock.events.push({key, at: Date.now(), minute: stamp.minute, period: stamp.period, clock: stamp.clock});
+    }
+  } else {
     const i = liveStack.lastIndexOf(key);
     if(i >= 0) liveStack.splice(i, 1);
+    for(let j = matchClock.events.length - 1; j >= 0; j--){
+      if(matchClock.events[j].key === key){ matchClock.events.splice(j, 1); break; }
+    }
   }
   updateHero();
   persistDraft();
@@ -3093,6 +3221,9 @@ function resetForm(keepDraft){
   editingId = null;
   form = emptyForm();
   liveStack = [];
+  matchClock = emptyClock();
+  stopClockTick();
+  renderLiveClock();
   setEditUi(false);
   document.getElementById('f-opponent').value = '';
   document.getElementById('f-score').value = '';
@@ -3135,6 +3266,12 @@ function fillForm(m){
   document.getElementById('f-venue').value = m.venue === 'away' ? 'away' : 'home';
   document.getElementById('f-role').value = m.role === 'sub' ? 'sub' : 'start';
   document.getElementById('f-comment').value = m.comment;
+  matchClock = {
+    startedAt: m.kickoffAt || null,
+    pausedAt: null,
+    pauseMs: 0,
+    events: Array.isArray(m.timeline) ? m.timeline.slice() : []
+  };
   syncCompetitionField();
   setEditUi(true);
   renderMetrics();
@@ -3170,6 +3307,9 @@ function collectMatch(){
     season: (editingId && matches.find(x => x.id === editingId)?.season) || (seasonIsOpen() ? (player.season || seasonFromDate(document.getElementById('f-date').value)) : seasonFromDate(document.getElementById('f-date').value)),
     team: (editingId && matches.find(x => x.id === editingId)?.team) || player.team || player.club || '',
     counts, behaviors,
+    timeline: matchClock.events.slice(),
+    kickoffAt: matchClock.startedAt || 0,
+    kickoffClock: matchClock.startedAt ? warsawClock(matchClock.startedAt) : '',
     actionRating: action,
     effortRating: effort,
     rating: overallScore(counts, behaviors, pos)
@@ -3742,20 +3882,77 @@ function renderLiveGrid(){
     </div>`;
   }).join('');
 }
+function stopClockTick(){
+  if(liveClockTimer){ clearInterval(liveClockTimer); liveClockTimer = 0; }
+}
+function startClockTick(){
+  stopClockTick();
+  liveClockTimer = setInterval(renderLiveClock, 1000);
+}
+function renderLiveClock(){
+  const el = document.getElementById('liveClock');
+  const btn = document.getElementById('liveKickBtn');
+  if(!el || !btn) return;
+  const now = Date.now();
+  if(!matchClock.startedAt){
+    el.classList.remove('on');
+    el.textContent = t('liveClockWait', {clock: warsawClock(now)});
+    btn.textContent = t('liveKick');
+    btn.classList.add('go');
+    return;
+  }
+  const stamp = clockStamp(now);
+  const half = halfLabel(stamp.period);
+  if(matchClock.pausedAt){
+    el.classList.remove('on');
+    el.textContent = t('liveClockPause', {clock: warsawClock(now), m: stamp.minute, half});
+    btn.textContent = t('liveResume');
+    btn.classList.add('go');
+    return;
+  }
+  el.classList.add('on');
+  el.textContent = t('liveClockRun', {clock: stamp.clock, m: stamp.minute, half});
+  btn.textContent = t('livePause');
+  btn.classList.remove('go');
+}
+function startMatchClock(){
+  const now = Date.now();
+  if(matchClock.pausedAt){
+    matchClock.pauseMs += now - matchClock.pausedAt;
+    matchClock.pausedAt = null;
+  } else if(!matchClock.startedAt){
+    matchClock.startedAt = now;
+  }
+  startClockTick();
+  renderLiveClock();
+  persistDraft();
+}
+function toggleMatchClock(){
+  if(!matchClock.startedAt || matchClock.pausedAt) startMatchClock();
+  else {
+    matchClock.pausedAt = Date.now();
+    renderLiveClock();
+    persistDraft();
+  }
+}
 function openLive(){
   fillPitchSelect(document.getElementById('live-position'), currentPitch());
   renderLiveGrid();
   document.getElementById('app').classList.add('live-on');
   updateHero();
+  renderLiveClock();
+  if(matchClock.startedAt && !matchClock.pausedAt) startClockTick();
 }
 function closeLive(){
   document.getElementById('app').classList.remove('live-on');
+  stopClockTick();
   document.getElementById('f-position').value = document.getElementById('live-position').value;
   renderMetrics();
   updateHero();
   persistDraft();
 }
 document.getElementById('liveStartBtn').addEventListener('click', openLive);
+document.getElementById('liveKickBtn').addEventListener('click', toggleMatchClock);
 document.getElementById('liveDoneBtn').addEventListener('click', closeLive);
 document.getElementById('live-position').addEventListener('change', () => {
   document.getElementById('f-position').value = document.getElementById('live-position').value;
