@@ -158,7 +158,7 @@
     width:44px;flex-shrink:0;border-radius:14px;border:1px solid var(--border);
     background:var(--surface-2);color:var(--danger);font-size:1.25rem;cursor:pointer;
   }
-  #addPlayerBtn{margin:4px 0 0;}
+  #playerCardBtn{margin:0 0 14px;}
   .cam-badge{right:0;bottom:0;width:30px;height:30px;border-radius:50%;font-size:.78rem;}
   .photo-sheet-back{
     position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:84;border:0;padding:0;
@@ -521,6 +521,7 @@
         <div class="fb-name" id="fbName"></div>
         <div class="fb-meta" id="fbMeta"></div>
       </div>
+      <button class="save-btn" id="playerCardBtn" type="button" data-i18n="playerCardBtn">Карточка игрока</button>
       <div class="pf-card">
         <h3 data-i18n="myPlayers">Мои игроки</h3>
         <div id="rosterList"></div>
@@ -971,7 +972,7 @@ uk:{
   focusBase:'Важкий матч ({r}). До наступного: прийняв м’яч — віддай пас. Біля своїх воріт не обводь.',
   lastFocus:'Після матчу з <b>{who}</b><br><b>{got}:</b> {plus}<br><b>{next}:</b> {focus}', unnamed:'Без назви',
   scoreLbl:'Рахунок {s}', minLbl:'{n} хв', actionsLbl:'Дії', gotLbl:'Вдалося', focusLbl:'Фокус',
-  cardBtn:'Картка', editBtn:'Правити', delBtn:'Видалити', noMatches:'Поки немає збережених матчів.', noPeriod:'За цей період матчів немає.',
+  cardBtn:'Картка', playerCardBtn:'Картка гравця', editBtn:'Правити', delBtn:'Видалити', noMatches:'Поки немає збережених матчів.', noPeriod:'За цей період матчів немає.',
   reportTitle:'Матч', reportNew:'Новий матч', actPlus:'позитивних дій', actMinus:'негативних дій',
   mn_duels:'єдиноборств',
   mn_goals:'гол|голи|голів', mn_assists:'асист|асисти|асистів', mn_shots:'удар у площину|удари в площину|ударів у площину',
@@ -1141,7 +1142,7 @@ pl:{
   focusBase:'Ciężki mecz ({r}). Do następnego: przyjąłeś — podaj. Przy swojej bramce nie drybluj.',
   lastFocus:'Po meczu z <b>{who}</b><br><b>{got}:</b> {plus}<br><b>{next}:</b> {focus}', unnamed:'Bez nazwy',
   scoreLbl:'Wynik {s}', minLbl:'{n} min', actionsLbl:'Akcje', gotLbl:'Udało się', focusLbl:'Cel',
-  cardBtn:'Karta', editBtn:'Edytuj', delBtn:'Usuń', noMatches:'Nie ma jeszcze zapisanych meczów.', noPeriod:'Brak meczów w tym okresie.',
+  cardBtn:'Karta', playerCardBtn:'Karta zawodnika', editBtn:'Edytuj', delBtn:'Usuń', noMatches:'Nie ma jeszcze zapisanych meczów.', noPeriod:'Brak meczów w tym okresie.',
   reportTitle:'Mecz', reportNew:'Nowy mecz', actPlus:'pozytywnych akcji', actMinus:'negatywnych akcji',
   mn_duels:'pojedynków',
   mn_goals:'gol|gole|goli', mn_assists:'asysta|asysty|asyst', mn_shots:'strzał celny|strzały celne|strzałów celnych',
@@ -1311,7 +1312,7 @@ en:{
   focusBase:'A hard match ({r}). Until next time: receive, then pass. Do not dribble by our goal.',
   lastFocus:'After <b>{who}</b><br><b>{got}:</b> {plus}<br><b>{next}:</b> {focus}', unnamed:'Untitled',
   scoreLbl:'Score {s}', minLbl:'{n} min', actionsLbl:'Actions', gotLbl:'Went well', focusLbl:'Focus',
-  cardBtn:'Match card', editBtn:'Edit', delBtn:'Delete', noMatches:'No saved matches yet.', noPeriod:'No matches in this period.',
+  cardBtn:'Match card', playerCardBtn:'Player card', editBtn:'Edit', delBtn:'Delete', noMatches:'No saved matches yet.', noPeriod:'No matches in this period.',
   reportTitle:'Match', reportNew:'New match', actPlus:'positive actions', actMinus:'negative actions',
   mn_duels:'duels',
   mn_goals:'goal|goals', mn_assists:'assist|assists', mn_shots:'shot on target|shots on target',
@@ -1481,7 +1482,7 @@ ru:{
   focusBase:'Тяжёлый матч ({r}). До следующего: принял мяч — отдай пас. У своих ворот не обводи.',
   lastFocus:'После матча с <b>{who}</b><br><b>{got}:</b> {plus}<br><b>{next}:</b> {focus}', unnamed:'Без названия',
   scoreLbl:'Счёт {s}', minLbl:'{n} мин', actionsLbl:'Действия', gotLbl:'Получилось', focusLbl:'Фокус',
-  cardBtn:'Карточка', editBtn:'Править', delBtn:'Удалить', noMatches:'Пока нет сохранённых матчей.', noPeriod:'За этот период матчей нет.',
+  cardBtn:'Карточка', playerCardBtn:'Карточка игрока', editBtn:'Править', delBtn:'Удалить', noMatches:'Пока нет сохранённых матчей.', noPeriod:'За этот период матчей нет.',
   reportTitle:'Матч', reportNew:'Новый матч', actPlus:'положительных действий', actMinus:'отрицательных действий',
   mn_duels:'единоборств',
   mn_goals:'гол|гола|голов', mn_assists:'ассист|ассиста|ассистов', mn_shots:'удар в створ|удара в створ|ударов в створ',
@@ -3796,6 +3797,7 @@ document.getElementById('pOpenSeasonBtn').addEventListener('click', () => {
 document.getElementById('pCloseSeasonBtn').addEventListener('click', () => closeSeason(false));
 document.getElementById('playerHeadBtn').addEventListener('click', () => showView('player'));
 document.getElementById('addPlayerBtn').addEventListener('click', addPlayer);
+document.getElementById('playerCardBtn').addEventListener('click', sharePlayerCard);
 document.getElementById('rosterList').addEventListener('click', e => {
   const del = e.target.closest('[data-del]');
   if(del){ e.preventDefault(); e.stopPropagation(); removePlayer(del.dataset.del); return; }
@@ -3924,71 +3926,328 @@ function wrapText(ctx, text, x, y, maxWidth, lineHeight){
   return yy;
 }
 
-let shareBusy = false;
-async function shareCard(m){
-  if(shareBusy) return;
-  shareBusy = true;
-  try{
-  const lines = reportLines(m);
-  const split = actionSplit(m.counts, m.position);
+function pathRoundRect(ctx, x, y, w, h, r){
+  const rr = Math.min(r, w / 2, h / 2);
+  ctx.beginPath();
+  ctx.moveTo(x + rr, y);
+  ctx.arcTo(x + w, y, x + w, y + h, rr);
+  ctx.arcTo(x + w, y + h, x, y + h, rr);
+  ctx.arcTo(x, y + h, x, y, rr);
+  ctx.arcTo(x, y, x + w, y, rr);
+  ctx.closePath();
+}
+function loadCanvasImage(src){
+  return new Promise(resolve => {
+    if(!src){ resolve(null); return; }
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => resolve(null);
+    img.src = src;
+  });
+}
+function drawCovered(ctx, img, x, y, w, h){
+  if(!img || !img.width) return;
+  const ir = img.width / img.height, r = w / h;
+  let dw, dh, dx, dy;
+  if(ir > r){ dh = h; dw = h * ir; dx = x - (dw - w) / 2; dy = y; }
+  else { dw = w; dh = w / ir; dx = x; dy = y - (dh - h) / 2; }
+  ctx.drawImage(img, dx, dy, dw, dh);
+}
+function makeHiCanvas(w, h){
   const canvas = document.createElement('canvas');
-  canvas.width = 900;
-  canvas.height = Math.max(1100, 380 + lines.length * 54 + 260);
+  const dpr = 2;
+  canvas.width = Math.round(w * dpr);
+  canvas.height = Math.round(h * dpr);
   const ctx = canvas.getContext('2d');
-  ctx.fillStyle = '#0B1220';
-  ctx.fillRect(0,0,canvas.width,canvas.height);
-  ctx.fillStyle = '#8D9AB5';
-  ctx.font = canvasFont('800', 28);
-  ctx.fillText(t('reportTitle').toUpperCase(), 60, 80);
-  ctx.fillStyle = '#EDF1F7';
-  ctx.font = canvasFont('800', 52);
-  ctx.fillText(`${reportPlayerName(m)} — ${fmtNum(m.rating, 1)}`, 60, 150);
-  ctx.fillStyle = '#8D9AB5';
-  ctx.font = canvasFont('600', 26);
-  ctx.fillText(`${formatDate(m.date)}  ·  ${m.opponent || t('shareVs')}  ·  ${m.score || '—'}`, 60, 200);
-  ctx.fillText(`${t('heroAction')} ${fmtNum(m.actionRating, 1)}   ${t('heroEffort')} ${fmtNum(m.effortRating, 1)}`, 60, 245);
-  let y = 310;
-  ctx.font = canvasFont('700', 34);
-  if(!lines.length){
-    ctx.fillStyle = '#EDF1F7';
-    ctx.fillText(t('plusEven'), 60, y);
-    y += 54;
-  } else {
-    lines.forEach(line => {
-      ctx.fillStyle = '#EDF1F7';
-      ctx.fillText(`${line.icon}   ${line.text}`, 60, y);
-      y += 54;
-    });
+  ctx.scale(dpr, dpr);
+  return {canvas, ctx, w, h};
+}
+function fifaOvr(list){
+  const a = avgRating(list);
+  if(a == null) return 60;
+  return Math.round(Math.min(99, Math.max(45, a * 10)));
+}
+function cardPosCode(){
+  const p = player.primary;
+  if(isPosCode(p)) return p;
+  return ({gk:'GK', def:'CB', mid:'CM', fwd:'ST'})[ratingPosOf(p)] || 'ST';
+}
+function blendCardGrade(list, pos, keys){
+  if(!list.length) return 6.2;
+  let s = 0, n = 0;
+  keys.forEach(key => {
+    const met = METRICS.find(x => x.key === key);
+    if(!met) return;
+    const w = weightOf(met, pos);
+    if(!w) return;
+    const avg = list.length ? countSum(list, key) / list.length : 0;
+    s += metricGrade(avg, key, w);
+    n++;
+  });
+  return n ? s / n : 6.2;
+}
+function to99(grade){
+  return Math.round(Math.min(99, Math.max(40, grade * 10)));
+}
+function futTheme(ovr){
+  if(ovr >= 85) return {
+    foil:'#F5D76E', foil2:'#C9A227', ink:'#140C28', paper:['#2A1658', '#0E1A36', '#12382E'],
+    glow:'rgba(34,211,166,.45)', plate:'#F5D76E', muted:'#D9C27A'
+  };
+  if(ovr >= 75) return {
+    foil:'#F3D27A', foil2:'#B8860B', ink:'#2A1A06', paper:['#5A3E12', '#2C1C08', '#7A5418'],
+    glow:'rgba(245,185,66,.35)', plate:'#F6DE9A', muted:'#E8D5A0'
+  };
+  if(ovr >= 65) return {
+    foil:'#D9E2EC', foil2:'#7C8A99', ink:'#1A2430', paper:['#3D4A5C', '#1B2430', '#5C6B7A'],
+    glow:'rgba(180,198,214,.3)', plate:'#E8EEF4', muted:'#C5D0DA'
+  };
+  return {
+    foil:'#E0B089', foil2:'#8A5A32', ink:'#2A160C', paper:['#5A3518', '#24140A', '#7A4A22'],
+    glow:'rgba(196,122,62,.3)', plate:'#E8C4A0', muted:'#D7B08A'
+  };
+}
+function futStatRows(list, pos){
+  if(pos === 'gk'){
+    return [
+      ['DIV', to99(blendCardGrade(list, pos, ['saves']))],
+      ['HAN', to99(blendCardGrade(list, pos, ['claims']))],
+      ['KIC', to99(blendCardGrade(list, pos, ['gkpass']))],
+      ['REF', to99(blendCardGrade(list, pos, ['interceptions']))],
+      ['POS', to99(blendCardGrade(list, pos, ['conceded']))],
+      ['PAS', to99(blendCardGrade(list, pos, ['buildpass', 'gkpass']))]
+    ];
   }
-  y += 20;
-  ctx.fillStyle = '#22D3A6';
-  ctx.font = canvasFont('800', 40);
-  ctx.fillText(fmtSigned(split.plus, 2), 60, y);
-  ctx.fillStyle = '#8D9AB5';
-  ctx.font = canvasFont('700', 22);
-  ctx.fillText(t('actPlus'), 60, y + 36);
-  ctx.fillStyle = '#FB6767';
-  ctx.font = canvasFont('800', 40);
-  ctx.fillText('−' + fmtNum(Math.abs(split.minus), 2), 460, y);
-  ctx.fillStyle = '#8D9AB5';
-  ctx.font = canvasFont('700', 22);
-  ctx.fillText(t('actMinus'), 460, y + 36);
-
+  return [
+    ['PAC', to99(blendCardGrade(list, pos, ['openings', 'dribbles', 'support']))],
+    ['SHO', to99(blendCardGrade(list, pos, ['goals', 'shots']))],
+    ['PAS', to99(blendCardGrade(list, pos, ['passes', 'assists', 'chances', 'buildpass']))],
+    ['DRI', to99(blendCardGrade(list, pos, ['dribbles']))],
+    ['DEF', to99(blendCardGrade(list, pos, ['tackles', 'interceptions', 'blocks', 'clearances']))],
+    ['PHY', to99(blendCardGrade(list, pos, ['duelswon', 'support']))]
+  ];
+}
+async function exportPngFile(canvas, filename){
   const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
-  const file = new File([blob], `ffk_${m.date}.png`, {type:'image/png'});
+  const file = new File([blob], filename, {type:'image/png'});
   try{
     if(navigator.canShare && navigator.canShare({files:[file]})){
       await navigator.share({files:[file], title:'FFK'});
-      return;
+      return true;
     }
   }catch(e){
-    if(e && e.name === 'AbortError') return;
+    if(e && e.name === 'AbortError') return true;
   }
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url; a.download = file.name; a.click();
   URL.revokeObjectURL(url);
   showToast(t('toastCard'));
+  return false;
+}
+
+let shareBusy = false;
+async function sharePlayerCard(){
+  if(shareBusy) return;
+  shareBusy = true;
+  try{
+    const {list} = feedList();
+    const pos = ratingPosOf(player.primary);
+    const ovr = fifaOvr(list);
+    const theme = futTheme(ovr);
+    const photo = await loadCanvasImage(currentPhoto() || player.photo);
+    const cover = await loadCanvasImage(currentCover() || player.cover);
+    const {canvas, ctx, w, h} = makeHiCanvas(780, 1120);
+    ctx.fillStyle = '#070B14';
+    ctx.fillRect(0, 0, w, h);
+    const g = ctx.createLinearGradient(0, 0, w, h);
+    g.addColorStop(0, theme.paper[0]);
+    g.addColorStop(0.55, theme.paper[1]);
+    g.addColorStop(1, theme.paper[2]);
+    pathRoundRect(ctx, 36, 36, w - 72, h - 72, 36);
+    ctx.fillStyle = g;
+    ctx.fill();
+    ctx.save();
+    pathRoundRect(ctx, 36, 36, w - 72, h - 72, 36);
+    ctx.clip();
+    if(cover){
+      ctx.globalAlpha = 0.28;
+      drawCovered(ctx, cover, 36, 36, w - 72, 420);
+      ctx.globalAlpha = 1;
+    }
+    const glow = ctx.createRadialGradient(w * 0.55, 280, 20, w * 0.5, 340, 420);
+    glow.addColorStop(0, theme.glow);
+    glow.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = glow;
+    ctx.fillRect(36, 36, w - 72, 520);
+    const photoBox = {x: 210, y: 168, w: 430, h: 520};
+    if(photo){
+      ctx.save();
+      pathRoundRect(ctx, photoBox.x, photoBox.y, photoBox.w, photoBox.h, 24);
+      ctx.clip();
+      drawCovered(ctx, photo, photoBox.x, photoBox.y, photoBox.w, photoBox.h);
+      ctx.restore();
+    } else {
+      ctx.fillStyle = 'rgba(0,0,0,.25)';
+      pathRoundRect(ctx, photoBox.x, photoBox.y, photoBox.w, photoBox.h, 24);
+      ctx.fill();
+      ctx.fillStyle = theme.plate;
+      ctx.font = canvasFont('900', 92);
+      ctx.textAlign = 'center';
+      ctx.fillText(initials(), photoBox.x + photoBox.w / 2, photoBox.y + 300);
+      ctx.textAlign = 'left';
+    }
+    const fade = ctx.createLinearGradient(0, 620, 0, 760);
+    fade.addColorStop(0, 'rgba(0,0,0,0)');
+    fade.addColorStop(1, theme.paper[1]);
+    ctx.fillStyle = fade;
+    ctx.fillRect(36, 600, w - 72, 180);
+    ctx.restore();
+
+    pathRoundRect(ctx, 36, 36, w - 72, h - 72, 36);
+    ctx.strokeStyle = theme.foil;
+    ctx.lineWidth = 10;
+    ctx.stroke();
+    pathRoundRect(ctx, 52, 52, w - 104, h - 104, 28);
+    ctx.strokeStyle = theme.foil2;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    ctx.fillStyle = theme.plate;
+    ctx.font = canvasFont('900', 118);
+    ctx.fillText(String(ovr), 78, 200);
+    ctx.font = canvasFont('800', 36);
+    ctx.fillStyle = theme.muted;
+    ctx.fillText(cardPosCode(), 86, 248);
+    const no = shirtNo();
+    if(no){
+      ctx.textAlign = 'right';
+      ctx.fillStyle = theme.plate;
+      ctx.font = canvasFont('800', 42);
+      ctx.fillText((settings.lang === 'en' ? '#' : '№') + no, w - 78, 118);
+      ctx.textAlign = 'left';
+    }
+    ctx.fillStyle = theme.muted;
+    ctx.font = canvasFont('700', 22);
+    ctx.fillText('FFK', 86, 286);
+
+    const name = (displayName() || '').toUpperCase();
+    pathRoundRect(ctx, 70, 700, w - 140, 78, 16);
+    ctx.fillStyle = theme.plate;
+    ctx.fill();
+    ctx.fillStyle = theme.ink;
+    ctx.font = canvasFont('900', name.length > 18 ? 28 : 34);
+    ctx.textAlign = 'center';
+    ctx.fillText(name.slice(0, 28), w / 2, 750);
+    ctx.textAlign = 'left';
+
+    const stats = futStatRows(list, pos);
+    const colW = 280;
+    const left = 110;
+    stats.forEach((row, i) => {
+      const col = i % 2;
+      const line = Math.floor(i / 2);
+      const x = left + col * colW;
+      const y = 830 + line * 64;
+      ctx.fillStyle = theme.plate;
+      ctx.font = canvasFont('900', 40);
+      ctx.fillText(String(row[1]), x, y);
+      ctx.fillStyle = theme.muted;
+      ctx.font = canvasFont('800', 18);
+      ctx.fillText(row[0], x + 86, y - 6);
+    });
+
+    ctx.fillStyle = theme.muted;
+    ctx.font = canvasFont('600', 18);
+    ctx.textAlign = 'center';
+    const club = [player.team || player.club, player.season].filter(Boolean).join('  ·  ');
+    ctx.fillText((club || 'FFK').slice(0, 42), w / 2, h - 86);
+    ctx.textAlign = 'left';
+
+    const slug = String(player.firstName || 'player').trim().replace(/\s+/g, '_').slice(0, 24) || 'player';
+    await exportPngFile(canvas, `ffk_card_${slug}.png`);
+  } finally {
+    shareBusy = false;
+  }
+}
+async function shareCard(m){
+  if(shareBusy) return;
+  shareBusy = true;
+  try{
+  const lines = reportLines(m);
+  const split = actionSplit(m.counts, m.position);
+  const photo = await loadCanvasImage(currentPhoto() || player.photo);
+  const ovr = Math.round(Math.min(99, Math.max(45, Number(m.rating) * 10)));
+  const theme = futTheme(ovr);
+  const {canvas, ctx, w} = makeHiCanvas(900, Math.max(1180, 430 + lines.length * 52 + 280));
+  const h = canvas.height / 2;
+  ctx.fillStyle = '#070B14';
+  ctx.fillRect(0, 0, w, h);
+  const bg = ctx.createLinearGradient(0, 0, w, h);
+  bg.addColorStop(0, theme.paper[0]);
+  bg.addColorStop(1, theme.paper[1]);
+  pathRoundRect(ctx, 28, 28, w - 56, h - 56, 28);
+  ctx.fillStyle = bg;
+  ctx.fill();
+  pathRoundRect(ctx, 28, 28, w - 56, h - 56, 28);
+  ctx.strokeStyle = theme.foil;
+  ctx.lineWidth = 8;
+  ctx.stroke();
+
+  if(photo){
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(120, 130, 64, 0, Math.PI * 2);
+    ctx.clip();
+    drawCovered(ctx, photo, 56, 66, 128, 128);
+    ctx.restore();
+    ctx.beginPath();
+    ctx.arc(120, 130, 66, 0, Math.PI * 2);
+    ctx.strokeStyle = theme.foil;
+    ctx.lineWidth = 4;
+    ctx.stroke();
+  }
+  ctx.fillStyle = theme.muted;
+  ctx.font = canvasFont('800', 22);
+  ctx.fillText('FFK  ·  ' + t('reportTitle').toUpperCase(), photo ? 210 : 70, 88);
+  ctx.fillStyle = theme.plate;
+  ctx.font = canvasFont('900', 48);
+  ctx.fillText(String(reportPlayerName(m)).slice(0, 18), photo ? 210 : 70, 148);
+  ctx.font = canvasFont('900', 72);
+  ctx.fillText(fmtNum(m.rating, 1), photo ? 210 : 70, 230);
+  ctx.fillStyle = theme.muted;
+  ctx.font = canvasFont('700', 24);
+  ctx.fillText(`${formatDate(m.date)}  ·  ${m.opponent || t('shareVs')}  ·  ${m.score || '—'}`, 70, 286);
+  ctx.fillText(`${t('heroAction')} ${fmtNum(m.actionRating, 1)}    ${t('heroEffort')} ${fmtNum(m.effortRating, 1)}`, 70, 326);
+
+  let y = 400;
+  ctx.font = canvasFont('700', 30);
+  if(!lines.length){
+    ctx.fillStyle = theme.plate;
+    ctx.fillText(t('plusEven'), 70, y);
+    y += 50;
+  } else {
+    lines.forEach(line => {
+      ctx.fillStyle = theme.plate;
+      ctx.fillText(`${line.icon}   ${line.text}`, 70, y);
+      y += 50;
+    });
+  }
+  y += 24;
+  ctx.fillStyle = '#22D3A6';
+  ctx.font = canvasFont('800', 40);
+  ctx.fillText(fmtSigned(split.plus, 2), 70, y);
+  ctx.fillStyle = theme.muted;
+  ctx.font = canvasFont('700', 20);
+  ctx.fillText(t('actPlus'), 70, y + 34);
+  ctx.fillStyle = '#FB6767';
+  ctx.font = canvasFont('800', 40);
+  ctx.fillText('−' + fmtNum(Math.abs(split.minus), 2), 470, y);
+  ctx.fillStyle = theme.muted;
+  ctx.font = canvasFont('700', 20);
+  ctx.fillText(t('actMinus'), 470, y + 34);
+
+  await exportPngFile(canvas, `ffk_${m.date}.png`);
   } finally {
     shareBusy = false;
   }
