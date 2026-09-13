@@ -749,8 +749,14 @@
       </div>
       <div id="seasonBoard"></div>
       <div id="compareBoard"></div>
+      <div class="chart-wrap">
+        <h3 id="chartHeading" data-i18n="chartTitle">Динамика общей оценки</h3>
+        <svg id="chartSvg" viewBox="0 0 320 200" role="img" data-i18n-aria="chartAria"></svg>
+      </div>
+      <h3 class="period-head" data-i18n="stPeriodCards">За выбранный период</h3>
+      <div class="stat-grid" id="statGrid"></div>
       <div id="timingBoard"></div>
-      <p class="hint" data-i18n="statsPeriodHint">График и карточки ниже — за выбранный период.</p>
+      <p class="hint" data-i18n="statsPeriodHint">График и карточки выше — за выбранный период.</p>
       <div class="period-chips" id="periodChips">
         <div class="chip active" data-range="10" data-i18n="periodLast10">Последние 10</div>
         <div class="chip" data-range="7d" data-i18n="periodWeek">Неделя</div>
@@ -759,12 +765,6 @@
         <div class="chip" data-range="all" data-i18n="periodAll">Всё время</div>
       </div>
       <button class="save-btn" id="statsCardBtn" type="button" data-i18n="cardPeriodBtn">Карточка периода</button>
-      <div class="chart-wrap">
-        <h3 id="chartHeading" data-i18n="chartTitle">Динамика общей оценки</h3>
-        <svg id="chartSvg" viewBox="0 0 320 200" role="img" data-i18n-aria="chartAria"></svg>
-      </div>
-      <h3 class="period-head" data-i18n="stPeriodCards">За выбранный период</h3>
-      <div class="stat-grid" id="statGrid"></div>
     </div>
 
     <div class="view" id="view-settings">
@@ -1075,7 +1075,7 @@ uk:{
   stSeasonTitle:'Статистика сезону', stSeasonAvg:'середня оцінка', stActions:'Дії', stDynamics:'Динаміка',
   stDynMetric:'Показник', stDynStart:'Початок', stDynNow:'Зараз',
   stDynHint:'Перші {n} і останні {n} матчів сезону',
-  statsPeriodHint:'Графік і картки нижче — за обраний період.',
+  statsPeriodHint:'Графік і картки вище — за обраний період.',
   stPeriodCards:'За обраний період',
   dyn_rating:'Рейтинг', dyn_dribbles:'Обводки', dyn_tackles:'Відбори', dyn_losses:'Втрати', dyn_duels:'Єдиноборства',
   cmpTitle:'Порівняння', cmpAll:'Весь час', cmpLast10:'Останні 10', cmpLastN:'Останні {n}', cmpSeason:'Сезон',
@@ -1281,7 +1281,7 @@ pl:{
   stSeasonTitle:'Statystyka sezonu', stSeasonAvg:'średnia ocena', stActions:'Akcje', stDynamics:'Dynamika',
   stDynMetric:'Wskaźnik', stDynStart:'Początek', stDynNow:'Teraz',
   stDynHint:'Pierwsze {n} i ostatnie {n} meczów sezonu',
-  statsPeriodHint:'Wykres i karty poniżej — za wybrany okres.',
+  statsPeriodHint:'Wykres i karty powyżej — za wybrany okres.',
   stPeriodCards:'Za wybrany okres',
   dyn_rating:'Ocena', dyn_dribbles:'Dryblingi', dyn_tackles:'Odbiory', dyn_losses:'Straty', dyn_duels:'Pojedynki',
   cmpTitle:'Porównanie', cmpAll:'Cały czas', cmpLast10:'Ostatnie 10', cmpLastN:'Ostatnie {n}', cmpSeason:'Sezon',
@@ -1487,7 +1487,7 @@ en:{
   stSeasonTitle:'Season stats', stSeasonAvg:'average rating', stActions:'Actions', stDynamics:'Trend',
   stDynMetric:'Metric', stDynStart:'Start', stDynNow:'Now',
   stDynHint:'First {n} vs last {n} matches of the season',
-  statsPeriodHint:'The chart and cards below use the selected period.',
+  statsPeriodHint:'The chart and cards above use the selected period.',
   stPeriodCards:'Selected period',
   dyn_rating:'Rating', dyn_dribbles:'Dribbles', dyn_tackles:'Tackles', dyn_losses:'Turnovers', dyn_duels:'Duels',
   cmpTitle:'Compare', cmpAll:'All time', cmpLast10:'Last 10', cmpLastN:'Last {n}', cmpSeason:'Season',
@@ -1693,7 +1693,7 @@ ru:{
   stSeasonTitle:'Статистика сезона', stSeasonAvg:'средняя оценка', stActions:'Действия', stDynamics:'Динамика',
   stDynMetric:'Показатель', stDynStart:'Начало', stDynNow:'Сейчас',
   stDynHint:'Первые {n} и последние {n} матчей сезона',
-  statsPeriodHint:'График и карточки ниже — за выбранный период.',
+  statsPeriodHint:'График и карточки выше — за выбранный период.',
   stPeriodCards:'За выбранный период',
   dyn_rating:'Рейтинг', dyn_dribbles:'Обводки', dyn_tackles:'Отборы', dyn_losses:'Потери', dyn_duels:'Единоборства',
   cmpTitle:'Сравнение', cmpAll:'Всё время', cmpLast10:'Последние 10', cmpLastN:'Последние {n}', cmpSeason:'Сезон',
