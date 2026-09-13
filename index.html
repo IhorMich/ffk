@@ -737,7 +737,8 @@ uk:{
   pPhotoAria:'Фото гравця', pCoverAria:'Фон картки', pSheetCancel:'Скасувати',
   cropHint:'Перетягніть фото і виберіть, що буде видно.', cropDone:'Готово',
   toastHeic:'Це фото телефон зберігає у форматі, який браузер не відкриває. Збережіть як JPG і спробуйте знову.',
-  toastPhotoFail:'Не вдалося відкрити фото. Спробуйте інший файл або JPG/PNG.',
+  toastPhotoWait:'Відкриваємо фото…',
+  toastPhotoFail:'Не вдалося відкрити фото. Спробуйте інший знімок.',
   pNoFile:'Файл не вибрано', pPhotoReady:'Фото вибрано', phDate:'дд.мм.рррр',
   pFirst:'Ім’я', pLast:'Прізвище', pBirth:'Дата народження', pNumber:'Номер',
   pTeam:'Команда', pClub:'Клуб / академія', pPrimary:'Основна позиція', pExtra:'Додаткові позиції',
@@ -850,7 +851,8 @@ pl:{
   pPhotoAria:'Zdjęcie zawodnika', pCoverAria:'Tło karty', pSheetCancel:'Anuluj',
   cropHint:'Przeciągnij zdjęcie i wybierz, co ma być widać.', cropDone:'Gotowe',
   toastHeic:'Ten telefon trzyma zdjęcie w formacie, którego przeglądarka nie otwiera. Zapisz jako JPG i spróbuj ponownie.',
-  toastPhotoFail:'Nie udało się otworzyć zdjęcia. Spróbuj innego pliku albo JPG/PNG.',
+  toastPhotoWait:'Otwieramy zdjęcie…',
+  toastPhotoFail:'Nie udało się otworzyć zdjęcia. Spróbuj innego zdjęcia.',
   pNoFile:'Nie wybrano pliku', pPhotoReady:'Zdjęcie wybrane', phDate:'dd.mm.rrrr',
   pFirst:'Imię', pLast:'Nazwisko', pBirth:'Data urodzenia', pNumber:'Numer',
   pTeam:'Drużyna', pClub:'Klub / akademia', pPrimary:'Pozycja główna', pExtra:'Pozycje dodatkowe',
@@ -963,7 +965,8 @@ en:{
   pPhotoAria:'Player photo', pCoverAria:'Card cover', pSheetCancel:'Cancel',
   cropHint:'Drag the photo and choose which part will be visible.', cropDone:'Done',
   toastHeic:'This photo is in a format the browser cannot open. Save it as JPG and try again.',
-  toastPhotoFail:'Could not open the photo. Try another file, or JPG/PNG.',
+  toastPhotoWait:'Opening photo…',
+  toastPhotoFail:'Could not open the photo. Try another picture.',
   pNoFile:'No file chosen', pPhotoReady:'Photo selected', phDate:'Select date',
   pFirst:'First name', pLast:'Last name', pBirth:'Date of birth', pNumber:'Number',
   pTeam:'Team', pClub:'Club / academy', pPrimary:'Main position', pExtra:'Other positions',
@@ -1076,7 +1079,8 @@ ru:{
   pPhotoAria:'Фото игрока', pCoverAria:'Фон карточки', pSheetCancel:'Отмена',
   cropHint:'Перетащите фото и выберите, что будет видно.', cropDone:'Готово',
   toastHeic:'Это фото телефон хранит в формате, который браузер не открывает. Сохраните как JPG и попробуйте снова.',
-  toastPhotoFail:'Не удалось открыть фото. Попробуйте другой файл или JPG/PNG.',
+  toastPhotoWait:'Открываем фото…',
+  toastPhotoFail:'Не удалось открыть фото. Попробуйте другой снимок.',
   pNoFile:'Файл не выбран', pPhotoReady:'Фото выбрано', phDate:'дд.мм.гггг',
   pFirst:'Имя', pLast:'Фамилия', pBirth:'Дата рождения', pNumber:'Номер',
   pTeam:'Команда', pClub:'Клуб / академия', pPrimary:'Основная позиция', pExtra:'Дополнительные позиции',
@@ -1725,13 +1729,39 @@ function exportCrop(){
   out.getContext('2d').drawImage(st.img, sx, sy, sw, sh, 0, 0, out.width, out.height);
   return out.toDataURL('image/jpeg', 0.82);
 }
+function loadScriptOnce(src){
+  if(loadScriptOnce.got && loadScriptOnce.got[src]) return loadScriptOnce.got[src];
+  loadScriptOnce.got = loadScriptOnce.got || {};
+  loadScriptOnce.got[src] = new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = src;
+    s.onload = resolve;
+    s.onerror = reject;
+    document.head.appendChild(s);
+  });
+  return loadScriptOnce.got[src];
+}
+async function heicToJpegFile(file){
+  await loadScriptOnce('https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js');
+  const out = await window.heic2any({blob: file, toType: 'image/jpeg', quality: 0.9});
+  const blob = Array.isArray(out) ? out[0] : out;
+  return new File([blob], 'photo.jpg', {type: 'image/jpeg'});
+}
 async function beginCrop(file, target){
   if(!file) return;
   try{
-    const img = await fileToImage(file);
+    let img;
+    try{
+      img = await fileToImage(file);
+    }catch(first){
+      if(!isHeicFile(file)) throw first;
+      showToast(t('toastPhotoWait'));
+      const jpeg = await heicToJpegFile(file);
+      img = await fileToImage(jpeg);
+    }
     openCrop(img, target);
   }catch(err){
-    showToast(t(isHeicFile(file) ? 'toastHeic' : 'toastPhotoFail'));
+    showToast(t('toastPhotoFail'));
   }
 }
 
