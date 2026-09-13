@@ -366,7 +366,10 @@
     padding:16px 16px 28px;max-width:480px;margin:0 auto;width:100%;
   }
   .app.live-on > .live{display:flex;flex-direction:column;}
-  .live-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+  .live-head{
+    display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;
+    position:sticky;top:0;z-index:2;padding-bottom:8px;background:var(--bg);
+  }
   .live-score{font-size:2rem;font-weight:800;color:var(--gold);}
   .live-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
   .live-btn{
@@ -377,7 +380,7 @@
   .live-btn.neg{border-color:rgba(251,103,103,.4);}
   .live-btn.neg .n{color:var(--danger);}
   .live-cell{
-    display:flex;flex-direction:column;min-height:108px;border-radius:16px;overflow:hidden;
+    display:flex;flex-direction:column;min-height:96px;border-radius:16px;overflow:hidden;
     border:1px solid var(--border);background:var(--surface);
   }
   .live-cell.neg{border-color:rgba(251,103,103,.4);}
@@ -391,7 +394,10 @@
     border:none;border-top:1px solid var(--border);background:var(--surface-2);color:var(--text);
     font-weight:800;font-size:1.15rem;padding:8px;cursor:pointer;
   }
-  .live-foot{display:flex;gap:8px;margin-top:14px;}
+  .live-foot{
+    display:flex;gap:8px;margin-top:14px;position:sticky;bottom:0;z-index:2;
+    padding:10px 0 6px;background:linear-gradient(to top, var(--bg) 72%, transparent);
+  }
   .live-foot button{flex:1;}
   .live-foot .ghost-btn,.live-foot .save-btn{width:auto;margin-top:0;}
 </style>
@@ -1489,7 +1495,6 @@ function currentPitch(){
 }
 function currentPos(){ return ratingPosOf(document.getElementById('f-position').value || defaultPitch()); }
 function metricsFor(pos){ return METRICS.filter(m => m.positions.includes(pos)); }
-function liveMetricsFor(pos){ return metricsFor(pos).filter(m => (m.live || []).includes(pos)); }
 function weightOf(m, pos){ return m.w[pos] ?? 0; }
 function clamp10(n){ return Math.round(Math.max(0, Math.min(10, n)) * 10) / 10; }
 
@@ -3011,7 +3016,7 @@ function drawChart(list){
 
 function renderLiveGrid(){
   const pos = ratingPosOf(document.getElementById('live-position').value || currentPitch());
-  document.getElementById('liveGrid').innerHTML = liveMetricsFor(pos).map(m => {
+  document.getElementById('liveGrid').innerHTML = metricsFor(pos).map(m => {
     const neg = weightOf(m, pos) < 0;
     return `<div class="live-cell ${neg?'neg':''}">
       <button class="live-plus" type="button" onclick="stepMetric('${m.key}',1)">
