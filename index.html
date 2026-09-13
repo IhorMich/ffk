@@ -230,8 +230,24 @@
   .live-btn .n{display:block;font-size:1.55rem;color:var(--gold);margin-top:6px;}
   .live-btn.neg{border-color:rgba(251,103,103,.4);}
   .live-btn.neg .n{color:var(--danger);}
+  .live-cell{
+    display:flex;flex-direction:column;min-height:108px;border-radius:16px;overflow:hidden;
+    border:1px solid var(--border);background:var(--surface);
+  }
+  .live-cell.neg{border-color:rgba(251,103,103,.4);}
+  .live-plus{
+    flex:1;border:none;background:none;color:var(--text);font-weight:800;font-size:.88rem;
+    cursor:pointer;padding:10px 10px 6px;text-align:center;
+  }
+  .live-plus .n{display:block;font-size:1.55rem;color:var(--gold);margin-top:6px;}
+  .live-cell.neg .live-plus .n{color:var(--danger);}
+  .live-minus{
+    border:none;border-top:1px solid var(--border);background:var(--surface-2);color:var(--text);
+    font-weight:800;font-size:1.15rem;padding:8px;cursor:pointer;
+  }
   .live-foot{display:flex;gap:8px;margin-top:14px;}
   .live-foot button{flex:1;}
+  .live-foot .ghost-btn,.live-foot .save-btn{width:auto;margin-top:0;}
 </style>
 </head>
 <body>
@@ -328,12 +344,13 @@
             <option value="league" data-i18n="kindLeague">Чемпионат</option>
             <option value="friendly" data-i18n="kindFriendly">Товарищеский</option>
             <option value="cup" data-i18n="kindCup">Кубок</option>
+            <option value="tournament" data-i18n="kindTournament">Турнир</option>
           </select>
         </div>
       </div>
-      <div class="field">
-        <label data-i18n="labelTournament">Турнир</label>
-        <input type="text" id="f-tournament" list="tourList" maxlength="48" data-i18n-placeholder="phTournament" placeholder="Название турнира">
+      <div class="field" id="tournamentWrap">
+        <label id="tournamentLabel">Название чемпионата</label>
+        <input type="text" id="f-tournament" list="tourList" maxlength="48" placeholder="Название чемпионата">
         <datalist id="tourList"></datalist>
       </div>
       <div class="row2">
@@ -490,7 +507,7 @@
   <div class="live-grid" id="liveGrid"></div>
   <div class="live-foot">
     <button class="ghost-btn" id="liveUndoBtn" type="button" data-i18n="liveUndo">Отменить</button>
-    <button class="save-btn" id="liveDoneBtn" type="button" style="margin-top:12px;" data-i18n="liveDone">Готово</button>
+    <button class="save-btn" id="liveDoneBtn" type="button" data-i18n="liveDone">Готово</button>
   </div>
   </div>
 </div>
@@ -525,7 +542,12 @@ uk:{
   pc_LWB:'Лівий вінгбек', pc_RWB:'Правий вінгбек', pc_CDM:'Опорний півзахисник', pc_CM:'Центральний півзахисник',
   pc_CAM:'Атакувальний півзахисник', pc_LM:'Лівий півзахисник', pc_RM:'Правий півзахисник',
   pc_LW:'Лівий вінгер', pc_RW:'Правий вінгер', pc_ST:'Нападник', pc_CF:'Центральний нападник',
-  kindLeague:'Чемпіонат', kindFriendly:'Товариський', kindCup:'Кубок',
+  ps_GK:'Врт', ps_CB:'ЦЗ', ps_LB:'ЛЗ', ps_RB:'ПрЗ', ps_LWB:'ЛВБ', ps_RWB:'ПВБ',
+  ps_CDM:'ОПЗ', ps_CM:'ЦПЗ', ps_CAM:'АПЗ', ps_LM:'ЛПЗ', ps_RM:'ППЗ',
+  ps_LW:'ЛВ', ps_RW:'ПВ', ps_ST:'Нап', ps_CF:'ЦН',
+  kindLeague:'Чемпіонат', kindFriendly:'Товариський', kindCup:'Кубок', kindTournament:'Турнір',
+  labelCompLeague:'Назва чемпіонату', phCompLeague:'Назва чемпіонату',
+  labelCompCup:'Назва кубка', phCompCup:'Назва кубка',
   roleStart:'У старті', roleSub:'Зі лавки',
   secActions:'Ігрові дії', secBehavior:'Як грав (1–5)',
   saveMatch:'Зберегти матч', saveChanges:'Зберегти зміни', cancelEdit:'Скасувати правку',
@@ -582,7 +604,12 @@ pl:{
   pc_LWB:'Lewy wahadłowy', pc_RWB:'Prawy wahadłowy', pc_CDM:'Defensywny pomocnik', pc_CM:'Środkowy pomocnik',
   pc_CAM:'Ofensywny pomocnik', pc_LM:'Lewy pomocnik', pc_RM:'Prawy pomocnik',
   pc_LW:'Lewy skrzydłowy', pc_RW:'Prawy skrzydłowy', pc_ST:'Napastnik', pc_CF:'Środkowy napastnik',
-  kindLeague:'Liga', kindFriendly:'Towarzyski', kindCup:'Puchar',
+  ps_GK:'Brk', ps_CB:'ŚO', ps_LB:'LO', ps_RB:'PO', ps_LWB:'LWB', ps_RWB:'PWB',
+  ps_CDM:'DM', ps_CM:'ŚP', ps_CAM:'OF', ps_LM:'LP', ps_RM:'PP',
+  ps_LW:'LS', ps_RW:'PS', ps_ST:'Nap', ps_CF:'ŚN',
+  kindLeague:'Liga', kindFriendly:'Towarzyski', kindCup:'Puchar', kindTournament:'Turniej',
+  labelCompLeague:'Nazwa ligi', phCompLeague:'Nazwa ligi',
+  labelCompCup:'Nazwa pucharu', phCompCup:'Nazwa pucharu',
   roleStart:'W składzie', roleSub:'Z ławki',
   secActions:'Akcje meczowe', secBehavior:'Jak grał (1–5)',
   saveMatch:'Zapisz mecz', saveChanges:'Zapisz zmiany', cancelEdit:'Anuluj edycję',
@@ -639,7 +666,12 @@ en:{
   pc_LWB:'Left wing-back', pc_RWB:'Right wing-back', pc_CDM:'Defensive midfielder', pc_CM:'Central midfielder',
   pc_CAM:'Attacking midfielder', pc_LM:'Left midfielder', pc_RM:'Right midfielder',
   pc_LW:'Left winger', pc_RW:'Right winger', pc_ST:'Striker', pc_CF:'Centre forward',
-  kindLeague:'League', kindFriendly:'Friendly', kindCup:'Cup',
+  ps_GK:'GK', ps_CB:'CB', ps_LB:'LB', ps_RB:'RB', ps_LWB:'LWB', ps_RWB:'RWB',
+  ps_CDM:'CDM', ps_CM:'CM', ps_CAM:'CAM', ps_LM:'LM', ps_RM:'RM',
+  ps_LW:'LW', ps_RW:'RW', ps_ST:'ST', ps_CF:'CF',
+  kindLeague:'League', kindFriendly:'Friendly', kindCup:'Cup', kindTournament:'Tournament',
+  labelCompLeague:'League name', phCompLeague:'League name',
+  labelCompCup:'Cup name', phCompCup:'Cup name',
   roleStart:'Started', roleSub:'Off the bench',
   secActions:'Match actions', secBehavior:'How he played (1–5)',
   saveMatch:'Save match', saveChanges:'Save changes', cancelEdit:'Cancel edit',
@@ -696,7 +728,12 @@ ru:{
   pc_LWB:'Левый вингбек', pc_RWB:'Правый вингбек', pc_CDM:'Опорный полузащитник', pc_CM:'Центральный полузащитник',
   pc_CAM:'Атакующий полузащитник', pc_LM:'Левый полузащитник', pc_RM:'Правый полузащитник',
   pc_LW:'Левый вингер', pc_RW:'Правый вингер', pc_ST:'Нападающий', pc_CF:'Центральный нападающий',
-  kindLeague:'Чемпионат', kindFriendly:'Товарищеский', kindCup:'Кубок',
+  ps_GK:'Врт', ps_CB:'ЦЗ', ps_LB:'ЛЗ', ps_RB:'ПрЗ', ps_LWB:'ЛВБ', ps_RWB:'ПВБ',
+  ps_CDM:'ОПЗ', ps_CM:'ЦПЗ', ps_CAM:'АПЗ', ps_LM:'ЛПЗ', ps_RM:'ППЗ',
+  ps_LW:'ЛВ', ps_RW:'ПВ', ps_ST:'Нап', ps_CF:'ЦН',
+  kindLeague:'Чемпионат', kindFriendly:'Товарищеский', kindCup:'Кубок', kindTournament:'Турнир',
+  labelCompLeague:'Название чемпионата', phCompLeague:'Название чемпионата',
+  labelCompCup:'Название кубка', phCompCup:'Название кубка',
   roleStart:'В старте', roleSub:'Со скамейки',
   secActions:'Игровые действия', secBehavior:'Как играл (1–5)',
   saveMatch:'Сохранить матч', saveChanges:'Сохранить изменения', cancelEdit:'Отменить правку',
@@ -760,6 +797,11 @@ function pitchPosLabel(code){
   const name = t('pc_'+code);
   return name === 'pc_'+code ? code : `${name} (${code})`;
 }
+function pitchPosLabelShort(code){
+  if(!POS_CODES.includes(code)) return code;
+  const name = t('ps_'+code);
+  return name === 'ps_'+code ? code : `${name} (${code})`;
+}
 function ratingPosOf(code){
   if(POS_GROUP[code]) return POS_GROUP[code];
   if(['fwd','mid','def','gk'].includes(code)) return code;
@@ -775,7 +817,7 @@ function orderedPitchCodes(){
 }
 function fillPitchSelect(sel, preferred){
   const want = POS_CODES.includes(preferred) ? preferred : (POS_CODES.includes(sel.value) ? sel.value : defaultPitch());
-  sel.innerHTML = orderedPitchCodes().map(code => `<option value="${code}">${escapeHtml(pitchPosLabel(code))}</option>`).join('');
+  sel.innerHTML = orderedPitchCodes().map(code => `<option value="${code}">${escapeHtml(pitchPosLabelShort(code))}</option>`).join('');
   sel.value = POS_CODES.includes(want) ? want : defaultPitch();
 }
 function fillMatchPitchSelects(preferred){
@@ -789,7 +831,28 @@ function matchPosDisplay(m){
 }
 function venueLabel(v){ return v === 'away' ? t('venueAway') : t('venueHome'); }
 function roleLabel(r){ return r === 'sub' ? t('roleSub') : t('roleStart'); }
-function kindLabel(key){ return ({league:t('kindLeague'), friendly:t('kindFriendly'), cup:t('kindCup')})[key] || key; }
+function kindLabel(key){ return ({league:t('kindLeague'), friendly:t('kindFriendly'), cup:t('kindCup'), tournament:t('kindTournament')})[key] || key; }
+function syncCompetitionField(){
+  const kind = document.getElementById('f-kind').value;
+  const wrap = document.getElementById('tournamentWrap');
+  const label = document.getElementById('tournamentLabel');
+  const input = document.getElementById('f-tournament');
+  if(kind === 'friendly'){
+    wrap.hidden = true;
+    return;
+  }
+  wrap.hidden = false;
+  if(kind === 'league'){
+    label.textContent = t('labelCompLeague');
+    input.placeholder = t('phCompLeague');
+  } else if(kind === 'cup'){
+    label.textContent = t('labelCompCup');
+    input.placeholder = t('phCompCup');
+  } else {
+    label.textContent = t('phTournament');
+    input.placeholder = t('phTournament');
+  }
+}
 function applyI18n(){
   const lang = LANGS.includes(settings.lang) ? settings.lang : 'ru';
   document.documentElement.lang = lang;
@@ -809,6 +872,7 @@ function applyI18n(){
   fillPrimarySelect();
   fillMatchPitchSelects(document.getElementById('f-position').value);
   renderExtraChips();
+  syncCompetitionField();
   if(lastReportMatch) document.getElementById('reportCard').innerHTML = renderReportHtml(lastReportMatch);
 }
 const BASE_RATING = 6.0;
@@ -1253,7 +1317,7 @@ function normalizeMatch(m){
     const v = Number(m.behaviors?.[b.key]);
     behaviors[b.key] = v >= 1 && v <= 5 ? v : 3;
   });
-  const kind = ['league','friendly','cup'].includes(m.kind) ? m.kind : 'league';
+  const kind = ['league','friendly','cup','tournament'].includes(m.kind) ? m.kind : 'league';
   const format = (FORMAT_MIN[m.format] || m.format === 'custom') ? m.format : '2x30';
   const matchLen = formatLength(format, m.matchLen || m.minutes);
   const minutes = Math.min(120, Math.max(1, Number(m.minutes) || matchLen));
@@ -1386,6 +1450,10 @@ window.stepMetric = function(key, dir){
   const live = document.getElementById('live-cnt-'+key);
   if(live) live.textContent = next;
   if(dir === 1) liveStack.push(key);
+  else {
+    const i = liveStack.lastIndexOf(key);
+    if(i >= 0) liveStack.splice(i, 1);
+  }
   updateHero();
   persistDraft();
 };
@@ -1437,6 +1505,7 @@ function resetForm(){
   document.getElementById('f-format').value = settings.format || '2x30';
   document.getElementById('f-matchlen').value = settings.minutes;
   syncPlayedDefault(true);
+  syncCompetitionField();
   document.getElementById('f-date').value = todayStr();
   renderMetrics();
   renderBehaviors();
@@ -1462,6 +1531,7 @@ function fillForm(m){
   document.getElementById('f-venue').value = m.venue === 'away' ? 'away' : 'home';
   document.getElementById('f-role').value = m.role === 'sub' ? 'sub' : 'start';
   document.getElementById('f-comment').value = m.comment;
+  syncCompetitionField();
   setEditUi(true);
   renderMetrics();
   renderBehaviors();
@@ -1484,7 +1554,7 @@ function collectMatch(){
     score: document.getElementById('f-score').value.trim(),
     pitchPos: currentPitch(),
     position: pos,
-    tournament: document.getElementById('f-tournament').value.trim().slice(0,48),
+    tournament: document.getElementById('f-kind').value === 'friendly' ? '' : document.getElementById('f-tournament').value.trim().slice(0,48),
     venue: document.getElementById('f-venue').value === 'away' ? 'away' : 'home',
     role: document.getElementById('f-role').value === 'sub' ? 'sub' : 'start',
     comment: document.getElementById('f-comment').value.trim(),
@@ -1526,6 +1596,7 @@ document.getElementById('cancelEditBtn').addEventListener('click', resetForm);
       document.getElementById('live-position').value = currentPitch();
       renderMetrics(); renderLiveGrid();
     }
+    if(id === 'f-kind') syncCompetitionField();
     if(id === 'f-format'){ syncPlayedDefault(true); }
     if(id === 'f-matchlen' && document.getElementById('f-format').value === 'custom'){
       document.getElementById('f-minutes').value = document.getElementById('f-matchlen').value;
@@ -1751,9 +1822,12 @@ function renderLiveGrid(){
   const pos = ratingPosOf(document.getElementById('live-position').value || currentPitch());
   document.getElementById('liveGrid').innerHTML = metricsFor(pos).map(m => {
     const neg = weightOf(m, pos) < 0;
-    return `<button class="live-btn ${neg?'neg':''}" type="button" onclick="stepMetric('${m.key}',1)">
-      ${escapeHtml(metricLabel(m.key))}<span class="n" id="live-cnt-${m.key}">${form.counts[m.key]||0}</span>
-    </button>`;
+    return `<div class="live-cell ${neg?'neg':''}">
+      <button class="live-plus" type="button" onclick="stepMetric('${m.key}',1)">
+        ${escapeHtml(metricLabel(m.key))}<span class="n" id="live-cnt-${m.key}">${form.counts[m.key]||0}</span>
+      </button>
+      <button class="live-minus" type="button" onclick="stepMetric('${m.key}',-1)">−</button>
+    </div>`;
   }).join('');
 }
 function openLive(){
