@@ -441,7 +441,8 @@
   .cmp-table .up{color:var(--accent);}
   .cmp-table .down{color:var(--danger);}
   .chart-wrap{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:18px;}
-  .chart-wrap h3{margin:0 0 12px;font-size:.82rem;color:var(--text-soft);font-weight:700;}
+  .chart-wrap h3{margin:0 0 10px;font-size:.82rem;color:var(--text-soft);font-weight:700;}
+  .chart-wrap .period-chips{margin:0 0 12px;}
   .chart-wrap svg{display:block;width:100%;height:200px;}
   .tabbar{
     position:fixed;left:50%;transform:translateX(-50%);bottom:14px;
@@ -751,12 +752,17 @@
       <div id="compareBoard"></div>
       <div class="chart-wrap">
         <h3 id="chartHeading" data-i18n="chartTitle">Динамика общей оценки</h3>
+        <div class="period-chips" id="chartChips">
+          <button type="button" class="chip active" data-chart="10" data-i18n="chart10">10 матчей</button>
+          <button type="button" class="chip" data-chart="100" data-i18n="chart100">100 матчей</button>
+          <button type="button" class="chip" data-chart="all" data-i18n="periodAll">Всё время</button>
+        </div>
         <svg id="chartSvg" viewBox="0 0 320 200" role="img" data-i18n-aria="chartAria"></svg>
       </div>
       <h3 class="period-head" data-i18n="stPeriodCards">За выбранный период</h3>
       <div class="stat-grid" id="statGrid"></div>
       <div id="timingBoard"></div>
-      <p class="hint" data-i18n="statsPeriodHint">График и карточки выше — за выбранный период.</p>
+      <p class="hint" data-i18n="statsPeriodHint">Карточки выше — за выбранный период.</p>
       <div class="period-chips" id="periodChips">
         <div class="chip active" data-range="10" data-i18n="periodLast10">Последние 10</div>
         <div class="chip" data-range="7d" data-i18n="periodWeek">Неделя</div>
@@ -915,7 +921,7 @@ uk:{
   backupBanner:'Дані лише на цьому телефоні. Зробіть експорт, щоб не втратити сезон.',
   export:'Експорт', import:'Імпорт', copy:'Копіювати',
   periodLast10:'Останні 10', periodWeek:'Тиждень', period10d:'10 днів', periodMonth:'Місяць', periodYear:'Рік', periodAll:'Весь час',
-  chartTitle:'Динаміка оцінки', chartLastN:'Останні {n} матчів', chartAria:'Графік оцінок', chartEmpty:'Поки немає даних',
+  chartTitle:'Динаміка оцінки', chartLastN:'Останні {n} матчів', chart10:'10 матчів', chart100:'100 матчів', chartAria:'Графік оцінок', chartEmpty:'Поки немає даних',
   sLang:'Мова', sFont:'Шрифт', fontSystem:'Системний', sFormat:'Формат матчу за замовчуванням', sSave:'Зберегти налаштування',
   tabPlayer:'Гравець', tabMatch:'Матч', tabHistory:'Історія', tabStats:'Статистика',
   pPhoto:'Фото', pPhotoHint:'Натисніть на фото або фон, щоб змінити.',
@@ -1075,7 +1081,7 @@ uk:{
   stSeasonTitle:'Статистика сезону', stSeasonAvg:'середня оцінка', stActions:'Дії', stDynamics:'Динаміка',
   stDynMetric:'Показник', stDynStart:'Початок', stDynNow:'Зараз',
   stDynHint:'Перші {n} і останні {n} матчів сезону',
-  statsPeriodHint:'Графік і картки вище — за обраний період.',
+  statsPeriodHint:'Картки вище — за обраний період.',
   stPeriodCards:'За обраний період',
   dyn_rating:'Рейтинг', dyn_dribbles:'Обводки', dyn_tackles:'Відбори', dyn_losses:'Втрати', dyn_duels:'Єдиноборства',
   cmpTitle:'Порівняння', cmpAll:'Весь час', cmpLast10:'Останні 10', cmpLastN:'Останні {n}', cmpSeason:'Сезон',
@@ -1121,7 +1127,7 @@ pl:{
   backupBanner:'Dane są tylko na tym telefonie. Zrób eksport, żeby nie stracić sezonu.',
   export:'Eksport', import:'Import', copy:'Kopiuj',
   periodLast10:'Ostatnie 10', periodWeek:'Tydzień', period10d:'10 dni', periodMonth:'Miesiąc', periodYear:'Rok', periodAll:'Cały czas',
-  chartTitle:'Dynamika oceny', chartLastN:'Ostatnie {n} meczów', chartAria:'Wykres ocen', chartEmpty:'Brak danych',
+  chartTitle:'Dynamika oceny', chartLastN:'Ostatnie {n} meczów', chart10:'10 meczów', chart100:'100 meczów', chartAria:'Wykres ocen', chartEmpty:'Brak danych',
   sLang:'Język', sFont:'Czcionka', fontSystem:'Systemowa', sFormat:'Domyślny format meczu', sSave:'Zapisz ustawienia',
   tabPlayer:'Zawodnik', tabMatch:'Mecz', tabHistory:'Historia', tabStats:'Statystyki',
   pPhoto:'Zdjęcie', pPhotoHint:'Dotknij zdjęcia lub tła, żeby zmienić.',
@@ -1281,7 +1287,7 @@ pl:{
   stSeasonTitle:'Statystyka sezonu', stSeasonAvg:'średnia ocena', stActions:'Akcje', stDynamics:'Dynamika',
   stDynMetric:'Wskaźnik', stDynStart:'Początek', stDynNow:'Teraz',
   stDynHint:'Pierwsze {n} i ostatnie {n} meczów sezonu',
-  statsPeriodHint:'Wykres i karty powyżej — za wybrany okres.',
+  statsPeriodHint:'Karty powyżej — za wybrany okres.',
   stPeriodCards:'Za wybrany okres',
   dyn_rating:'Ocena', dyn_dribbles:'Dryblingi', dyn_tackles:'Odbiory', dyn_losses:'Straty', dyn_duels:'Pojedynki',
   cmpTitle:'Porównanie', cmpAll:'Cały czas', cmpLast10:'Ostatnie 10', cmpLastN:'Ostatnie {n}', cmpSeason:'Sezon',
@@ -1327,7 +1333,7 @@ en:{
   backupBanner:'Data stays on this phone. Export so you do not lose the season.',
   export:'Export', import:'Import', copy:'Copy',
   periodLast10:'Last 10', periodWeek:'Week', period10d:'10 days', periodMonth:'Month', periodYear:'Year', periodAll:'All time',
-  chartTitle:'Rating trend', chartLastN:'Last {n} matches', chartAria:'Rating chart', chartEmpty:'No data yet',
+  chartTitle:'Rating trend', chartLastN:'Last {n} matches', chart10:'10 matches', chart100:'100 matches', chartAria:'Rating chart', chartEmpty:'No data yet',
   sLang:'Language', sFont:'Font', fontSystem:'System', sFormat:'Default match format', sSave:'Save settings',
   tabPlayer:'Player', tabMatch:'Match', tabHistory:'History', tabStats:'Stats',
   pPhoto:'Photo', pPhotoHint:'Tap the photo or cover to change it.',
@@ -1487,7 +1493,7 @@ en:{
   stSeasonTitle:'Season stats', stSeasonAvg:'average rating', stActions:'Actions', stDynamics:'Trend',
   stDynMetric:'Metric', stDynStart:'Start', stDynNow:'Now',
   stDynHint:'First {n} vs last {n} matches of the season',
-  statsPeriodHint:'The chart and cards above use the selected period.',
+  statsPeriodHint:'The cards above use the selected period.',
   stPeriodCards:'Selected period',
   dyn_rating:'Rating', dyn_dribbles:'Dribbles', dyn_tackles:'Tackles', dyn_losses:'Turnovers', dyn_duels:'Duels',
   cmpTitle:'Compare', cmpAll:'All time', cmpLast10:'Last 10', cmpLastN:'Last {n}', cmpSeason:'Season',
@@ -1533,7 +1539,7 @@ ru:{
   backupBanner:'Данные только на этом телефоне. Сделайте экспорт, чтобы не потерять сезон.',
   export:'Экспорт', import:'Импорт', copy:'Копировать',
   periodLast10:'Последние 10', periodWeek:'Неделя', period10d:'10 дней', periodMonth:'Месяц', periodYear:'Год', periodAll:'Всё время',
-  chartTitle:'Динамика оценки', chartLastN:'Последние {n} матчей', chartAria:'График оценок', chartEmpty:'Пока нет данных',
+  chartTitle:'Динамика оценки', chartLastN:'Последние {n} матчей', chart10:'10 матчей', chart100:'100 матчей', chartAria:'График оценок', chartEmpty:'Пока нет данных',
   sLang:'Язык', sFont:'Шрифт', fontSystem:'Системный', sFormat:'Формат матча по умолчанию', sSave:'Сохранить настройки',
   tabPlayer:'Игрок', tabMatch:'Матч', tabHistory:'История', tabStats:'Статистика',
   pPhoto:'Фотография', pPhotoHint:'Нажмите на фото или фон, чтобы сменить.',
@@ -1693,7 +1699,7 @@ ru:{
   stSeasonTitle:'Статистика сезона', stSeasonAvg:'средняя оценка', stActions:'Действия', stDynamics:'Динамика',
   stDynMetric:'Показатель', stDynStart:'Начало', stDynNow:'Сейчас',
   stDynHint:'Первые {n} и последние {n} матчей сезона',
-  statsPeriodHint:'График и карточки выше — за выбранный период.',
+  statsPeriodHint:'Карточки выше — за выбранный период.',
   stPeriodCards:'За выбранный период',
   dyn_rating:'Рейтинг', dyn_dribbles:'Обводки', dyn_tackles:'Отборы', dyn_losses:'Потери', dyn_duels:'Единоборства',
   cmpTitle:'Сравнение', cmpAll:'Всё время', cmpLast10:'Последние 10', cmpLastN:'Последние {n}', cmpSeason:'Сезон',
@@ -3951,6 +3957,7 @@ document.getElementById('importFile').addEventListener('change', async (e) => {
 });
 
 let currentRange = '10';
+let chartRange = '10';
 let currentSeasonFilter = 'current';
 function knownSeasons(){
   const set = new Set();
@@ -3994,6 +4001,20 @@ document.getElementById('periodChips').addEventListener('click', e => {
   currentRange = chip.dataset.range || '10';
   renderStats();
 });
+document.getElementById('chartChips').addEventListener('click', e => {
+  const chip = e.target.closest('[data-chart]');
+  if(!chip) return;
+  document.querySelectorAll('#chartChips .chip').forEach(c=>c.classList.remove('active'));
+  chip.classList.add('active');
+  chartRange = chip.dataset.chart || '10';
+  renderStats();
+});
+function chartMatches(){
+  const all = sortedMatches();
+  if(chartRange === '10') return all.slice(-10);
+  if(chartRange === '100') return all.slice(-100);
+  return all;
+}
 function statsMatches(){
   const sorted = seasonPool();
   if(currentRange === '10') return sorted.slice(-10);
@@ -4222,10 +4243,13 @@ function renderStats(){
   renderTimingBoard();
   const grid = document.getElementById('statGrid');
   const heading = document.getElementById('chartHeading');
-  heading.textContent = list.length <= 1 ? t('chartTitle') : t('chartLastN', {n: list.length});
+  const chartList = chartMatches();
+  heading.textContent = chartRange === 'all'
+    ? (chartList.length <= 1 ? t('chartTitle') : t('periodAll'))
+    : (chartList.length <= 1 ? t('chartTitle') : t('chartLastN', {n: chartList.length}));
   if(!list.length){
     grid.innerHTML = `<div class="empty" style="grid-column:1/-1;">${escapeHtml(t('noPeriod'))}</div>`;
-    drawChart([]);
+    drawChart(chartList);
     return;
   }
   const avg = arr => arr.reduce((a,b)=>a+b,0)/arr.length;
@@ -4245,7 +4269,7 @@ function renderStats(){
     {num:sum('goals'), lbl:t('stGoals')},
     {num:minutes?fmtNum(sum('goals')*90/minutes, 1):fmtNum(0, 1), lbl:t('stG90')},
   ].map(c=>`<div class="stat-card"><div class="num ${c.cls||''}">${c.num}</div><div class="lbl">${c.lbl}</div></div>`).join('');
-  drawChart(list);
+  drawChart(chartList);
 }
 function drawChart(list){
   const svg = document.getElementById('chartSvg');
@@ -4282,11 +4306,13 @@ function drawChart(list){
   const xs = list.map((_,i)=> xAt(i));
   const ys = ratings.map(r => yAt(r));
   const path = list.length === 1 ? '' : `<path d="${xs.map((x,i)=> `${i===0?'M':'L'}${x.toFixed(1)},${ys[i].toFixed(1)}`).join(' ')}" fill="none" stroke="#22D3A6" stroke-width="2.5"/>`;
+  const step = list.length > 10 ? Math.ceil(list.length / 8) : 1;
+  const dotStep = list.length > 40 ? Math.ceil(list.length / 40) : 1;
   const dots = xs.map((x,i)=> {
     const last = i === xs.length-1;
+    if(!last && i % dotStep) return '';
     return `<circle cx="${x.toFixed(1)}" cy="${ys[i].toFixed(1)}" r="${last?5:3.5}" fill="${last?'#F5B942':'#22D3A6'}"/>`;
   }).join('');
-  const step = list.length > 10 ? Math.ceil(list.length / 8) : 1;
   const labels = xs.map((x,i)=> {
     if(i !== 0 && i !== xs.length-1 && i % step) return '';
     return `<text x="${x.toFixed(1)}" y="${h-8}" font-size="9" fill="#8D9AB5" text-anchor="middle">${i+1}</text>`;
