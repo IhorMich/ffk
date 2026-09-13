@@ -356,8 +356,9 @@
       <div class="field">
         <label data-i18n="pSeason">Сезон</label>
         <input type="text" id="p-season" maxlength="16" placeholder="2026/27">
-        <div class="hint" data-i18n="pSeasonHint">Каждый матч запоминает сезон. Потом можно открыть 2026/27 отдельно.</div>
-        <button class="ghost-btn" id="pNewSeasonBtn" type="button" data-i18n="pNewSeason">Начать новый сезон</button>
+        <div class="hint" id="pSeasonHint"></div>
+        <button class="ghost-btn" id="pOpenSeasonBtn" type="button" data-i18n="pOpenSeason" hidden>Открыть сезон</button>
+        <button class="ghost-btn" id="pCloseSeasonBtn" type="button" data-i18n="pCloseSeason" hidden>Закрыть сезон</button>
       </div>
       <button class="save-btn" id="savePlayerBtn" type="button" data-i18n="pSave">Сохранить карточку</button>
     </div>
@@ -606,8 +607,20 @@ uk:{
   pPickPhoto:'Вибрати файл', pNoFile:'Файл не вибрано', pPhotoReady:'Фото вибрано', phDate:'дд.мм.рррр',
   pFirst:'Ім’я', pLast:'Прізвище', pBirth:'Дата народження', pNumber:'Номер',
   pTeam:'Команда', pClub:'Клуб / академія', pPrimary:'Основна позиція', pExtra:'Додаткові позиції',
-  pSeason:'Сезон', pSeasonHint:'Кожен матч запам’ятовує сезон. Пізніше можна відкрити 2026/27 окремо.', pNewSeason:'Почати новий сезон', pSave:'Зберегти картку', toastPlayer:'Картку гравця збережено', toastNewSeason:'Сезон {s}. Нові матчі підуть сюди.',
-  confirmNewSeason:'Закрити {from} і почати {to}? Старі матчі залишаться в архіві.',
+  pSeason:'Сезон', pOpenSeason:'Відкрити сезон', pCloseSeason:'Закрити сезон',
+  pSeasonHintOpen:'Сезон відкрито. Нові матчі пишуться сюди.',
+  pSeasonHintClosed:'Сезон {s} закрито. Матчі лишились в архіві.',
+  confirmOpenSeason:'Відкрити сезон {s}? Нові матчі підуть сюди.',
+  confirmOpenForMatch:'Сезон закрито. Відкрити {s} для цього матчу?',
+  closeTooEarly:'Зараз {when}. Сезон {s} ще не почався (старт 1 липня {start}). Закрити все одно?',
+  closeNotOver:'Зараз {when}. Сезон {s} ще триває — зазвичай до 1 липня {end}. Закрити все одно?',
+  closeEarlyNoMatches:'Зараз {when}, у сезоні {s} немає матчів. Зазвичай сезон закривають після 1 липня {end}. Закрити?',
+  closeEarlyFew:'Зараз {when}. У сезоні {s} лише {n} матчів, до 1 липня {end} ще є час. Закрити все одно?',
+  closeReady:'1 липня {end} уже минуло. Закрити сезон {s}? Матчі залишаться в архіві, далі можна відкрити {next}.',
+  closeReadyEmpty:'1 липня уже минуло, але в сезоні {s} немає матчів. Закрити?',
+  toastSeasonOpened:'Сезон {s} відкрито', toastSeasonClosed:'Сезон {s} закрито',
+  seasonClosed:'{s} · закритий',
+  pSave:'Зберегти картку', toastPlayer:'Картку гравця збережено',
   seasonFilter:'Сезон', seasonCurrent:'{s} · поточний', seasonAll:'Усі сезони',
   ageOne:'{n} рік', ageFew:'{n} роки', ageMany:'{n} років', ageEn:'{n} years',
   liveHint:'Великі кнопки, зручно на полі', liveUndo:'Скасувати', liveDone:'Готово',
@@ -673,8 +686,20 @@ pl:{
   pPickPhoto:'Wybierz plik', pNoFile:'Nie wybrano pliku', pPhotoReady:'Zdjęcie wybrane', phDate:'dd.mm.rrrr',
   pFirst:'Imię', pLast:'Nazwisko', pBirth:'Data urodzenia', pNumber:'Numer',
   pTeam:'Drużyna', pClub:'Klub / akademia', pPrimary:'Pozycja główna', pExtra:'Pozycje dodatkowe',
-  pSeason:'Sezon', pSeasonHint:'Każdy mecz zapamiętuje sezon. Później można osobno otworzyć 2026/27.', pNewSeason:'Rozpocznij nowy sezon', pSave:'Zapisz kartę', toastPlayer:'Karta zawodnika zapisana', toastNewSeason:'Sezon {s}. Nowe mecze trafią tutaj.',
-  confirmNewSeason:'Zamknąć {from} i zacząć {to}? Stare mecze zostaną w archiwum.',
+  pSeason:'Sezon', pOpenSeason:'Otwórz sezon', pCloseSeason:'Zamknij sezon',
+  pSeasonHintOpen:'Sezon jest otwarty. Nowe mecze trafiają tutaj.',
+  pSeasonHintClosed:'Sezon {s} jest zamknięty. Mecze zostały w archiwum.',
+  confirmOpenSeason:'Otworzyć sezon {s}? Nowe mecze trafią tutaj.',
+  confirmOpenForMatch:'Sezon jest zamknięty. Otworzyć {s} dla tego meczu?',
+  closeTooEarly:'Teraz jest {when}. Sezon {s} jeszcze się nie zaczął (start 1 lipca {start}). Zamknąć mimo to?',
+  closeNotOver:'Teraz jest {when}. Sezon {s} jeszcze trwa — zwykle do 1 lipca {end}. Zamknąć mimo to?',
+  closeEarlyNoMatches:'Teraz jest {when}, w sezonie {s} nie ma meczów. Sezon zamyka się zwykle po 1 lipca {end}. Zamknąć?',
+  closeEarlyFew:'Teraz jest {when}. W sezonie {s} są tylko {n} mecze, do 1 lipca {end} jest jeszcze czas. Zamknąć mimo to?',
+  closeReady:'1 lipca {end} już minął. Zamknąć sezon {s}? Mecze zostaną w archiwum, potem można otworzyć {next}.',
+  closeReadyEmpty:'1 lipca już minął, ale w sezonie {s} nie ma meczów. Zamknąć?',
+  toastSeasonOpened:'Sezon {s} otwarty', toastSeasonClosed:'Sezon {s} zamknięty',
+  seasonClosed:'{s} · zamknięty',
+  pSave:'Zapisz kartę', toastPlayer:'Karta zawodnika zapisana',
   seasonFilter:'Sezon', seasonCurrent:'{s} · bieżący', seasonAll:'Wszystkie sezony',
   ageOne:'{n} rok', ageFew:'{n} lata', ageMany:'{n} lat', ageEn:'{n} years',
   liveHint:'Duże przyciski, wygodne na boisku', liveUndo:'Cofnij', liveDone:'Gotowe',
@@ -740,8 +765,20 @@ en:{
   pPickPhoto:'Choose file', pNoFile:'No file chosen', pPhotoReady:'Photo selected', phDate:'Select date',
   pFirst:'First name', pLast:'Last name', pBirth:'Date of birth', pNumber:'Number',
   pTeam:'Team', pClub:'Club / academy', pPrimary:'Main position', pExtra:'Other positions',
-  pSeason:'Season', pSeasonHint:'Each match remembers its season. Later you can open 2026/27 on its own.', pNewSeason:'Start a new season', pSave:'Save player card', toastPlayer:'Player card saved', toastNewSeason:'Season {s}. New matches go here.',
-  confirmNewSeason:'Close {from} and start {to}? Old matches stay in the archive.',
+  pSeason:'Season', pOpenSeason:'Open season', pCloseSeason:'Close season',
+  pSeasonHintOpen:'The season is open. New matches are saved here.',
+  pSeasonHintClosed:'Season {s} is closed. Matches stay in the archive.',
+  confirmOpenSeason:'Open season {s}? New matches will go here.',
+  confirmOpenForMatch:'The season is closed. Open {s} for this match?',
+  closeTooEarly:'It is {when}. Season {s} has not started yet (1 July {start}). Close anyway?',
+  closeNotOver:'It is {when}. Season {s} is still running — usually until 1 July {end}. Close anyway?',
+  closeEarlyNoMatches:'It is {when} and season {s} has no matches. Seasons are usually closed after 1 July {end}. Close?',
+  closeEarlyFew:'It is {when}. Season {s} has only {n} matches, and 1 July {end} is still ahead. Close anyway?',
+  closeReady:'1 July {end} has passed. Close season {s}? Matches stay in the archive, then you can open {next}.',
+  closeReadyEmpty:'1 July has passed, but season {s} has no matches. Close it?',
+  toastSeasonOpened:'Season {s} opened', toastSeasonClosed:'Season {s} closed',
+  seasonClosed:'{s} · closed',
+  pSave:'Save player card', toastPlayer:'Player card saved',
   seasonFilter:'Season', seasonCurrent:'{s} · current', seasonAll:'All seasons',
   ageOne:'{n} year', ageFew:'{n} years', ageMany:'{n} years', ageEn:'{n} years',
   liveHint:'Big buttons, easy on the pitch', liveUndo:'Undo', liveDone:'Done',
@@ -807,8 +844,20 @@ ru:{
   pPickPhoto:'Выбрать файл', pNoFile:'Файл не выбран', pPhotoReady:'Фото выбрано', phDate:'дд.мм.гггг',
   pFirst:'Имя', pLast:'Фамилия', pBirth:'Дата рождения', pNumber:'Номер',
   pTeam:'Команда', pClub:'Клуб / академия', pPrimary:'Основная позиция', pExtra:'Дополнительные позиции',
-  pSeason:'Сезон', pSeasonHint:'Каждый матч запоминает сезон. Потом можно открыть 2026/27 отдельно.', pNewSeason:'Начать новый сезон', pSave:'Сохранить карточку', toastPlayer:'Карточка игрока сохранена', toastNewSeason:'Сезон {s}. Новые матчи пойдут сюда.',
-  confirmNewSeason:'Закрыть {from} и начать {to}? Старые матчи останутся в архиве.',
+  pSeason:'Сезон', pOpenSeason:'Открыть сезон', pCloseSeason:'Закрыть сезон',
+  pSeasonHintOpen:'Сезон открыт. Новые матчи пишутся сюда.',
+  pSeasonHintClosed:'Сезон {s} закрыт. Матчи остались в архиве.',
+  confirmOpenSeason:'Открыть сезон {s}? Новые матчи пойдут сюда.',
+  confirmOpenForMatch:'Сезон закрыт. Открыть {s} для этого матча?',
+  closeTooEarly:'Сейчас {when}. Сезон {s} ещё не начался (старт 1 июля {start}). Закрыть всё равно?',
+  closeNotOver:'Сейчас {when}. Сезон {s} ещё идёт — обычно до 1 июля {end}. Закрыть всё равно?',
+  closeEarlyNoMatches:'Сейчас {when}, в сезоне {s} нет матчей. Обычно сезон закрывают после 1 июля {end}. Закрыть?',
+  closeEarlyFew:'Сейчас {when}. В сезоне {s} только {n} матчей, до 1 июля {end} ещё есть время. Закрыть всё равно?',
+  closeReady:'1 июля {end} уже прошло. Закрыть сезон {s}? Матчи останутся в архиве, дальше можно открыть {next}.',
+  closeReadyEmpty:'1 июля уже прошло, но в сезоне {s} нет матчей. Закрыть?',
+  toastSeasonOpened:'Сезон {s} открыт', toastSeasonClosed:'Сезон {s} закрыт',
+  seasonClosed:'{s} · закрыт',
+  pSave:'Сохранить карточку', toastPlayer:'Карточка игрока сохранена',
   seasonFilter:'Сезон', seasonCurrent:'{s} · текущий', seasonAll:'Все сезоны',
   ageOne:'{n} год', ageFew:'{n} года', ageMany:'{n} лет', ageEn:'{n} years',
   liveHint:'Крупные кнопки, удобно на поле', liveUndo:'Отменить', liveDone:'Готово',
@@ -942,6 +991,7 @@ function applyI18n(){
   renderLiveGrid();
   renderFocusBanner();
   fillSeasonSelects();
+  syncSeasonUi();
   renderHistory();
   renderStats();
   updateHero();
@@ -986,7 +1036,7 @@ const BEHAVIOR = [
   {key:'mood', inRating:false},
 ];
 
-let settings = {club:'FC FFK', player:'Данило Михайлюк', position:'fwd', format:'2x30', minutes:'60', lang:'ru'};
+let settings = {club:'FC FFK', player:'Данило Михайлюк', position:'fwd', format:'2x30', minutes:'60', lang:'ru', seasonCloseDeclined:''};
 let player = defaultPlayer();
 let extraSelected = [];
 let photoDraft;
@@ -1205,10 +1255,100 @@ function nextSeasonLabel(s){
 function matchSeason(m){
   return String(m?.season || '').trim() || seasonFromDate(m?.date);
 }
+function seasonIsOpen(){ return player.seasonOpen !== false; }
+function parseSeasonYears(s){
+  const m = String(s || '').match(/(\d{2,4})\s*\/\s*(\d{2,4})/);
+  if(!m) return null;
+  const start = Number(m[1].length === 2 ? '20'+m[1] : m[1]);
+  let end = Number(m[2].length === 2 ? '20'+m[2] : m[2]);
+  if(end < 100) end = Math.floor(start / 100) * 100 + end;
+  if(end <= start) end = start + 1;
+  return {start, end};
+}
+function whenLabel(d){
+  const loc = {uk:'uk-UA', pl:'pl-PL', en:'en-GB', ru:'ru-RU'}[settings.lang] || 'ru-RU';
+  const s = d.toLocaleDateString(loc, {month:'long', year:'numeric'});
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+function seasonMatchCount(s){
+  return matches.filter(m => matchSeason(m) === s).length;
+}
+function seasonEndPassed(s, now){
+  const y = parseSeasonYears(s);
+  if(!y) return false;
+  return now >= new Date(y.end, 6, 1);
+}
+function closeSeasonMessage(s){
+  const now = new Date();
+  const y = parseSeasonYears(s) || {start: now.getFullYear(), end: now.getFullYear() + 1};
+  const when = whenLabel(now);
+  const n = seasonMatchCount(s);
+  const startAt = new Date(y.start, 6, 1);
+  const endAt = new Date(y.end, 6, 1);
+  if(now < startAt) return t('closeTooEarly', {s, when, start: y.start});
+  if(now < endAt){
+    if(!n) return t('closeEarlyNoMatches', {s, when, end: y.end});
+    if(n <= 3) return t('closeEarlyFew', {s, when, n, end: y.end});
+    return t('closeNotOver', {s, when, end: y.end});
+  }
+  if(!n) return t('closeReadyEmpty', {s, next: nextSeasonLabel(s)});
+  return t('closeReady', {s, next: nextSeasonLabel(s), n, end: y.end});
+}
+function syncSeasonUi(){
+  const open = seasonIsOpen();
+  const s = player.season || currentSeason();
+  document.getElementById('pOpenSeasonBtn').hidden = open;
+  document.getElementById('pCloseSeasonBtn').hidden = !open;
+  document.getElementById('pSeasonHint').textContent = open ? t('pSeasonHintOpen') : t('pSeasonHintClosed', {s});
+}
+function openSeason(s, silent){
+  const name = String(s || '').trim() || currentSeason();
+  if(!silent && !confirm(t('confirmOpenSeason', {s: name}))) return false;
+  player.season = name;
+  player.seasonOpen = true;
+  document.getElementById('p-season').value = name;
+  savePlayer();
+  applyHeader();
+  fillSeasonSelects();
+  syncSeasonUi();
+  if(!silent) showToast(t('toastSeasonOpened', {s: name}));
+  return true;
+}
+function closeSeason(fromPrompt){
+  if(!seasonIsOpen()) return false;
+  const s = player.season || currentSeason();
+  if(!confirm(closeSeasonMessage(s))){
+    if(fromPrompt){
+      settings.seasonCloseDeclined = s;
+      saveSettings();
+    }
+    return false;
+  }
+  player.season = s;
+  player.seasonOpen = false;
+  savePlayer();
+  settings.seasonCloseDeclined = s;
+  saveSettings();
+  applyHeader();
+  fillSeasonSelects();
+  if(document.getElementById('view-player').classList.contains('active')){
+    document.getElementById('p-season').value = nextSeasonLabel(s);
+  }
+  syncSeasonUi();
+  showToast(t('toastSeasonClosed', {s}));
+  return true;
+}
+function maybePromptSeasonClose(){
+  if(!seasonIsOpen()) return;
+  const s = player.season || currentSeason();
+  if(settings.seasonCloseDeclined === s) return;
+  if(!seasonEndPassed(s, new Date())) return;
+  closeSeason(true);
+}
 function defaultPlayer(){
   return {
     firstName:'Данило', lastName:'Михайлюк', birthDate:'', photo:'',
-    team:'', club:'FC FFK', number:'', primary:'RW', extra:['CM'], season: currentSeason()
+    team:'', club:'FC FFK', number:'', primary:'RW', extra:['CM'], season: currentSeason(), seasonOpen: true
   };
 }
 function displayName(){
@@ -1261,7 +1401,8 @@ function loadSettings(){
       position: ['fwd','mid','def','gk'].includes(s.position) ? s.position : 'fwd',
       format: (FORMAT_MIN[s.format] || s.format === 'custom') ? s.format : (Object.keys(FORMAT_MIN).find(k => FORMAT_MIN[k] === Number(s.minutes)) || '2x30'),
       minutes: String(s.minutes || '60'),
-      lang: LANGS.includes(s.lang) ? s.lang : detectLang()
+      lang: LANGS.includes(s.lang) ? s.lang : detectLang(),
+      seasonCloseDeclined: String(s.seasonCloseDeclined || '')
     };
     if(!s.lang) saveSettings();
   }catch(e){}
@@ -1310,7 +1451,8 @@ function normalizePlayer(p){
     number: num ? String(Math.min(99, Number(num))) : '',
     primary,
     extra,
-    season: String(p.season || currentSeason()).slice(0,16)
+    season: String(p.season || currentSeason()).slice(0,16),
+    seasonOpen: p.seasonOpen !== false
   };
 }
 function savePlayer(){
@@ -1380,13 +1522,14 @@ function fillPlayerForm(){
   document.getElementById('p-number').value = player.number;
   document.getElementById('p-team').value = player.team;
   document.getElementById('p-club').value = player.club;
-  document.getElementById('p-season').value = player.season;
+  document.getElementById('p-season').value = seasonIsOpen() ? (player.season || currentSeason()) : nextSeasonLabel(player.season || currentSeason());
   document.getElementById('p-photo').value = '';
   setBadge(document.getElementById('pPhotoBox'), currentPhoto(), initials());
   document.getElementById('pRemovePhotoBtn').hidden = !currentPhoto();
   renderExtraChips();
   syncDateShown();
   updatePhotoMeta();
+  syncSeasonUi();
 }
 function collectPlayer(){
   const primary = document.getElementById('p-primary').value;
@@ -1400,7 +1543,8 @@ function collectPlayer(){
     number: document.getElementById('p-number').value,
     primary,
     extra: extraSelected.filter(x => x !== primary),
-    season: document.getElementById('p-season').value.trim() || currentSeason()
+    season: seasonIsOpen() ? (document.getElementById('p-season').value.trim() || player.season || currentSeason()) : (player.season || currentSeason()),
+    seasonOpen: player.seasonOpen !== false
   });
 }
 function compressPhoto(file){
@@ -1700,7 +1844,7 @@ function collectMatch(){
     format: document.getElementById('f-format').value,
     matchLen: formatLength(document.getElementById('f-format').value, document.getElementById('f-matchlen').value),
     kind: document.getElementById('f-kind').value,
-    season: (editingId && matches.find(x => x.id === editingId)?.season) || (player.season || seasonFromDate(document.getElementById('f-date').value)),
+    season: (editingId && matches.find(x => x.id === editingId)?.season) || (seasonIsOpen() ? (player.season || seasonFromDate(document.getElementById('f-date').value)) : seasonFromDate(document.getElementById('f-date').value)),
     counts, behaviors,
     actionRating: action,
     effortRating: effort,
@@ -1713,6 +1857,12 @@ document.getElementById('saveBtn').addEventListener('click', () => {
   if(!row.opponent && !confirm(t('confirmNoOpp'))) return;
   const dup = matches.some(m => m.id !== row.id && m.date === row.date && m.opponent === row.opponent && row.opponent);
   if(dup && !editingId && !confirm(t('confirmDup'))) return;
+  if(!editingId && !seasonIsOpen()){
+    const s = row.season || seasonFromDate(row.date);
+    if(!confirm(t('confirmOpenForMatch', {s}))) return;
+    openSeason(s, true);
+    row.season = s;
+  }
   if(editingId) matches = matches.map(m => m.id === editingId ? row : m);
   else matches.push(row);
   saveMatches();
@@ -1914,7 +2064,7 @@ function knownSeasons(){
 function fillSeasonSelects(){
   const current = player.season || currentSeason();
   const extra = knownSeasons().filter(s => s !== current);
-  const html = `<option value="current">${escapeHtml(t('seasonCurrent', {s: current}))}</option>` +
+  const html = `<option value="current">${escapeHtml(seasonIsOpen() ? t('seasonCurrent', {s: current}) : t('seasonClosed', {s: current}))}</option>` +
     `<option value="all">${escapeHtml(t('seasonAll'))}</option>` +
     extra.map(s => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('');
   ['statsSeason','historySeason'].forEach(id => {
@@ -2122,19 +2272,11 @@ document.getElementById('reportShareBtn').addEventListener('click', () => {
   if(lastReportMatch) shareCard(lastReportMatch);
 });
 
-document.getElementById('pNewSeasonBtn').addEventListener('click', () => {
-  const from = document.getElementById('p-season').value.trim() || player.season || currentSeason();
-  const to = nextSeasonLabel(from);
-  if(!confirm(t('confirmNewSeason', {from, to}))) return;
-  document.getElementById('p-season').value = to;
-  player = collectPlayer();
-  extraSelected = [...player.extra];
-  savePlayer();
-  applyHeader();
-  currentSeasonFilter = 'current';
-  fillSeasonSelects();
-  showToast(t('toastNewSeason', {s: to}));
+document.getElementById('pOpenSeasonBtn').addEventListener('click', () => {
+  const s = document.getElementById('p-season').value.trim() || nextSeasonLabel(player.season || currentSeason());
+  if(openSeason(s)) currentSeasonFilter = 'current';
 });
+document.getElementById('pCloseSeasonBtn').addEventListener('click', () => closeSeason(false));
 document.getElementById('playerHeadBtn').addEventListener('click', () => showView('player'));
 document.getElementById('p-primary').addEventListener('change', renderExtraChips);
 document.getElementById('pExtraChips').addEventListener('click', e => {
@@ -2283,6 +2425,7 @@ async function shareCard(m){
   restoreDraft();
   applyI18n();
   renderOppList();
+  maybePromptSeasonClose();
 })();
 </script>
 </body>
