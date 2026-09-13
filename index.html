@@ -138,12 +138,26 @@
   }
   .insight{background:var(--surface);border:1px solid var(--border);}
   .insight b{color:var(--accent);}
+  .report{
+    background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:18px 16px 16px;
+  }
+  .report-kicker{font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--text-soft);}
+  .report-title{font-size:1.5rem;font-weight:800;margin:6px 0 8px;line-height:1.2;}
+  .report-title .n{color:var(--gold);}
+  .report-sub{display:flex;justify-content:space-between;gap:10px;color:var(--text-soft);font-size:.78rem;font-weight:700;margin-bottom:12px;}
+  .report-line{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);font-weight:700;font-size:.95rem;}
+  .report-line .ic{width:28px;text-align:center;flex-shrink:0;}
+  .report-split{display:flex;gap:10px;margin-top:16px;}
+  .report-pill{flex:1;border-radius:14px;padding:12px;font-weight:800;font-size:1.15rem;}
+  .report-pill.plus{background:rgba(34,211,166,.12);color:var(--accent);}
+  .report-pill.minus{background:rgba(251,103,103,.12);color:var(--danger);}
+  .report-pill small{display:block;font-size:.68rem;font-weight:700;color:var(--text-soft);margin-top:4px;}
   .banner{background:rgba(124,92,252,.14);border:1px solid rgba(124,92,252,.35);margin-top:0;margin-bottom:14px;}
   .warn{background:rgba(245,185,66,.12);border:1px solid rgba(245,185,66,.35);}
   .save-btn,.ghost-btn,.live-start{
     width:100%;margin-top:12px;padding:15px;border:none;border-radius:16px;font-size:1rem;font-weight:800;cursor:pointer;
   }
-  #savePlayerBtn{margin-bottom:12px;position:relative;z-index:41;}
+  #savePlayerBtn,#saveBtn{margin-bottom:12px;position:relative;z-index:41;}
   .save-btn,.live-start{background:linear-gradient(135deg, var(--accent), var(--violet));color:#08121C;}
   .live-start{margin-top:0;margin-bottom:16px;}
   .ghost-btn{background:var(--surface);color:var(--text);border:1px solid var(--border);}
@@ -394,6 +408,12 @@
       <button class="ghost-btn" id="cancelEditBtn" type="button" hidden data-i18n="cancelEdit">Отменить правку</button>
     </div>
 
+    <div class="view" id="view-report">
+      <div class="report" id="reportCard"></div>
+      <button class="save-btn" id="reportShareBtn" type="button" data-i18n="cardBtn">Карточка</button>
+      <button class="ghost-btn" id="reportDoneBtn" type="button" data-i18n="reportNew">Новый матч</button>
+    </div>
+
     <div class="view" id="view-history">
       <div class="banner warn" id="backupBanner" hidden data-i18n="backupBanner">Данные только на этом телефоне. Сделайте экспорт, чтобы не потерять сезон.</div>
       <div class="backup-row">
@@ -527,6 +547,15 @@ uk:{
   lastFocus:'Минулого разу фокус: <b>{focus}</b> ({who})', unnamed:'Без назви',
   scoreLbl:'Рахунок {s}', minLbl:'{n} хв', actionsLbl:'Дії', gotLbl:'Вдалося', focusLbl:'Фокус',
   cardBtn:'Картка', editBtn:'Правити', delBtn:'Видалити', noMatches:'Поки немає збережених матчів.', noPeriod:'За цей період матчів немає.',
+  reportTitle:'Матч', reportNew:'Новий матч', actPlus:'позитивних дій', actMinus:'негативних дій',
+  mn_duels:'єдиноборств',
+  mn_goals:'гол|голи|голів', mn_assists:'асист|асисти|асистів', mn_shots:'удар у площину|удари в площину|ударів у площину',
+  mn_dribbles:'обводка|обводки|обводок', mn_tackles:'відбір|відбори|відборів', mn_passes:'гострий пас|гострі паси|гострих пасів',
+  mn_support:'підтримка|підтримки|підтримок', mn_saves:'сейв|сейви|сейвів', mn_claims:'вихід|виходи|виходів',
+  mn_gkpass:'гра ногами|гри ногами|гри ногами', mn_conceded:'пропущений|пропущені|пропущених',
+  mn_losses:'втрата|втрати|втрат', mn_ledtogoal:'втрата → гол суперника|втрати → гол суперника|втрат → гол суперника',
+  mn_badpass:'неточний пас|неточні паси|неточних пасів', mn_badtouch:'втрата прийому|втрати прийому|втрат прийому',
+  mn_fouls:'фол|фоли|фолів', mn_owngoal:'автогол|автоголи|автоголів',
   stMatches:'Матчів', stAvg:'Середня загальна', stAction:'Середній вклад', stEffort:'Середнє старання', stVs5:'До останніх 5', stMins:'Хвилин', stGoals:'Голи', stG90:'Голи / 90',
   toastSaveFail:'Не вдалося зберегти', toastSaved:'Матч збережено', toastUpdated:'Матч оновлено', toastDeleted:'Матч видалено',
   toastNothingExport:'Поки нічого експортувати', toastFileSaved:'Файл збережено', toastCopied:'Скопійовано', toastCopyFail:'Не вдалося скопіювати',
@@ -575,6 +604,15 @@ pl:{
   lastFocus:'Ostatnio cel: <b>{focus}</b> ({who})', unnamed:'Bez nazwy',
   scoreLbl:'Wynik {s}', minLbl:'{n} min', actionsLbl:'Akcje', gotLbl:'Udało się', focusLbl:'Cel',
   cardBtn:'Kartka', editBtn:'Edytuj', delBtn:'Usuń', noMatches:'Nie ma jeszcze zapisanych meczów.', noPeriod:'Brak meczów w tym okresie.',
+  reportTitle:'Mecz', reportNew:'Nowy mecz', actPlus:'pozytywnych akcji', actMinus:'negatywnych akcji',
+  mn_duels:'pojedynków',
+  mn_goals:'gol|gole|goli', mn_assists:'asysta|asysty|asyst', mn_shots:'strzał celny|strzały celne|strzałów celnych',
+  mn_dribbles:'drybling|dryblingi|dryblingów', mn_tackles:'odbiór|odbioru|odbiorów', mn_passes:'kluczowe podanie|kluczowe podania|kluczowych podań',
+  mn_support:'wsparcie|wsparcia|wsparć', mn_saves:'interwencja|interwencje|interwencji', mn_claims:'wyjście|wyjścia|wyjść',
+  mn_gkpass:'gra nogami|gry nogami|gry nogami', mn_conceded:'stracony|stracone|straconych',
+  mn_losses:'strata|straty|strat', mn_ledtogoal:'strata → gol rywala|straty → gol rywala|strat → gol rywala',
+  mn_badpass:'niedokładne podanie|niedokładne podania|niedokładnych podań', mn_badtouch:'strata przy przyjęciu|straty przy przyjęciu|strat przy przyjęciu',
+  mn_fouls:'faul|faule|fauli', mn_owngoal:'samobój|samobój|samobójów',
   stMatches:'Mecze', stAvg:'Średnia ogólna', stAction:'Średni wkład', stEffort:'Średnie zaangażowanie', stVs5:'Do ostatnich 5', stMins:'Minuty', stGoals:'Gole', stG90:'Gole / 90',
   toastSaveFail:'Nie udało się zapisać', toastSaved:'Mecz zapisany', toastUpdated:'Mecz zaktualizowany', toastDeleted:'Mecz usunięty',
   toastNothingExport:'Nie ma nic do eksportu', toastFileSaved:'Plik zapisany', toastCopied:'Skopiowano', toastCopyFail:'Nie udało się skopiować',
@@ -623,6 +661,15 @@ en:{
   lastFocus:'Last focus: <b>{focus}</b> ({who})', unnamed:'Untitled',
   scoreLbl:'Score {s}', minLbl:'{n} min', actionsLbl:'Actions', gotLbl:'Went well', focusLbl:'Focus',
   cardBtn:'Card', editBtn:'Edit', delBtn:'Delete', noMatches:'No saved matches yet.', noPeriod:'No matches in this period.',
+  reportTitle:'Match', reportNew:'New match', actPlus:'positive actions', actMinus:'negative actions',
+  mn_duels:'duels',
+  mn_goals:'goal|goals', mn_assists:'assist|assists', mn_shots:'shot on target|shots on target',
+  mn_dribbles:'dribble|dribbles', mn_tackles:'tackle|tackles', mn_passes:'key pass|key passes',
+  mn_support:'support|supports', mn_saves:'save|saves', mn_claims:'claim|claims',
+  mn_gkpass:'distribution|distribution', mn_conceded:'goal conceded|goals conceded',
+  mn_losses:'turnover|turnovers', mn_ledtogoal:'turnover to a goal|turnovers to a goal',
+  mn_badpass:'incomplete pass|incomplete passes', mn_badtouch:'poor first touch|poor first touches',
+  mn_fouls:'foul|fouls', mn_owngoal:'own goal|own goals',
   stMatches:'Matches', stAvg:'Average overall', stAction:'Average impact', stEffort:'Average effort', stVs5:'vs last 5', stMins:'Minutes', stGoals:'Goals', stG90:'Goals / 90',
   toastSaveFail:'Could not save', toastSaved:'Match saved', toastUpdated:'Match updated', toastDeleted:'Match deleted',
   toastNothingExport:'Nothing to export yet', toastFileSaved:'File saved', toastCopied:'Copied', toastCopyFail:'Could not copy',
@@ -671,6 +718,15 @@ ru:{
   lastFocus:'В прошлый раз фокус: <b>{focus}</b> ({who})', unnamed:'Без названия',
   scoreLbl:'Счёт {s}', minLbl:'{n} мин', actionsLbl:'Действия', gotLbl:'Получилось', focusLbl:'Фокус',
   cardBtn:'Карточка', editBtn:'Править', delBtn:'Удалить', noMatches:'Пока нет сохранённых матчей.', noPeriod:'За этот период матчей нет.',
+  reportTitle:'Матч', reportNew:'Новый матч', actPlus:'положительных действий', actMinus:'отрицательных действий',
+  mn_duels:'единоборств',
+  mn_goals:'гол|гола|голов', mn_assists:'ассист|ассиста|ассистов', mn_shots:'удар в створ|удара в створ|ударов в створ',
+  mn_dribbles:'обводка|обводки|обводок', mn_tackles:'отбор|отбора|отборов', mn_passes:'острый пас|острых паса|острых пасов',
+  mn_support:'поддержка|поддержки|поддержек', mn_saves:'сейв|сейва|сейвов', mn_claims:'выход|выхода|выходов',
+  mn_gkpass:'игра ногами|игры ногами|игр ногами', mn_conceded:'пропущенный|пропущенных|пропущенных',
+  mn_losses:'потеря|потери|потерь', mn_ledtogoal:'потеря → гол соперника|потери → гол соперника|потерь → гол соперника',
+  mn_badpass:'неточный пас|неточных паса|неточных пасов', mn_badtouch:'потеря приёма|потери приёма|потерь приёма',
+  mn_fouls:'фол|фола|фолов', mn_owngoal:'автогол|автогола|автоголов',
   stMatches:'Матчей', stAvg:'Средняя общая', stAction:'Средний вклад', stEffort:'Среднее старание', stVs5:'К последним 5', stMins:'Минут', stGoals:'Голы', stG90:'Голы / 90',
   toastSaveFail:'Не удалось сохранить', toastSaved:'Матч сохранён', toastUpdated:'Матч обновлён', toastDeleted:'Матч удалён',
   toastNothingExport:'Пока нечего экспортировать', toastFileSaved:'Файл сохранён', toastCopied:'Скопировано', toastCopyFail:'Не удалось скопировать',
@@ -753,6 +809,7 @@ function applyI18n(){
   fillPrimarySelect();
   fillMatchPitchSelects(document.getElementById('f-position').value);
   renderExtraChips();
+  if(lastReportMatch) document.getElementById('reportCard').innerHTML = renderReportHtml(lastReportMatch);
 }
 const BASE_RATING = 6.0;
 
@@ -789,6 +846,7 @@ let settings = {club:'FC FFK', player:'Данило Михайлюк', position:
 let player = defaultPlayer();
 let extraSelected = [];
 let photoDraft;
+let lastReportMatch = null;
 let matches = [];
 let editingId = null;
 let form = emptyForm();
@@ -846,6 +904,74 @@ function effortScore(behaviors){
 }
 function overallScore(counts, behaviors, pos){
   return clamp10(BASE_RATING + actionSum(counts, pos) + (behaviorAvg(behaviors) - 3) * 0.5);
+}
+function fmtNum(n, digits){
+  const s = Number(n).toFixed(digits);
+  return settings.lang === 'en' ? s : s.replace('.', ',');
+}
+function fmtSigned(n, digits){
+  const abs = fmtNum(Math.abs(n), digits);
+  if(n > 0) return '+'+abs;
+  if(n < 0) return '−'+abs;
+  return (settings.lang === 'en' ? '+' : '+') + fmtNum(0, digits);
+}
+function slavicForm(n){
+  const n10 = n % 10, n100 = n % 100;
+  if(n10 === 1 && n100 !== 11) return 0;
+  if(n10 >= 2 && n10 <= 4 && (n100 < 10 || n100 >= 20)) return 1;
+  return 2;
+}
+function metricNoun(key, n){
+  const parts = String(t('mn_'+key) || '').split('|');
+  if(parts[0] === 'mn_'+key || !parts[0]) return metricLabel(key).toLowerCase();
+  if(settings.lang === 'en') return n === 1 ? parts[0] : (parts[1] || parts[0]);
+  return parts[slavicForm(n)] || parts[0];
+}
+function actionSplit(counts, pos){
+  let plus = 0, minus = 0;
+  metricsFor(pos).forEach(m => {
+    const v = stackedWeight(counts[m.key], weightOf(m, pos));
+    if(v > 0) plus += v;
+    else if(v < 0) minus += v;
+  });
+  return {plus: Math.round(plus * 100) / 100, minus: Math.round(minus * 100) / 100};
+}
+function reportLines(m){
+  const pos = ['fwd','mid','def','gk'].includes(m.position) ? m.position : ratingPosOf(m.position);
+  const counts = m.counts || {};
+  const lines = [];
+  let duelsDone = false;
+  metricsFor(pos).forEach(met => {
+    if(met.key === 'duelswon' || met.key === 'duelslost'){
+      if(duelsDone) return;
+      duelsDone = true;
+      const w = counts.duelswon || 0, l = counts.duelslost || 0;
+      if(w + l > 0) lines.push({icon:'💪', text: `${w}/${w+l} ${t('mn_duels')}`});
+      return;
+    }
+    const n = counts[met.key] || 0;
+    if(!n) return;
+    lines.push({icon: met.icon, text: `${n} ${metricNoun(met.key, n)}`});
+  });
+  return lines;
+}
+function reportPlayerName(m){
+  return (player.firstName || String(m.player || '').trim().split(/\s+/)[0] || '—');
+}
+function renderReportHtml(m, compact){
+  const split = actionSplit(m.counts, m.position);
+  const lines = reportLines(m);
+  const head = compact ? '' : `<div class="report-kicker">${escapeHtml(t('reportTitle'))}</div>
+    <div class="report-title">${escapeHtml(reportPlayerName(m))} — <span class="n">${fmtNum(m.rating, 1)}</span></div>
+    <div class="report-sub"><span>${escapeHtml(t('heroAction'))} ${fmtNum(m.actionRating, 1)}</span><span>${escapeHtml(t('heroEffort'))} ${fmtNum(m.effortRating, 1)}</span></div>`;
+  const body = lines.length
+    ? lines.map(x => `<div class="report-line"><span class="ic">${x.icon}</span><span>${escapeHtml(x.text)}</span></div>`).join('')
+    : `<div class="report-line">${escapeHtml(t('plusEven'))}</div>`;
+  return `${head}${body}
+    <div class="report-split">
+      <div class="report-pill plus">${fmtSigned(Math.max(0, split.plus), 2)}<small>${escapeHtml(t('actPlus'))}</small></div>
+      <div class="report-pill minus">${'−' + fmtNum(Math.abs(split.minus), 2)}<small>${escapeHtml(t('actMinus'))}</small></div>
+    </div>`;
 }
 
 function ratingClass(r){
@@ -1381,11 +1507,14 @@ document.getElementById('saveBtn').addEventListener('click', () => {
   if(editingId) matches = matches.map(m => m.id === editingId ? row : m);
   else matches.push(row);
   saveMatches();
+  lastReportMatch = row;
+  document.getElementById('reportCard').innerHTML = renderReportHtml(row);
   showToast(editingId ? t('toastUpdated') : t('toastSaved'));
   resetForm();
   renderHistory();
   renderStats();
   renderOppList();
+  showView('report');
 });
 
 document.getElementById('cancelEditBtn').addEventListener('click', resetForm);
@@ -1425,9 +1554,6 @@ function renderHistory(){
   }
   const sorted = [...matches].sort((a,b)=> b.date.localeCompare(a.date) || b.id-a.id);
   el.innerHTML = sorted.map(m => {
-    const ins = buildInsights(m.counts, m.behaviors, m.position);
-    const metricLine = metricsFor(m.position).filter(x => m.counts[x.key] > 0)
-      .map(x => `${x.icon} ${m.counts[x.key]}`).join('  ') || '—';
     return `<div class="match-card">
       <div class="match-card-top" onclick="toggleDetails(${m.id})">
         <div class="match-meta">
@@ -1438,9 +1564,7 @@ function renderHistory(){
         <div class="match-rating ${ratingClass(m.rating)}">${Number(m.rating).toFixed(1)}</div>
       </div>
       <div class="match-details" id="details-${m.id}">
-        <div>${escapeHtml(t('actionsLbl'))}: ${metricLine}</div>
-        <div>${escapeHtml(t('gotLbl'))}: ${escapeHtml(ins.plus)}</div>
-        <div>${escapeHtml(t('focusLbl'))}: ${escapeHtml(ins.focus)}</div>
+        ${renderReportHtml(m, true)}
         ${m.comment ? `<div>${escapeHtml(m.comment)}</div>` : ''}
         <div class="card-actions">
           <button class="share-btn" type="button" onclick="shareMatch(${m.id})">${escapeHtml(t('cardBtn'))}</button>
@@ -1478,6 +1602,7 @@ function showView(name){
   document.getElementById('heroBlock').style.display = (name === 'new') ? 'grid' : 'none';
   document.querySelector('.topbar').classList.toggle('compact', name !== 'new');
   if(name === 'player') fillPlayerForm();
+  if(name === 'report' && lastReportMatch) document.getElementById('reportCard').innerHTML = renderReportHtml(lastReportMatch);
   if(name === 'history') renderHistory();
   if(name === 'stats') renderStats();
 }
@@ -1697,6 +1822,13 @@ document.getElementById('saveSettingsBtn').addEventListener('click', () => {
 document.querySelectorAll('.tabbtn').forEach(btn => {
   btn.addEventListener('click', () => showView(btn.dataset.view));
 });
+document.getElementById('reportDoneBtn').addEventListener('click', () => {
+  showView('new');
+  window.scrollTo({top:0, behavior:'instant'});
+});
+document.getElementById('reportShareBtn').addEventListener('click', () => {
+  if(lastReportMatch) shareCard(lastReportMatch);
+});
 
 document.getElementById('playerHeadBtn').addEventListener('click', () => showView('player'));
 document.getElementById('p-primary').addEventListener('change', renderExtraChips);
@@ -1758,50 +1890,54 @@ function wrapText(ctx, text, x, y, maxWidth, lineHeight){
 }
 
 async function shareCard(m){
-  const ins = buildInsights(m.counts, m.behaviors, m.position);
+  const lines = reportLines(m);
+  const split = actionSplit(m.counts, m.position);
   const canvas = document.createElement('canvas');
-  canvas.width = 900; canvas.height = 1200;
+  canvas.width = 900;
+  canvas.height = Math.max(1100, 380 + lines.length * 54 + 260);
   const ctx = canvas.getContext('2d');
   ctx.fillStyle = '#0B1220';
-  ctx.fillRect(0,0,900,1200);
-  ctx.fillStyle = '#22D3A6';
-  ctx.font = '800 36px sans-serif';
-  ctx.fillText(player.club || 'FFK', 60, 90);
-  ctx.fillStyle = '#EDF1F7';
-  ctx.font = '700 42px sans-serif';
-  ctx.fillText(m.player, 60, 150);
+  ctx.fillRect(0,0,canvas.width,canvas.height);
   ctx.fillStyle = '#8D9AB5';
-  ctx.font = '600 28px sans-serif';
+  ctx.font = '800 28px sans-serif';
+  ctx.fillText(t('reportTitle').toUpperCase(), 60, 80);
+  ctx.fillStyle = '#EDF1F7';
+  ctx.font = '800 52px sans-serif';
+  ctx.fillText(`${reportPlayerName(m)} — ${fmtNum(m.rating, 1)}`, 60, 150);
+  ctx.fillStyle = '#8D9AB5';
+  ctx.font = '600 26px sans-serif';
   ctx.fillText(`${formatDate(m.date)}  ·  ${m.opponent || t('shareVs')}  ·  ${m.score || '—'}`, 60, 200);
-  ctx.fillStyle = '#F5B942';
-  ctx.font = '800 140px sans-serif';
-  ctx.fillText(Number(m.rating).toFixed(1), 60, 380);
-  ctx.fillStyle = '#8D9AB5';
-  ctx.font = '700 32px sans-serif';
-  ctx.fillText(t('shareOverall'), 420, 360);
-  ctx.fillStyle = '#EDF1F7';
-  ctx.font = '700 36px sans-serif';
-  ctx.fillText(`${t('heroAction')} ${Number(m.actionRating).toFixed(1)}`, 60, 470);
-  ctx.fillText(`${t('heroEffort')} ${Number(m.effortRating).toFixed(1)}`, 60, 530);
+  ctx.fillText(`${t('heroAction')} ${fmtNum(m.actionRating, 1)}   ${t('heroEffort')} ${fmtNum(m.effortRating, 1)}`, 60, 245);
+  let y = 310;
+  ctx.font = '700 34px sans-serif';
+  if(!lines.length){
+    ctx.fillStyle = '#EDF1F7';
+    ctx.fillText(t('plusEven'), 60, y);
+    y += 54;
+  } else {
+    lines.forEach(line => {
+      ctx.fillStyle = '#EDF1F7';
+      ctx.fillText(`${line.icon}   ${line.text}`, 60, y);
+      y += 54;
+    });
+  }
+  y += 20;
   ctx.fillStyle = '#22D3A6';
-  ctx.font = '800 28px sans-serif';
-  ctx.fillText(t('insightPlus'), 60, 640);
-  ctx.fillStyle = '#EDF1F7';
-  ctx.font = '600 32px sans-serif';
-  wrapText(ctx, ins.plus, 60, 690, 780, 42);
-  ctx.fillStyle = '#22D3A6';
-  ctx.font = '800 28px sans-serif';
-  ctx.fillText(t('insightFocus'), 60, 860);
-  ctx.fillStyle = '#EDF1F7';
-  ctx.font = '600 32px sans-serif';
-  wrapText(ctx, ins.focus, 60, 910, 780, 42);
+  ctx.font = '800 40px sans-serif';
+  ctx.fillText(fmtSigned(split.plus, 2), 60, y);
   ctx.fillStyle = '#8D9AB5';
-  ctx.font = '600 24px sans-serif';
-  ctx.fillText(`${matchPosDisplay(m)}  ·  ${venueLabel(m.venue)}  ·  ${roleLabel(m.role)}  ·  ${t('minLbl', {n: m.minutes})}${m.tournament ? '  ·  ' + m.tournament : ''}`, 60, 1120);
+  ctx.font = '700 22px sans-serif';
+  ctx.fillText(t('actPlus'), 60, y + 36);
+  ctx.fillStyle = '#FB6767';
+  ctx.font = '800 40px sans-serif';
+  ctx.fillText('−' + fmtNum(Math.abs(split.minus), 2), 460, y);
+  ctx.fillStyle = '#8D9AB5';
+  ctx.font = '700 22px sans-serif';
+  ctx.fillText(t('actMinus'), 460, y + 36);
 
   const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
   const file = new File([blob], `ffk_${m.date}.png`, {type:'image/png'});
-  const text = `${m.player}: ${Number(m.rating).toFixed(1)}/10 vs ${m.opponent || t('shareOpp')}. ${t('heroAction')} ${Number(m.actionRating).toFixed(1)}, ${t('heroEffort')} ${Number(m.effortRating).toFixed(1)}. ${t('focusLbl')}: ${ins.focus}`;
+  const text = [`${reportPlayerName(m)} — ${fmtNum(m.rating, 1)}`, ...lines.map(l => `${l.icon} ${l.text}`), `${fmtSigned(split.plus, 2)} ${t('actPlus')}`, `${'−' + fmtNum(Math.abs(split.minus), 2)} ${t('actMinus')}`].join('\n');
   try{
     if(navigator.canShare && navigator.canShare({files:[file]})){
       await navigator.share({files:[file], title:'FFK', text});
