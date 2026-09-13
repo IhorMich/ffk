@@ -217,6 +217,8 @@
   }
   .section-title::after{content:"";flex:1;height:1px;background:var(--border);}
   .metric-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);}
+  .metric-row.key .metric-icon{background:rgba(34,211,166,.16);}
+  .metric-row.key .metric-name{font-weight:800;}
   .metric-name{display:flex;align-items:center;gap:11px;font-size:.9rem;font-weight:600;}
   .metric-icon{width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:var(--surface-2);flex-shrink:0;}
   .metric-weight{font-size:.72rem;color:var(--text-soft);display:block;font-weight:600;}
@@ -801,7 +803,10 @@ uk:{
   ageOne:'{n} рік', ageFew:'{n} роки', ageMany:'{n} років', ageEn:'{n} years',
   matchOne:'{n} матч', matchFew:'{n} матчі', matchMany:'{n} матчів', matchEn:'{n} matches',
   liveHint:'Великі кнопки, зручно на полі', liveUndo:'Скасувати', liveDone:'Готово',
-  hintGk:'Повторні сейви і пропущені важать менше за перші. Командний провал слабо б’є по воротарю.',
+  hintGk:'Для воротаря важливі сейви, пропущені, виходи, передачі, перехоплення і гра ногами. Повторні сейви і пропущені важать менше за перші.',
+  hintFwd:'Для нападника важливі голи, удари, асисти, обводки, гострі паси і відкривання.',
+  hintMid:'Для півзахисника важливі передачі, гострі паси, відбори, єдиноборства, втрати і моменти для партнерів.',
+  hintDef:'Для захисника важливі відбори, перехоплення, єдиноборства, винесення, блоки й точні передачі. Помилки сильно б’ють по оцінці.',
   hintOut:'Оцінка починається з 6 і може дійти до 10 за сильний матч.',
   insightPlus:'Сильні сторони', insightFocus:'Установка', plusEven:'Рівна гра без яскравих дій.', plusSolid:'Спокійна, корисна гра для команди.',
   plus_goals:'Гол — нагорода за момент.', plus_assists:'Асист: побачив партнера вчасно.',
@@ -810,6 +815,12 @@ uk:{
   plus_support:'Відкривався і страхував партнерів.', plus_dribbles:'Обводка проходила ближче до чужих воріт.',
   plus_saves:'Сейви тримали команду в грі.', plus_claims:'Виходи на подачах були сміливі.',
   plus_gkpass:'Гра ногами давала початок атаці.',
+  plus_openings:'Відкривався вчасно — партнеру було кому віддати.',
+  plus_chances:'Створював моменти партнерам.',
+  plus_buildpass:'Точні передачі тримали м’яч у команди.',
+  plus_interceptions:'Перехоплення обривали атаки суперника.',
+  plus_clearances:'Винесення прибирали небезпеку.',
+  plus_blocks:'Блоки не давали пробити.',
   focusDefault:'Будь у грі всі хвилини: гукай партнерів і віддавай простий пас, якщо тебе тіснять.',
   focusOwn:'М’яч потрапив у свої ворота. Біля воріт стій ближче до штанги і вибивай убік, не перед воротами.',
   focusLed:'М’яч загубили біля своїх воріт — суперник забив. Біля своїх воріт не обводь: віддай пас товаришу або вибий подалі.',
@@ -844,6 +855,9 @@ uk:{
   mn_losses:'втрата|втрати|втрат', mn_ledtogoal:'втрата → гол суперника|втрати → гол суперника|втрат → гол суперника',
   mn_badpass:'неточний пас|неточні паси|неточних пасів', mn_badtouch:'втрата прийому|втрати прийому|втрат прийому',
   mn_fouls:'фол|фоли|фолів', mn_owngoal:'автогол|автоголи|автоголів',
+  mn_openings:'відкривання|відкривання|відкривань', mn_chances:'момент для партнера|моменти для партнера|моментів для партнера',
+  mn_buildpass:'передача|передачі|передач', mn_interceptions:'перехоплення|перехоплення|перехоплень',
+  mn_clearances:'винесення|винесення|винесень', mn_blocks:'блок|блоки|блоків',
   stMatches:'Матчів', stAvg:'Середня оцінка', stBest:'Найкращий матч', stWorst:'Найгірший', stTrend:'Тренд', stAction:'Середній вклад', stEffort:'Середнє старання', stMins:'Хвилин', stGoals:'Голи', stG90:'Голи / 90',
   mn_matches:'матч|матчі|матчів', mn_starts:'старт|старти|стартів', mn_subs:'вихід з лавки|виходи з лавки|виходів з лавки', mn_mins:'хвилина|хвилини|хвилин',
   act_dribbles:'успішна обводка|успішні обводки|успішних обводок',
@@ -862,6 +876,8 @@ uk:{
   shareOverall:'/ 10 загальна', shareVs:'матч', shareOpp:'суперник',
   m_goals:'Гол', m_assists:'Асист', m_shots:'Удар у площину', m_dribbles:'Обводка', m_tackles:'Відбір', m_duelswon:'Єдиноборство +',
   m_passes:'Гострий пас', m_support:'Підтримка', m_saves:'Сейв', m_claims:'Вихід', m_gkpass:'Гра ногами', m_conceded:'Пропущений',
+  m_openings:'Відкривання', m_chances:'Момент для партнера', m_buildpass:'Передача',
+  m_interceptions:'Перехоплення', m_clearances:'Винесення', m_blocks:'Блок',
   m_losses:'Втрата', m_ledtogoal:'Втрата → гол суперника', m_badpass:'Неточний пас', m_badtouch:'Втрата прийому', m_duelslost:'Єдиноборство −', m_fouls:'Фол', m_owngoal:'Автогол',
   b_effort:'Старання і боротьба за м’яч', b_team:'Гра в команді', b_coach:'Слухав тренера', b_discipline:'Дисципліна / повага до судді', b_mood:'Настрій (не в оцінці)'
 },
@@ -924,7 +940,10 @@ pl:{
   ageOne:'{n} rok', ageFew:'{n} lata', ageMany:'{n} lat', ageEn:'{n} years',
   matchOne:'{n} mecz', matchFew:'{n} mecze', matchMany:'{n} meczów', matchEn:'{n} matches',
   liveHint:'Duże przyciski, wygodne na boisku', liveUndo:'Cofnij', liveDone:'Gotowe',
-  hintGk:'Kolejne interwencje i stracone gole ważą mniej niż pierwsze. Słaba gra zespołu słabo obniża notę bramkarza.',
+  hintGk:'Dla bramkarza ważne są interwencje, stracone, wyjścia, podania, przechwyty i gra nogami. Kolejne interwencje i stracone ważą mniej niż pierwsze.',
+  hintFwd:'Dla napastnika ważne są gole, strzały, asysty, dryblingi, kluczowe podania i wbiegnięcia.',
+  hintMid:'Dla pomocnika ważne są podania, kluczowe podania, odbiory, pojedynki, straty i okazje dla partnerów.',
+  hintDef:'Dla obrońcy ważne są odbiory, przechwyty, pojedynki, wybicia, bloki i dokładne podania. Błędy mocno obniżają ocenę.',
   hintOut:'Ocena startuje od 6 i może dojść do 10 za mocny mecz.',
   insightPlus:'Mocne strony', insightFocus:'Zadanie', plusEven:'Równa gra bez wyróżniających akcji.', plusSolid:'Spokojna, pożyteczna gra dla zespołu.',
   plus_goals:'Gol — nagroda za moment.', plus_assists:'Asysta: w porę zobaczyłeś partnera.',
@@ -933,6 +952,12 @@ pl:{
   plus_support:'Otwierałeś się i asekurowałeś partnerów.', plus_dribbles:'Drybling schodził bliżej bramki rywala.',
   plus_saves:'Interwencje trzymały zespół w meczu.', plus_claims:'Wyjścia do piłek były odważne.',
   plus_gkpass:'Gra nogami zaczynała atak.',
+  plus_openings:'Wbiegałeś na czas — partner miał do kogo podać.',
+  plus_chances:'Tworzyłeś okazje partnerom.',
+  plus_buildpass:'Dokładne podania trzymały piłkę w zespole.',
+  plus_interceptions:'Przechwyty ucinały ataki rywala.',
+  plus_clearances:'Wybicia usuwały zagrożenie.',
+  plus_blocks:'Bloki nie dawały strzelić.',
   focusDefault:'Bądź w grze przez całe minuty: wołaj partnerów i dawaj proste podanie, gdy ktoś Cię cisnie.',
   focusOwn:'Piłka wpadła do naszej bramki. Przy bramce stój bliżej słupka i wybijaj w bok, nie przed bramkę.',
   focusLed:'Piłkę straciliście przy własnej bramce — rywal strzelił. Przy swojej bramce nie drybluj: podaj do kolegi albo wybij daleko.',
@@ -967,6 +992,9 @@ pl:{
   mn_losses:'strata|straty|strat', mn_ledtogoal:'strata → gol rywala|straty → gol rywala|strat → gol rywala',
   mn_badpass:'niedokładne podanie|niedokładne podania|niedokładnych podań', mn_badtouch:'strata przy przyjęciu|straty przy przyjęciu|strat przy przyjęciu',
   mn_fouls:'faul|faule|fauli', mn_owngoal:'gol samobójczy|gole samobójcze|goli samobójczych',
+  mn_openings:'wbiegnięcie|wbiegnięcia|wbiegnięć', mn_chances:'okazja dla partnera|okazje dla partnera|okazji dla partnera',
+  mn_buildpass:'podanie|podania|podań', mn_interceptions:'przechwyt|przechwyty|przechwytów',
+  mn_clearances:'wybicie|wybicia|wybić', mn_blocks:'blok|bloki|bloków',
   stMatches:'Mecze', stAvg:'Średnia ocena', stBest:'Najlepszy mecz', stWorst:'Najsłabszy', stTrend:'Trend', stAction:'Średni wkład', stEffort:'Średnie zaangażowanie', stMins:'Minuty', stGoals:'Gole', stG90:'Gole / 90',
   mn_matches:'mecz|mecze|meczów', mn_starts:'start|starty|startów', mn_subs:'wejście z ławki|wejścia z ławki|wejść z ławki', mn_mins:'minuta|minuty|minut',
   act_dribbles:'udany drybling|udane dryblingi|udanych dryblingów',
@@ -985,6 +1013,8 @@ pl:{
   shareOverall:'/ 10 ogólna', shareVs:'mecz', shareOpp:'rywal',
   m_goals:'Gol', m_assists:'Asysta', m_shots:'Strzał celny', m_dribbles:'Drybling', m_tackles:'Odbiór', m_duelswon:'Pojedynek +',
   m_passes:'Kluczowe podanie', m_support:'Wsparcie', m_saves:'Interwencja', m_claims:'Wyjście z bramki', m_gkpass:'Gra nogami', m_conceded:'Stracony',
+  m_openings:'Wbiegnięcie', m_chances:'Okazja dla partnera', m_buildpass:'Podanie',
+  m_interceptions:'Przechwyt', m_clearances:'Wybicie', m_blocks:'Blok',
   m_losses:'Strata', m_ledtogoal:'Strata → gol rywala', m_badpass:'Niedokładne podanie', m_badtouch:'Strata przy przyjęciu', m_duelslost:'Pojedynek −', m_fouls:'Faul', m_owngoal:'Gol samobójczy',
   b_effort:'Zaangażowanie i walka o piłkę', b_team:'Gra zespołowa', b_coach:'Słuchał trenera', b_discipline:'Dyscyplina / szacunek dla sędziego', b_mood:'Nastrój (nie w ocenie)'
 },
@@ -1047,7 +1077,10 @@ en:{
   ageOne:'{n} year', ageFew:'{n} years', ageMany:'{n} years', ageEn:'{n} years',
   matchOne:'{n} match', matchFew:'{n} matches', matchMany:'{n} matches', matchEn:'{n} matches',
   liveHint:'Big buttons, easy on the pitch', liveUndo:'Undo', liveDone:'Done',
-  hintGk:'Later saves and goals conceded count less than the first. A team collapse barely hits the keeper rating.',
+  hintGk:'For the keeper what matters is saves, goals conceded, claims, passes, interceptions and distribution. Later saves and goals conceded count less than the first.',
+  hintFwd:'For a striker what matters is goals, shots, assists, dribbles, key passes and runs in behind.',
+  hintMid:'For a midfielder what matters is passes, key passes, tackles, duels, turnovers and chances for teammates.',
+  hintDef:'For a defender what matters is tackles, interceptions, duels, clearances, blocks and accurate passes. Mistakes hit the rating hard.',
   hintOut:'The rating starts at 6 and can reach 10 after a strong match.',
   insightPlus:'Strengths', insightFocus:'Next task', plusEven:'A steady game without standout actions.', plusSolid:'A calm, useful game for the team.',
   plus_goals:'The goal rewarded a good run.', plus_assists:'Assist: you saw the teammate in time.',
@@ -1056,6 +1089,12 @@ en:{
   plus_support:'You showed for the ball and covered teammates.', plus_dribbles:'Take the dribble closer to their goal, not ours.',
   plus_saves:'Saves kept the team in the game.', plus_claims:'Claims off crosses were brave.',
   plus_gkpass:'Distribution started attacks.',
+  plus_openings:'You ran into space in time — a teammate had someone to pass to.',
+  plus_chances:'You created chances for teammates.',
+  plus_buildpass:'Accurate passes kept the ball in the team.',
+  plus_interceptions:'Interceptions cut out their attacks.',
+  plus_clearances:'Clearances took the danger away.',
+  plus_blocks:'Blocks stopped the shot.',
   focusDefault:'Stay in the game every minute: call for the ball and make a simple pass if someone is tight on you.',
   focusOwn:'The ball went into our net. Stand closer to the post and kick it out to the side, not in front of the goal.',
   focusLed:'The ball was lost near our goal and they scored. Near our goal do not dribble: pass to a teammate or kick it away.',
@@ -1090,6 +1129,9 @@ en:{
   mn_losses:'turnover|turnovers', mn_ledtogoal:'turnover to a goal|turnovers to a goal',
   mn_badpass:'incomplete pass|incomplete passes', mn_badtouch:'poor first touch|poor first touches',
   mn_fouls:'foul|fouls', mn_owngoal:'own goal|own goals',
+  mn_openings:'run in behind|runs in behind', mn_chances:'chance created|chances created',
+  mn_buildpass:'pass|passes', mn_interceptions:'interception|interceptions',
+  mn_clearances:'clearance|clearances', mn_blocks:'block|blocks',
   stMatches:'Matches', stAvg:'Average rating', stBest:'Best match', stWorst:'Worst', stTrend:'Trend', stAction:'Average impact', stEffort:'Average effort', stMins:'Minutes', stGoals:'Goals', stG90:'Goals / 90',
   mn_matches:'match|matches', mn_starts:'start|starts', mn_subs:'bench appearance|bench appearances', mn_mins:'minute|minutes',
   act_dribbles:'successful dribble|successful dribbles',
@@ -1108,6 +1150,8 @@ en:{
   shareOverall:'/ 10 overall', shareVs:'match', shareOpp:'opponent',
   m_goals:'Goal', m_assists:'Assist', m_shots:'Shot on target', m_dribbles:'Dribble', m_tackles:'Tackle', m_duelswon:'Duel won',
   m_passes:'Key pass', m_support:'Support', m_saves:'Save', m_claims:'Claim', m_gkpass:'Distribution', m_conceded:'Goal conceded',
+  m_openings:'Run in behind', m_chances:'Chance created', m_buildpass:'Pass',
+  m_interceptions:'Interception', m_clearances:'Clearance', m_blocks:'Block',
   m_losses:'Turnover', m_ledtogoal:'Turnover leading to a goal', m_badpass:'Incomplete pass', m_badtouch:'Poor first touch', m_duelslost:'Duel lost', m_fouls:'Foul', m_owngoal:'Own goal',
   b_effort:'Work rate and duels', b_team:'Team play', b_coach:'Listened to the coach', b_discipline:'Discipline / respect for the referee', b_mood:'Mood (not in the rating)'
 },
@@ -1170,7 +1214,10 @@ ru:{
   ageOne:'{n} год', ageFew:'{n} года', ageMany:'{n} лет', ageEn:'{n} years',
   matchOne:'{n} матч', matchFew:'{n} матча', matchMany:'{n} матчей', matchEn:'{n} matches',
   liveHint:'Крупные кнопки, удобно на поле', liveUndo:'Отменить', liveDone:'Готово',
-  hintGk:'Повторные сейвы и пропущенные весят меньше первых. Командный провал слабо бьёт по вратарю.',
+  hintGk:'Для вратаря важны сейвы, пропущенные, выходы, передачи, перехваты и игра ногами. Повторные сейвы и пропущенные весят меньше первых.',
+  hintFwd:'Для нападающего важны голы, удары, ассисты, обводки, острые пасы и открывания.',
+  hintMid:'Для полузащитника важны передачи, острые пасы, отборы, единоборства, потери и моменты для партнёров.',
+  hintDef:'Для защитника важны отборы, перехваты, единоборства, выносы, блоки и точные передачи. Ошибки сильно бьют по оценке.',
   hintOut:'Оценка начинается с 6 и может дойти до 10 за сильный матч.',
   insightPlus:'Сильные стороны', insightFocus:'Установка', plusEven:'Ровная игра без ярких действий.', plusSolid:'Спокойная, полезная игра для команды.',
   plus_goals:'Гол — награда за момент.', plus_assists:'Ассист: вовремя увидел партнёра.',
@@ -1179,6 +1226,12 @@ ru:{
   plus_support:'Открывался и страховал партнёров.', plus_dribbles:'Обводку бери ближе к чужим воротам, не у своих.',
   plus_saves:'Сейвы держали команду в игре.', plus_claims:'Выходы на подачах были смелые.',
   plus_gkpass:'Игра ногами давала начало атаке.',
+  plus_openings:'Открывался вовремя — партнёру было кому отдать.',
+  plus_chances:'Создавал моменты партнёрам.',
+  plus_buildpass:'Точные передачи держали мяч у команды.',
+  plus_interceptions:'Перехваты обрывали атаки соперника.',
+  plus_clearances:'Выносы убирали опасность.',
+  plus_blocks:'Блоки не давали пробить.',
   focusDefault:'Будь в игре все минуты: зови партнёров и отдавай простой пас, если тебя теснят.',
   focusOwn:'Мяч попал в свои ворота. У ворот стой ближе к штанге и выбивай в сторону, не перед воротами.',
   focusLed:'Мяч потеряли рядом со своими воротами — соперник забил. У своих ворот не обводи: отдай пас товарищу или выбей подальше.',
@@ -1213,6 +1266,9 @@ ru:{
   mn_losses:'потеря|потери|потерь', mn_ledtogoal:'потеря → гол соперника|потери → гол соперника|потерь → гол соперника',
   mn_badpass:'неточный пас|неточных паса|неточных пасов', mn_badtouch:'потеря приёма|потери приёма|потерь приёма',
   mn_fouls:'фол|фола|фолов', mn_owngoal:'автогол|автогола|автоголов',
+  mn_openings:'открывание|открывания|открываний', mn_chances:'момент для партнёра|момента для партнёра|моментов для партнёра',
+  mn_buildpass:'передача|передачи|передач', mn_interceptions:'перехват|перехвата|перехватов',
+  mn_clearances:'вынос|выноса|выносов', mn_blocks:'блок|блока|блоков',
   stMatches:'Матчей', stAvg:'Средняя оценка', stBest:'Лучший матч', stWorst:'Худший', stTrend:'Тренд', stAction:'Средний вклад', stEffort:'Среднее старание', stMins:'Минут', stGoals:'Голы', stG90:'Голы / 90',
   mn_matches:'матч|матча|матчей', mn_starts:'старт|старта|стартов', mn_subs:'выход со скамейки|выхода со скамейки|выходов со скамейки', mn_mins:'минута|минуты|минут',
   act_dribbles:'успешная обводка|успешные обводки|успешных обводок',
@@ -1231,6 +1287,8 @@ ru:{
   shareOverall:'/ 10 общая', shareVs:'матч', shareOpp:'соперник',
   m_goals:'Гол', m_assists:'Ассист', m_shots:'Удар в створ', m_dribbles:'Обводка', m_tackles:'Отбор', m_duelswon:'Единоборство +',
   m_passes:'Острый пас', m_support:'Поддержка', m_saves:'Сейв', m_claims:'Выход', m_gkpass:'Игра ногами', m_conceded:'Пропущен',
+  m_openings:'Открывание', m_chances:'Момент для партнёра', m_buildpass:'Передача',
+  m_interceptions:'Перехват', m_clearances:'Вынос', m_blocks:'Блок',
   m_losses:'Потеря', m_ledtogoal:'Потеря → гол соперника', m_badpass:'Неточный пас', m_badtouch:'Потеря приёма', m_duelslost:'Единоборство −', m_fouls:'Фол', m_owngoal:'Автогол',
   b_effort:'Старание и борьба за мяч', b_team:'Игра в команде', b_coach:'Слушал тренера', b_discipline:'Дисциплина / уважение к судье', b_mood:'Настроение (не в оценке)'
 }
@@ -1373,25 +1431,31 @@ function applyI18n(){
 const BASE_RATING = 6.0;
 
 const METRICS = [
-  {key:'goals', icon:'⚽', positions:['fwd','mid','def'], w:{fwd:0.7, mid:0.55, def:0.45, gk:0}},
-  {key:'assists', icon:'🎯', positions:['fwd','mid','def'], w:{fwd:0.5, mid:0.5, def:0.35, gk:0}},
-  {key:'shots', icon:'🥅', positions:['fwd','mid'], w:{fwd:0.2, mid:0.15, def:0, gk:0}},
-  {key:'dribbles', icon:'🌀', positions:['fwd','mid'], w:{fwd:0.15, mid:0.1, def:0, gk:0}},
-  {key:'tackles', icon:'🛡', positions:['fwd','mid','def'], w:{fwd:0.1, mid:0.25, def:0.4, gk:0}},
-  {key:'duelswon', icon:'💪', positions:['fwd','mid','def'], w:{fwd:0.1, mid:0.2, def:0.3, gk:0}},
-  {key:'passes', icon:'📤', positions:['fwd','mid','def'], w:{fwd:0.15, mid:0.25, def:0.15, gk:0}},
-  {key:'support', icon:'🤝', positions:['fwd','mid','def'], w:{fwd:0.15, mid:0.2, def:0.25, gk:0}},
-  {key:'saves', icon:'🧤', positions:['gk'], w:{fwd:0, mid:0, def:0, gk:0.4}},
-  {key:'claims', icon:'🪂', positions:['gk'], w:{fwd:0, mid:0, def:0, gk:0.3}},
-  {key:'gkpass', icon:'👟', positions:['gk'], w:{fwd:0, mid:0, def:0, gk:0.15}},
-  {key:'conceded', icon:'📉', positions:['gk'], w:{fwd:0, mid:0, def:0, gk:-0.18}},
-  {key:'losses', icon:'✖', positions:['fwd','mid','def'], w:{fwd:-0.2, mid:-0.15, def:-0.1, gk:0}},
-  {key:'ledtogoal', icon:'⛔', positions:['fwd','mid','def','gk'], w:{fwd:-0.8, mid:-0.8, def:-0.85, gk:-0.55}},
-  {key:'badpass', icon:'↩', positions:['fwd','mid','def','gk'], w:{fwd:-0.1, mid:-0.15, def:-0.1, gk:-0.15}},
-  {key:'badtouch', icon:'🫳', positions:['fwd','mid','def'], w:{fwd:-0.1, mid:-0.1, def:-0.1, gk:0}},
-  {key:'duelslost', icon:'🤼', positions:['fwd','mid','def'], w:{fwd:-0.1, mid:-0.15, def:-0.25, gk:0}},
-  {key:'fouls', icon:'🟨', positions:['fwd','mid','def','gk'], w:{fwd:-0.25, mid:-0.25, def:-0.2, gk:-0.2}},
-  {key:'owngoal', icon:'😬', positions:['fwd','mid','def','gk'], w:{fwd:-1, mid:-1, def:-1, gk:-1}},
+  {key:'goals', icon:'⚽', positions:['fwd','mid','def'], live:['fwd','mid'], w:{fwd:0.7, mid:0.55, def:0.45, gk:0}},
+  {key:'shots', icon:'🥅', positions:['fwd','mid'], live:['fwd'], w:{fwd:0.2, mid:0.15, def:0, gk:0}},
+  {key:'assists', icon:'🎯', positions:['fwd','mid','def'], live:['fwd','mid'], w:{fwd:0.5, mid:0.5, def:0.35, gk:0}},
+  {key:'dribbles', icon:'🌀', positions:['fwd','mid'], live:['fwd'], w:{fwd:0.15, mid:0.1, def:0, gk:0}},
+  {key:'openings', icon:'🏃', positions:['fwd'], live:['fwd'], w:{fwd:0.2, mid:0, def:0, gk:0}},
+  {key:'chances', icon:'✨', positions:['mid'], live:['mid'], w:{fwd:0, mid:0.32, def:0, gk:0}},
+  {key:'passes', icon:'📤', positions:['fwd','mid','def'], live:['fwd','mid'], w:{fwd:0.15, mid:0.25, def:0.15, gk:0}},
+  {key:'buildpass', icon:'➡', positions:['mid','def','gk'], live:['mid','def','gk'], w:{fwd:0, mid:0.07, def:0.1, gk:0.12}},
+  {key:'tackles', icon:'🛡', positions:['fwd','mid','def'], live:['mid','def'], w:{fwd:0.1, mid:0.25, def:0.4, gk:0}},
+  {key:'interceptions', icon:'🪝', positions:['mid','def','gk'], live:['def','gk'], w:{fwd:0, mid:0.18, def:0.35, gk:0.28}},
+  {key:'clearances', icon:'🧹', positions:['def'], live:['def'], w:{fwd:0, mid:0, def:0.22, gk:0}},
+  {key:'blocks', icon:'🧱', positions:['def'], live:['def'], w:{fwd:0, mid:0, def:0.28, gk:0}},
+  {key:'duelswon', icon:'💪', positions:['fwd','mid','def'], live:['mid','def'], w:{fwd:0.1, mid:0.2, def:0.3, gk:0}},
+  {key:'support', icon:'🤝', positions:['fwd','mid','def'], live:[], w:{fwd:0.15, mid:0.2, def:0.25, gk:0}},
+  {key:'saves', icon:'🧤', positions:['gk'], live:['gk'], w:{fwd:0, mid:0, def:0, gk:0.4}},
+  {key:'claims', icon:'🪂', positions:['gk'], live:['gk'], w:{fwd:0, mid:0, def:0, gk:0.3}},
+  {key:'gkpass', icon:'👟', positions:['gk'], live:['gk'], w:{fwd:0, mid:0, def:0, gk:0.15}},
+  {key:'conceded', icon:'📉', positions:['gk'], live:['gk'], w:{fwd:0, mid:0, def:0, gk:-0.18}},
+  {key:'losses', icon:'✖', positions:['fwd','mid','def'], live:['fwd','mid','def'], w:{fwd:-0.2, mid:-0.15, def:-0.1, gk:0}},
+  {key:'ledtogoal', icon:'⛔', positions:['fwd','mid','def','gk'], live:['def','gk'], w:{fwd:-0.8, mid:-0.8, def:-0.85, gk:-0.55}},
+  {key:'badpass', icon:'↩', positions:['fwd','mid','def','gk'], live:[], w:{fwd:-0.1, mid:-0.15, def:-0.1, gk:-0.15}},
+  {key:'badtouch', icon:'🫳', positions:['fwd','mid','def'], live:[], w:{fwd:-0.1, mid:-0.1, def:-0.1, gk:0}},
+  {key:'duelslost', icon:'🤼', positions:['fwd','mid','def'], live:[], w:{fwd:-0.1, mid:-0.15, def:-0.25, gk:0}},
+  {key:'fouls', icon:'🟨', positions:['fwd','mid','def','gk'], live:[], w:{fwd:-0.25, mid:-0.25, def:-0.2, gk:-0.2}},
+  {key:'owngoal', icon:'😬', positions:['fwd','mid','def','gk'], live:[], w:{fwd:-1, mid:-1, def:-1, gk:-1}},
 ];
 const BEHAVIOR = [
   {key:'effort', inRating:true},
@@ -1425,6 +1489,7 @@ function currentPitch(){
 }
 function currentPos(){ return ratingPosOf(document.getElementById('f-position').value || defaultPitch()); }
 function metricsFor(pos){ return METRICS.filter(m => m.positions.includes(pos)); }
+function liveMetricsFor(pos){ return metricsFor(pos).filter(m => (m.live || []).includes(pos)); }
 function weightOf(m, pos){ return m.w[pos] ?? 0; }
 function clamp10(n){ return Math.round(Math.max(0, Math.min(10, n)) * 10) / 10; }
 
@@ -1557,7 +1622,7 @@ function buildInsights(m, history){
   const prevLed = hist.slice(0, 4).some(x => countOf(x, 'ledtogoal') > 0);
   if(matchIsBlank(m)) return {plus: t('plusEven'), focus: t('focusDefault')};
 
-  const plusOrder = ['goals','assists','saves','claims','tackles','duelswon','passes','shots','support','dribbles','gkpass'];
+  const plusOrder = ['goals','assists','saves','claims','chances','openings','tackles','interceptions','blocks','clearances','duelswon','passes','buildpass','shots','support','dribbles','gkpass'];
   const plusBits = plusOrder.filter(k => countOf(m, k) > 0).map(k => t('plus_'+k, {n: countOf(m, k)}));
   const plus = plusBits.length ? plusBits.slice(0, 2).join(' ') : (hasRating && rating >= 6.8 ? t('plusSolid') : t('plusEven'));
 
@@ -1570,7 +1635,8 @@ function buildInsights(m, history){
   const fouls = countOf(m, 'fouls');
   const conc = countOf(m, 'conceded');
   const shots = countOf(m, 'shots') + countOf(m, 'goals');
-  const defWork = countOf(m, 'tackles') + won;
+  const defWork = countOf(m, 'tackles') + countOf(m, 'interceptions') + countOf(m, 'blocks') + countOf(m, 'clearances') + won;
+  const midWork = countOf(m, 'passes') + countOf(m, 'buildpass') + countOf(m, 'chances') + countOf(m, 'tackles') + countOf(m, 'support');
   const lossBar = Math.max(3, Math.round(minutes / 18));
 
   let key = 'focusDefault', vars = {};
@@ -1588,8 +1654,8 @@ function buildInsights(m, history){
   else if(behaviorOf(m, 'coach') <= 2) set('focusListen');
   else if(behaviorOf(m, 'team') <= 2) set('focusTeam');
   else if(pos === 'gk' && conc >= 3) set('focusGk', {n: conc});
-  else if(pos === 'fwd' && minutes >= 25 && shots === 0 && countOf(m, 'assists') === 0) set('focusFwd');
-  else if(pos === 'mid' && minutes >= 25 && countOf(m, 'passes') + countOf(m, 'tackles') + countOf(m, 'support') <= 1) set('focusMid');
+  else if(pos === 'fwd' && minutes >= 25 && shots === 0 && countOf(m, 'assists') === 0 && countOf(m, 'openings') === 0) set('focusFwd');
+  else if(pos === 'mid' && minutes >= 25 && midWork <= 1) set('focusMid');
   else if(pos === 'def' && minutes >= 25 && defWork <= 1) set('focusDef');
   else if((m.role === 'sub' || minutes < 25) && minutes < 25) set('focusSub', {n: minutes});
   else if(hasRating && rating < 5.5) set('focusBase', {r: fmtNum(rating, 1)});
@@ -2308,11 +2374,12 @@ function restoreDraft(){
 
 function renderMetrics(){
   const pos = currentPos();
-  document.getElementById('weightsHint').textContent = pos === 'gk' ? t('hintGk') : t('hintOut');
+  document.getElementById('weightsHint').textContent = t(({gk:'hintGk', fwd:'hintFwd', mid:'hintMid', def:'hintDef'})[pos] || 'hintOut');
   document.getElementById('metricsList').innerHTML = metricsFor(pos).map(m => {
     const w = weightOf(m, pos);
     const shown = (w > 0 ? '+' : '') + (settings.lang === 'en' ? String(w) : String(w).replace('.', ','));
-    return `<div class="metric-row">
+    const keyRow = (m.live || []).includes(pos);
+    return `<div class="metric-row${keyRow ? ' key' : ''}">
       <div class="metric-name">
         <div class="metric-icon">${m.icon}</div>
         <div>${escapeHtml(metricLabel(m.key))}<span class="metric-weight">${shown}</span></div>
@@ -2944,7 +3011,7 @@ function drawChart(list){
 
 function renderLiveGrid(){
   const pos = ratingPosOf(document.getElementById('live-position').value || currentPitch());
-  document.getElementById('liveGrid').innerHTML = metricsFor(pos).map(m => {
+  document.getElementById('liveGrid').innerHTML = liveMetricsFor(pos).map(m => {
     const neg = weightOf(m, pos) < 0;
     return `<div class="live-cell ${neg?'neg':''}">
       <button class="live-plus" type="button" onclick="stepMetric('${m.key}',1)">
