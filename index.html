@@ -2165,6 +2165,18 @@ function syncDateShown(){
 function updatePhotoMeta(){ setCoverPreview(); }
 function currentPhoto(){ return photoDraft === undefined ? player.photo : photoDraft; }
 function currentCover(){ return coverDraft === undefined ? (player.cover || '') : coverDraft; }
+function persistPlayerMedia(kind){
+  if(kind === 'cover'){
+    player.cover = coverDraft === undefined ? (player.cover || '') : coverDraft;
+    coverDraft = undefined;
+  } else {
+    player.photo = photoDraft === undefined ? (player.photo || '') : photoDraft;
+    photoDraft = undefined;
+  }
+  savePlayer();
+  applyHeader();
+  renderRoster();
+}
 function setCoverPreview(){
   const img = document.getElementById('pCoverImg');
   if(!img) return;
@@ -4193,10 +4205,12 @@ document.getElementById('photoSheetClear').addEventListener('click', () => {
     coverDraft = '';
     document.getElementById('p-cover').value = '';
     setCoverPreview();
+    persistPlayerMedia('cover');
   } else {
     photoDraft = '';
     document.getElementById('p-photo').value = '';
     setBadge(document.getElementById('pPhotoBox'), '', initials());
+    persistPlayerMedia('photo');
   }
   closePhotoSheet();
 });
@@ -4220,9 +4234,11 @@ document.getElementById('cropOkBtn').addEventListener('click', () => {
   if(cropState.target === 'cover'){
     coverDraft = data;
     setCoverPreview();
+    persistPlayerMedia('cover');
   } else {
     photoDraft = data;
     setBadge(document.getElementById('pPhotoBox'), photoDraft, initials());
+    persistPlayerMedia('photo');
   }
   closeCrop();
 });
