@@ -1,21 +1,30 @@
 package app.ffk.rating;
 
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebView;
 import androidx.activity.OnBackPressedCallback;
-import com.getcapacitor.Bridge;
 import com.getcapacitor.BridgeActivity;
 
 public class MainActivity extends BridgeActivity {
   public static class Host {
     private volatile boolean stay = true;
+    private volatile int backSeq = 0;
 
     @JavascriptInterface
     public void setStay(boolean value) {
       stay = value;
+    }
+
+    @JavascriptInterface
+    public int takeBack() {
+      int n = backSeq;
+      backSeq = 0;
+      return n;
+    }
+
+    void requestBack() {
+      backSeq++;
     }
 
     boolean stay() {
@@ -24,7 +33,6 @@ public class MainActivity extends BridgeActivity {
   }
 
   private final Host host = new Host();
-  private final Handler mainHandler = new Handler(Looper.getMainLooper());
   private OnBackPressedCallback backCallback;
 
   @Override
@@ -38,7 +46,7 @@ public class MainActivity extends BridgeActivity {
           moveTaskToBack(true);
           return;
         }
-        runInAppBack();
+        host.requestBack();
       }
     };
     getOnBackPressedDispatcher().addCallback(this, backCallback);
@@ -52,16 +60,6 @@ public class MainActivity extends BridgeActivity {
       backCallback.remove();
       getOnBackPressedDispatcher().addCallback(this, backCallback);
     }
-  }
-
-  private void runInAppBack() {
-    Bridge bridge = getBridge();
-    if (bridge == null) return;
-    // Run after the system gesture finishes — Samsung drops JS during the swipe.
-    mainHandler.postDelayed(() -> bridge.eval(
-      "(function(){try{window.handleAppBack&&window.handleAppBack()}catch(e){}})()",
-      null
-    ), 32);
   }
 
   private void attachHost() {

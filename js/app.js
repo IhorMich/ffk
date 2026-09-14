@@ -2837,11 +2837,15 @@ window.handleAppBack = function(){
   try{ return handleAppBack(); }catch(e){ syncNativeBackFlag(); return true; }
 };
 function bindAppBack(){
-  const ping = n => {
-    syncNativeBackFlag();
-    if(n < 25) setTimeout(() => ping(n + 1), 40);
-  };
-  ping(0);
+  syncNativeBackFlag();
+  if(window.__ffkBackPoll) return;
+  window.__ffkBackPoll = setInterval(() => {
+    try{
+      if(window.FfkHost && typeof window.FfkHost.takeBack === 'function' && window.FfkHost.takeBack()){
+        window.handleAppBack();
+      }
+    }catch(e){}
+  }, 50);
 }
 document.addEventListener('click', (e) => {
   const go = e.target.closest('[data-go-view]');
