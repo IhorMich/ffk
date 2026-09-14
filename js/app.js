@@ -590,7 +590,7 @@ function reportPlayerName(m){
 function renderReportHtml(m, compact){
   const split = actionSplit(m.counts, m.position);
   const lines = reportLines(m);
-  const vs = `${escapeHtml(m.opponent || t('unnamed'))}${m.score ? ' · ' + escapeHtml(m.score) : ''}`;
+  const vs = `${escapeHtml(m.opponent || t('unnamed'))}${m.score ? ' · ' + scoreLineHtml(m) : ''}`;
   const kick = m.kickoffClock ? escapeHtml(t('kickoffLine', {clock: m.kickoffClock})) : '';
   const meta = `<div class="report-sub"><span>${vs}</span>${kick ? `<span>${kick}</span>` : ''}</div>`;
   const head = compact ? meta : `<div class="report-kicker">${escapeHtml(t('reportTitle'))}</div>
@@ -636,18 +636,62 @@ function fillScoreFields(s){
     scoreFallback = '';
     usEl.value = p.us;
     themEl.value = p.them;
+    syncScoreResultHint();
     return;
   }
   usEl.value = '';
   themEl.value = '';
   scoreFallback = String(s || '');
+  syncScoreResultHint();
 }
 function emptyCtaHtml(msg){
   return `<div class="empty-card"><p>${escapeHtml(msg)}</p><button type="button" class="save-btn" data-go-view="new">${escapeHtml(t('emptyGoMatch'))}</button></div>`;
 }
-function teamWon(m){
+function matchResult(m){
   const p = scoreSides(m && m.score);
-  return !!(p && p.us > p.them);
+  if(!p) return '';
+  if(p.us > p.them) return 'win';
+  if(p.us < p.them) return 'loss';
+  return 'draw';
+}
+function teamWon(m){ return matchResult(m) === 'win'; }
+function resultLabel(m){
+  const r = matchResult(m);
+  if(r === 'win') return t('resultWin');
+  if(r === 'loss') return t('resultLoss');
+  if(r === 'draw') return t('resultDraw');
+  return '';
+}
+function scoreLine(m){
+  if(!m || !m.score) return '—';
+  const res = resultLabel(m);
+  const base = t('scoreLbl', {s: m.score});
+  return res ? base + ' · ' + res : base;
+}
+function scoreLineHtml(m){
+  if(!m || !m.score) return '—';
+  const r = matchResult(m);
+  const res = resultLabel(m);
+  const main = escapeHtml(t('scoreLbl', {s: m.score}));
+  if(!res) return main;
+  return `${main} <span class="match-result ${r}">${escapeHtml(res)}</span>`;
+}
+function syncScoreResultHint(){
+  const el = document.getElementById('scoreResultHint');
+  if(!el) return;
+  const us = document.getElementById('f-score-us');
+  const them = document.getElementById('f-score-them');
+  if(!us || !them || (us.value === '' && them.value === '' && !scoreFallback)){
+    el.hidden = true;
+    el.textContent = '';
+    return;
+  }
+  const fake = {score: scoreFromFields()};
+  const res = resultLabel(fake);
+  if(!res){ el.hidden = true; el.textContent = ''; return; }
+  el.hidden = false;
+  el.textContent = res;
+  el.className = 'hint match-result ' + matchResult(fake);
 }
 function plusFact(key, n){
   if(key === 'goals' || key === 'assists' || key === 'saves') return t('plus_'+key, {n, what: declined(n, 'mn_'+key)});
@@ -668,7 +712,10 @@ function buildInsights(m, history){
   const head = [];
   if(hasRating && rating >= 9.5) head.push(t('plusTop', {r: fmtRating(rating)}));
   else if(hasRating && rating >= 8.5) head.push(t('plusGreat', {r: fmtRating(rating)}));
-  if(teamWon(m)) head.push(t('plusWin'));
+  const ended = matchResult(m);
+  if(ended === 'win') head.push(t('plusWin'));
+  else if(ended === 'loss') head.push(t('plusLoss'));
+  else if(ended === 'draw') head.push(t('plusDraw'));
   const plus = (head.concat(plusBits).slice(0, 4).join(' ')) || (hasRating && rating >= 6.8 ? t('plusSolid') : t('plusEven'));
 
   const led = countOf(m, 'ledtogoal');
@@ -1907,7 +1954,10 @@ document.getElementById('cancelEditBtn').addEventListener('click', resetForm);
     }
     if(id === 'f-kind') syncCompetitionField();
     if(id === 'f-date') syncDateShown();
-    if(id === 'f-score-us' || id === 'f-score-them') scoreFallback = '';
+    if(id === 'f-score-us' || id === 'f-score-them'){
+      scoreFallback = '';
+      syncScoreResultHint();
+    }
     if(id === 'f-format'){ syncPlayedDefault(true); renderLiveClock(); }
     if(id === 'f-matchlen' && document.getElementById('f-format').value === 'custom'){
       document.getElementById('f-minutes').value = document.getElementById('f-matchlen').value;
@@ -1971,7 +2021,7 @@ function renderHistory(){
         <div class="match-meta">
           <span class="match-date">${escapeHtml(formatDate(m.date))}${showSeason ? ' · ' + escapeHtml(matchSeason(m)) : ''} · ${escapeHtml(matchPosDisplay(m))}</span>
           <span class="match-opp">${escapeHtml(m.opponent || t('unnamed'))}</span>
-          <span class="match-score">${m.score ? escapeHtml(t('scoreLbl', {s:m.score})) : '—'}</span>
+          <span class="match-score">${scoreLineHtml(m)}</span>
         </div>
         <div class="match-rating ${ratingClass(m.rating)}">${fmtNum(m.rating, 1)}</div>
       </div>
@@ -2154,12 +2204,14 @@ document.getElementById('importFile').addEventListener('change', async (e) => {
 });
 
 let currentRange = '10';
+let currentRangeFrom = '';
+let currentRangeTo = '';
 let currentSeasonFilter = 'current';
 let historyPage = 1;
 let historyQuery = '';
 let historyKind = 'all';
 const HISTORY_PAGE = 10;
-const RANGE_KEYS = ['10','100','7d','30d','year','all'];
+const RANGE_KEYS = ['10','100','7d','30d','year','all','custom'];
 const KIND_KEYS = ['all','league','friendly','cup','tournament'];
 function loadFilters(){
   try{
@@ -2168,6 +2220,8 @@ function loadFilters(){
     if(RANGE_KEYS.includes(f.range)) currentRange = f.range;
     else if(RANGE_KEYS.includes(f.chart)) currentRange = f.chart;
     else if(RANGE_KEYS.includes(f.cardPeriod)) currentRange = f.cardPeriod;
+    if(/^\d{4}-\d{2}-\d{2}$/.test(String(f.rangeFrom || ''))) currentRangeFrom = f.rangeFrom;
+    if(/^\d{4}-\d{2}-\d{2}$/.test(String(f.rangeTo || ''))) currentRangeTo = f.rangeTo;
     historyQuery = String(f.historyQuery || '').slice(0, 80);
     if(KIND_KEYS.includes(f.historyKind)) historyKind = f.historyKind;
   }catch(e){}
@@ -2177,6 +2231,8 @@ function saveFilters(){
     localStorage.setItem(FILTER_KEY, JSON.stringify({
       season: currentSeasonFilter,
       range: currentRange,
+      rangeFrom: currentRangeFrom,
+      rangeTo: currentRangeTo,
       chart: currentRange,
       cardPeriod: currentRange,
       historyQuery,
@@ -2188,6 +2244,12 @@ function syncFilterChips(){
   document.querySelectorAll('#periodChips .chip').forEach(c => {
     c.classList.toggle('active', c.dataset.range === currentRange);
   });
+  const custom = document.getElementById('periodCustomRow');
+  if(custom) custom.hidden = currentRange !== 'custom';
+  const fromEl = document.getElementById('periodFrom');
+  const toEl = document.getElementById('periodTo');
+  if(fromEl && document.activeElement !== fromEl) fromEl.value = currentRangeFrom;
+  if(toEl && document.activeElement !== toEl) toEl.value = currentRangeTo;
 }
 function knownSeasons(){
   const set = new Set();
@@ -2245,8 +2307,23 @@ document.getElementById('periodChips').addEventListener('click', e => {
   document.querySelectorAll('#periodChips .chip').forEach(c=>c.classList.remove('active'));
   chip.classList.add('active');
   currentRange = chip.dataset.range || '10';
+  if(currentRange === 'custom' && (!currentRangeFrom || !currentRangeTo)){
+    currentRangeTo = todayStr();
+    currentRangeFrom = daysAgoStr(30);
+  }
   saveFilters();
+  syncFilterChips();
   renderStats();
+});
+['periodFrom','periodTo'].forEach(id => {
+  document.getElementById(id)?.addEventListener('change', () => {
+    currentRange = 'custom';
+    currentRangeFrom = document.getElementById('periodFrom').value || currentRangeFrom;
+    currentRangeTo = document.getElementById('periodTo').value || currentRangeTo;
+    saveFilters();
+    syncFilterChips();
+    renderStats();
+  });
 });
 document.getElementById('historyKind').addEventListener('click', e => {
   const chip = e.target.closest('.chip');
@@ -2266,6 +2343,12 @@ function periodSlice(sorted, key){
   if(key === '10') return sorted.slice(-10);
   if(key === '100') return sorted.slice(-100);
   if(key === 'all') return sorted;
+  if(key === 'custom'){
+    let from = currentRangeFrom || '0000-01-01';
+    let to = currentRangeTo || '9999-12-31';
+    if(from > to){ const x = from; from = to; to = x; }
+    return sorted.filter(m => m.date >= from && m.date <= to);
+  }
   if(key === 'year'){
     const y = String(new Date().getFullYear());
     return sorted.filter(m => String(m.date).startsWith(y));
@@ -2274,6 +2357,10 @@ function periodSlice(sorted, key){
   return sorted.filter(m => m.date >= daysAgoStr(days));
 }
 function rangeLabel(key){
+  if(key === 'custom'){
+    if(currentRangeFrom && currentRangeTo) return formatDate(currentRangeFrom) + ' – ' + formatDate(currentRangeTo);
+    return t('periodCustom');
+  }
   return ({
     '10': t('chart10'),
     '100': t('chart100'),
@@ -2709,6 +2796,42 @@ document.querySelectorAll('.js-match-clock-btn').forEach(btn => {
   btn.addEventListener('click', toggleMatchClock);
 });
 document.getElementById('liveDoneBtn').addEventListener('click', closeLive);
+function isElShown(id){
+  const el = document.getElementById(id);
+  return !!(el && !el.hidden);
+}
+function activeViewName(){
+  const view = document.querySelector('.view.active');
+  return view && view.id ? view.id.replace('view-', '') : '';
+}
+function handleAppBack(){
+  if(isElShown('onboard')){
+    if(onboardStep > 0){
+      onboardStep -= 1;
+      renderOnboard();
+    }
+    return true;
+  }
+  if(isElShown('cropModal')){ closeCrop(); return true; }
+  if(isElShown('photoSheet')){ closePhotoSheet(); return true; }
+  if(isElShown('previewModal')){ closeCardPreview(); return true; }
+  if(isElShown('playerEdit')){ closePlayerEdit(true); return true; }
+  if(document.getElementById('app')?.classList.contains('live-on')){ closeLive(); return true; }
+  const openDetails = document.querySelector('#historyList .match-details.open');
+  if(openDetails){ openDetails.classList.remove('open'); return true; }
+  const name = activeViewName();
+  if(name === 'report'){ showView('history'); return true; }
+  if(name && name !== 'player'){ showView('player'); return true; }
+  return false;
+}
+function bindAppBack(){
+  const App = capPlugin('App');
+  if(!App || typeof App.addListener !== 'function') return;
+  App.addListener('backButton', () => {
+    if(handleAppBack()) return;
+    if(typeof App.exitApp === 'function') App.exitApp();
+  }).catch(() => {});
+}
 document.addEventListener('click', (e) => {
   const go = e.target.closest('[data-go-view]');
   if(go) showView(go.dataset.goView);
@@ -3333,7 +3456,7 @@ async function drawMatchCardCanvas(m, mode){
   ctx.fillText(fmtNum(m.rating, 1), tx, 242);
   ctx.fillStyle = theme.muted;
   ctx.font = canvasFont('700', 26);
-  ctx.fillText(`${formatDate(m.date)}  ·  ${m.opponent || t('shareVs')}  ·  ${m.score || '—'}`, tx, 292);
+  ctx.fillText(`${formatDate(m.date)}  ·  ${m.opponent || t('shareVs')}  ·  ${m.score ? scoreLine(m) : '—'}`, tx, 292);
   if(m.kickoffClock){
     ctx.fillText(t('kickoffLine', {clock: m.kickoffClock}), tx, 330);
   }
@@ -3408,6 +3531,8 @@ async function shareCard(m){
     maybePromptSeasonClose();
     restoreView();
     maybeOnboard();
+    bindAppBack();
+    syncScoreResultHint();
     hydrateAllMedia().then(() => {
       applyHeader();
       if(document.getElementById('view-player')?.classList.contains('active')) fillPlayerForm();

@@ -505,6 +505,14 @@
   .match-date{font-size:.7rem;color:var(--text-soft);font-weight:700;text-transform:uppercase;}
   .match-opp{font-size:.95rem;font-weight:700;}
   .match-score{font-size:.78rem;color:var(--text-soft);}
+  .match-result{font-weight:800;letter-spacing:.02em;}
+  .match-result.win{color:var(--accent);}
+  .match-result.loss{color:var(--danger);}
+  .match-result.draw{color:var(--gold);}
+  #scoreResultHint{margin:6px 0 0;min-height:1em;}
+  .period-custom{
+    display:grid;grid-template-columns:1fr 1fr;gap:10px;max-width:420px;margin:-8px 0 16px;
+  }
   .match-rating{font-size:1.4rem;font-weight:800;color:var(--accent);font-variant-numeric:tabular-nums;}
   .match-rating.low{color:var(--danger);}
   .match-rating.mid{color:var(--gold);}

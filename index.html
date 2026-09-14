@@ -188,6 +188,7 @@ window.ffkIsNative = function () {
             <span class="score-colon" aria-hidden="true">:</span>
             <input type="number" id="f-score-them" min="0" max="99" inputmode="numeric" data-i18n-aria="scoreThemAria">
           </div>
+          <p class="hint match-result" id="scoreResultHint" hidden></p>
         </div>
       </div>
       <div class="row2">
@@ -304,8 +305,8 @@ window.ffkIsNative = function () {
       <h3 class="period-head" id="periodHead" data-i18n="stPeriodCards">За выбранный период</h3>
       <div class="period-chips period-switch" id="periodChips">
         <div class="period-switch-row">
-          <button type="button" class="chip active" data-range="10" data-i18n="chart10">10 матчей</button>
-          <button type="button" class="chip" data-range="100" data-i18n="chart100">100 матчей</button>
+        <button type="button" class="chip active" data-range="10" data-i18n="chart10">10 матчей</button>
+        <button type="button" class="chip" data-range="100" data-i18n="chart100">100 матчей</button>
         </div>
         <div class="period-switch-row">
           <button type="button" class="chip" data-range="7d" data-i18n="periodWeek">Неделя</button>
@@ -313,7 +314,20 @@ window.ffkIsNative = function () {
         </div>
         <div class="period-switch-row">
           <button type="button" class="chip" data-range="year" data-i18n="periodYear">Год</button>
-          <button type="button" class="chip" data-range="all" data-i18n="periodAll">Всё время</button>
+        <button type="button" class="chip" data-range="all" data-i18n="periodAll">Всё время</button>
+      </div>
+        <div class="period-switch-row">
+          <button type="button" class="chip" data-range="custom" data-i18n="periodCustom">Свои даты</button>
+        </div>
+      </div>
+      <div class="period-custom" id="periodCustomRow" hidden>
+        <div class="field">
+          <label data-i18n="periodFrom">С</label>
+          <input type="date" id="periodFrom">
+        </div>
+        <div class="field">
+          <label data-i18n="periodTo">По</label>
+          <input type="date" id="periodTo">
         </div>
       </div>
       <div class="stats-layout">
