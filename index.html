@@ -89,7 +89,8 @@ window.ffkIsNative = function () {
       </div>
       <button class="ghost-btn" id="editPlayerBtn" type="button" data-i18n="pEditCard">Редактировать карточку</button>
       <div class="player-edit" id="playerEdit" hidden>
-        <div class="player-edit-card">
+        <div class="player-edit-card" id="playerEditCard">
+          <div class="sheet-grab" id="playerEditGrab" aria-hidden="true"><span></span></div>
           <div class="player-edit-head">
             <h2 data-i18n="pEditCard">Редактировать карточку</h2>
             <button class="ghost-btn" id="editPlayerClose" type="button" data-i18n="pSheetCancel">Отмена</button>
@@ -147,7 +148,7 @@ window.ffkIsNative = function () {
     </div>
     <div class="view active" id="view-new">
       <div class="match-col match-col-ctx">
-      <button class="save-btn" id="liveStartBtn" type="button" data-i18n="liveOnPitch">На поле</button>
+      <button class="save-btn" id="liveStartBtn" type="button" data-i18n="liveOnPitch">Вести матч</button>
       <div class="match-clock-bar">
         <div class="live-clock" id="formClock"></div>
         <button class="ghost-btn js-match-clock-btn" id="formKickBtn" type="button" data-i18n="liveKick">Старт матча</button>
@@ -177,10 +178,10 @@ window.ffkIsNative = function () {
         <input type="text" id="f-tournament" list="tourList" maxlength="48" placeholder="Название чемпионата">
         <datalist id="tourList"></datalist>
       </div>
-      <div class="row2">
+      <div class="row2 row2-opp">
         <div class="field">
           <label data-i18n="labelOpp">Соперник</label>
-          <input type="text" id="f-opponent" list="oppList" data-i18n-placeholder="phOpp" placeholder="Название команды">
+          <input type="text" id="f-opponent" list="oppList" data-i18n-placeholder="phOpp" placeholder="Команда">
           <datalist id="oppList"></datalist>
         </div>
         <div class="field">
@@ -438,7 +439,8 @@ window.ffkIsNative = function () {
   </div>
 
   <div class="preview-modal" id="previewModal" hidden>
-    <div class="preview-card">
+    <div class="preview-card" id="previewCard">
+      <div class="sheet-grab" id="previewGrab" aria-hidden="true"><span></span></div>
       <img id="previewImg" alt="">
       <div class="period-chips period-switch" id="previewPeriod" hidden>
         <div class="period-switch-row">

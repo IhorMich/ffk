@@ -23,7 +23,7 @@
       "resize": "body"
     },
     "App": {
-      "disableBackButtonHandler": true
+      "disableBackButtonHandler": false
     }
   }
 }

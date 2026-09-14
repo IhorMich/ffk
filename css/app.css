@@ -220,8 +220,19 @@
     width:min(520px,100%);max-height:min(92dvh,920px);overflow:auto;
     background:var(--surface);border:1px solid var(--border);
     border-radius:22px 22px 0 0;
-    padding:16px 16px calc(18px + env(safe-area-inset-bottom, 0px));
+    padding:0 16px calc(18px + env(safe-area-inset-bottom, 0px));
   }
+  .sheet-grab{
+    position:sticky;top:0;z-index:3;
+    display:flex;align-items:center;justify-content:center;
+    margin:0 -16px 4px;padding:12px 0 10px;
+    background:var(--surface);
+    touch-action:none;cursor:grab;
+  }
+  .sheet-grab:active{cursor:grabbing;}
+  .sheet-grab span{width:46px;height:5px;border-radius:99px;background:var(--border);}
+  .player-edit-card,.preview-card{transition:transform .18s ease, max-height .18s ease, border-radius .18s ease;}
+  .sheet-dragging{transition:none !important;}
   .player-edit-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px;}
   .player-edit-head h2{margin:0;font-size:1.05rem;}
   .player-edit-head .ghost-btn{width:auto;margin:0;padding:10px 14px;}
@@ -308,6 +319,17 @@
   .onboard-dots span.on{background:var(--accent);}
   .onboard-card .ghost-btn{margin-top:8px;}
   #transfer .save-btn{width:100%;}
+  .preview-modal{align-items:flex-end;padding:0;}
+  .preview-card{
+    width:min(520px,100%);max-height:min(92dvh,920px);
+    border-radius:22px 22px 0 0;
+    padding:0 16px calc(16px + env(safe-area-inset-bottom, 0px));
+  }
+  .player-edit-card.sheet-full,.preview-card.sheet-full{max-height:100dvh;border-radius:0;}
+  @media (min-width:720px){
+    .preview-modal{align-items:center;padding:16px;}
+    .preview-card{border-radius:22px;max-height:88vh;padding:0 16px 16px;}
+  }
   .preview-card img{display:block;width:100%;border-radius:16px;margin:0 0 12px;background:var(--surface-2);}
   #previewTheme{justify-content:center;overflow:visible;margin:0 0 8px;}
   #previewPeriod{
@@ -409,6 +431,9 @@
   .file-meta{display:block;font-size:.78rem;color:var(--text-soft);font-weight:600;margin-top:8px;}
   .row2{display:flex;gap:10px;}
   .row2 .field{flex:1;}
+  .row2-opp .field:first-child{flex:1 1 auto;min-width:0;}
+  .row2-opp .field:last-child{flex:0 0 122px;}
+  .row2-opp .score-pair input{padding-left:6px;padding-right:6px;}
   .hint{
     font-size:.78rem;color:var(--text-soft);margin:8px 0 0;font-weight:600;
     line-height:1.4;overflow-wrap:anywhere;word-break:break-word;

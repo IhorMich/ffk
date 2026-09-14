@@ -1750,12 +1750,14 @@ function renderExtraChips(){
 function openPlayerEdit(){
   fillPlayerForm();
   const el = document.getElementById('playerEdit');
+  resetSheet(document.getElementById('playerEditCard'));
   if(el) el.hidden = false;
   pushAppState('layer');
 }
 function closePlayerEdit(revert){
   const el = document.getElementById('playerEdit');
   if(el) el.hidden = true;
+  resetSheet(document.getElementById('playerEditCard'));
   if(revert !== false) fillPlayerForm();
 }
 function fillPlayerForm(){
@@ -1901,15 +1903,25 @@ function renderOppList(){
   const tours = [...new Set(matches.map(m => m.tournament).filter(Boolean))].sort();
   document.getElementById('tourList').innerHTML = tours.map(n => `<option value="${escapeHtml(n)}">`).join('');
 }
-function liveHaptic(ms){
+function haptic(style){
   const Haptics = capPlugin('Haptics');
-  if(Haptics){
-    Promise.resolve(Haptics.impact({style: 'LIGHT'})).catch(() => {});
+  if(Haptics && typeof Haptics.impact === 'function'){
+    Promise.resolve(Haptics.impact({style: style === 'MEDIUM' ? 'MEDIUM' : 'LIGHT'})).catch(() => {});
     return;
   }
   try{
-    if(typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(ms || 15);
+    if(typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(style === 'MEDIUM' ? 24 : 14);
   }catch(e){}
+}
+const HAPTIC_STRONG = '#saveBtn,#savePlayerBtn,#liveStartBtn,#liveDoneBtn,#saveSettingsBtn,.js-match-clock-btn,.live-kick';
+function bindTapHaptics(){
+  if(window.__ffkTapHaptics) return;
+  window.__ffkTapHaptics = true;
+  document.addEventListener('click', e => {
+    const tap = e.target.closest('button,.chip,.pos-chip,.tabbtn');
+    if(!tap || tap.disabled) return;
+    haptic(tap.matches(HAPTIC_STRONG) ? 'MEDIUM' : 'LIGHT');
+  }, true);
 }
 function syncLiveUndo(){
   const btn = document.getElementById('liveUndoBtn');
@@ -1943,7 +1955,6 @@ window.stepMetric = function(key, dir){
       const stamp = clockStamp();
       matchClock.events.push({key, at: Date.now(), minute: stamp.matchMin, period: stamp.period, inPeriod: stamp.minute});
     }
-    if(document.getElementById('app').classList.contains('live-on')) liveHaptic(15);
   } else {
     const i = liveStack.lastIndexOf(key);
     if(i >= 0) liveStack.splice(i, 1);
@@ -3000,9 +3011,11 @@ function handleAppBack(){
   if(isElShown('previewModal')){ closeCardPreview(); return true; }
   if(isElShown('playerEdit')){ closePlayerEdit(true); return true; }
   if(document.getElementById('app')?.classList.contains('live-on')){ closeLive(); return true; }
-  const openDetails = document.querySelector('#historyList .match-details.open');
-  if(openDetails){ openDetails.classList.remove('open'); return true; }
   const name = activeViewName();
+  if(name === 'history'){
+    const openDetails = document.querySelector('#historyList .match-details.open');
+    if(openDetails){ openDetails.classList.remove('open'); return true; }
+  }
   if(name === 'report'){ showView('history'); return true; }
   if(name !== 'player'){ showView('player'); return true; }
   return false;
@@ -3015,6 +3028,56 @@ function bindAppBack(){
   if(window.__ffkPopBound) return;
   window.__ffkPopBound = true;
   window.addEventListener('popstate', () => { requestAppBack(); });
+}
+function resetSheet(card){
+  if(!card) return;
+  card.classList.remove('sheet-full', 'sheet-dragging');
+  card.style.transform = '';
+}
+function bindSheetDrag(cardId, grabId, onClose){
+  const card = document.getElementById(cardId);
+  const grab = document.getElementById(grabId);
+  if(!card || !grab) return;
+  let startY = 0, shift = 0, startedAt = 0, dragging = false;
+  const finish = () => {
+    if(!dragging) return;
+    dragging = false;
+    card.classList.remove('sheet-dragging');
+    card.style.transform = '';
+    const flick = Date.now() - startedAt < 260 && shift > 50;
+    if(shift > 0 && card.classList.contains('sheet-full')) card.classList.remove('sheet-full');
+    else if(shift > 110 || flick) onClose();
+  };
+  grab.addEventListener('pointerdown', e => {
+    dragging = true;
+    startY = e.clientY;
+    shift = 0;
+    startedAt = Date.now();
+    card.classList.add('sheet-dragging');
+    try{ grab.setPointerCapture(e.pointerId); }catch(err){}
+  });
+  grab.addEventListener('pointermove', e => {
+    if(!dragging) return;
+    shift = e.clientY - startY;
+    if(shift < -24) card.classList.add('sheet-full');
+    card.style.transform = shift > 0 ? 'translateY(' + shift + 'px)' : '';
+  });
+  grab.addEventListener('pointerup', finish);
+  grab.addEventListener('pointercancel', finish);
+}
+function bindSheets(){
+  bindSheetDrag('playerEditCard', 'playerEditGrab', () => closePlayerEdit(true));
+  bindSheetDrag('previewCard', 'previewGrab', () => closeCardPreview());
+}
+function bindNativeBack(){
+  const App = capPlugin('App');
+  if(!isNativeApp() || !App || typeof App.addListener !== 'function' || window.__ffkBackBound) return;
+  window.__ffkBackBound = true;
+  App.addListener('backButton', () => {
+    if(requestAppBack()) return;
+    if(typeof App.minimizeApp === 'function') App.minimizeApp();
+    else if(typeof App.exitApp === 'function') App.exitApp();
+  });
 }
 document.addEventListener('click', (e) => {
   const go = e.target.closest('[data-go-view]');
@@ -3493,6 +3556,7 @@ async function openCardPreview(state){
   previewState = {mode: defaultCardMode(), ...state};
   try{
     await refreshCardPreview();
+    resetSheet(document.getElementById('previewCard'));
     document.getElementById('previewModal').hidden = false;
     pushAppState('layer');
   }catch(e){
@@ -3503,6 +3567,7 @@ async function openCardPreview(state){
 }
 function closeCardPreview(){
   document.getElementById('previewModal').hidden = true;
+  resetSheet(document.getElementById('previewCard'));
   const period = document.getElementById('previewPeriod');
   if(period) period.hidden = true;
   const img = document.getElementById('previewImg');
@@ -3794,6 +3859,9 @@ async function shareCard(m){
     restoreView();
     if(!maybeTransfer()) maybeOnboard();
     bindAppBack();
+    bindNativeBack();
+    bindTapHaptics();
+    bindSheets();
     bindCameraRestore();
     syncScoreResultHint();
     hydrateAllMedia().then(() => {

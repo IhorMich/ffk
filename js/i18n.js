@@ -6,7 +6,7 @@ const I18N = {
 uk:{
   pageTitle:'FFK — оцінка матчу', settingsAria:'Налаштування', themeAria:'Тема',
   heroOverall:'загальна оцінка', heroShort:'короткий вихід', heroAction:'вклад', heroEffort:'старання',
-  liveStart:'Швидкий режим', livePitch:'Швидкий доступ', matchDetails:'Деталі матчу', labelDate:'Дата', labelPos:'Позиція', labelOpp:'Суперник', phOpp:'Назва команди',
+  liveStart:'Швидкий режим', livePitch:'Швидкий доступ', matchDetails:'Деталі матчу', labelDate:'Дата', labelPos:'Позиція', labelOpp:'Суперник', phOpp:'Команда',
   labelScore:'Рахунок', scoreUsAria:'Наші голи', scoreThemAria:'Голи суперника', emptyGoMatch:'Записати матч', labelMin:'Хвилини на полі', labelFormat:'Формат матчу', labelMatchLen:'Довжина матчу, хв', fmtCustom:'Свій',
   labelKind:'Тип гри', labelTournament:'Турнір', phTournament:'Назва турніру',
   labelVenue:'Де грали', venueHome:'Вдома', venueAway:'На виїзді', labelRole:'Вихід',
@@ -213,7 +213,7 @@ uk:{
 pl:{
   pageTitle:'FFK — ocena meczu', settingsAria:'Ustawienia', themeAria:'Motyw',
   heroOverall:'ocena ogólna', heroShort:'krótki występ', heroAction:'wkład', heroEffort:'zaangażowanie',
-  liveStart:'Tryb szybki', livePitch:'Szybki dostęp', matchDetails:'Szczegóły meczu', labelDate:'Data', labelPos:'Pozycja', labelOpp:'Rywal', phOpp:'Nazwa drużyny',
+  liveStart:'Tryb szybki', livePitch:'Szybki dostęp', matchDetails:'Szczegóły meczu', labelDate:'Data', labelPos:'Pozycja', labelOpp:'Rywal', phOpp:'Drużyna',
   labelScore:'Wynik', scoreUsAria:'Nasze gole', scoreThemAria:'Gole rywala', emptyGoMatch:'Zapisz mecz', labelMin:'Minuty na boisku', labelFormat:'Format meczu', labelMatchLen:'Długość meczu, min', fmtCustom:'Własny',
   labelKind:'Typ meczu', labelTournament:'Turniej', phTournament:'Nazwa turnieju',
   labelVenue:'Gdzie grali', venueHome:'U siebie', venueAway:'Na wyjeździe', labelRole:'Skład',
@@ -420,7 +420,7 @@ pl:{
 en:{
   pageTitle:'FFK — match rating', settingsAria:'Settings', themeAria:'Theme',
   heroOverall:'overall rating', heroShort:'short appearance', heroAction:'impact', heroEffort:'effort',
-  liveStart:'Quick mode', livePitch:'Quick access', matchDetails:'Match details', labelDate:'Date', labelPos:'Position', labelOpp:'Opponent', phOpp:'Team name',
+  liveStart:'Quick mode', livePitch:'Quick access', matchDetails:'Match details', labelDate:'Date', labelPos:'Position', labelOpp:'Opponent', phOpp:'Team',
   labelScore:'Score', scoreUsAria:'Our goals', scoreThemAria:'Opponent goals', emptyGoMatch:'Record a match', labelMin:'Minutes on the pitch', labelFormat:'Match format', labelMatchLen:'Match length, min', fmtCustom:'Custom',
   labelKind:'Match type', labelTournament:'Competition', phTournament:'Competition name',
   labelVenue:'Venue', venueHome:'Home', venueAway:'Away', labelRole:'Line-up',
@@ -641,7 +641,7 @@ es:{
   labelDate:'Fecha',
   labelPos:'Posición',
   labelOpp:'Rival',
-  phOpp:'Nombre del equipo',
+  phOpp:'Equipo',
   labelScore:'Resultado',
   labelMin:'Minutos en el campo',
   labelFormat:'Formato del partido',
@@ -1094,7 +1094,7 @@ de:{
   labelDate:'Datum',
   labelPos:'Position',
   labelOpp:'Gegner',
-  phOpp:'Teamname',
+  phOpp:'Team',
   labelScore:'Ergebnis',
   labelMin:'Minuten auf dem Platz',
   labelFormat:'Spielformat',
@@ -1547,7 +1547,7 @@ it:{
   labelDate:'Data',
   labelPos:'Ruolo',
   labelOpp:'Avversario',
-  phOpp:'Nome della squadra',
+  phOpp:'Squadra',
   labelScore:'Risultato',
   labelMin:'Minuti in campo',
   labelFormat:'Formato della partita',
@@ -2000,7 +2000,7 @@ fr:{
   labelDate:'Date',
   labelPos:'Poste',
   labelOpp:'Adversaire',
-  phOpp:'Nom de l\'équipe',
+  phOpp:'Équipe',
   labelScore:'Résultat',
   labelMin:'Minutes sur le terrain',
   labelFormat:'Format du match',
@@ -2453,7 +2453,7 @@ pt:{
   labelDate:'Data',
   labelPos:'Posição',
   labelOpp:'Adversário',
-  phOpp:'Nome da equipa',
+  phOpp:'Equipa',
   labelScore:'Resultado',
   labelMin:'Minutos em campo',
   labelFormat:'Formato do jogo',
@@ -2893,7 +2893,7 @@ pt:{
 ru:{
   pageTitle:'FFK — Оценка матча', settingsAria:'Настройки', themeAria:'Тема',
   heroOverall:'общая оценка', heroShort:'короткий выход', heroAction:'вклад', heroEffort:'старание',
-  liveStart:'Быстрый режим', livePitch:'Быстрый доступ', matchDetails:'Детали матча', labelDate:'Дата', labelPos:'Позиция', labelOpp:'Соперник', phOpp:'Название команды',
+  liveStart:'Быстрый режим', livePitch:'Быстрый доступ', matchDetails:'Детали матча', labelDate:'Дата', labelPos:'Позиция', labelOpp:'Соперник', phOpp:'Команда',
   labelScore:'Счёт', scoreUsAria:'Наши голы', scoreThemAria:'Голы соперника', emptyGoMatch:'Записать матч', labelMin:'Минуты на поле', labelFormat:'Формат матча', labelMatchLen:'Длина матча, мин', fmtCustom:'Свой',
   labelKind:'Тип игры', labelTournament:'Турнир', phTournament:'Название турнира',
   labelVenue:'Где играли', venueHome:'Дома', venueAway:'На выезде', labelRole:'Выход',
@@ -3114,7 +3114,7 @@ ru:{
       previewTitle:'Картка', previewShare:'Поділитися', previewSave:'Завантажити', previewCancel:'Скасувати',
       previewDark:'Темна', previewLight:'Світла',
       histSearch:'Суперник', histSearchPh:'Назва команди', histKindAll:'Усі ігри', histEmpty:'Немає матчів з таким фільтром.',
-      liveOnPitch:'На поле', pAddCover:'Додати фото'
+      liveOnPitch:'Вести матч', pAddCover:'Додати фото'
     },
     pl:{
       sTheme:'Motyw', theme_dark:'Noc', theme_light:'Pokój', theme_day:'Boisko',
@@ -3129,7 +3129,7 @@ ru:{
       previewTitle:'Karta', previewShare:'Udostępnij', previewSave:'Pobierz', previewCancel:'Anuluj',
       previewDark:'Ciemna', previewLight:'Jasna',
       histSearch:'Rywal', histSearchPh:'Nazwa drużyny', histKindAll:'Wszystkie mecze', histEmpty:'Brak meczów dla tego filtra.',
-      liveOnPitch:'Na boisko', pAddCover:'Dodaj zdjęcie'
+      liveOnPitch:'Prowadź mecz', pAddCover:'Dodaj zdjęcie'
     },
     en:{
       sTheme:'Theme', theme_dark:'Night', theme_light:'Indoor', theme_day:'Pitch',
@@ -3144,7 +3144,7 @@ ru:{
       previewTitle:'Card', previewShare:'Share', previewSave:'Download', previewCancel:'Cancel',
       previewDark:'Dark', previewLight:'Light',
       histSearch:'Opponent', histSearchPh:'Team name', histKindAll:'All games', histEmpty:'No matches for this filter.',
-      liveOnPitch:'On the pitch', pAddCover:'Add photo'
+      liveOnPitch:'Track the match', pAddCover:'Add photo'
     },
     ru:{
       sTheme:'Тема', theme_dark:'Ночь', theme_light:'Комната', theme_day:'Улица',
@@ -3159,7 +3159,7 @@ ru:{
       previewTitle:'Карточка', previewShare:'Поделиться', previewSave:'Скачать', previewCancel:'Отмена',
       previewDark:'Тёмная', previewLight:'Светлая',
       histSearch:'Соперник', histSearchPh:'Название команды', histKindAll:'Все игры', histEmpty:'Нет матчей с таким фильтром.',
-      liveOnPitch:'На поле', pAddCover:'Добавить фото'
+      liveOnPitch:'Вести матч', pAddCover:'Добавить фото'
     },
     es:{
       sTheme:'Tema', theme_dark:'Noche', theme_light:'Sala', theme_day:'Campo',
@@ -3174,7 +3174,7 @@ ru:{
       previewTitle:'Carta', previewShare:'Compartir', previewSave:'Descargar', previewCancel:'Cancelar',
       previewDark:'Oscura', previewLight:'Clara',
       histSearch:'Rival', histSearchPh:'Nombre del equipo', histKindAll:'Todos los partidos', histEmpty:'No hay partidos con este filtro.',
-      liveOnPitch:'Al campo', pAddCover:'Añadir foto'
+      liveOnPitch:'Seguir el partido', pAddCover:'Añadir foto'
     },
     de:{
       sTheme:'Design', theme_dark:'Nacht', theme_light:'Halle', theme_day:'Platz',
@@ -3189,7 +3189,7 @@ ru:{
       previewTitle:'Karte', previewShare:'Teilen', previewSave:'Laden', previewCancel:'Abbrechen',
       previewDark:'Dunkel', previewLight:'Hell',
       histSearch:'Gegner', histSearchPh:'Teamname', histKindAll:'Alle Spiele', histEmpty:'Keine Spiele für diesen Filter.',
-      liveOnPitch:'Auf den Platz', pAddCover:'Foto hinzufügen'
+      liveOnPitch:'Spiel mitschreiben', pAddCover:'Foto hinzufügen'
     },
     it:{
       sTheme:'Tema', theme_dark:'Notte', theme_light:'Sala', theme_day:'Campo',
@@ -3204,7 +3204,7 @@ ru:{
       previewTitle:'Carta', previewShare:'Condividi', previewSave:'Scarica', previewCancel:'Annulla',
       previewDark:'Scura', previewLight:'Chiara',
       histSearch:'Avversario', histSearchPh:'Nome della squadra', histKindAll:'Tutte le partite', histEmpty:'Nessuna partita per questo filtro.',
-      liveOnPitch:'In campo', pAddCover:'Aggiungi foto'
+      liveOnPitch:'Segui la partita', pAddCover:'Aggiungi foto'
     },
     fr:{
       sTheme:'Thème', theme_dark:'Nuit', theme_light:'Salle', theme_day:'Terrain',
@@ -3219,7 +3219,7 @@ ru:{
       previewTitle:'Carte', previewShare:'Partager', previewSave:'Télécharger', previewCancel:'Annuler',
       previewDark:'Sombre', previewLight:'Claire',
       histSearch:'Adversaire', histSearchPh:'Nom de l’équipe', histKindAll:'Tous les matchs', histEmpty:'Aucun match pour ce filtre.',
-      liveOnPitch:'Sur le terrain', pAddCover:'Ajouter une photo'
+      liveOnPitch:'Suivre le match', pAddCover:'Ajouter une photo'
     },
     pt:{
       sTheme:'Tema', theme_dark:'Noite', theme_light:'Sala', theme_day:'Campo',
@@ -3234,7 +3234,7 @@ ru:{
       previewTitle:'Carta', previewShare:'Partilhar', previewSave:'Descarregar', previewCancel:'Cancelar',
       previewDark:'Escura', previewLight:'Clara',
       histSearch:'Adversário', histSearchPh:'Nome da equipa', histKindAll:'Todos os jogos', histEmpty:'Não há jogos para este filtro.',
-      liveOnPitch:'Para o campo', pAddCover:'Adicionar foto'
+      liveOnPitch:'Acompanhar o jogo', pAddCover:'Adicionar foto'
     }
   };
   LANGS.forEach(lang => {
