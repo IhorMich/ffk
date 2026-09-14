@@ -624,9 +624,9 @@ function renderReportHtml(m, compact){
   const kick = m.kickoffClock ? escapeHtml(t('kickoffLine', {clock: m.kickoffClock})) : '';
   const meta = `<div class="report-sub"><span>${vs}</span>${kick ? `<span>${kick}</span>` : ''}</div>`;
   const head = compact ? meta : `<div class="report-kicker">${escapeHtml(t('reportTitle'))}</div>
-    <div class="report-title">${escapeHtml(reportPlayerName(m))} — <span class="n">${fmtNum(m.rating, 1)}</span></div>
+    <div class="report-title">${escapeHtml(reportPlayerName(m))} — <span class="n">${fmtNum(m.rating, 2)}</span></div>
     ${meta}
-    <div class="report-sub"><span>${escapeHtml(t('heroAction'))} ${fmtNum(m.actionRating, 1)}</span><span>${escapeHtml(t('heroEffort'))} ${fmtNum(m.effortRating, 1)}</span></div>`;
+    <div class="report-sub"><span>${escapeHtml(t('heroAction'))} ${fmtNum(m.actionRating, 2)}</span><span>${escapeHtml(t('heroEffort'))} ${fmtNum(m.effortRating, 2)}</span></div>`;
   const body = lines.length
     ? lines.map(x => `<div class="report-line"><span class="ic">${x.icon}</span><span>${escapeHtml(x.text)}</span></div>`).join('')
     : `<div class="report-line">${escapeHtml(t('plusEven'))}</div>`;
@@ -1581,7 +1581,7 @@ function renderPlayerFeed(){
       <div class="pf-rate">${fmtNum(avg, 2)}<small>${escapeHtml(season ? t('pfSeasonAvg') : t('pfAllAvg'))}</small></div>
       ${trendHtml}
       <div class="pf-grid">
-        <div class="pf-kpi"><div class="n">${fmtNum(last.rating, 1)}</div><div class="l">${escapeHtml(t('pfLast'))}</div></div>
+        <div class="pf-kpi"><div class="n">${fmtNum(last.rating, 2)}</div><div class="l">${escapeHtml(t('pfLast'))}</div></div>
         <div class="pf-kpi"><div class="n">${list.length}</div><div class="l">${escapeHtml(pfGamesLabel(list.length, season))}</div></div>
         <div class="pf-kpi"><div class="n">${goals} · ${assists}</div><div class="l">${escapeHtml(t('pfGA'))}</div></div>
       </div>
@@ -1601,7 +1601,7 @@ function applyHeader(){
   if(seasonAvg == null) avgEl.hidden = true;
   else {
     avgEl.hidden = false;
-    avgEl.textContent = '⭐ ' + fmtNum(seasonAvg, 1);
+    avgEl.textContent = '⭐ ' + fmtNum(seasonAvg, 2);
   }
   const numEl = document.getElementById('playerNumberDisplay');
   if(no){
@@ -1993,12 +1993,12 @@ function scoresNow(){
 }
 function updateHero(){
   const s = scoresNow();
-  document.getElementById('heroScore').innerHTML = fmtNum(s.overall, 1) + '<small>/10</small>';
-  document.getElementById('heroAction').textContent = fmtNum(s.action, 1);
-  document.getElementById('heroEffort').textContent = fmtNum(s.effort, 1);
+  document.getElementById('heroScore').innerHTML = fmtNum(s.overall, 2) + '<small>/10</small>';
+  document.getElementById('heroAction').textContent = fmtNum(s.action, 2);
+  document.getElementById('heroEffort').textContent = fmtNum(s.effort, 2);
   const minutes = Number(document.getElementById('f-minutes').value) || 60;
   document.getElementById('heroLabel').textContent = minutes < 25 ? t('heroShort') : t('heroOverall');
-  document.getElementById('liveScore').textContent = fmtNum(s.action, 1);
+  document.getElementById('liveScore').textContent = fmtNum(s.action, 2);
   syncLiveUndo();
 }
 
@@ -2215,7 +2215,7 @@ function renderHistory(){
           <span class="match-opp">${escapeHtml(m.opponent || t('unnamed'))}</span>
           <span class="match-score">${scoreLineHtml(m)}</span>
         </div>
-        <div class="match-rating ${ratingClass(m.rating)}">${fmtNum(m.rating, 1)}</div>
+        <div class="match-rating ${ratingClass(m.rating)}">${fmtNum(m.rating, 2)}</div>
       </div>
       <div class="match-details" id="details-${m.id}">
         ${renderReportHtml(m, true)}
@@ -2677,7 +2677,7 @@ function renderSeasonBoard(){
     const p0 = duelPct(win.start), p1 = duelPct(win.now);
     const pct = (v, digits) => v == null ? '—' : fmtNum(v, digits) + '%';
     const rows = [
-      [t('dyn_rating'), fmtNum(r0,1), fmtNum(r1,1), dynCls(r1,r0,false)],
+      [t('dyn_rating'), fmtNum(r0,2), fmtNum(r1,2), dynCls(r1,r0,false)],
       [t('dyn_dribbles'), fmtNum(d0,1), fmtNum(d1,1), dynCls(d1,d0,false)],
       [t('dyn_tackles'), fmtNum(t0,1), fmtNum(t1,1), dynCls(t1,t0,false)],
       [t('dyn_losses'), fmtNum(l0,1), fmtNum(l1,1), dynCls(l1,l0,true)],
@@ -2801,8 +2801,8 @@ function renderStats(){
   grid.innerHTML = [
     {num:fmtNum(avg(ratings), 2), lbl:t('stAvg')},
     {num:trendMark + fmtSigned(trend, 2), lbl:t('stTrend'), cls:trendCls},
-    {num:fmtNum(Math.max(...ratings), 1), lbl:t('stBest')},
-    {num:fmtNum(Math.min(...ratings), 1), lbl:t('stWorst')},
+    {num:fmtNum(Math.max(...ratings), 2), lbl:t('stBest')},
+    {num:fmtNum(Math.min(...ratings), 2), lbl:t('stWorst')},
     {num:list.length, lbl:t('stMatches')},
     {num:minutes, lbl:t('stMins')},
     {num:sum('goals'), lbl:t('stGoals')},
