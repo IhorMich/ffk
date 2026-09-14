@@ -6,7 +6,7 @@
 
 Живая страница: [https://ihormich.github.io/ffk/](https://ihormich.github.io/ffk/)
 
-Локально достаточно открыть `index.html` в браузере (рядом должны лежать `css/app.css`, `js/i18n.js` и `js/app.js`). Сервер не нужен. Для установки на домашний экран есть `manifest.webmanifest`.
+Локально достаточно открыть `index.html` в браузере (рядом должны лежать `css/` и `js/`). Сервер не нужен. Для установки на домашний экран есть `manifest.webmanifest`.
 
 ## Для кого и какую задачу закрывает
 
@@ -150,9 +150,9 @@
 
 | | |
 | --- | --- |
-| Стек | `index.html` + `css/app.css` + `js/i18n.js` + `js/app.js`, без сборки |
+| Стек | `index.html` + `css/app.css` + `js/i18n.js` + `js/rating.js` + `js/storage.js` + `js/app.js`, без сборки |
 | Данные | `localStorage` (ключи вида `ffk_*`) |
 | Оценка | Формула в браузере, без внешнего API |
 | Репозиторий | GitHub Pages отдаёт эти же файлы |
 
-Менять интерфейс — `index.html` и `css/app.css`, тексты — `js/i18n.js`, логику — `js/app.js`. Отдельного бэкенда и зависимостей нет.
+Менять интерфейс — `index.html` и `css/app.css`, тексты — `js/i18n.js`, формулу оценки — `js/rating.js`, сохранение — `js/storage.js`, экраны — `js/app.js`. Отдельного бэкенда и зависимостей нет.

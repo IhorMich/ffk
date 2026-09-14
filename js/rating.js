@@ -1,0 +1,148 @@
+const ROLE_CODES = ['gk','def','mid','fwd'];
+const POS_CODES = ['GK','CB','LB','RB','LWB','RWB','CDM','CM','CAM','LM','RM','LW','RW','ST','CF'];
+const POS_GROUP = {
+  GK:'gk', CB:'def', LB:'def', RB:'def', LWB:'def', RWB:'def',
+  CDM:'mid', CM:'mid', CAM:'mid', LM:'mid', RM:'mid',
+  LW:'fwd', RW:'fwd', ST:'fwd', CF:'fwd'
+};
+const GROUP_TO_POS = {gk:'GK', def:'CB', mid:'CM', fwd:'RW'};
+
+const BASE_RATING = 6.0;
+
+const METRICS = [
+  {key:'goals', icon:'⚽', positions:['fwd','mid','def'], live:['fwd','mid'], w:{fwd:0.7, mid:0.55, def:0.45, gk:0}},
+  {key:'shots', icon:'🥅', positions:['fwd','mid'], live:['fwd'], w:{fwd:0.2, mid:0.15, def:0, gk:0}},
+  {key:'assists', icon:'🎯', positions:['fwd','mid','def'], live:['fwd','mid'], w:{fwd:0.5, mid:0.5, def:0.35, gk:0}},
+  {key:'dribbles', icon:'🌀', positions:['fwd','mid'], live:['fwd'], w:{fwd:0.15, mid:0.1, def:0, gk:0}},
+  {key:'openings', icon:'🏃', positions:['fwd'], live:['fwd'], w:{fwd:0.2, mid:0, def:0, gk:0}},
+  {key:'chances', icon:'✨', positions:['mid'], live:['mid'], w:{fwd:0, mid:0.32, def:0, gk:0}},
+  {key:'passes', icon:'📤', positions:['fwd','mid','def'], live:['fwd','mid'], w:{fwd:0.15, mid:0.25, def:0.15, gk:0}},
+  {key:'buildpass', icon:'➡', positions:['mid','def','gk'], live:['mid','def','gk'], w:{fwd:0, mid:0.07, def:0.1, gk:0.12}},
+  {key:'tackles', icon:'🛡', positions:['fwd','mid','def'], live:['mid','def'], w:{fwd:0.1, mid:0.25, def:0.4, gk:0}},
+  {key:'interceptions', icon:'🪝', positions:['mid','def','gk'], live:['def','gk'], w:{fwd:0, mid:0.18, def:0.35, gk:0.28}},
+  {key:'clearances', icon:'🧹', positions:['def'], live:['def'], w:{fwd:0, mid:0, def:0.22, gk:0}},
+  {key:'blocks', icon:'🧱', positions:['def'], live:['def'], w:{fwd:0, mid:0, def:0.28, gk:0}},
+  {key:'duelswon', icon:'💪', positions:['fwd','mid','def'], live:['mid','def'], w:{fwd:0.1, mid:0.2, def:0.3, gk:0}},
+  {key:'support', icon:'🤝', positions:['fwd','mid','def'], live:[], w:{fwd:0.15, mid:0.2, def:0.25, gk:0}},
+  {key:'saves', icon:'🧤', positions:['gk'], live:['gk'], w:{fwd:0, mid:0, def:0, gk:0.4}},
+  {key:'claims', icon:'🪂', positions:['gk'], live:['gk'], w:{fwd:0, mid:0, def:0, gk:0.3}},
+  {key:'gkpass', icon:'👟', positions:['gk'], live:['gk'], w:{fwd:0, mid:0, def:0, gk:0.15}},
+  {key:'conceded', icon:'📉', positions:['gk'], live:['gk'], w:{fwd:0, mid:0, def:0, gk:-0.18}},
+  {key:'losses', icon:'✖', positions:['fwd','mid','def'], live:['fwd','mid','def'], w:{fwd:-0.2, mid:-0.15, def:-0.1, gk:0}},
+  {key:'ledtogoal', icon:'⛔', positions:['fwd','mid','def','gk'], live:['def','gk'], w:{fwd:-0.8, mid:-0.8, def:-0.85, gk:-0.55}},
+  {key:'badpass', icon:'↩', positions:['fwd','mid','def','gk'], live:[], w:{fwd:-0.1, mid:-0.15, def:-0.1, gk:-0.15}},
+  {key:'badtouch', icon:'🫳', positions:['fwd','mid','def'], live:[], w:{fwd:-0.1, mid:-0.1, def:-0.1, gk:0}},
+  {key:'duelslost', icon:'🤼', positions:['fwd','mid','def'], live:[], w:{fwd:-0.1, mid:-0.15, def:-0.25, gk:0}},
+  {key:'fouls', icon:'🟨', positions:['fwd','mid','def','gk'], live:[], w:{fwd:-0.25, mid:-0.25, def:-0.2, gk:-0.2}},
+  {key:'owngoal', icon:'😬', positions:['fwd','mid','def','gk'], live:[], w:{fwd:-1, mid:-1, def:-1, gk:-1}},
+];
+const BEHAVIOR = [
+  {key:'effort', inRating:true},
+  {key:'team', inRating:true},
+  {key:'coach', inRating:true},
+  {key:'discipline', inRating:true},
+  {key:'mood', inRating:false},
+];
+
+const GRADE_TYPICAL = {
+  goals:0.6, assists:0.5, shots:1.2, dribbles:2.2, openings:2, chances:1.2,
+  passes:1.5, buildpass:6, tackles:2.5, interceptions:2, clearances:2, blocks:1.2,
+  duelswon:4, support:2, saves:3, claims:1.5, gkpass:4,
+  losses:3.4, ledtogoal:0.35, badpass:2.4, badtouch:1.4, duelslost:3, fouls:1.2,
+  owngoal:0.2, conceded:1.4
+};
+function metricGrade(avg, key, w){
+  const typical = GRADE_TYPICAL[key] || 2;
+  if(w >= 0) return clamp10(4 + 6 * (1 - Math.exp(-avg / typical)));
+  return clamp10(10 - 6 * (1 - Math.exp(-avg / typical)));
+}
+
+function isRoleCode(code){ return ROLE_CODES.includes(code); }
+function isPosCode(code){ return POS_CODES.includes(code); }
+function isPitchCode(code){ return isRoleCode(code) || isPosCode(code); }
+
+function guessPos(label){
+  const s = String(label||'');
+  const code = s.toUpperCase();
+  if(POS_GROUP[code]) return POS_GROUP[code];
+  if(/вратар|воротар|bramk|goalkeep|\bgk\b/i.test(s)) return 'gk';
+  if(/защит|захис|obroń|obron|\bdef\b/i.test(s)) return 'def';
+  if(/полузащ|півзахис|pomoc|\bmid\b/i.test(s)) return 'mid';
+  return 'fwd';
+}
+
+function ratingPosOf(code){
+  if(POS_GROUP[code]) return POS_GROUP[code];
+  if(isRoleCode(code)) return code;
+  return guessPos(code);
+}
+
+function emptyForm(){
+  const counts = {}, behaviors = {};
+  METRICS.forEach(m => counts[m.key] = 0);
+  BEHAVIOR.forEach(b => behaviors[b.key] = 3);
+  return {counts, behaviors};
+}
+
+function metricsFor(pos){ return METRICS.filter(m => m.positions.includes(pos)); }
+function weightOf(m, pos){ return m.w[pos] ?? 0; }
+function clamp10(n){ return Math.round(Math.max(0, Math.min(10, n)) * 10) / 10; }
+
+function behaviorAvg(behaviors){
+  const rated = BEHAVIOR.filter(b => b.inRating).map(b => Number(behaviors[b.key]) || 3);
+  return rated.reduce((a,b)=>a+b,0) / rated.length;
+}
+function stackedWeight(n, w){
+  n = Math.max(0, Math.floor(Number(n)||0));
+  if(!n || !w) return 0;
+  const decay = w < 0 ? 0.75 : 0.88;
+  let sum = 0;
+  for(let i=0;i<n;i++) sum += w * Math.pow(decay, i);
+  return sum;
+}
+function actionSum(counts, pos){
+  let sum = 0;
+  metricsFor(pos).forEach(m => sum += stackedWeight(counts[m.key], weightOf(m, pos)));
+  return sum;
+}
+function actionScore(counts, pos){
+  return clamp10(BASE_RATING + actionSum(counts, pos));
+}
+function effortScore(behaviors){
+  return clamp10(BASE_RATING + (behaviorAvg(behaviors) - 3) * 2);
+}
+function overallScore(counts, behaviors, pos){
+  return clamp10(BASE_RATING + actionSum(counts, pos) + (behaviorAvg(behaviors) - 3) * 0.5);
+}
+
+function actionSplit(counts, pos){
+  let plus = 0, minus = 0;
+  metricsFor(pos).forEach(m => {
+    const v = stackedWeight(counts[m.key], weightOf(m, pos));
+    if(v > 0) plus += v;
+    else if(v < 0) minus += v;
+  });
+  return {plus: Math.round(plus * 100) / 100, minus: Math.round(minus * 100) / 100};
+}
+
+function eventSign(key, pos){
+  const met = METRICS.find(x => x.key === key);
+  if(!met) return 0;
+  const w = weightOf(met, pos);
+  if(w > 0) return 1;
+  if(w < 0) return -1;
+  return 0;
+}
+
+function ratingClass(r){
+  if(r < 5.5) return 'low';
+  if(r < 7.5) return 'mid';
+  return '';
+}
+function countOf(m, key){ return Math.max(0, Math.floor(Number(m?.counts?.[key]) || 0)); }
+function behaviorOf(m, key){ return Number(m?.behaviors?.[key]) || 3; }
+function matchIsBlank(m){
+  const acted = METRICS.some(x => countOf(m, x.key) > 0);
+  const shifted = BEHAVIOR.some(b => b.inRating && behaviorOf(m, b.key) !== 3);
+  return !acted && !shifted;
+}
