@@ -3147,25 +3147,30 @@ async function shareCard(m){
 }
 
 (function init(){
-  loadSettings();
-  loadFilters();
-  applyFont();
-  applyTheme();
-  loadPlayer();
-  fillPrimarySelect();
-  applyHeader();
-  document.getElementById('f-date').value = todayStr();
-  fillMatchPitchSelects(defaultPitch());
-  document.getElementById('f-format').value = settings.format || '2x30';
-  document.getElementById('f-matchlen').value = settings.minutes;
-  syncPlayedDefault(true);
-  loadMatches();
-  syncFilterChips();
-  applyHeader();
-  restoreDraft();
-  applyI18n();
-  applyTheme();
-  renderOppList();
-  maybePromptSeasonClose();
-  restoreView();
+  try{
+    loadSettings();
+    loadFilters();
+    applyFont();
+    applyTheme();
+    loadPlayer();
+    fillPrimarySelect();
+    applyHeader();
+    document.getElementById('f-date').value = todayStr();
+    fillMatchPitchSelects(defaultPitch());
+    document.getElementById('f-format').value = settings.format || '2x30';
+    document.getElementById('f-matchlen').value = settings.minutes;
+    syncPlayedDefault(true);
+    loadMatches();
+    syncFilterChips();
+    applyHeader();
+    restoreDraft();
+    applyI18n();
+    applyTheme();
+    renderOppList();
+    maybePromptSeasonClose();
+    restoreView();
+  }catch(err){
+    console.error(err);
+    showToast(String(err && err.message || err));
+  }
 })();
