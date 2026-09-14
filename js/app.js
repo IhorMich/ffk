@@ -19,14 +19,25 @@ function t(key, vars){
   return s;
 }
 function isNativeApp(){
-  return typeof window.ffkIsNative === 'function' && window.ffkIsNative();
+  try{
+    const C = window.Capacitor;
+    if(C){
+      if(typeof C.isNativePlatform === 'function' && C.isNativePlatform()) return true;
+      if(C.isNative === true) return true;
+      if(typeof C.getPlatform === 'function'){
+        const p = C.getPlatform();
+        if(p === 'android' || p === 'ios') return true;
+      }
+    }
+  }catch(e){}
+  const proto = location.protocol;
+  return proto === 'capacitor:' || proto === 'ionic:';
 }
 function capPlugin(name){
   try{
     const C = window.Capacitor;
-    if(!C) return null;
-    if(C.Plugins && C.Plugins[name]) return C.Plugins[name];
-    if(typeof C.registerPlugin === 'function') return C.registerPlugin(name);
+    if(!C || typeof C.registerPlugin !== 'function') return null;
+    return C.registerPlugin(name);
   }catch(e){}
   return null;
 }
@@ -855,10 +866,15 @@ function closePhotoSheet(){
   document.getElementById('photoSheet').hidden = true;
   document.getElementById('photoSheetBack').hidden = true;
 }
+function cameraCaptureAvailable(){
+  return isNativeApp();
+}
 function openPhotoSheet(target){
   photoSheetTarget = target;
   const has = target === 'cover' ? !!currentCover() : !!currentPhoto();
-  document.getElementById('photoSheetCamera').textContent = t(target === 'cover' ? 'pTakeCover' : 'pTakePhoto');
+  const cam = document.getElementById('photoSheetCamera');
+  cam.hidden = !cameraCaptureAvailable();
+  cam.textContent = t(target === 'cover' ? 'pTakeCover' : 'pTakePhoto');
   document.getElementById('photoSheetPick').textContent = t('pFromGallery');
   document.getElementById('photoSheetClear').hidden = !has;
   document.getElementById('photoSheet').hidden = false;
@@ -921,54 +937,61 @@ async function beginCropFromNative(result){
   if(!file){ showToast(t('toastPhotoFail')); return; }
   await beginCrop(file, photoSheetTarget);
 }
+async function nativeGetPhoto(source){
+  const Camera = capPlugin('Camera');
+  if(!Camera) throw new Error('nocam');
+  if(typeof Camera.requestPermissions === 'function' && source === 'CAMERA'){
+    try{ await Camera.requestPermissions({permissions: ['camera']}); }catch(e){}
+  }
+  if(source === 'CAMERA' && typeof Camera.getPhoto === 'function'){
+    return Camera.getPhoto({
+      quality: 90,
+      allowEditing: false,
+      resultType: 'uri',
+      source: 'CAMERA',
+      saveToGallery: false,
+      correctOrientation: true
+    });
+  }
+  if(source === 'CAMERA' && typeof Camera.takePhoto === 'function'){
+    return Camera.takePhoto({quality: 90, saveToGallery: false, cameraDirection: 'REAR'});
+  }
+  if(typeof Camera.chooseFromGallery === 'function'){
+    const pack = await Camera.chooseFromGallery({quality: 90, limit: 1, mediaType: 0});
+    return pack && pack.results && pack.results[0];
+  }
+  if(typeof Camera.getPhoto === 'function'){
+    return Camera.getPhoto({quality: 90, allowEditing: false, resultType: 'uri', source: 'PHOTOS'});
+  }
+  throw new Error('nocam');
+}
 async function pickFromCamera(){
   closePhotoSheet();
-  const Camera = capPlugin('Camera');
-  if(isNativeApp() && Camera){
-    try{
-      let result = null;
-      if(typeof Camera.takePhoto === 'function'){
-        result = await Camera.takePhoto({
-          quality: 90,
-          saveToGallery: false,
-          cameraDirection: 'REAR',
-          targetWidth: 1600,
-          targetHeight: 1600
-        });
-      } else if(typeof Camera.getPhoto === 'function'){
-        result = await Camera.getPhoto({quality: 90, source: 'CAMERA', resultType: 'uri', saveToGallery: false});
-      }
-      if(result) await beginCropFromNative(result);
-    }catch(err){
-      if(cameraUserStopped(err)) return;
-      showToast(t('toastPhotoFail'));
-      pickPhotoFile(true);
-    }
+  if(!isNativeApp()){
+    pickPhotoFile(true);
     return;
   }
-  pickPhotoFile(true);
+  try{
+    const result = await nativeGetPhoto('CAMERA');
+    if(result) await beginCropFromNative(result);
+  }catch(err){
+    if(cameraUserStopped(err)) return;
+    showToast(t('toastPhotoFail'));
+  }
 }
 async function pickFromGallery(){
   closePhotoSheet();
-  const Camera = capPlugin('Camera');
-  if(isNativeApp() && Camera){
-    try{
-      let result = null;
-      if(typeof Camera.chooseFromGallery === 'function'){
-        const pack = await Camera.chooseFromGallery({quality: 90, limit: 1, mediaType: 0});
-        result = pack && pack.results && pack.results[0];
-      } else if(typeof Camera.getPhoto === 'function'){
-        result = await Camera.getPhoto({quality: 90, source: 'PHOTOS', resultType: 'uri'});
-      }
-      if(result) await beginCropFromNative(result);
-    }catch(err){
-      if(cameraUserStopped(err)) return;
-      showToast(t('toastPhotoFail'));
-      pickPhotoFile(false);
-    }
+  if(!isNativeApp()){
+    pickPhotoFile(false);
     return;
   }
-  pickPhotoFile(false);
+  try{
+    const result = await nativeGetPhoto('PHOTOS');
+    if(result) await beginCropFromNative(result);
+  }catch(err){
+    if(cameraUserStopped(err)) return;
+    showToast(t('toastPhotoFail'));
+  }
 }
 function bindCameraRestore(){
   const App = capPlugin('App');

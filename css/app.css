@@ -159,12 +159,7 @@
       radial-gradient(80% 70% at 50% 100%, rgba(34,211,166,.28), transparent 70%);
     background-size:100% 16px, 100% 100%, 100% 100%;
   }
-  .cover-cta{
-    position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);
-    z-index:2;padding:8px 14px;border-radius:999px;
-    background:rgba(8,18,14,.72);border:1px solid rgba(255,255,255,.2);
-    color:#fff;font-size:.78rem;font-weight:800;white-space:nowrap;pointer-events:none;
-  }
+  .cover-cta{display:none !important;}
   .profile-cover.has-photo .cover-cta{display:none;}
   .profile-cover .cover-fill{display:none;}
   .profile-cover .cover-fit{
@@ -283,6 +278,7 @@
     width:100%;padding:14px 12px;border:0;background:none;color:var(--text);
     font:inherit;font-weight:800;cursor:pointer;border-radius:12px;
   }
+  .photo-sheet button[hidden]{display:none !important;}
   .photo-sheet button:active{background:var(--surface-2);}
   .photo-sheet .sheet-mute{font-weight:600;font-size:.88rem;color:var(--text-soft);}
   .photo-sheet .sheet-danger{font-weight:700;font-size:.88rem;color:var(--danger);}

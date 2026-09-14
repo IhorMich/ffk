@@ -7,8 +7,12 @@ window.ffkIsNative = function () {
   try {
     var C = window.Capacitor;
     if (C) {
-      if (typeof C.isNativePlatform === 'function') return !!C.isNativePlatform();
+      if (typeof C.isNativePlatform === 'function' && C.isNativePlatform()) return true;
       if (C.isNative) return true;
+      if (typeof C.getPlatform === 'function') {
+        var plat = C.getPlatform();
+        if (plat === 'android' || plat === 'ios') return true;
+      }
     }
   } catch (e) {}
   var p = location.protocol;
