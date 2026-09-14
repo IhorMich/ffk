@@ -273,13 +273,19 @@
         <select id="statsSeason"></select>
       </div>
       <h3 class="period-head" id="periodHead" data-i18n="stPeriodCards">За выбранный период</h3>
-      <div class="period-chips" id="periodChips">
-        <button type="button" class="chip active" data-range="10" data-i18n="chart10">10 матчей</button>
-        <button type="button" class="chip" data-range="100" data-i18n="chart100">100 матчей</button>
-        <button type="button" class="chip" data-range="7d" data-i18n="periodWeek">Неделя</button>
-        <button type="button" class="chip" data-range="30d" data-i18n="periodMonth">Месяц</button>
-        <button type="button" class="chip" data-range="year" data-i18n="periodYear">Год</button>
-        <button type="button" class="chip" data-range="all" data-i18n="periodAll">Всё время</button>
+      <div class="period-chips period-switch" id="periodChips">
+        <div class="period-switch-row">
+          <button type="button" class="chip active" data-range="10" data-i18n="chart10">10 матчей</button>
+          <button type="button" class="chip" data-range="100" data-i18n="chart100">100 матчей</button>
+        </div>
+        <div class="period-switch-row">
+          <button type="button" class="chip" data-range="7d" data-i18n="periodWeek">Неделя</button>
+          <button type="button" class="chip" data-range="30d" data-i18n="periodMonth">Месяц</button>
+        </div>
+        <div class="period-switch-row">
+          <button type="button" class="chip" data-range="year" data-i18n="periodYear">Год</button>
+          <button type="button" class="chip" data-range="all" data-i18n="periodAll">Всё время</button>
+        </div>
       </div>
       <div class="stats-layout">
       <div class="stats-side">

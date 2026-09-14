@@ -2381,7 +2381,6 @@ function renderStats(){
   const list = statsMatches();
   renderTimingBoard();
   const grid = document.getElementById('statGrid');
-  document.getElementById('periodHead').textContent = statsPeriodLabel();
   const chartList = chartMatches();
   if(!list.length){
     grid.innerHTML = matches.length
