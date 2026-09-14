@@ -507,6 +507,8 @@
     display:grid;grid-template-columns:1fr 1fr;gap:10px;max-width:420px;margin:0 0 16px;padding:10px 12px;
     border-radius:18px;background:var(--surface);border:1px solid var(--border);
   }
+  .period-custom[hidden]{display:grid !important;}
+  .period-switch-row:last-child{grid-template-columns:1fr;}
   .match-rating{font-size:1.4rem;font-weight:800;color:var(--accent);font-variant-numeric:tabular-nums;}
   .match-rating.low{color:var(--danger);}
   .match-rating.mid{color:var(--gold);}

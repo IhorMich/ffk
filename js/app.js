@@ -26,7 +26,6 @@ function capPlugin(name){
     const C = window.Capacitor;
     if(!C) return null;
     if(C.Plugins && C.Plugins[name]) return C.Plugins[name];
-    if(typeof C.registerPlugin === 'function') return C.registerPlugin(name);
   }catch(e){}
   return null;
 }
@@ -2835,13 +2834,7 @@ window.handleAppBack = function(){
   try{ return handleAppBack(); }catch(e){ return false; }
 };
 function bindAppBack(){
-  const App = capPlugin('App');
-  if(!App || typeof App.addListener !== 'function') return;
-  App.addListener('backButton', () => {
-    if(window.handleAppBack()) return;
-    if(typeof App.minimizeApp === 'function') App.minimizeApp();
-    else if(typeof App.exitApp === 'function') App.exitApp();
-  }).catch(() => {});
+  /* Android back is handled in MainActivity so the system swipe cannot WebView.goBack(). */
 }
 document.addEventListener('click', (e) => {
   const go = e.target.closest('[data-go-view]');
