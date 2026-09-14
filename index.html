@@ -91,39 +91,33 @@
   }
   .player-head-top{display:flex;align-items:center;flex-wrap:wrap;gap:4px;}
   .profile-hero{
-    position:relative;left:50%;width:100vw;margin-left:-50vw;margin-top:-18px;margin-bottom:84px;
+    position:relative;left:50%;width:100vw;margin-left:-50vw;margin-top:-18px;margin-bottom:88px;
   }
   .profile-cover{
-    display:block;width:100%;min-height:180px;padding:0;border:0;border-radius:0;overflow:hidden;
-    cursor:pointer;position:relative;color:inherit;
+    display:block;width:100%;height:148px;min-height:148px;padding:0;border:0;border-radius:0;overflow:hidden;
+    cursor:pointer;position:relative;color:inherit;z-index:0;
     background:
       radial-gradient(120% 90% at 20% 20%, rgba(34,211,166,.35) 0%, transparent 55%),
       radial-gradient(90% 80% at 90% 80%, rgba(124,92,252,.32) 0%, transparent 50%),
       var(--surface-2);
   }
-  .profile-cover.has-photo{min-height:140px;}
-  .profile-cover.has-photo:not(.cover-tall){
-    aspect-ratio:16 / 9;max-height:42vh;min-height:0;
+  @media (min-width:720px){
+    .profile-cover{height:176px;min-height:176px;}
   }
   .profile-cover .cover-fill{
     display:none;position:absolute;inset:0;width:100%;height:100%;
-    object-fit:cover;filter:blur(28px) saturate(1.05);transform:scale(1.12);
+    object-fit:cover;filter:blur(24px) saturate(1.05);transform:scale(1.12);
     pointer-events:none;z-index:0;
   }
   .profile-cover.cover-tall .cover-fill{display:block;}
   .profile-cover .cover-fit{
-    position:relative;z-index:1;display:block;width:100%;height:auto;
-    pointer-events:none;object-position:center;
+    position:absolute;inset:0;z-index:1;display:block;width:100%;height:100%;
+    object-fit:cover;object-position:center;pointer-events:none;
   }
-  .profile-cover.has-photo:not(.cover-tall) .cover-fit{
-    position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
-  }
-  .profile-cover.cover-tall .cover-fit{
-    max-height:70vh;object-fit:contain;
-  }
+  .profile-cover.cover-tall .cover-fit{object-fit:contain;}
   .profile-cover::after{
-    content:"";position:absolute;left:0;right:0;bottom:0;height:72px;pointer-events:none;z-index:1;
-    background:linear-gradient(to top, rgba(8,14,24,.28), transparent);
+    content:"";position:absolute;left:0;right:0;bottom:0;height:48px;pointer-events:none;z-index:1;
+    background:linear-gradient(to top, rgba(8,14,24,.22), transparent);
   }
   .cam-chip,.cam-badge{
     position:absolute;display:flex;align-items:center;justify-content:center;
@@ -132,15 +126,15 @@
   }
   .cam-chip{right:10px;bottom:10px;width:34px;height:34px;border-radius:50%;font-size:.9rem;z-index:2;}
   .avatar-pin{
-    position:absolute;left:50%;bottom:-64px;transform:translateX(-50%);
-    width:128px;height:128px;
+    position:absolute;left:50%;bottom:-58px;transform:translateX(-50%);
+    width:128px;height:128px;z-index:5;
   }
   .photo-box{
     position:relative;width:128px;height:128px;border-radius:50%;overflow:hidden;padding:0;margin:0;
     background:linear-gradient(135deg, var(--accent), var(--violet));
     border:4px solid var(--bg);display:flex;align-items:center;justify-content:center;
     font-weight:900;font-size:1.85rem;color:#08121C;cursor:pointer;
-    box-shadow:0 8px 24px rgba(0,0,0,.35);
+    box-shadow:0 8px 24px rgba(0,0,0,.35);z-index:1;
   }
   .photo-box img{width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;}
   .fb-id{text-align:center;margin:4px 0 18px;}
