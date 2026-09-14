@@ -1,35 +1,44 @@
 package app.ffk.rating;
 
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
 import android.webkit.WebView;
 import androidx.activity.OnBackPressedCallback;
 import com.getcapacitor.Bridge;
 import com.getcapacitor.BridgeActivity;
 
 public class MainActivity extends BridgeActivity {
-  private final Handler mainHandler = new Handler(Looper.getMainLooper());
 
   @Override
   public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-    getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
-      @Override
-      public void handleOnBackPressed() {
-        WebView webView = getBridge() != null ? getBridge().getWebView() : null;
-        if (webView != null && webView.canGoBack()) {
-          webView.goBack();
-          mainHandler.postDelayed(() -> {
-            Bridge bridge = getBridge();
-            if (bridge != null) {
-              bridge.eval("window.requestAppBack&&window.requestAppBack()", null);
-            }
-          }, 80);
-          return;
+    // Added after the plugins, so this callback is the top of the stack and gets
+    // both the back key and the edge gesture.
+    getOnBackPressedDispatcher()
+      .addCallback(
+        this,
+        new OnBackPressedCallback(true) {
+          @Override
+          public void handleOnBackPressed() {
+            handleBack();
+          }
         }
-        moveTaskToBack(true);
+      );
+  }
+
+  private void handleBack() {
+    Bridge bridge = getBridge();
+    WebView webView = bridge != null ? bridge.getWebView() : null;
+    if (webView == null) {
+      moveTaskToBack(true);
+      return;
+    }
+    // The web layer closes its own overlays and tabs; "0" means there is
+    // nothing left to close, so the app goes to the background.
+    webView.evaluateJavascript(
+      "(window.ffkBack&&window.ffkBack())?'1':'0'",
+      value -> {
+        if (value == null || !value.contains("1")) moveTaskToBack(true);
       }
-    });
+    );
   }
 }

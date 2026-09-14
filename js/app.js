@@ -1913,14 +1913,15 @@ function haptic(style){
     if(typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(style === 'MEDIUM' ? 24 : 14);
   }catch(e){}
 }
-const HAPTIC_STRONG = '#saveBtn,#savePlayerBtn,#liveStartBtn,#liveDoneBtn,#saveSettingsBtn,.js-match-clock-btn,.live-kick';
+// Haptics stay inside the live pad and on the action steppers, nowhere else.
+const HAPTIC_TAPS = '#livePad button,.stepper button';
 function bindTapHaptics(){
   if(window.__ffkTapHaptics) return;
   window.__ffkTapHaptics = true;
   document.addEventListener('click', e => {
-    const tap = e.target.closest('button,.chip,.pos-chip,.tabbtn');
+    const tap = e.target.closest(HAPTIC_TAPS);
     if(!tap || tap.disabled) return;
-    haptic(tap.matches(HAPTIC_STRONG) ? 'MEDIUM' : 'LIGHT');
+    haptic(tap.matches('#liveKickBtn,#liveDoneBtn') ? 'MEDIUM' : 'LIGHT');
   }, true);
 }
 function syncLiveUndo(){
@@ -2898,8 +2899,77 @@ function renderLiveClock(){
     btn.textContent = btnText;
     btn.disabled = phase === 'done';
   });
+  // Match over: nothing to do but save, so the live entry stays locked until then.
+  const startBtn = document.getElementById('liveStartBtn');
+  if(startBtn) startBtn.disabled = phase === 'done';
   const liveKick = document.getElementById('liveKickBtn');
   if(liveKick) liveKick.classList.toggle('go', phase === 'idle' || phase === 'break');
+}
+let whistleCtx = null;
+function audioCtx(){
+  try{
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if(!AC) return null;
+    if(!whistleCtx) whistleCtx = new AC();
+    if(whistleCtx.state === 'suspended') whistleCtx.resume().catch(() => {});
+    return whistleCtx;
+  }catch(e){ return null; }
+}
+function whistleBlow(ctx, at, dur){
+  const out = ctx.createGain();
+  out.connect(ctx.destination);
+  out.gain.setValueAtTime(0.0001, at);
+  out.gain.exponentialRampToValueAtTime(0.42, at + 0.02);
+  out.gain.setValueAtTime(0.42, at + Math.max(0.04, dur - 0.07));
+  out.gain.exponentialRampToValueAtTime(0.0001, at + dur);
+  // The pea rattle: fast frequency warble around the main tone.
+  const pea = ctx.createOscillator();
+  pea.frequency.value = 30;
+  const peaDepth = ctx.createGain();
+  peaDepth.gain.value = 210;
+  pea.connect(peaDepth);
+  pea.start(at);
+  pea.stop(at + dur + 0.03);
+  [[3180, 'sine', 1], [4520, 'triangle', 0.22]].forEach(([freq, type, level]) => {
+    const osc = ctx.createOscillator();
+    osc.type = type;
+    osc.frequency.value = freq;
+    peaDepth.connect(osc.frequency);
+    const gain = ctx.createGain();
+    gain.gain.value = level;
+    osc.connect(gain);
+    gain.connect(out);
+    osc.start(at);
+    osc.stop(at + dur + 0.03);
+  });
+  const frames = Math.ceil(ctx.sampleRate * (dur + 0.05));
+  const buf = ctx.createBuffer(1, frames, ctx.sampleRate);
+  const data = buf.getChannelData(0);
+  for(let i = 0; i < frames; i++) data[i] = Math.random() * 2 - 1;
+  const air = ctx.createBufferSource();
+  air.buffer = buf;
+  const band = ctx.createBiquadFilter();
+  band.type = 'bandpass';
+  band.frequency.value = 3300;
+  band.Q.value = 1.1;
+  const airGain = ctx.createGain();
+  airGain.gain.value = 0.14;
+  air.connect(band);
+  band.connect(airGain);
+  airGain.connect(out);
+  air.start(at);
+  air.stop(at + dur + 0.03);
+}
+function whistle(blows){
+  const ctx = audioCtx();
+  if(!ctx) return;
+  let at = ctx.currentTime + 0.04;
+  for(let i = 0; i < blows; i++){
+    const last = i === blows - 1;
+    const dur = blows === 1 ? 0.5 : (last ? 0.55 : 0.2);
+    whistleBlow(ctx, at, dur);
+    at += dur + 0.13;
+  }
 }
 function startMatchClock(){
   const now = Date.now();
@@ -2918,6 +2988,7 @@ function startMatchClock(){
   matchClock.phase = 'run';
   matchClock.periodRunAt = now;
   matchClock.pausedAt = null;
+  whistle(1);
   startClockTick();
   renderLiveClock();
   persistDraft();
@@ -2933,6 +3004,7 @@ function endCurrentPeriod(){
   const {parts} = periodShape();
   const period = Number(matchClock.period) || 1;
   matchClock.phase = period < parts ? 'break' : 'done';
+  whistle(matchClock.phase === 'done' ? 3 : 2);
   if(matchClock.phase === 'done') stopClockTick();
   renderLiveClock();
   persistDraft();
@@ -2980,7 +3052,9 @@ function activeViewName(){
 let popping = false;
 let lastAppBack = 0;
 function pushAppState(kind){
-  if(popping) return;
+  // In the native shell the WebView swallows the back gesture whenever it has
+  // history of its own, so there MainActivity drives the back handling instead.
+  if(popping || isNativeApp()) return;
   try{
     const has = !!(history.state && history.state.ffk);
     if(kind === 'layer' || !has) history.pushState({ffk: kind || 'tab'}, '');
@@ -2989,7 +3063,7 @@ function pushAppState(kind){
 }
 function requestAppBack(){
   const now = Date.now();
-  if(now - lastAppBack < 400) return true;
+  if(now - lastAppBack < 600) return true;
   lastAppBack = now;
   popping = true;
   try{ return handleAppBack(); } finally { popping = false; }
@@ -3020,33 +3094,49 @@ function handleAppBack(){
   if(name !== 'player'){ showView('player'); return true; }
   return false;
 }
-window.handleAppBack = function(){
+// Called from MainActivity on the back key and the edge gesture. Keep the name
+// distinct from the functions above: assigning to window would shadow them.
+window.ffkBack = function(){
   try{ return requestAppBack(); }catch(e){ return true; }
 };
-window.requestAppBack = requestAppBack;
 function bindAppBack(){
-  if(window.__ffkPopBound) return;
+  if(window.__ffkPopBound || isNativeApp()) return;
   window.__ffkPopBound = true;
   window.addEventListener('popstate', () => { requestAppBack(); });
 }
+const SHEET_ANIM_MS = 260;
 function resetSheet(card){
   if(!card) return;
-  card.classList.remove('sheet-full', 'sheet-dragging');
+  card.classList.remove('sheet-full', 'sheet-dragging', 'sheet-closing');
   card.style.transform = '';
+  if(card.parentElement) card.parentElement.classList.remove('sheet-hiding');
 }
 function bindSheetDrag(cardId, grabId, onClose){
   const card = document.getElementById(cardId);
   const grab = document.getElementById(grabId);
   if(!card || !grab) return;
   let startY = 0, shift = 0, startedAt = 0, dragging = false;
+  const slideOut = () => {
+    card.classList.add('sheet-closing');
+    card.style.transform = '';
+    if(card.parentElement) card.parentElement.classList.add('sheet-hiding');
+    window.setTimeout(onClose, SHEET_ANIM_MS);
+  };
   const finish = () => {
     if(!dragging) return;
     dragging = false;
     card.classList.remove('sheet-dragging');
-    card.style.transform = '';
-    const flick = Date.now() - startedAt < 260 && shift > 50;
-    if(shift > 0 && card.classList.contains('sheet-full')) card.classList.remove('sheet-full');
-    else if(shift > 110 || flick) onClose();
+    const elapsed = Math.max(1, Date.now() - startedAt);
+    const far = shift > Math.min(240, card.offsetHeight * 0.32);
+    const flick = shift > 90 && shift / elapsed > 0.9;
+    if(shift > 0 && card.classList.contains('sheet-full')){
+      card.classList.remove('sheet-full');
+      card.style.transform = '';
+    } else if(far || flick){
+      slideOut();
+    } else {
+      card.style.transform = '';
+    }
   };
   grab.addEventListener('pointerdown', e => {
     dragging = true;
@@ -3069,16 +3159,8 @@ function bindSheets(){
   bindSheetDrag('playerEditCard', 'playerEditGrab', () => closePlayerEdit(true));
   bindSheetDrag('previewCard', 'previewGrab', () => closeCardPreview());
 }
-function bindNativeBack(){
-  const App = capPlugin('App');
-  if(!isNativeApp() || !App || typeof App.addListener !== 'function' || window.__ffkBackBound) return;
-  window.__ffkBackBound = true;
-  App.addListener('backButton', () => {
-    if(requestAppBack()) return;
-    if(typeof App.minimizeApp === 'function') App.minimizeApp();
-    else if(typeof App.exitApp === 'function') App.exitApp();
-  });
-}
+// Android back (key and edge gesture) is routed through MainActivity, which calls
+// window.ffkBack and minimizes the app when nothing was left to close.
 document.addEventListener('click', (e) => {
   const go = e.target.closest('[data-go-view]');
   if(go) showView(go.dataset.goView);
@@ -3834,6 +3916,11 @@ async function shareCard(m){
     if('serviceWorker' in navigator && !isNativeApp()){
       const swUrl = new URL('sw.js', document.querySelector('base')?.href || location.href);
       navigator.serviceWorker.register(swUrl.href).catch(() => {});
+    } else if('serviceWorker' in navigator && isNativeApp()){
+      // The APK ships its own assets; a worker left over from the PWA build
+      // would keep serving stale files after an update.
+      navigator.serviceWorker.getRegistrations().then(list => list.forEach(reg => reg.unregister())).catch(() => {});
+      if(window.caches && caches.keys) caches.keys().then(keys => keys.forEach(key => caches.delete(key))).catch(() => {});
     }
     loadSettings();
     const ratingFail = ratingFixtureFail();
@@ -3859,7 +3946,6 @@ async function shareCard(m){
     restoreView();
     if(!maybeTransfer()) maybeOnboard();
     bindAppBack();
-    bindNativeBack();
     bindTapHaptics();
     bindSheets();
     bindCameraRestore();
