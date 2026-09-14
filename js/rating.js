@@ -146,3 +146,27 @@ function matchIsBlank(m){
   const shifted = BEHAVIOR.some(b => b.inRating && behaviorOf(m, b.key) !== 3);
   return !acted && !shifted;
 }
+
+const RATING_FIXTURES = [
+  {name:'base', pos:'fwd', counts:{}, behaviors:{}, overall:6, action:6, effort:6},
+  {name:'oneGoal', pos:'fwd', counts:{goals:1}, behaviors:{}, overall:6.7, action:6.7, effort:6},
+  {name:'threeGoals', pos:'fwd', counts:{goals:3}, behaviors:{}, overall:7.9, action:7.9, effort:6},
+  {name:'gkSaves', pos:'gk', counts:{saves:4, claims:1}, behaviors:{}, overall:7.6, action:7.6, effort:6},
+  {name:'maxEffort', pos:'fwd', counts:{}, behaviors:{effort:5, team:5, coach:5, discipline:5}, overall:7, action:6, effort:10},
+  {name:'minEffort', pos:'fwd', counts:{}, behaviors:{effort:1, team:1, coach:1, discipline:1}, overall:5, action:6, effort:2}
+];
+function ratingFixtureFail(){
+  for(let i=0;i<RATING_FIXTURES.length;i++){
+    const f = RATING_FIXTURES[i];
+    const form = emptyForm();
+    Object.keys(f.counts || {}).forEach(k => { form.counts[k] = f.counts[k]; });
+    Object.keys(f.behaviors || {}).forEach(k => { form.behaviors[k] = f.behaviors[k]; });
+    const overall = overallScore(form.counts, form.behaviors, f.pos);
+    const action = actionScore(form.counts, f.pos);
+    const effort = effortScore(form.behaviors);
+    if(overall !== f.overall || action !== f.action || effort !== f.effort){
+      return f.name + ' got ' + overall + '/' + action + '/' + effort;
+    }
+  }
+  return '';
+}

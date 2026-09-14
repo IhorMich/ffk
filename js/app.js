@@ -19,7 +19,14 @@ function t(key, vars){
   return s;
 }
 function applyFont(){
-  document.documentElement.style.setProperty('--font', APP_FONT);
+  document.documentElement.style.setProperty('--font', FONT_FALLBACK);
+  const link = document.getElementById('appFontLink');
+  if(!link) return;
+  const useWeb = () => {
+    document.documentElement.style.setProperty('--font', '"Plus Jakarta Sans",' + FONT_FALLBACK);
+  };
+  link.addEventListener('load', useWeb);
+  if(link.sheet) useWeb();
 }
 const THEME_ORDER = ['dark','light','day'];
 function themeName(){
@@ -707,6 +714,11 @@ function formatDate(iso){
     return new Date(Number(y), Number(m)-1, Number(d)).toLocaleDateString(LANG_LOCALE[settings.lang] || 'en-GB', {day:'numeric', month:'short', year:'numeric'});
   }
   return `${d}.${m}.${y}`;
+}
+function chartDateLabel(iso){
+  const [y,m,d] = String(iso||'').split('-');
+  if(!y||!m||!d) return '';
+  return d + '.' + m;
 }
 function syncDateShown(){
   [['f-date','f-date-shown'],['p-birth','p-birth-shown']].forEach(([id, shownId]) => {
@@ -1921,9 +1933,9 @@ function renderHistory(){
     return `<div class="match-card">
       <div class="match-card-top" onclick="toggleDetails(${m.id})">
         <div class="match-meta">
-          <span class="match-date">${escapeHtml(formatDate(m.date))}${showSeason ? ' · ' + escapeHtml(matchSeason(m)) : ''} · ${escapeHtml(matchPosDisplay(m))} · ${escapeHtml(venueLabel(m.venue))} · ${escapeHtml(roleLabel(m.role))} · ${escapeHtml(kindLabel(m.kind))}${m.tournament ? ' · ' + escapeHtml(m.tournament) : ''} · ${escapeHtml((m.format||'').replace('x','×') || t('fmtCustom'))} · ${escapeHtml(t('minLbl', {n:m.minutes}))}</span>
+          <span class="match-date">${escapeHtml(formatDate(m.date))}${showSeason ? ' · ' + escapeHtml(matchSeason(m)) : ''} · ${escapeHtml(matchPosDisplay(m))}</span>
           <span class="match-opp">${escapeHtml(m.opponent || t('unnamed'))}</span>
-          <span class="match-score">${m.score ? escapeHtml(t('scoreLbl', {s:m.score})) : ''} · ${escapeHtml(t('heroAction'))} ${fmtNum(m.actionRating, 1)} · ${escapeHtml(t('heroEffort'))} ${fmtNum(m.effortRating, 1)}</span>
+          <span class="match-score">${m.score ? escapeHtml(t('scoreLbl', {s:m.score})) : '—'}</span>
         </div>
         <div class="match-rating ${ratingClass(m.rating)}">${fmtNum(m.rating, 1)}</div>
       </div>
@@ -1992,6 +2004,7 @@ function showView(name){
   const views = ['player','new','history','stats','settings','report'];
   if(!views.includes(name)) name = 'new';
   if(name !== 'player') closePlayerEdit();
+  document.getElementById('app').classList.toggle('player-on', name === 'player');
   document.querySelectorAll('.tabbtn').forEach(b => b.classList.toggle('active', b.dataset.view === name));
   document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id === 'view-'+name));
   document.querySelector('.topbar').classList.add('compact');
@@ -2527,7 +2540,7 @@ function drawChart(list){
   }).join('');
   const labels = xs.map((x,i)=> {
     if(i !== 0 && i !== xs.length-1 && i % step) return '';
-    return `<text x="${x.toFixed(1)}" y="${h-8}" font-size="9" fill="${cssVar('--text-soft','#8D9AB5')}" text-anchor="middle">${i+1}</text>`;
+    return `<text x="${x.toFixed(1)}" y="${h-8}" font-size="9" fill="${cssVar('--text-soft','#8D9AB5')}" text-anchor="middle">${escapeHtml(chartDateLabel(list[i].date))}</text>`;
   }).join('');
   svg.innerHTML = `${grid}${path}${dots}${labels}`;
 }
@@ -3327,6 +3340,8 @@ async function shareCard(m){
       navigator.serviceWorker.register(swUrl.href).catch(() => {});
     }
     loadSettings();
+    const ratingFail = ratingFixtureFail();
+    if(ratingFail) console.error('FFK rating', ratingFail);
     loadFilters();
     applyFont();
     applyTheme();
