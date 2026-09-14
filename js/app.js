@@ -2575,9 +2575,48 @@ function rangeLabel(key){
 function cardPeriodMatches(range){
   return periodSlice(seasonPool(), range || currentRange);
 }
+function cardLocale(){
+  return ({uk:'uk-UA', pl:'pl-PL', en:'en-GB', ru:'ru-RU', es:'es-ES', de:'de-DE', it:'it-IT', fr:'fr-FR', pt:'pt-PT'})[settings.lang] || 'en-GB';
+}
+function upperFirst(s){
+  const str = String(s || '');
+  return str ? str.charAt(0).toUpperCase() + str.slice(1) : '';
+}
+function dateFromStr(s){
+  const d = new Date(String(s || '') + 'T00:00:00');
+  return isNaN(d.getTime()) ? null : d;
+}
+// A card outlives the season, so "Month" says nothing later; write the days it
+// really covers, and the month name when every match fits into one month.
+function cardSpanLabel(list, monthly){
+  const dates = (list || []).map(m => m && m.date).filter(Boolean).sort();
+  if(!dates.length) return '';
+  const first = dates[0], last = dates[dates.length - 1];
+  const from = dateFromStr(first), to = dateFromStr(last);
+  if(!from || !to) return '';
+  const locale = cardLocale();
+  const sameYear = from.getFullYear() === to.getFullYear();
+  const sameMonth = sameYear && from.getMonth() === to.getMonth();
+  try{
+    if(monthly && sameMonth) return upperFirst(from.toLocaleDateString(locale, {month: 'long'})) + ' ' + from.getFullYear();
+    if(first === last) return upperFirst(from.toLocaleDateString(locale, {day: 'numeric', month: 'long'})) + ' ' + from.getFullYear();
+    if(sameYear){
+      const fmt = new Intl.DateTimeFormat(locale, {day: 'numeric', month: 'long'});
+      const span = typeof fmt.formatRange === 'function'
+        ? fmt.formatRange(from, to)
+        : fmt.format(from) + ' – ' + fmt.format(to);
+      return upperFirst(span) + ' ' + to.getFullYear();
+    }
+  }catch(e){}
+  return formatDate(first) + ' – ' + formatDate(last);
+}
 function cardPeriodLabel(range){
   const key = range || currentRange;
   if(key === 'season') return currentSeason();
+  if(key !== 'all'){
+    const span = cardSpanLabel(cardPeriodMatches(key), key === '30d');
+    if(span) return span;
+  }
   const label = rangeLabel(key);
   if(currentSeasonFilter === 'all'){
     if(key === 'all') return t('seasonAll');
@@ -3866,8 +3905,8 @@ function playerCardList(kind){
   return feedList().list;
 }
 function playerCardPeriod(kind){
-  if(kind === 'month') return t('periodMonth');
-  if(kind === '10') return t('periodLast10');
+  if(kind === 'month') return cardSpanLabel(playerCardList('month'), true) || t('periodMonth');
+  if(kind === '10') return cardSpanLabel(playerCardList('10'), false) || t('periodLast10');
   if(kind === 'all') return t('periodAll');
   const {season} = feedList();
   return season ? (player.season || currentSeason()) : t('periodAll');
