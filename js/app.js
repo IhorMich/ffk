@@ -1366,6 +1366,8 @@ function renderRoster(){
       ${del}
     </div>`;
   }).join('');
+  const add = document.getElementById('addPlayerBtn');
+  if(add) add.hidden = roster.ids.length >= MAX_PLAYERS;
 }
 function persistActivePlayer(){
   if(document.getElementById('view-player').classList.contains('active')){
