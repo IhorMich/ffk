@@ -36,10 +36,16 @@ function isNativeApp(){
 function capPlugin(name){
   try{
     const C = window.Capacitor;
-    if(!C || typeof C.registerPlugin !== 'function') return null;
-    return C.registerPlugin(name);
+    if(!C) return null;
+    // Native bridge exposes plugins on Capacitor.Plugins; registerPlugin only exists in the web runtime.
+    if(C.Plugins && C.Plugins[name]) return C.Plugins[name];
+    if(typeof C.registerPlugin === 'function') return C.registerPlugin(name);
   }catch(e){}
   return null;
+}
+function camLog(){
+  if(!isNativeApp()) return;
+  try{ console.error('[ffk-cam]', Array.prototype.map.call(arguments, v => typeof v === 'string' ? v : JSON.stringify(v)).join(' ')); }catch(e){}
 }
 function blobToBase64(blob){
   return new Promise((resolve, reject) => {
@@ -954,42 +960,34 @@ async function photoToDataUrl(result){
   return url && /^data:image\//i.test(url) ? url : '';
 }
 async function beginCropFromNative(result){
+  camLog('result keys', Object.keys(result || {}));
   try{
     const dataUrl = await photoToDataUrl(result);
+    camLog('dataUrl len', String((dataUrl || '').length));
     if(dataUrl){
       openCrop(await loadImageFromSrc(dataUrl), photoSheetTarget);
       return;
     }
-  }catch(e){}
+  }catch(e){
+    camLog('crop error', String((e && e.message) || e));
+  }
   showToast(t('toastPhotoFail'));
 }
 async function nativeGetPhoto(source){
   const Camera = capPlugin('Camera');
+  camLog('plugin', Camera ? Object.keys(Camera).join(',') : 'null');
   if(!Camera) throw new Error('nocam');
   const fromCamera = source === 'CAMERA';
-  if(fromCamera && typeof Camera.requestPermissions === 'function'){
-    try{ await Camera.requestPermissions({permissions: ['camera']}); }catch(e){}
-  }
-  if(typeof Camera.getPhoto === 'function'){
-    return Camera.getPhoto({
-      quality: 70,
-      allowEditing: false,
-      resultType: 'dataUrl',
-      source: fromCamera ? 'CAMERA' : 'PHOTOS',
-      saveToGallery: false,
-      correctOrientation: true,
-      width: 1280,
-      height: 1280
-    });
-  }
-  if(fromCamera && typeof Camera.takePhoto === 'function'){
-    return Camera.takePhoto({quality: 70, saveToGallery: false, cameraDirection: 'REAR'});
-  }
-  if(!fromCamera && typeof Camera.chooseFromGallery === 'function'){
-    const pack = await Camera.chooseFromGallery({quality: 70, limit: 1, mediaType: 0});
-    return pack && pack.results && pack.results[0];
-  }
-  throw new Error('nocam');
+  return Camera.getPhoto({
+    quality: 70,
+    allowEditing: false,
+    resultType: 'dataUrl',
+    source: fromCamera ? 'CAMERA' : 'PHOTOS',
+    saveToGallery: false,
+    correctOrientation: true,
+    width: 1280,
+    height: 1280
+  });
 }
 async function pickFromCamera(){
   closePhotoSheet();
@@ -1001,6 +999,7 @@ async function pickFromCamera(){
     const result = await nativeGetPhoto('CAMERA');
     if(result) await beginCropFromNative(result);
   }catch(err){
+    camLog('camera fail', String((err && (err.message || err.errorMessage)) || err), String((err && err.code) || ''));
     if(cameraUserStopped(err)) return;
     showToast(t('toastPhotoFail'));
   }
@@ -1015,6 +1014,7 @@ async function pickFromGallery(){
     const result = await nativeGetPhoto('PHOTOS');
     if(result) await beginCropFromNative(result);
   }catch(err){
+    camLog('gallery fail', String((err && (err.message || err.errorMessage)) || err), String((err && err.code) || ''));
     if(cameraUserStopped(err)) return;
     showToast(t('toastPhotoFail'));
   }
