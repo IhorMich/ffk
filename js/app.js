@@ -854,7 +854,6 @@ function setCoverPreview(){
 function closePhotoSheet(){
   document.getElementById('photoSheet').hidden = true;
   document.getElementById('photoSheetBack').hidden = true;
-  syncNativeBackFlag();
 }
 function openPhotoSheet(target){
   photoSheetTarget = target;
@@ -863,7 +862,7 @@ function openPhotoSheet(target){
   document.getElementById('photoSheetClear').hidden = !has;
   document.getElementById('photoSheet').hidden = false;
   document.getElementById('photoSheetBack').hidden = false;
-  syncNativeBackFlag();
+  pushAppState();
 }
 function pickPhotoFile(){
   const el = document.getElementById(photoSheetTarget === 'cover' ? 'p-cover' : 'p-photo');
@@ -1024,13 +1023,12 @@ function openCrop(img, target){
   if(hint) hint.textContent = t(target === 'cover' ? 'cropCoverHint' : 'cropHint');
   document.getElementById('cropZoom').value = '100';
   document.getElementById('cropModal').hidden = false;
-  syncNativeBackFlag();
+  pushAppState();
   requestAnimationFrame(() => requestAnimationFrame(() => applyCropZoom(false)));
 }
 function closeCrop(){
   cropState = null;
   document.getElementById('cropModal').hidden = true;
-  syncNativeBackFlag();
 }
 function exportCrop(){
   const st = cropState;
@@ -1595,13 +1593,12 @@ function openPlayerEdit(){
   fillPlayerForm();
   const el = document.getElementById('playerEdit');
   if(el) el.hidden = false;
-  syncNativeBackFlag();
+  pushAppState();
 }
 function closePlayerEdit(revert){
   const el = document.getElementById('playerEdit');
   if(el) el.hidden = true;
   if(revert !== false) fillPlayerForm();
-  syncNativeBackFlag();
 }
 function fillPlayerForm(){
   fillPrimarySelect();
@@ -2075,7 +2072,13 @@ window.historyGo = function(p){
   document.getElementById('view-history')?.scrollIntoView({block:'start'});
 };
 
-window.toggleDetails = function(id){ document.getElementById('details-'+id)?.classList.toggle('open'); };
+window.toggleDetails = function(id){
+  const el = document.getElementById('details-'+id);
+  if(!el) return;
+  const willOpen = !el.classList.contains('open');
+  el.classList.toggle('open');
+  if(willOpen) pushAppState();
+};
 window.toggleStory = function(id){
   const el = document.getElementById('story-'+id);
   if(el) el.hidden = !el.hidden;
@@ -2118,7 +2121,7 @@ function showView(name){
   renderLiveClock();
   if(clockPhase() === 'run') startClockTick();
   try{ sessionStorage.setItem(VIEW_KEY, name === 'report' ? 'history' : name); }catch(e){}
-  syncNativeBackFlag();
+  if(!popping && name !== 'player') pushAppState();
 }
 function restoreView(){
   let name = 'new';
@@ -2772,7 +2775,7 @@ function openLive(){
   updateHero();
   renderLiveClock();
   if(clockPhase() === 'run') startClockTick();
-  syncNativeBackFlag();
+  pushAppState();
 }
 function closeLive(){
   document.getElementById('app').classList.remove('live-on');
@@ -2782,7 +2785,6 @@ function closeLive(){
   renderLiveClock();
   if(clockPhase() === 'run') startClockTick();
   persistDraft();
-  syncNativeBackFlag();
 }
 document.getElementById('liveStartBtn').addEventListener('click', openLive);
 document.getElementById('liveUndoBtn').addEventListener('click', () => undoLastLive());
@@ -2800,16 +2802,10 @@ function activeViewName(){
   const view = document.querySelector('.view.active');
   return view && view.id ? view.id.replace('view-', '') : '';
 }
-function peekAppBack(){
-  if(isElShown('onboard') || isElShown('cropModal') || isElShown('photoSheet') || isElShown('previewModal') || isElShown('playerEdit')) return true;
-  if(document.getElementById('app')?.classList.contains('live-on')) return true;
-  if(document.querySelector('#historyList .match-details.open')) return true;
-  return activeViewName() !== 'player';
-}
-function syncNativeBackFlag(){
-  try{
-    if(window.FfkHost && typeof window.FfkHost.setStay === 'function') window.FfkHost.setStay(peekAppBack());
-  }catch(e){}
+let popping = false;
+function pushAppState(){
+  if(popping) return;
+  try{ history.pushState({ffk: Date.now()}, ''); }catch(e){}
 }
 function handleAppBack(){
   if(isElShown('onboard')){
@@ -2817,67 +2813,30 @@ function handleAppBack(){
       onboardStep -= 1;
       renderOnboard();
     }
-    syncNativeBackFlag();
     return true;
   }
-  if(isElShown('cropModal')){ closeCrop(); syncNativeBackFlag(); return true; }
-  if(isElShown('photoSheet')){ closePhotoSheet(); syncNativeBackFlag(); return true; }
-  if(isElShown('previewModal')){ closeCardPreview(); syncNativeBackFlag(); return true; }
-  if(isElShown('playerEdit')){ closePlayerEdit(true); syncNativeBackFlag(); return true; }
-  if(document.getElementById('app')?.classList.contains('live-on')){ closeLive(); syncNativeBackFlag(); return true; }
+  if(isElShown('cropModal')){ closeCrop(); return true; }
+  if(isElShown('photoSheet')){ closePhotoSheet(); return true; }
+  if(isElShown('previewModal')){ closeCardPreview(); return true; }
+  if(isElShown('playerEdit')){ closePlayerEdit(true); return true; }
+  if(document.getElementById('app')?.classList.contains('live-on')){ closeLive(); return true; }
   const openDetails = document.querySelector('#historyList .match-details.open');
-  if(openDetails){ openDetails.classList.remove('open'); syncNativeBackFlag(); return true; }
+  if(openDetails){ openDetails.classList.remove('open'); return true; }
   const name = activeViewName();
   if(name === 'report'){ showView('history'); return true; }
   if(name !== 'player'){ showView('player'); return true; }
-  syncNativeBackFlag();
   return false;
 }
 window.handleAppBack = function(){
-  try{ return handleAppBack(); }catch(e){ syncNativeBackFlag(); return true; }
+  try{ return handleAppBack(); }catch(e){ return true; }
 };
-function nativeGoHome(){
-  try{
-    if(window.FfkHost && typeof window.FfkHost.goHome === 'function') window.FfkHost.goHome();
-  }catch(e){}
-}
 function bindAppBack(){
-  syncNativeBackFlag();
-  if(!window.__ffkBackPoll){
-    window.__ffkBackPoll = setInterval(() => {
-      try{
-        if(window.FfkHost && typeof window.FfkHost.takeBack === 'function' && Number(window.FfkHost.takeBack()) > 0){
-          if(!window.handleAppBack()) nativeGoHome();
-        }
-      }catch(e){}
-    }, 50);
-  }
-  if(window.__ffkEdgeBack) return;
-  window.__ffkEdgeBack = true;
-  let on = false, x0 = 0, y0 = 0;
-  const edge = 44;
-  document.addEventListener('touchstart', e => {
-    const t = e.changedTouches[0];
-    on = t.clientX <= edge;
-    x0 = t.clientX;
-    y0 = t.clientY;
-  }, {passive:true, capture:true});
-  document.addEventListener('touchmove', e => {
-    if(!on) return;
-    const t = e.changedTouches[0];
-    const dx = t.clientX - x0;
-    const dy = Math.abs(t.clientY - y0);
-    if(dx > 20 && dx > dy && e.cancelable) e.preventDefault();
-  }, {passive:false, capture:true});
-  document.addEventListener('touchend', e => {
-    if(!on) return;
-    on = false;
-    const t = e.changedTouches[0];
-    const dx = t.clientX - x0;
-    const dy = Math.abs(t.clientY - y0);
-    if(dx < 56 || dy > 90) return;
-    if(!window.handleAppBack()) nativeGoHome();
-  }, {passive:true, capture:true});
+  if(window.__ffkPopBound) return;
+  window.__ffkPopBound = true;
+  window.addEventListener('popstate', () => {
+    popping = true;
+    try{ handleAppBack(); } finally { popping = false; }
+  });
 }
 document.addEventListener('click', (e) => {
   const go = e.target.closest('[data-go-view]');
@@ -2943,7 +2902,6 @@ function finishOnboard(){
   settings.onboarded = true;
   saveSettings();
   document.getElementById('onboard').hidden = true;
-  syncNativeBackFlag();
 }
 function renderOnboard(){
   const pages = onboardPages();
@@ -2964,7 +2922,7 @@ function maybeOnboard(){
   onboardStep = 0;
   document.getElementById('onboard').hidden = false;
   renderOnboard();
-  syncNativeBackFlag();
+  pushAppState();
 }
 document.getElementById('onboardNext').addEventListener('click', () => {
   if(onboardStep >= 2){ finishOnboard(); return; }
@@ -3332,7 +3290,7 @@ async function openCardPreview(state){
   try{
     await refreshCardPreview();
     document.getElementById('previewModal').hidden = false;
-    syncNativeBackFlag();
+    pushAppState();
   }catch(e){
     shareBusy = false;
     previewState = null;
@@ -3347,7 +3305,6 @@ function closeCardPreview(){
   img.removeAttribute('src');
   previewState = null;
   shareBusy = false;
-  syncNativeBackFlag();
 }
 async function drawFutCardCanvas(list, period, mode){
     const pos = ratingPosOf(player.primary);
