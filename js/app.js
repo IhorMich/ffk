@@ -2836,16 +2836,48 @@ function handleAppBack(){
 window.handleAppBack = function(){
   try{ return handleAppBack(); }catch(e){ syncNativeBackFlag(); return true; }
 };
+function nativeGoHome(){
+  try{
+    if(window.FfkHost && typeof window.FfkHost.goHome === 'function') window.FfkHost.goHome();
+  }catch(e){}
+}
 function bindAppBack(){
   syncNativeBackFlag();
-  if(window.__ffkBackPoll) return;
-  window.__ffkBackPoll = setInterval(() => {
-    try{
-      if(window.FfkHost && typeof window.FfkHost.takeBack === 'function' && window.FfkHost.takeBack()){
-        window.handleAppBack();
-      }
-    }catch(e){}
-  }, 50);
+  if(!window.__ffkBackPoll){
+    window.__ffkBackPoll = setInterval(() => {
+      try{
+        if(window.FfkHost && typeof window.FfkHost.takeBack === 'function' && Number(window.FfkHost.takeBack()) > 0){
+          if(!window.handleAppBack()) nativeGoHome();
+        }
+      }catch(e){}
+    }, 50);
+  }
+  if(window.__ffkEdgeBack) return;
+  window.__ffkEdgeBack = true;
+  let on = false, x0 = 0, y0 = 0;
+  const edge = 44;
+  document.addEventListener('touchstart', e => {
+    const t = e.changedTouches[0];
+    on = t.clientX <= edge;
+    x0 = t.clientX;
+    y0 = t.clientY;
+  }, {passive:true, capture:true});
+  document.addEventListener('touchmove', e => {
+    if(!on) return;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - x0;
+    const dy = Math.abs(t.clientY - y0);
+    if(dx > 20 && dx > dy && e.cancelable) e.preventDefault();
+  }, {passive:false, capture:true});
+  document.addEventListener('touchend', e => {
+    if(!on) return;
+    on = false;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - x0;
+    const dy = Math.abs(t.clientY - y0);
+    if(dx < 56 || dy > 90) return;
+    if(!window.handleAppBack()) nativeGoHome();
+  }, {passive:true, capture:true});
 }
 document.addEventListener('click', (e) => {
   const go = e.target.closest('[data-go-view]');

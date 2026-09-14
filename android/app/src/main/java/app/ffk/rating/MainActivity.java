@@ -1,15 +1,22 @@
 package app.ffk.rating;
 
 import android.os.Bundle;
+import android.view.View;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebView;
 import androidx.activity.OnBackPressedCallback;
 import com.getcapacitor.BridgeActivity;
+import java.lang.ref.WeakReference;
 
 public class MainActivity extends BridgeActivity {
   public static class Host {
+    private final WeakReference<MainActivity> activity;
     private volatile boolean stay = true;
     private volatile int backSeq = 0;
+
+    Host(MainActivity activity) {
+      this.activity = new WeakReference<>(activity);
+    }
 
     @JavascriptInterface
     public void setStay(boolean value) {
@@ -23,6 +30,12 @@ public class MainActivity extends BridgeActivity {
       return n;
     }
 
+    @JavascriptInterface
+    public void goHome() {
+      MainActivity a = activity.get();
+      if (a != null) a.runOnUiThread(() -> a.moveTaskToBack(true));
+    }
+
     void requestBack() {
       backSeq++;
     }
@@ -32,12 +45,13 @@ public class MainActivity extends BridgeActivity {
     }
   }
 
-  private final Host host = new Host();
+  private Host host;
   private OnBackPressedCallback backCallback;
 
   @Override
   public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
+    host = new Host(this);
     attachHost();
     backCallback = new OnBackPressedCallback(true) {
       @Override
@@ -66,5 +80,7 @@ public class MainActivity extends BridgeActivity {
     if (getBridge() == null || getBridge().getWebView() == null) return;
     WebView webView = getBridge().getWebView();
     webView.addJavascriptInterface(host, "FfkHost");
+    webView.setOverScrollMode(View.OVER_SCROLL_NEVER);
+    webView.setHorizontalScrollBarEnabled(false);
   }
 }
