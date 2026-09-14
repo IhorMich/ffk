@@ -112,11 +112,19 @@
       radial-gradient(90% 90% at 100% 0%, rgba(124,92,252,.25) 0%, rgba(124,92,252,0) 55%),
       var(--bg);
   }
-  .app.player-on .club-name,
-  .app.player-on .player-name,
-  .app.player-on .player-avg,
-  .app.player-on .player-num{display:none;}
-  .app.player-on .topbar{padding-bottom:10px;}
+  .app.player-on .club-row-main{display:none;}
+  /* The cover photo is the header here, so the bar only floats the two actions. */
+  .app.player-on{position:relative;}
+  .app.player-on .topbar{
+    position:absolute;left:0;right:0;top:0;z-index:6;
+    padding:calc(12px + env(safe-area-inset-top, 0px)) 16px 0;
+    background:none;pointer-events:none;
+  }
+  .app.player-on .top-actions{pointer-events:auto;}
+  .app.player-on .icon-btn{
+    background:rgba(8,14,24,.5);border-color:rgba(255,255,255,.22);color:#fff;
+    backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  }
   .club-row{display:flex;align-items:center;gap:12px;}
   .club-row-main{display:flex;align-items:center;gap:12px;min-width:0;flex:1;cursor:pointer;text-align:left;background:none;border:none;color:inherit;padding:0;font:inherit;}
   .club-badge{
@@ -139,17 +147,20 @@
   }
   .player-head-top{display:flex;align-items:center;flex-wrap:wrap;gap:4px;}
   .profile-hero{
-    position:relative;width:calc(100% + 32px);margin: -18px -16px 108px;
+    position:relative;width:calc(100% + 32px);margin: -18px -16px 96px;
   }
   .profile-cover{
     appearance:none;-webkit-appearance:none;
-    display:block;width:100%;height:148px;min-height:148px;padding:0;border:0;border-radius:0;overflow:hidden;
+    display:block;width:100%;
+    height:calc(178px + env(safe-area-inset-top, 0px));
+    min-height:calc(178px + env(safe-area-inset-top, 0px));
+    padding:0;border:0;border-radius:0 0 28px 28px;overflow:hidden;
     cursor:pointer;position:relative;color:inherit;z-index:0;
     background-color:var(--surface-2);
     background-size:cover;background-position:center;background-repeat:no-repeat;
   }
   @media (min-width:720px){
-    .profile-cover{height:176px;min-height:176px;}
+    .profile-cover{height:206px;min-height:206px;}
   }
   .profile-cover:not(.has-photo){
     background-color:#14301c;
@@ -172,18 +183,18 @@
     background:linear-gradient(to top, rgba(8,14,24,.22), transparent);
   }
   .avatar-pin{
-    position:absolute;left:50%;bottom:-70px;transform:translateX(-50%);
-    width:152px;height:152px;z-index:5;
+    position:absolute;left:50%;bottom:-84px;transform:translateX(-50%);
+    width:172px;height:172px;z-index:5;
   }
   .photo-box{
-    position:relative;width:152px;height:152px;border-radius:50%;overflow:hidden;padding:0;margin:0;
+    position:relative;width:172px;height:172px;border-radius:50%;overflow:hidden;padding:0;margin:0;
     background:linear-gradient(135deg, var(--accent), var(--violet));
     border:4px solid var(--bg);display:flex;align-items:center;justify-content:center;
     font-weight:900;font-size:2.1rem;color:#08121C;cursor:pointer;
     box-shadow:0 8px 24px rgba(0,0,0,.35);z-index:1;
   }
   .photo-box img{width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;}
-  .fb-id{text-align:center;margin:4px 0 18px;}
+  .fb-id{text-align:center;margin:0 0 12px;}
   .fb-name{font-size:1.45rem;font-weight:800;line-height:1.15;overflow-wrap:anywhere;}
   .fb-meta{margin-top:6px;font-size:.82rem;color:var(--text-soft);font-weight:600;line-height:1.4;overflow-wrap:anywhere;}
   .pf-card{
@@ -232,15 +243,12 @@
   .sheet-grab:active{cursor:grabbing;}
   .sheet-grab span{width:46px;height:5px;border-radius:99px;background:var(--border);}
   .player-edit-card,.preview-card{
-    transition:transform .26s cubic-bezier(.22,.61,.36,1), max-height .26s ease, border-radius .26s ease;
-    animation:sheetUp .26s cubic-bezier(.22,.61,.36,1);
+    transition:max-height .26s ease, border-radius .26s ease;
     will-change:transform;
   }
-  @keyframes sheetUp{from{transform:translateY(100%);}to{transform:none;}}
-  .sheet-dragging{transition:none !important;animation:none !important;}
-  .sheet-closing{transform:translateY(100%) !important;animation:none !important;}
-  .player-edit,.preview-modal{transition:opacity .26s ease;}
-  .sheet-hiding{opacity:0;pointer-events:none;}
+  .sheet-dragging{transition:none !important;}
+  .player-edit,.preview-modal{transition:background-color .28s ease;}
+  .sheet-hiding{background-color:transparent !important;pointer-events:none;}
   .player-edit-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px;}
   .player-edit-head h2{margin:0;font-size:1.05rem;}
   .player-edit-head .ghost-btn{width:auto;margin:0;padding:10px 14px;}
@@ -784,6 +792,11 @@
       box-shadow:inset 3px 0 0 var(--accent);
     }
     .topbar{grid-column:2;padding-left:20px;padding-right:20px;}
+    /* The wide layout keeps a real header, so the player page uses it too. */
+    .app.player-on .topbar{position:static;background:var(--bg);padding:18px 20px 16px;pointer-events:auto;}
+    .app.player-on .club-row-main{display:flex;}
+    .app.player-on .icon-btn{background:var(--surface);border-color:var(--border);color:var(--text);backdrop-filter:none;-webkit-backdrop-filter:none;}
+    .app.player-on .profile-hero{margin-top:0;}
     .content{
       grid-column:2;max-width:none;
       padding:18px 20px 32px;

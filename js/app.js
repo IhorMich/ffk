@@ -1750,8 +1750,8 @@ function renderExtraChips(){
 function openPlayerEdit(){
   fillPlayerForm();
   const el = document.getElementById('playerEdit');
-  resetSheet(document.getElementById('playerEditCard'));
   if(el) el.hidden = false;
+  openSheet(document.getElementById('playerEditCard'));
   pushAppState('layer');
 }
 function closePlayerEdit(revert){
@@ -2905,70 +2905,47 @@ function renderLiveClock(){
   const liveKick = document.getElementById('liveKickBtn');
   if(liveKick) liveKick.classList.toggle('go', phase === 'idle' || phase === 'break');
 }
-let whistleCtx = null;
+let cueCtx = null;
 function audioCtx(){
   try{
     const AC = window.AudioContext || window.webkitAudioContext;
     if(!AC) return null;
-    if(!whistleCtx) whistleCtx = new AC();
-    if(whistleCtx.state === 'suspended') whistleCtx.resume().catch(() => {});
-    return whistleCtx;
+    if(!cueCtx) cueCtx = new AC();
+    if(cueCtx.state === 'suspended') cueCtx.resume().catch(() => {});
+    return cueCtx;
   }catch(e){ return null; }
 }
-function whistleBlow(ctx, at, dur){
-  const out = ctx.createGain();
-  out.connect(ctx.destination);
-  out.gain.setValueAtTime(0.0001, at);
-  out.gain.exponentialRampToValueAtTime(0.42, at + 0.02);
-  out.gain.setValueAtTime(0.42, at + Math.max(0.04, dur - 0.07));
-  out.gain.exponentialRampToValueAtTime(0.0001, at + dur);
-  // The pea rattle: fast frequency warble around the main tone.
-  const pea = ctx.createOscillator();
-  pea.frequency.value = 30;
-  const peaDepth = ctx.createGain();
-  peaDepth.gain.value = 210;
-  pea.connect(peaDepth);
-  pea.start(at);
-  pea.stop(at + dur + 0.03);
-  [[3180, 'sine', 1], [4520, 'triangle', 0.22]].forEach(([freq, type, level]) => {
-    const osc = ctx.createOscillator();
-    osc.type = type;
-    osc.frequency.value = freq;
-    peaDepth.connect(osc.frequency);
-    const gain = ctx.createGain();
-    gain.gain.value = level;
-    osc.connect(gain);
-    gain.connect(out);
-    osc.start(at);
-    osc.stop(at + dur + 0.03);
-  });
-  const frames = Math.ceil(ctx.sampleRate * (dur + 0.05));
-  const buf = ctx.createBuffer(1, frames, ctx.sampleRate);
-  const data = buf.getChannelData(0);
-  for(let i = 0; i < frames; i++) data[i] = Math.random() * 2 - 1;
-  const air = ctx.createBufferSource();
-  air.buffer = buf;
-  const band = ctx.createBiquadFilter();
-  band.type = 'bandpass';
-  band.frequency.value = 3300;
-  band.Q.value = 1.1;
-  const airGain = ctx.createGain();
-  airGain.gain.value = 0.14;
-  air.connect(band);
-  band.connect(airGain);
-  airGain.connect(out);
-  air.start(at);
-  air.stop(at + dur + 0.03);
+function softTone(ctx, at, freq, dur){
+  const osc = ctx.createOscillator();
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(freq, at);
+  const soft = ctx.createBiquadFilter();
+  soft.type = 'lowpass';
+  soft.frequency.value = 1800;
+  const gain = ctx.createGain();
+  gain.gain.setValueAtTime(0.0001, at);
+  gain.gain.linearRampToValueAtTime(0.16, at + 0.02);
+  gain.gain.exponentialRampToValueAtTime(0.0001, at + dur);
+  osc.connect(soft);
+  soft.connect(gain);
+  gain.connect(ctx.destination);
+  osc.start(at);
+  osc.stop(at + dur + 0.02);
 }
-function whistle(blows){
+// Short, quiet marker for clock events: a soft tone plus a buzz, no whistle.
+function matchCue(kind){
+  haptic('MEDIUM');
+  if(kind === 'end') window.setTimeout(() => haptic('MEDIUM'), 150);
   const ctx = audioCtx();
   if(!ctx) return;
-  let at = ctx.currentTime + 0.04;
-  for(let i = 0; i < blows; i++){
-    const last = i === blows - 1;
-    const dur = blows === 1 ? 0.5 : (last ? 0.55 : 0.2);
-    whistleBlow(ctx, at, dur);
-    at += dur + 0.13;
+  const at = ctx.currentTime + 0.03;
+  if(kind === 'end'){
+    softTone(ctx, at, 620, 0.2);
+    softTone(ctx, at + 0.16, 440, 0.3);
+  } else if(kind === 'break'){
+    softTone(ctx, at, 560, 0.26);
+  } else {
+    softTone(ctx, at, 760, 0.24);
   }
 }
 function startMatchClock(){
@@ -2988,7 +2965,7 @@ function startMatchClock(){
   matchClock.phase = 'run';
   matchClock.periodRunAt = now;
   matchClock.pausedAt = null;
-  whistle(1);
+  matchCue('start');
   startClockTick();
   renderLiveClock();
   persistDraft();
@@ -3004,7 +2981,7 @@ function endCurrentPeriod(){
   const {parts} = periodShape();
   const period = Number(matchClock.period) || 1;
   matchClock.phase = period < parts ? 'break' : 'done';
-  whistle(matchClock.phase === 'done' ? 3 : 2);
+  matchCue(matchClock.phase === 'done' ? 'end' : 'break');
   if(matchClock.phase === 'done') stopClockTick();
   renderLiveClock();
   persistDraft();
@@ -3104,38 +3081,68 @@ function bindAppBack(){
   window.__ffkPopBound = true;
   window.addEventListener('popstate', () => { requestAppBack(); });
 }
-const SHEET_ANIM_MS = 260;
+const SHEET_ANIM_MS = 280;
+const SHEET_EASE = 'cubic-bezier(.22,.61,.36,1)';
 function resetSheet(card){
   if(!card) return;
-  card.classList.remove('sheet-full', 'sheet-dragging', 'sheet-closing');
+  if(card.__sheetAnim){
+    try{ card.__sheetAnim.cancel(); }catch(e){}
+    card.__sheetAnim = null;
+  }
+  card.classList.remove('sheet-full', 'sheet-dragging');
   card.style.transform = '';
   if(card.parentElement) card.parentElement.classList.remove('sheet-hiding');
+}
+function openSheet(card){
+  if(!card) return;
+  resetSheet(card);
+  try{
+    card.__sheetAnim = card.animate(
+      [{transform: 'translateY(100%)'}, {transform: 'translateY(0px)'}],
+      {duration: SHEET_ANIM_MS, easing: SHEET_EASE}
+    );
+  }catch(e){}
+}
+// Glides the sheet from where the finger left it either back into place or out
+// of the screen; CSS transitions are unreliable right after a drag.
+function settleSheet(card, from, toClose, onClose){
+  const done = () => {
+    card.__sheetAnim = null;
+    if(toClose) onClose();
+    // A finished fill-forwards animation would outrank the inline transform of
+    // the next drag, so drop it once the sheet reached its place.
+    if(anim) try{ anim.cancel(); }catch(e){}
+  };
+  card.style.transform = '';
+  if(toClose && card.parentElement) card.parentElement.classList.add('sheet-hiding');
+  let anim = null;
+  try{
+    anim = card.animate(
+      [{transform: 'translateY(' + Math.max(0, from) + 'px)'}, {transform: toClose ? 'translateY(100%)' : 'translateY(0px)'}],
+      {duration: SHEET_ANIM_MS, easing: SHEET_EASE, fill: 'forwards'}
+    );
+  }catch(e){}
+  card.__sheetAnim = anim;
+  if(!anim){ done(); return; }
+  anim.onfinish = done;
 }
 function bindSheetDrag(cardId, grabId, onClose){
   const card = document.getElementById(cardId);
   const grab = document.getElementById(grabId);
   if(!card || !grab) return;
   let startY = 0, shift = 0, startedAt = 0, dragging = false;
-  const slideOut = () => {
-    card.classList.add('sheet-closing');
-    card.style.transform = '';
-    if(card.parentElement) card.parentElement.classList.add('sheet-hiding');
-    window.setTimeout(onClose, SHEET_ANIM_MS);
-  };
   const finish = () => {
     if(!dragging) return;
     dragging = false;
     card.classList.remove('sheet-dragging');
     const elapsed = Math.max(1, Date.now() - startedAt);
-    const far = shift > Math.min(240, card.offsetHeight * 0.32);
+    const far = shift > Math.min(180, card.offsetHeight * 0.28);
     const flick = shift > 90 && shift / elapsed > 0.9;
     if(shift > 0 && card.classList.contains('sheet-full')){
       card.classList.remove('sheet-full');
-      card.style.transform = '';
-    } else if(far || flick){
-      slideOut();
+      settleSheet(card, shift, false, onClose);
     } else {
-      card.style.transform = '';
+      settleSheet(card, shift, far || flick, onClose);
     }
   };
   grab.addEventListener('pointerdown', e => {
@@ -3143,6 +3150,10 @@ function bindSheetDrag(cardId, grabId, onClose){
     startY = e.clientY;
     shift = 0;
     startedAt = Date.now();
+    if(card.__sheetAnim){
+      try{ card.__sheetAnim.cancel(); }catch(err){}
+      card.__sheetAnim = null;
+    }
     card.classList.add('sheet-dragging');
     try{ grab.setPointerCapture(e.pointerId); }catch(err){}
   });
@@ -3638,8 +3649,8 @@ async function openCardPreview(state){
   previewState = {mode: defaultCardMode(), ...state};
   try{
     await refreshCardPreview();
-    resetSheet(document.getElementById('previewCard'));
     document.getElementById('previewModal').hidden = false;
+    openSheet(document.getElementById('previewCard'));
     pushAppState('layer');
   }catch(e){
     shareBusy = false;
