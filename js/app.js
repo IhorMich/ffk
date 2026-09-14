@@ -1878,6 +1878,11 @@ function renderHistory(){
   const pager = document.getElementById('historyPager');
   const hidePager = () => { if(pager){ pager.hidden = true; pager.innerHTML = ''; } };
   const toolbar = document.getElementById('historyToolbar');
+  const search = document.getElementById('historySearch');
+  if(search && document.activeElement !== search) search.value = historyQuery;
+  document.querySelectorAll('#historyKind .chip').forEach(c => {
+    c.classList.toggle('active', (c.dataset.kind || 'all') === historyKind);
+  });
   if(matches.length === 0){
     if(toolbar) toolbar.hidden = true;
     el.innerHTML = emptyCtaHtml(t('noMatches'));
@@ -1885,9 +1890,12 @@ function renderHistory(){
     return;
   }
   if(toolbar) toolbar.hidden = false;
-  const list = [...seasonPool()].reverse();
+  const list = historyPool();
   if(!list.length){
-    el.innerHTML = emptyCtaHtml(t('noPeriod'));
+    const filtered = !!(historyQuery.trim() || (historyKind && historyKind !== 'all'));
+    el.innerHTML = filtered
+      ? `<div class="empty-card"><p>${escapeHtml(t('histEmpty'))}</p></div>`
+      : emptyCtaHtml(t('noPeriod'));
     hidePager();
     return;
   }
@@ -2079,8 +2087,11 @@ document.getElementById('importFile').addEventListener('change', async (e) => {
 let currentRange = '10';
 let currentSeasonFilter = 'current';
 let historyPage = 1;
+let historyQuery = '';
+let historyKind = 'all';
 const HISTORY_PAGE = 10;
 const RANGE_KEYS = ['10','100','7d','30d','year','all'];
+const KIND_KEYS = ['all','league','friendly','cup','tournament'];
 function loadFilters(){
   try{
     const f = JSON.parse(localStorage.getItem(FILTER_KEY) || '{}');
@@ -2088,6 +2099,8 @@ function loadFilters(){
     if(RANGE_KEYS.includes(f.range)) currentRange = f.range;
     else if(RANGE_KEYS.includes(f.chart)) currentRange = f.chart;
     else if(RANGE_KEYS.includes(f.cardPeriod)) currentRange = f.cardPeriod;
+    historyQuery = String(f.historyQuery || '').slice(0, 80);
+    if(KIND_KEYS.includes(f.historyKind)) historyKind = f.historyKind;
   }catch(e){}
 }
 function saveFilters(){
@@ -2096,7 +2109,9 @@ function saveFilters(){
       season: currentSeasonFilter,
       range: currentRange,
       chart: currentRange,
-      cardPeriod: currentRange
+      cardPeriod: currentRange,
+      historyQuery,
+      historyKind
     }));
   }catch(e){}
 }
@@ -2134,6 +2149,17 @@ function seasonPool(){
   const s = currentSeasonFilter === 'current' ? (player.season || currentSeason()) : currentSeasonFilter;
   return sorted.filter(m => matchSeason(m) === s);
 }
+function historyPool(){
+  const q = historyQuery.trim().toLowerCase();
+  return [...seasonPool()].reverse().filter(m => {
+    if(historyKind && historyKind !== 'all' && (m.kind || 'league') !== historyKind) return false;
+    if(!q) return true;
+    const opp = String(m.opponent || '').toLowerCase();
+    const tour = String(m.tournament || '').toLowerCase();
+    const kind = kindLabel(m.kind).toLowerCase();
+    return opp.includes(q) || tour.includes(q) || kind.includes(q);
+  });
+}
 ['statsSeason','historySeason'].forEach(id => {
   document.getElementById(id).addEventListener('change', e => {
     currentSeasonFilter = e.target.value;
@@ -2152,6 +2178,20 @@ document.getElementById('periodChips').addEventListener('click', e => {
   currentRange = chip.dataset.range || '10';
   saveFilters();
   renderStats();
+});
+document.getElementById('historyKind').addEventListener('click', e => {
+  const chip = e.target.closest('.chip');
+  if(!chip) return;
+  historyKind = KIND_KEYS.includes(chip.dataset.kind) ? chip.dataset.kind : 'all';
+  historyPage = 1;
+  saveFilters();
+  renderHistory();
+});
+document.getElementById('historySearch').addEventListener('input', e => {
+  historyQuery = String(e.target.value || '').slice(0, 80);
+  historyPage = 1;
+  saveFilters();
+  renderHistory();
 });
 function periodSlice(sorted, key){
   if(key === '10') return sorted.slice(-10);

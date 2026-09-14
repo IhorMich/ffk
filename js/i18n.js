@@ -3104,7 +3104,8 @@ ru:{
       onboard3Title:'Не втратьте сезон',
       onboard3Body:'Дані лише на телефоні. У налаштуваннях зробіть експорт JSON — це ваш бекап.',
       previewTitle:'Картка', previewShare:'Поділитися', previewSave:'Завантажити', previewCancel:'Скасувати',
-      previewDark:'Темна', previewLight:'Світла'
+      previewDark:'Темна', previewLight:'Світла',
+      histSearch:'Суперник', histSearchPh:'Назва команди', histKindAll:'Усі ігри', histEmpty:'Немає матчів з таким фільтром.'
     },
     pl:{
       sTheme:'Motyw', theme_dark:'Noc', theme_light:'Pokój', theme_day:'Boisko',
@@ -3117,7 +3118,8 @@ ru:{
       onboard3Title:'Nie zgub sezonu',
       onboard3Body:'Dane są tylko na telefonie. W ustawieniach zrób eksport JSON — to kopia zapasowa.',
       previewTitle:'Karta', previewShare:'Udostępnij', previewSave:'Pobierz', previewCancel:'Anuluj',
-      previewDark:'Ciemna', previewLight:'Jasna'
+      previewDark:'Ciemna', previewLight:'Jasna',
+      histSearch:'Rywal', histSearchPh:'Nazwa drużyny', histKindAll:'Wszystkie mecze', histEmpty:'Brak meczów dla tego filtra.'
     },
     en:{
       sTheme:'Theme', theme_dark:'Night', theme_light:'Indoor', theme_day:'Pitch',
@@ -3130,7 +3132,8 @@ ru:{
       onboard3Title:'Don’t lose the season',
       onboard3Body:'Data lives only on this phone. In Settings, export JSON — that file is your backup.',
       previewTitle:'Card', previewShare:'Share', previewSave:'Download', previewCancel:'Cancel',
-      previewDark:'Dark', previewLight:'Light'
+      previewDark:'Dark', previewLight:'Light',
+      histSearch:'Opponent', histSearchPh:'Team name', histKindAll:'All games', histEmpty:'No matches for this filter.'
     },
     ru:{
       sTheme:'Тема', theme_dark:'Ночь', theme_light:'Комната', theme_day:'Улица',
@@ -3143,7 +3146,8 @@ ru:{
       onboard3Title:'Не потеряйте сезон',
       onboard3Body:'Данные только на телефоне. В настройках сделайте экспорт JSON — это ваш бэкап.',
       previewTitle:'Карточка', previewShare:'Поделиться', previewSave:'Скачать', previewCancel:'Отмена',
-      previewDark:'Тёмная', previewLight:'Светлая'
+      previewDark:'Тёмная', previewLight:'Светлая',
+      histSearch:'Соперник', histSearchPh:'Название команды', histKindAll:'Все игры', histEmpty:'Нет матчей с таким фильтром.'
     },
     es:{
       sTheme:'Tema', theme_dark:'Noche', theme_light:'Sala', theme_day:'Campo',
@@ -3156,7 +3160,8 @@ ru:{
       onboard3Title:'No pierdas la temporada',
       onboard3Body:'Los datos están solo en el teléfono. En Ajustes exporta JSON: esa es tu copia.',
       previewTitle:'Carta', previewShare:'Compartir', previewSave:'Descargar', previewCancel:'Cancelar',
-      previewDark:'Oscura', previewLight:'Clara'
+      previewDark:'Oscura', previewLight:'Clara',
+      histSearch:'Rival', histSearchPh:'Nombre del equipo', histKindAll:'Todos los partidos', histEmpty:'No hay partidos con este filtro.'
     },
     de:{
       sTheme:'Design', theme_dark:'Nacht', theme_light:'Halle', theme_day:'Platz',
@@ -3169,7 +3174,8 @@ ru:{
       onboard3Title:'Saison nicht verlieren',
       onboard3Body:'Daten liegen nur auf dem Telefon. Unter Einstellungen JSON exportieren — das ist das Backup.',
       previewTitle:'Karte', previewShare:'Teilen', previewSave:'Laden', previewCancel:'Abbrechen',
-      previewDark:'Dunkel', previewLight:'Hell'
+      previewDark:'Dunkel', previewLight:'Hell',
+      histSearch:'Gegner', histSearchPh:'Teamname', histKindAll:'Alle Spiele', histEmpty:'Keine Spiele für diesen Filter.'
     },
     it:{
       sTheme:'Tema', theme_dark:'Notte', theme_light:'Sala', theme_day:'Campo',
@@ -3182,7 +3188,8 @@ ru:{
       onboard3Title:'Non perdere la stagione',
       onboard3Body:'I dati stanno solo sul telefono. Nelle Impostazioni esporta JSON: quello è il backup.',
       previewTitle:'Carta', previewShare:'Condividi', previewSave:'Scarica', previewCancel:'Annulla',
-      previewDark:'Scura', previewLight:'Chiara'
+      previewDark:'Scura', previewLight:'Chiara',
+      histSearch:'Avversario', histSearchPh:'Nome della squadra', histKindAll:'Tutte le partite', histEmpty:'Nessuna partita per questo filtro.'
     },
     fr:{
       sTheme:'Thème', theme_dark:'Nuit', theme_light:'Salle', theme_day:'Terrain',
@@ -3195,7 +3202,8 @@ ru:{
       onboard3Title:'Ne perdez pas la saison',
       onboard3Body:'Les données sont seulement sur le téléphone. Dans Réglages, exportez le JSON — c’est la sauvegarde.',
       previewTitle:'Carte', previewShare:'Partager', previewSave:'Télécharger', previewCancel:'Annuler',
-      previewDark:'Sombre', previewLight:'Claire'
+      previewDark:'Sombre', previewLight:'Claire',
+      histSearch:'Adversaire', histSearchPh:'Nom de l’équipe', histKindAll:'Tous les matchs', histEmpty:'Aucun match pour ce filtre.'
     },
     pt:{
       sTheme:'Tema', theme_dark:'Noite', theme_light:'Sala', theme_day:'Campo',
@@ -3208,7 +3216,8 @@ ru:{
       onboard3Title:'Não perca a época',
       onboard3Body:'Os dados ficam só no telefone. Nas Definições exporte JSON — esse ficheiro é o backup.',
       previewTitle:'Carta', previewShare:'Partilhar', previewSave:'Descarregar', previewCancel:'Cancelar',
-      previewDark:'Escura', previewLight:'Clara'
+      previewDark:'Escura', previewLight:'Clara',
+      histSearch:'Adversário', histSearchPh:'Nome da equipa', histKindAll:'Todos os jogos', histEmpty:'Não há jogos para este filtro.'
     }
   };
   LANGS.forEach(lang => {

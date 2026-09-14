@@ -257,9 +257,22 @@
 
     <div class="view" id="view-history">
       <div id="historyToolbar">
+      <div class="hist-filters">
       <div class="field">
         <label data-i18n="seasonFilter">Сезон</label>
         <select id="historySeason"></select>
+      </div>
+      <div class="field">
+        <label data-i18n="histSearch">Соперник</label>
+        <input id="historySearch" type="search" autocomplete="off" data-i18n-placeholder="histSearchPh" placeholder="Название команды">
+      </div>
+      </div>
+      <div class="period-chips" id="historyKind">
+        <button type="button" class="chip active" data-kind="all" data-i18n="histKindAll">Все игры</button>
+        <button type="button" class="chip" data-kind="league" data-i18n="kindLeague">Чемпионат</button>
+        <button type="button" class="chip" data-kind="friendly" data-i18n="kindFriendly">Товарищеский</button>
+        <button type="button" class="chip" data-kind="cup" data-i18n="kindCup">Кубок</button>
+        <button type="button" class="chip" data-kind="tournament" data-i18n="kindTournament">Турнир</button>
       </div>
       <button class="save-btn" id="historyCardBtn" type="button" data-i18n="cardSeasonBtn">Карточка сезона</button>
       </div>
