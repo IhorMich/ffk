@@ -893,12 +893,26 @@ function cameraUserStopped(err){
   const code = String((err && err.code) || '');
   return /cancel|cancell|user denied|no image|no photo|no media/i.test(s) || /0003|0005|0006/.test(code);
 }
-function nativeWebPath(result){
-  if(!result) return '';
+function nativeFilePath(result){
+  if(!result || typeof result !== 'object') return '';
+  return result.path || result.uri || '';
+}
+function nativeSrc(result){
+  if(!result || typeof result !== 'object') return '';
+  if(result.dataUrl) return result.dataUrl;
   if(result.webPath) return result.webPath;
+  const file = nativeFilePath(result);
   const C = window.Capacitor;
-  if(result.uri && C && typeof C.convertFileSrc === 'function') return C.convertFileSrc(result.uri);
-  return result.uri || '';
+  if(file && C && typeof C.convertFileSrc === 'function') return C.convertFileSrc(file);
+  return file;
+}
+function loadImageFromSrc(src){
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => img.width ? resolve(img) : reject(new Error('img'));
+    img.onerror = () => reject(new Error('img'));
+    img.src = src;
+  });
 }
 function b64ToJpegFile(b64){
   const raw = String(b64 || '').replace(/^data:image\/[^;]+;base64,/, '');
@@ -909,59 +923,90 @@ function b64ToJpegFile(b64){
 }
 async function nativeMediaToFile(result){
   if(!result) return null;
-  const path = nativeWebPath(result);
-  if(path){
+  if(result.dataUrl){
     try{
-      const res = await fetch(path);
+      const blob = await (await fetch(result.dataUrl)).blob();
+      if(blob && blob.size) return new File([blob], 'photo.jpg', {type: blob.type || 'image/jpeg'});
+    }catch(e){}
+  }
+  const src = nativeSrc(result);
+  if(src && !/^data:/i.test(src)){
+    try{
+      const res = await fetch(src);
       const blob = await res.blob();
       if(blob && blob.size) return new File([blob], 'photo.jpg', {type: blob.type || 'image/jpeg'});
     }catch(e){}
   }
   const Filesystem = capPlugin('Filesystem');
-  if(result.uri && Filesystem && typeof Filesystem.readFile === 'function'){
+  const disk = nativeFilePath(result);
+  if(disk && Filesystem && typeof Filesystem.readFile === 'function'){
     try{
-      const got = await Filesystem.readFile({path: result.uri});
+      const got = await Filesystem.readFile({path: disk});
       if(got && typeof got.data === 'string' && got.data) return b64ToJpegFile(got.data);
     }catch(e){}
   }
-  if(result.thumbnail) return b64ToJpegFile(result.thumbnail);
   if(result.base64String) return b64ToJpegFile(result.base64String);
-  if(result.dataUrl){
-    const blob = await (await fetch(result.dataUrl)).blob();
-    return new File([blob], 'photo.jpg', {type: blob.type || 'image/jpeg'});
-  }
+  if(result.thumbnail) return b64ToJpegFile(result.thumbnail);
   return null;
 }
 async function beginCropFromNative(result){
-  const file = await nativeMediaToFile(result);
-  if(!file){ showToast(t('toastPhotoFail')); return; }
-  await beginCrop(file, photoSheetTarget);
+  try{
+    const src = nativeSrc(result);
+    if(src){
+      try{
+        openCrop(await loadImageFromSrc(src), photoSheetTarget);
+        return;
+      }catch(e){}
+    }
+    if(result && result.base64String){
+      const fmt = String(result.format || 'jpeg').replace(/^jpg$/i, 'jpeg');
+      openCrop(await loadImageFromSrc('data:image/' + fmt + ';base64,' + result.base64String), photoSheetTarget);
+      return;
+    }
+    if(result && result.thumbnail){
+      openCrop(await loadImageFromSrc('data:image/jpeg;base64,' + String(result.thumbnail).replace(/^data:image\/[^;]+;base64,/, '')), photoSheetTarget);
+      return;
+    }
+    const file = await nativeMediaToFile(result);
+    if(file){
+      await beginCrop(file, photoSheetTarget);
+      return;
+    }
+  }catch(e){}
+  showToast(t('toastPhotoFail'));
 }
 async function nativeGetPhoto(source){
   const Camera = capPlugin('Camera');
   if(!Camera) throw new Error('nocam');
-  if(typeof Camera.requestPermissions === 'function' && source === 'CAMERA'){
-    try{ await Camera.requestPermissions({permissions: ['camera']}); }catch(e){}
-  }
-  if(source === 'CAMERA' && typeof Camera.getPhoto === 'function'){
-    return Camera.getPhoto({
-      quality: 90,
-      allowEditing: false,
-      resultType: 'uri',
-      source: 'CAMERA',
-      saveToGallery: false,
-      correctOrientation: true
-    });
-  }
-  if(source === 'CAMERA' && typeof Camera.takePhoto === 'function'){
-    return Camera.takePhoto({quality: 90, saveToGallery: false, cameraDirection: 'REAR'});
+  if(source === 'CAMERA'){
+    if(typeof Camera.requestPermissions === 'function'){
+      try{ await Camera.requestPermissions({permissions: ['camera']}); }catch(e){}
+    }
+    try{
+      if(typeof Camera.getPhoto === 'function'){
+        return await Camera.getPhoto({
+          quality: 80,
+          allowEditing: false,
+          resultType: 'uri',
+          source: 'CAMERA',
+          saveToGallery: false,
+          correctOrientation: true
+        });
+      }
+    }catch(err){
+      if(cameraUserStopped(err)) throw err;
+    }
+    if(typeof Camera.takePhoto === 'function'){
+      return Camera.takePhoto({quality: 80, saveToGallery: false, cameraDirection: 'REAR'});
+    }
+    throw new Error('nocam');
   }
   if(typeof Camera.chooseFromGallery === 'function'){
-    const pack = await Camera.chooseFromGallery({quality: 90, limit: 1, mediaType: 0});
+    const pack = await Camera.chooseFromGallery({quality: 80, limit: 1, mediaType: 0});
     return pack && pack.results && pack.results[0];
   }
   if(typeof Camera.getPhoto === 'function'){
-    return Camera.getPhoto({quality: 90, allowEditing: false, resultType: 'uri', source: 'PHOTOS'});
+    return Camera.getPhoto({quality: 80, allowEditing: false, resultType: 'uri', source: 'PHOTOS'});
   }
   throw new Error('nocam');
 }

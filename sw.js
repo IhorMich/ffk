@@ -1,4 +1,4 @@
-const CACHE = 'ffk_v24';
+const CACHE = 'ffk_v25';
 const ASSETS = [
   './',
   './index.html',
