@@ -521,7 +521,6 @@
   .match-clock-bar{margin:0 0 16px;}
   .match-clock-bar .live-kick{margin:8px 0 0;}
   #liveStartBtn{margin-top:0;margin-bottom:12px;}
-  #formKickBottom{margin-top:12px;}
   #formClock{margin:0;}
   .score-pair{display:flex;align-items:center;gap:8px;}
   .score-pair input{flex:1;min-width:0;text-align:center;font-variant-numeric:tabular-nums;font-weight:800;}
