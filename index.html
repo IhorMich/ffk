@@ -807,25 +807,6 @@
           <option value="ru">Русский</option>
         </select>
       </div>
-      <div class="field">
-        <label data-i18n="sFormat">Формат матча по умолчанию</label>
-        <select id="s-format">
-          <option value="3x15">3×15</option>
-          <option value="3x20">3×20</option>
-          <option value="3x25">3×25</option>
-          <option value="2x25">2×25</option>
-          <option value="2x30">2×30</option>
-          <option value="2x35">2×35</option>
-          <option value="2x40">2×40</option>
-          <option value="2x45">2×45</option>
-          <option value="custom" data-i18n="fmtCustom">Свой</option>
-        </select>
-      </div>
-      <div class="field" id="s-custom-wrap" hidden>
-        <label data-i18n="labelMatchLen">Длина матча, мин</label>
-        <input type="number" id="s-minutes" min="1" max="120" value="60">
-      </div>
-      <button class="save-btn" id="saveSettingsBtn" type="button" data-i18n="sSave">Сохранить настройки</button>
       <h3 class="period-head" data-i18n="sBackup">Данные на телефоне</h3>
       <p class="hint" id="backupBanner" hidden data-i18n="backupBanner">Данные только на этом телефоне. Сделайте экспорт, чтобы не потерять сезон.</p>
       <div class="backup-row">
@@ -834,6 +815,7 @@
         <button class="backup-btn" id="copyBtn" type="button" data-i18n="copy">Копировать</button>
         <input type="file" id="importFile" accept="application/json" hidden>
       </div>
+      <button class="save-btn" id="saveSettingsBtn" type="button" data-i18n="sSave">Сохранить настройки</button>
     </div>
   </div>
 
@@ -936,7 +918,7 @@ uk:{
   export:'Експорт', import:'Імпорт', copy:'Копіювати',
   periodLast10:'Останні 10', periodWeek:'Тиждень', period10d:'10 днів', periodMonth:'Місяць', periodYear:'Рік', periodAll:'Весь час',
   chartTitle:'Динаміка оцінки', chartLastN:'Останні {n} матчів', chart10:'10 матчів', chart100:'100 матчів', chartAria:'Графік оцінок', chartEmpty:'Поки немає даних',
-  sLang:'Мова', sBackup:'Дані на телефоні', sFormat:'Формат матчу за замовчуванням', sSave:'Зберегти налаштування',
+  sLang:'Мова', sBackup:'Дані на телефоні', sSave:'Зберегти налаштування',
   tabPlayer:'Гравець', tabMatch:'Матч', tabHistory:'Історія', tabStats:'Статистика',
   pPhoto:'Фото', pPhotoHint:'Натисніть на фото або фон, щоб змінити.',
   pRemovePhoto:'Прибрати', pPickPhoto:'Вибрати фото', pPickCover:'Вибрати фон',
@@ -1142,7 +1124,7 @@ pl:{
   export:'Eksport', import:'Import', copy:'Kopiuj',
   periodLast10:'Ostatnie 10', periodWeek:'Tydzień', period10d:'10 dni', periodMonth:'Miesiąc', periodYear:'Rok', periodAll:'Cały czas',
   chartTitle:'Dynamika oceny', chartLastN:'Ostatnie {n} meczów', chart10:'10 meczów', chart100:'100 meczów', chartAria:'Wykres ocen', chartEmpty:'Brak danych',
-  sLang:'Język', sBackup:'Dane w telefonie', sFormat:'Domyślny format meczu', sSave:'Zapisz ustawienia',
+  sLang:'Język', sBackup:'Dane w telefonie', sSave:'Zapisz ustawienia',
   tabPlayer:'Zawodnik', tabMatch:'Mecz', tabHistory:'Historia', tabStats:'Statystyki',
   pPhoto:'Zdjęcie', pPhotoHint:'Dotknij zdjęcia lub tła, żeby zmienić.',
   pRemovePhoto:'Usuń', pPickPhoto:'Wybierz zdjęcie', pPickCover:'Wybierz tło',
@@ -1348,7 +1330,7 @@ en:{
   export:'Export', import:'Import', copy:'Copy',
   periodLast10:'Last 10', periodWeek:'Week', period10d:'10 days', periodMonth:'Month', periodYear:'Year', periodAll:'All time',
   chartTitle:'Rating trend', chartLastN:'Last {n} matches', chart10:'10 matches', chart100:'100 matches', chartAria:'Rating chart', chartEmpty:'No data yet',
-  sLang:'Language', sBackup:'Data on this phone', sFormat:'Default match format', sSave:'Save settings',
+  sLang:'Language', sBackup:'Data on this phone', sSave:'Save settings',
   tabPlayer:'Player', tabMatch:'Match', tabHistory:'History', tabStats:'Stats',
   pPhoto:'Photo', pPhotoHint:'Tap the photo or cover to change it.',
   pRemovePhoto:'Remove', pPickPhoto:'Choose photo', pPickCover:'Choose cover',
@@ -1554,7 +1536,7 @@ ru:{
   export:'Экспорт', import:'Импорт', copy:'Копировать',
   periodLast10:'Последние 10', periodWeek:'Неделя', period10d:'10 дней', periodMonth:'Месяц', periodYear:'Год', periodAll:'Всё время',
   chartTitle:'Динамика оценки', chartLastN:'Последние {n} матчей', chart10:'10 матчей', chart100:'100 матчей', chartAria:'График оценок', chartEmpty:'Пока нет данных',
-  sLang:'Язык', sBackup:'Данные на телефоне', sFormat:'Формат матча по умолчанию', sSave:'Сохранить настройки',
+  sLang:'Язык', sBackup:'Данные на телефоне', sSave:'Сохранить настройки',
   tabPlayer:'Игрок', tabMatch:'Матч', tabHistory:'История', tabStats:'Статистика',
   pPhoto:'Фотография', pPhotoHint:'Нажмите на фото или фон, чтобы сменить.',
   pRemovePhoto:'Убрать', pPickPhoto:'Выбрать фото', pPickCover:'Выбрать фон',
@@ -4542,9 +4524,6 @@ document.getElementById('live-position').addEventListener('change', () => {
 
 document.querySelectorAll('.theme-toggle').forEach(btn => btn.addEventListener('click', toggleTheme));
 document.getElementById('settingsBtn').addEventListener('click', () => {
-  document.getElementById('s-format').value = settings.format || '2x30';
-  document.getElementById('s-minutes').value = settings.minutes;
-  document.getElementById('s-custom-wrap').hidden = (settings.format !== 'custom');
   document.getElementById('s-lang').value = settings.lang;
   refreshBackupBanner();
   showView('settings');
@@ -4554,25 +4533,11 @@ document.getElementById('s-lang').addEventListener('change', () => {
   saveSettings();
   applyI18n();
 });
-document.getElementById('s-format').addEventListener('change', () => {
-  document.getElementById('s-custom-wrap').hidden = document.getElementById('s-format').value !== 'custom';
-  if(document.getElementById('s-format').value !== 'custom'){
-    document.getElementById('s-minutes').value = String(FORMAT_MIN[document.getElementById('s-format').value] || 60);
-  }
-});
 document.getElementById('saveSettingsBtn').addEventListener('click', () => {
-  settings.format = document.getElementById('s-format').value;
-  settings.minutes = String(formatLength(settings.format, document.getElementById('s-minutes').value));
   settings.lang = document.getElementById('s-lang').value;
   saveSettings();
   applyHeader();
   applyI18n();
-  if(!editingId){
-    document.getElementById('f-format').value = settings.format;
-    document.getElementById('f-matchlen').value = settings.minutes;
-    syncPlayedDefault(true);
-    renderMetrics();
-  }
   showToast(t('toastSettings'));
   showView('new');
   updateHero();
