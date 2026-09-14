@@ -2487,8 +2487,7 @@ function drawChart(list){
 
 function renderLiveGrid(){
   const pos = ratingPosOf(document.getElementById('live-position').value || currentPitch());
-  const list = METRICS.filter(m => (m.live || []).includes(pos));
-  document.getElementById('liveGrid').innerHTML = list.map(m => {
+  document.getElementById('liveGrid').innerHTML = metricsFor(pos).map(m => {
     const neg = weightOf(m, pos) < 0;
     return `<div class="live-cell ${neg?'neg':''}">
       <button class="live-plus" type="button" onclick="stepMetric('${m.key}',1)">
