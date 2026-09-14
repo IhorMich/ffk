@@ -68,5 +68,11 @@
 	<true/>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
+	<key>NSCameraUsageDescription</key>
+	<string>FFK uses the camera to take a player photo for the card.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>FFK needs the photo library to set a player photo or cover.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>FFK does not save photos to the library unless you choose to.</string>
 </dict>
 </plist>

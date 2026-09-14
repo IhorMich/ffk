@@ -858,16 +858,128 @@ function closePhotoSheet(){
 function openPhotoSheet(target){
   photoSheetTarget = target;
   const has = target === 'cover' ? !!currentCover() : !!currentPhoto();
-  document.getElementById('photoSheetPick').textContent = t(target === 'cover' ? 'pPickCover' : 'pPickPhoto');
+  document.getElementById('photoSheetCamera').textContent = t(target === 'cover' ? 'pTakeCover' : 'pTakePhoto');
+  document.getElementById('photoSheetPick').textContent = t('pFromGallery');
   document.getElementById('photoSheetClear').hidden = !has;
   document.getElementById('photoSheet').hidden = false;
   document.getElementById('photoSheetBack').hidden = false;
   pushAppState('layer');
 }
-function pickPhotoFile(){
+function pickPhotoFile(useCamera){
   const el = document.getElementById(photoSheetTarget === 'cover' ? 'p-cover' : 'p-photo');
   el.value = '';
+  if(useCamera) el.setAttribute('capture', 'environment');
+  else el.removeAttribute('capture');
   el.click();
+}
+function cameraUserStopped(err){
+  const s = String((err && (err.message || err.errorMessage || err)) || '').toLowerCase();
+  const code = String((err && err.code) || '');
+  return /cancel|cancell|user denied|no image|no photo|no media/i.test(s) || /0003|0005|0006/.test(code);
+}
+function nativeWebPath(result){
+  if(!result) return '';
+  if(result.webPath) return result.webPath;
+  const C = window.Capacitor;
+  if(result.uri && C && typeof C.convertFileSrc === 'function') return C.convertFileSrc(result.uri);
+  return result.uri || '';
+}
+function b64ToJpegFile(b64){
+  const raw = String(b64 || '').replace(/^data:image\/[^;]+;base64,/, '');
+  const bin = atob(raw);
+  const arr = new Uint8Array(bin.length);
+  for(let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+  return new File([arr], 'photo.jpg', {type:'image/jpeg'});
+}
+async function nativeMediaToFile(result){
+  if(!result) return null;
+  const path = nativeWebPath(result);
+  if(path){
+    try{
+      const res = await fetch(path);
+      const blob = await res.blob();
+      if(blob && blob.size) return new File([blob], 'photo.jpg', {type: blob.type || 'image/jpeg'});
+    }catch(e){}
+  }
+  const Filesystem = capPlugin('Filesystem');
+  if(result.uri && Filesystem && typeof Filesystem.readFile === 'function'){
+    try{
+      const got = await Filesystem.readFile({path: result.uri});
+      if(got && typeof got.data === 'string' && got.data) return b64ToJpegFile(got.data);
+    }catch(e){}
+  }
+  if(result.thumbnail) return b64ToJpegFile(result.thumbnail);
+  if(result.base64String) return b64ToJpegFile(result.base64String);
+  if(result.dataUrl){
+    const blob = await (await fetch(result.dataUrl)).blob();
+    return new File([blob], 'photo.jpg', {type: blob.type || 'image/jpeg'});
+  }
+  return null;
+}
+async function beginCropFromNative(result){
+  const file = await nativeMediaToFile(result);
+  if(!file){ showToast(t('toastPhotoFail')); return; }
+  await beginCrop(file, photoSheetTarget);
+}
+async function pickFromCamera(){
+  closePhotoSheet();
+  const Camera = capPlugin('Camera');
+  if(isNativeApp() && Camera){
+    try{
+      let result = null;
+      if(typeof Camera.takePhoto === 'function'){
+        result = await Camera.takePhoto({
+          quality: 90,
+          saveToGallery: false,
+          cameraDirection: 'REAR',
+          targetWidth: 1600,
+          targetHeight: 1600
+        });
+      } else if(typeof Camera.getPhoto === 'function'){
+        result = await Camera.getPhoto({quality: 90, source: 'CAMERA', resultType: 'uri', saveToGallery: false});
+      }
+      if(result) await beginCropFromNative(result);
+    }catch(err){
+      if(cameraUserStopped(err)) return;
+      showToast(t('toastPhotoFail'));
+      pickPhotoFile(true);
+    }
+    return;
+  }
+  pickPhotoFile(true);
+}
+async function pickFromGallery(){
+  closePhotoSheet();
+  const Camera = capPlugin('Camera');
+  if(isNativeApp() && Camera){
+    try{
+      let result = null;
+      if(typeof Camera.chooseFromGallery === 'function'){
+        const pack = await Camera.chooseFromGallery({quality: 90, limit: 1, mediaType: 0});
+        result = pack && pack.results && pack.results[0];
+      } else if(typeof Camera.getPhoto === 'function'){
+        result = await Camera.getPhoto({quality: 90, source: 'PHOTOS', resultType: 'uri'});
+      }
+      if(result) await beginCropFromNative(result);
+    }catch(err){
+      if(cameraUserStopped(err)) return;
+      showToast(t('toastPhotoFail'));
+      pickPhotoFile(false);
+    }
+    return;
+  }
+  pickPhotoFile(false);
+}
+function bindCameraRestore(){
+  const App = capPlugin('App');
+  if(!isNativeApp() || !App || typeof App.addListener !== 'function' || window.__ffkCamRestore) return;
+  window.__ffkCamRestore = true;
+  App.addListener('appRestoredResult', ev => {
+    if(!ev || ev.pluginId !== 'Camera' || ev.success === false) return;
+    const data = ev.data || {};
+    const media = data.webPath || data.uri ? data : (data.results && data.results[0]);
+    if(media) beginCropFromNative(media).catch(() => {});
+  });
 }
 let cropState = null;
 function isHeicFile(file){
@@ -3040,15 +3152,10 @@ document.getElementById('pExtraChips').addEventListener('click', e => {
   extraSelected = extraSelected.includes(code) ? extraSelected.filter(x => x !== code) : extraSelected.concat(code);
   renderExtraChips();
 });
-document.getElementById('pPhotoWrap').addEventListener('click', () => {
-  if(currentPhoto()) openPhotoSheet('photo');
-  else { photoSheetTarget = 'photo'; pickPhotoFile(); }
-});
-document.getElementById('pCoverBtn').addEventListener('click', () => {
-  if(currentCover()) openPhotoSheet('cover');
-  else { photoSheetTarget = 'cover'; pickPhotoFile(); }
-});
-document.getElementById('photoSheetPick').addEventListener('click', () => { closePhotoSheet(); pickPhotoFile(); });
+document.getElementById('pPhotoWrap').addEventListener('click', () => openPhotoSheet('photo'));
+document.getElementById('pCoverBtn').addEventListener('click', () => openPhotoSheet('cover'));
+document.getElementById('photoSheetCamera').addEventListener('click', () => pickFromCamera());
+document.getElementById('photoSheetPick').addEventListener('click', () => pickFromGallery());
 document.getElementById('photoSheetClear').addEventListener('click', () => {
   if(photoSheetTarget === 'cover'){
     coverDraft = '';
@@ -3641,6 +3748,7 @@ async function shareCard(m){
     restoreView();
     if(!maybeTransfer()) maybeOnboard();
     bindAppBack();
+    bindCameraRestore();
     syncScoreResultHint();
     hydrateAllMedia().then(() => {
       applyHeader();

@@ -3303,3 +3303,20 @@ ru:{
     Object.assign(I18N[lang], extra.en, extra[lang] || {});
   });
 })();
+
+(function mergeCameraI18n(){
+  const extra = {
+    uk:{ pTakePhoto:'Зняти фото', pTakeCover:'Зняти фон', pFromGallery:'Галерея' },
+    pl:{ pTakePhoto:'Zrób zdjęcie', pTakeCover:'Zrób tło', pFromGallery:'Galeria' },
+    en:{ pTakePhoto:'Take photo', pTakeCover:'Take cover', pFromGallery:'Gallery' },
+    ru:{ pTakePhoto:'Снять фото', pTakeCover:'Снять фон', pFromGallery:'Галерея' },
+    es:{ pTakePhoto:'Hacer foto', pTakeCover:'Hacer fondo', pFromGallery:'Galería' },
+    de:{ pTakePhoto:'Foto aufnehmen', pTakeCover:'Hintergrund aufnehmen', pFromGallery:'Galerie' },
+    it:{ pTakePhoto:'Scatta foto', pTakeCover:'Scatta sfondo', pFromGallery:'Galleria' },
+    fr:{ pTakePhoto:'Prendre une photo', pTakeCover:'Prendre le fond', pFromGallery:'Galerie' },
+    pt:{ pTakePhoto:'Tirar foto', pTakeCover:'Tirar fundo', pFromGallery:'Galeria' }
+  };
+  LANGS.forEach(lang => {
+    Object.assign(I18N[lang], extra.en, extra[lang] || {});
+  });
+})();
