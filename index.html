@@ -47,16 +47,6 @@
         <button class="icon-btn" id="settingsBtn" type="button" data-i18n-aria="settingsAria">⚙</button>
       </div>
     </div>
-    <div class="hero" id="heroBlock">
-      <div>
-        <div class="hero-score" id="heroScore">6.0<small>/10</small></div>
-        <div class="hero-caption" id="heroLabel" data-i18n="heroOverall">общая оценка</div>
-      </div>
-      <div class="hero-split">
-        <div class="hero-mini"><span class="l" data-i18n="heroAction">вклад</span><span class="n" id="heroAction">6.0</span></div>
-        <div class="hero-mini"><span class="l" data-i18n="heroEffort">старание</span><span class="n" id="heroEffort">6.0</span></div>
-      </div>
-    </div>
   </div>
 
   <div class="content">
@@ -137,6 +127,7 @@
       </details>
     </div>
     <div class="view active" id="view-new">
+      <div class="match-col match-col-ctx">
       <button class="ghost-btn" id="liveStartBtn" type="button" data-i18n="livePitch">Быстрый доступ</button>
       <div class="match-clock-bar">
         <div class="live-clock" id="formClock"></div>
@@ -229,7 +220,18 @@
         </div>
       </div>
       </details>
-
+      </div>
+      <div class="match-col match-col-play">
+      <div class="hero" id="heroBlock">
+        <div>
+          <div class="hero-score" id="heroScore">6.0<small>/10</small></div>
+          <div class="hero-caption" id="heroLabel" data-i18n="heroOverall">общая оценка</div>
+        </div>
+        <div class="hero-split">
+          <div class="hero-mini"><span class="l" data-i18n="heroAction">вклад</span><span class="n" id="heroAction">6.0</span></div>
+          <div class="hero-mini"><span class="l" data-i18n="heroEffort">старание</span><span class="n" id="heroEffort">6.0</span></div>
+        </div>
+      </div>
       <div class="section-title" data-i18n="secActions">Игровые действия</div>
       <p class="hint" id="weightsHint"></p>
       <div id="metricsList"></div>
@@ -241,6 +243,7 @@
       </div>
       <button class="save-btn" id="saveBtn" type="button" data-i18n="saveMatch">Сохранить матч</button>
       <button class="ghost-btn" id="cancelEditBtn" type="button" hidden data-i18n="cancelEdit">Отменить правку</button>
+      </div>
     </div>
 
     <div class="view" id="view-report">
@@ -268,34 +271,31 @@
         <label data-i18n="seasonFilter">Сезон</label>
         <select id="statsSeason"></select>
       </div>
-      <div id="seasonBoard"></div>
-      <div id="compareBoard"></div>
-      <div class="chart-wrap">
-        <h3 id="chartHeading" data-i18n="chartTitle">Динамика оценки</h3>
-        <div class="period-chips" id="chartChips">
-          <button type="button" class="chip active" data-chart="10" data-i18n="chart10">10 матчей</button>
-          <button type="button" class="chip" data-chart="100" data-i18n="chart100">100 матчей</button>
-          <button type="button" class="chip" data-chart="all" data-i18n="periodAll">Всё время</button>
-        </div>
-        <svg id="chartSvg" viewBox="0 0 320 200" role="img" data-i18n-aria="chartAria"></svg>
-      </div>
       <h3 class="period-head" id="periodHead" data-i18n="stPeriodCards">За выбранный период</h3>
       <div class="period-chips" id="periodChips">
         <button type="button" class="chip active" data-range="10" data-i18n="chart10">10 матчей</button>
         <button type="button" class="chip" data-range="100" data-i18n="chart100">100 матчей</button>
+        <button type="button" class="chip" data-range="7d" data-i18n="periodWeek">Неделя</button>
+        <button type="button" class="chip" data-range="30d" data-i18n="periodMonth">Месяц</button>
+        <button type="button" class="chip" data-range="year" data-i18n="periodYear">Год</button>
         <button type="button" class="chip" data-range="all" data-i18n="periodAll">Всё время</button>
       </div>
+      <div class="stats-layout">
+      <div class="stats-side">
+      <div class="chart-wrap">
+        <h3 id="chartHeading" data-i18n="chartTitle">Динамика оценки</h3>
+        <svg id="chartSvg" viewBox="0 0 320 200" role="img" data-i18n-aria="chartAria"></svg>
+      </div>
+      </div>
+      <div class="stats-main">
+      <div id="seasonBoard"></div>
+      <div id="compareBoard"></div>
       <div class="stat-grid" id="statGrid"></div>
       <div id="timingBoard"></div>
-      <p class="hint" data-i18n="statsPeriodHint">Карточка периода — за выбранный ниже диапазон.</p>
-      <div class="period-chips" id="cardPeriodChips">
-        <button type="button" class="chip active" data-card-period="10" data-i18n="periodLast10">Последние 10</button>
-        <button type="button" class="chip" data-card-period="7d" data-i18n="periodWeek">Неделя</button>
-        <button type="button" class="chip" data-card-period="30d" data-i18n="periodMonth">Месяц</button>
-        <button type="button" class="chip" data-card-period="year" data-i18n="periodYear">Год</button>
-        <button type="button" class="chip" data-card-period="all" data-i18n="periodAll">Всё время</button>
-      </div>
+      <p class="hint" data-i18n="statsPeriodHint">Карточка периода — за выбранный диапазон.</p>
       <button class="save-btn" id="statsCardBtn" type="button" data-i18n="cardPeriodBtn">Карточка периода</button>
+      </div>
+      </div>
     </div>
 
     <div class="view" id="view-settings">

@@ -1948,8 +1948,7 @@ function showView(name){
   if(!views.includes(name)) name = 'new';
   document.querySelectorAll('.tabbtn').forEach(b => b.classList.toggle('active', b.dataset.view === name));
   document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id === 'view-'+name));
-  document.getElementById('heroBlock').style.display = (name === 'new') ? 'grid' : 'none';
-  document.querySelector('.topbar').classList.toggle('compact', name !== 'new');
+  document.querySelector('.topbar').classList.add('compact');
   if(name === 'player') fillPlayerForm();
   if(name === 'report' && lastReportMatch){
     document.getElementById('reportCard').innerHTML = renderReportHtml(lastReportMatch);
@@ -2053,18 +2052,17 @@ document.getElementById('importFile').addEventListener('change', async (e) => {
 });
 
 let currentRange = '10';
-let chartRange = '10';
-let cardPeriod = '10';
 let currentSeasonFilter = 'current';
 let historyPage = 1;
 const HISTORY_PAGE = 10;
+const RANGE_KEYS = ['10','100','7d','30d','year','all'];
 function loadFilters(){
   try{
     const f = JSON.parse(localStorage.getItem(FILTER_KEY) || '{}');
     if(f.season === 'all' || f.season === 'current' || /^\d{4}\/\d{2}$/.test(String(f.season || ''))) currentSeasonFilter = f.season;
-    if(['10','100','all'].includes(f.range)) currentRange = f.range;
-    if(['10','100','all'].includes(f.chart)) chartRange = f.chart;
-    if(['10','7d','30d','year','all'].includes(f.cardPeriod)) cardPeriod = f.cardPeriod;
+    if(RANGE_KEYS.includes(f.range)) currentRange = f.range;
+    else if(RANGE_KEYS.includes(f.chart)) currentRange = f.chart;
+    else if(RANGE_KEYS.includes(f.cardPeriod)) currentRange = f.cardPeriod;
   }catch(e){}
 }
 function saveFilters(){
@@ -2072,20 +2070,14 @@ function saveFilters(){
     localStorage.setItem(FILTER_KEY, JSON.stringify({
       season: currentSeasonFilter,
       range: currentRange,
-      chart: chartRange,
-      cardPeriod
+      chart: currentRange,
+      cardPeriod: currentRange
     }));
   }catch(e){}
 }
 function syncFilterChips(){
   document.querySelectorAll('#periodChips .chip').forEach(c => {
     c.classList.toggle('active', c.dataset.range === currentRange);
-  });
-  document.querySelectorAll('#chartChips .chip').forEach(c => {
-    c.classList.toggle('active', c.dataset.chart === chartRange);
-  });
-  document.querySelectorAll('#cardPeriodChips .chip').forEach(c => {
-    c.classList.toggle('active', c.dataset.cardPeriod === cardPeriod);
   });
 }
 function knownSeasons(){
@@ -2136,60 +2128,44 @@ document.getElementById('periodChips').addEventListener('click', e => {
   saveFilters();
   renderStats();
 });
-document.getElementById('chartChips').addEventListener('click', e => {
-  const chip = e.target.closest('[data-chart]');
-  if(!chip) return;
-  document.querySelectorAll('#chartChips .chip').forEach(c=>c.classList.remove('active'));
-  chip.classList.add('active');
-  chartRange = chip.dataset.chart || '10';
-  saveFilters();
-  renderStats();
-});
-document.getElementById('cardPeriodChips').addEventListener('click', e => {
-  const chip = e.target.closest('[data-card-period]');
-  if(!chip) return;
-  document.querySelectorAll('#cardPeriodChips .chip').forEach(c=>c.classList.remove('active'));
-  chip.classList.add('active');
-  cardPeriod = chip.dataset.cardPeriod || '10';
-  saveFilters();
-});
-function cardPeriodMatches(){
-  const sorted = seasonPool();
-  if(cardPeriod === '10') return sorted.slice(-10);
-  if(cardPeriod === 'all') return sorted;
-  if(cardPeriod === 'year'){
+function periodSlice(sorted, key){
+  if(key === '10') return sorted.slice(-10);
+  if(key === '100') return sorted.slice(-100);
+  if(key === 'all') return sorted;
+  if(key === 'year'){
     const y = String(new Date().getFullYear());
     return sorted.filter(m => String(m.date).startsWith(y));
   }
-  const days = cardPeriod === '7d' ? 7 : 30;
+  const days = key === '7d' ? 7 : 30;
   return sorted.filter(m => m.date >= daysAgoStr(days));
 }
-function cardPeriodLabel(){
-  const range = ({
-    '10': t('periodLast10'),
+function rangeLabel(key){
+  return ({
+    '10': t('chart10'),
+    '100': t('chart100'),
     '7d': t('periodWeek'),
     '30d': t('periodMonth'),
     'year': t('periodYear'),
     'all': t('periodAll')
-  })[cardPeriod] || t('periodLast10');
+  })[key] || t('chart10');
+}
+function cardPeriodMatches(){
+  return periodSlice(seasonPool(), currentRange);
+}
+function cardPeriodLabel(){
+  const range = rangeLabel(currentRange);
   if(currentSeasonFilter === 'all'){
-    if(cardPeriod === 'all') return t('seasonAll');
+    if(currentRange === 'all') return t('seasonAll');
     return t('seasonAll') + ' · ' + range;
   }
-  if(cardPeriod === 'all') return seasonNameLabel();
+  if(currentRange === 'all') return seasonNameLabel();
   return seasonNameLabel() + ' · ' + range;
 }
 function chartMatches(){
-  const all = sortedMatches();
-  if(chartRange === '10') return all.slice(-10);
-  if(chartRange === '100') return all.slice(-100);
-  return all;
+  return periodSlice(seasonPool(), currentRange);
 }
 function statsMatches(){
-  const sorted = seasonPool();
-  if(currentRange === '10') return sorted.slice(-10);
-  if(currentRange === '100') return sorted.slice(-100);
-  return sorted;
+  return periodSlice(seasonPool(), currentRange);
 }
 function ratingTrend(list){
   if(list.length < 2) return 0;
@@ -2218,11 +2194,7 @@ function seasonNameLabel(){
   return currentSeasonFilter;
 }
 function statsPeriodLabel(){
-  const range = ({
-    '10': t('chart10'),
-    '100': t('chart100'),
-    'all': t('periodAll')
-  })[currentRange] || t('chart10');
+  const range = rangeLabel(currentRange);
   if(currentSeasonFilter === 'all'){
     if(currentRange === 'all') return t('seasonAll');
     return t('seasonAll') + ' · ' + range;
@@ -2438,8 +2410,9 @@ function renderStats(){
 }
 function drawChart(list){
   const svg = document.getElementById('chartSvg');
-  if(list.length < 1){
-    svg.innerHTML = `<text x="160" y="100" text-anchor="middle" font-size="12" fill="${cssVar('--text-soft','#8D9AB5')}">${escapeHtml(t('chartEmpty'))}</text>`;
+  if(list.length < 2){
+    const msg = matches.length ? t('chartNeed', {n: 2}) : t('chartEmpty');
+    svg.innerHTML = `<text x="160" y="100" text-anchor="middle" font-size="12" fill="${cssVar('--text-soft','#8D9AB5')}">${escapeHtml(msg)}</text>`;
     return;
   }
   const w=320,h=200,padL=36,padR=14,padT=14,padB=30;
@@ -2472,11 +2445,8 @@ function drawChart(list){
   const ys = ratings.map(r => yAt(r));
   const path = list.length === 1 ? '' : `<path d="${xs.map((x,i)=> `${i===0?'M':'L'}${x.toFixed(1)},${ys[i].toFixed(1)}`).join(' ')}" fill="none" stroke="${cssVar('--accent','#22D3A6')}" stroke-width="2.5"/>`;
   const step = list.length > 10 ? Math.ceil(list.length / 8) : 1;
-  const dotStep = list.length > 40 ? Math.ceil(list.length / 40) : 1;
   const dots = xs.map((x,i)=> {
-    const last = i === xs.length-1;
-    if(!last && i % dotStep) return '';
-    return `<circle cx="${x.toFixed(1)}" cy="${ys[i].toFixed(1)}" r="${last?5:3.5}" fill="${last?cssVar('--gold','#F5B942'):cssVar('--accent','#22D3A6')}"/>`;
+    return `<circle cx="${x.toFixed(1)}" cy="${ys[i].toFixed(1)}" r="${i === xs.length-1?5:3.2}" fill="${i === xs.length-1?cssVar('--gold','#F5B942'):cssVar('--accent','#22D3A6')}"/>`;
   }).join('');
   const labels = xs.map((x,i)=> {
     if(i !== 0 && i !== xs.length-1 && i % step) return '';
@@ -3063,7 +3033,7 @@ function sharePlayerCard(kind){
   return shareFutCard(playerCardList(kind || 'season'), playerCardPeriod(kind || 'season'), kind || 'season');
 }
 function shareStatsCard(){
-  return shareFutCard(cardPeriodMatches(), cardPeriodLabel(), cardPeriod);
+  return shareFutCard(cardPeriodMatches(), cardPeriodLabel(), currentRange);
 }
 function shareHistoryCard(){
   return shareFutCard(seasonPool(), seasonNameLabel(), 'season');
