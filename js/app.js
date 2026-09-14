@@ -3710,6 +3710,22 @@ async function exportPngFile(canvas, filename){
 }
 
 async function savePngFile(canvas, filename){
+  // A download link is dead inside the web view, so the card goes into the
+  // gallery; sharing is the last resort if even that is refused.
+  if(isNativeApp()){
+    const Gallery = capPlugin('GalleryPicker');
+    if(Gallery && typeof Gallery.saveImage === 'function'){
+      try{
+        await Gallery.saveImage({dataUrl: canvas.toDataURL('image/png'), filename});
+        showToast(t('toastCardGallery'));
+        return;
+      }catch(err){
+        camLog('save card fail', String((err && (err.message || err.errorMessage)) || err));
+      }
+    }
+    await exportPngFile(canvas, filename);
+    return;
+  }
   const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');

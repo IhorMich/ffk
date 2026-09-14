@@ -2,6 +2,8 @@ package app.ffk.rating;
 
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
+import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -9,6 +11,8 @@ import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
 import android.media.ExifInterface;
 import android.net.Uri;
+import android.os.Build;
+import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Base64;
 import androidx.activity.result.ActivityResult;
@@ -20,6 +24,7 @@ import com.getcapacitor.annotation.ActivityCallback;
 import com.getcapacitor.annotation.CapacitorPlugin;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
+import java.io.OutputStream;
 
 /**
  * The system photo picker is served by Google Photos on this phone, so the
@@ -41,6 +46,48 @@ public class GalleryPickerPlugin extends Plugin {
       startActivityForResult(call, pick, "pickResult");
     } catch (ActivityNotFoundException e) {
       call.reject("no gallery app", "NO_PICKER");
+    }
+  }
+
+  /**
+   * A download link does nothing inside the web view, so the card is written
+   * straight into the gallery, where a parent looks for pictures anyway.
+   */
+  @PluginMethod
+  public void saveImage(PluginCall call) {
+    String dataUrl = call.getString("dataUrl", "");
+    String name = call.getString("filename", "ffk_card.png");
+    int comma = dataUrl.indexOf(',');
+    if (comma < 0) {
+      call.reject("no image data", "NO_DATA");
+      return;
+    }
+    try {
+      byte[] bytes = Base64.decode(dataUrl.substring(comma + 1), Base64.DEFAULT);
+      ContentValues values = new ContentValues();
+      values.put(MediaStore.Images.Media.DISPLAY_NAME, name);
+      values.put(MediaStore.Images.Media.MIME_TYPE, "image/png");
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        values.put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES + "/FFK");
+      }
+      ContentResolver resolver = getContext().getContentResolver();
+      Uri target = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
+      if (target == null) {
+        call.reject("gallery rejected the file", "NO_TARGET");
+        return;
+      }
+      try (OutputStream out = resolver.openOutputStream(target)) {
+        if (out == null) {
+          call.reject("cannot write", "NO_STREAM");
+          return;
+        }
+        out.write(bytes);
+      }
+      JSObject ret = new JSObject();
+      ret.put("uri", target.toString());
+      call.resolve(ret);
+    } catch (Exception e) {
+      call.reject(e.getMessage() == null ? "save failed" : e.getMessage(), "SAVE");
     }
   }
 
