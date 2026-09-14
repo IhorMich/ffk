@@ -24,10 +24,11 @@ function isNativeApp(){
 function capPlugin(name){
   try{
     const C = window.Capacitor;
-    return (C && C.Plugins && C.Plugins[name]) || null;
-  }catch(e){
-    return null;
-  }
+    if(!C) return null;
+    if(C.Plugins && C.Plugins[name]) return C.Plugins[name];
+    if(typeof C.registerPlugin === 'function') return C.registerPlugin(name);
+  }catch(e){}
+  return null;
 }
 function blobToBase64(blob){
   return new Promise((resolve, reject) => {
@@ -2245,7 +2246,9 @@ function syncFilterChips(){
     c.classList.toggle('active', c.dataset.range === currentRange);
   });
   const custom = document.getElementById('periodCustomRow');
-  if(custom) custom.hidden = currentRange !== 'custom';
+  if(custom) custom.hidden = false;
+  if(!currentRangeFrom) currentRangeFrom = daysAgoStr(30);
+  if(!currentRangeTo) currentRangeTo = todayStr();
   const fromEl = document.getElementById('periodFrom');
   const toEl = document.getElementById('periodTo');
   if(fromEl && document.activeElement !== fromEl) fromEl.value = currentRangeFrom;
@@ -2824,12 +2827,20 @@ function handleAppBack(){
   if(name && name !== 'player'){ showView('player'); return true; }
   return false;
 }
+let backLock = false;
+window.handleAppBack = function(){
+  if(backLock) return true;
+  backLock = true;
+  setTimeout(() => { backLock = false; }, 280);
+  try{ return handleAppBack(); }catch(e){ return false; }
+};
 function bindAppBack(){
   const App = capPlugin('App');
   if(!App || typeof App.addListener !== 'function') return;
   App.addListener('backButton', () => {
-    if(handleAppBack()) return;
-    if(typeof App.exitApp === 'function') App.exitApp();
+    if(window.handleAppBack()) return;
+    if(typeof App.minimizeApp === 'function') App.minimizeApp();
+    else if(typeof App.exitApp === 'function') App.exitApp();
   }).catch(() => {});
 }
 document.addEventListener('click', (e) => {
