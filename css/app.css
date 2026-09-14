@@ -139,7 +139,7 @@
   }
   .player-head-top{display:flex;align-items:center;flex-wrap:wrap;gap:4px;}
   .profile-hero{
-    position:relative;width:calc(100% + 32px);margin: -18px -16px 88px;
+    position:relative;width:calc(100% + 32px);margin: -18px -16px 108px;
   }
   .profile-cover{
     appearance:none;-webkit-appearance:none;
@@ -176,21 +176,15 @@
     content:"";position:absolute;left:0;right:0;bottom:0;height:48px;pointer-events:none;z-index:1;
     background:linear-gradient(to top, rgba(8,14,24,.22), transparent);
   }
-  .cam-chip,.cam-badge{
-    position:absolute;display:flex;align-items:center;justify-content:center;
-    background:rgba(11,18,32,.78);border:2px solid var(--bg);color:#fff;
-    pointer-events:none;z-index:1;
-  }
-  .cam-chip{right:10px;bottom:10px;width:34px;height:34px;border-radius:50%;font-size:.9rem;z-index:2;}
   .avatar-pin{
-    position:absolute;left:50%;bottom:-58px;transform:translateX(-50%);
-    width:128px;height:128px;z-index:5;
+    position:absolute;left:50%;bottom:-70px;transform:translateX(-50%);
+    width:152px;height:152px;z-index:5;
   }
   .photo-box{
-    position:relative;width:128px;height:128px;border-radius:50%;overflow:hidden;padding:0;margin:0;
+    position:relative;width:152px;height:152px;border-radius:50%;overflow:hidden;padding:0;margin:0;
     background:linear-gradient(135deg, var(--accent), var(--violet));
     border:4px solid var(--bg);display:flex;align-items:center;justify-content:center;
-    font-weight:900;font-size:1.85rem;color:#08121C;cursor:pointer;
+    font-weight:900;font-size:2.1rem;color:#08121C;cursor:pointer;
     box-shadow:0 8px 24px rgba(0,0,0,.35);z-index:1;
   }
   .photo-box img{width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;}
@@ -276,7 +270,6 @@
   .hist-filters{display:flex;flex-direction:column;}
   #historyKind{flex-wrap:wrap;overflow:visible;margin:0 0 14px;}
   button.chip{font:inherit;}
-  .cam-badge{right:0;bottom:0;width:30px;height:30px;border-radius:50%;font-size:.78rem;}
   .photo-sheet-back{
     position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:93;border:0;padding:0;
   }
