@@ -1,0 +1,26 @@
+{
+  "appId": "app.ffk.rating",
+  "appName": "FFK",
+  "webDir": "www",
+  "android": {
+    "allowMixedContent": false
+  },
+  "ios": {
+    "contentInset": "automatic",
+    "preferredContentMode": "mobile"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 0,
+      "launchAutoHide": true,
+      "backgroundColor": "#0B1220",
+      "showSpinner": false
+    },
+    "StatusBar": {
+      "overlaysWebView": true
+    },
+    "Keyboard": {
+      "resize": "body"
+    }
+  }
+}

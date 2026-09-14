@@ -156,3 +156,14 @@
 | Репозиторий | GitHub Pages отдаёт эти же файлы |
 
 Менять интерфейс — `index.html` и `css/app.css`, тексты — `js/i18n.js`, формулу оценки — `js/rating.js`, сохранение — `js/storage.js`, экраны — `js/app.js`. Отдельного бэкенда и зависимостей нет.
+
+## Android и iPhone
+
+Тот же веб внутри Capacitor. GitHub Pages не трогаем. После правки HTML/CSS/JS:
+
+```
+npm install
+npm run android
+```
+
+или `npm run ios` — откроет Android Studio / Xcode. Debug-сборку запускаете там (нужны JDK + Android SDK или полный Xcode). Данные PWA в Safari и данные приложения — разные хранилища: перенос через экспорт JSON.

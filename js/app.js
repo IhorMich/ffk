@@ -21,6 +21,43 @@ function t(key, vars){
 function isNativeApp(){
   return typeof window.ffkIsNative === 'function' && window.ffkIsNative();
 }
+function capPlugin(name){
+  try{
+    const C = window.Capacitor;
+    return (C && C.Plugins && C.Plugins[name]) || null;
+  }catch(e){
+    return null;
+  }
+}
+function blobToBase64(blob){
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || '').split(',')[1] || '');
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
+async function nativeShareBlob(blob, filename, title){
+  const Share = capPlugin('Share');
+  const Filesystem = capPlugin('Filesystem');
+  if(!isNativeApp() || !Share || !Filesystem || !blob) return false;
+  const data = await blobToBase64(blob);
+  const directory = 'CACHE';
+  await Filesystem.writeFile({path: filename, data, directory});
+  const got = await Filesystem.getUri({path: filename, directory});
+  await Share.share({title: title || 'FFK', files: [got.uri], dialogTitle: title || 'FFK'});
+  return true;
+}
+function applyNativeChrome(){
+  const Bar = capPlugin('StatusBar');
+  if(!isNativeApp() || !Bar) return;
+  const theme = themeName();
+  const color = theme === 'day' ? '#FFF8D6' : (theme === 'light' ? '#F3F5FA' : '#0B1220');
+  const style = theme === 'dark' ? 'LIGHT' : 'DARK';
+  Promise.resolve(Bar.setOverlaysWebView({overlay: true})).catch(() => {});
+  Promise.resolve(Bar.setBackgroundColor({color})).catch(() => {});
+  Promise.resolve(Bar.setStyle({style})).catch(() => {});
+}
 const THEME_ORDER = ['dark','light','day'];
 function themeName(){
   return THEME_ORDER.includes(settings.theme) ? settings.theme : 'dark';
@@ -40,6 +77,7 @@ function applyTheme(){
   document.querySelectorAll('#themeChips .chip').forEach(c => {
     c.classList.toggle('active', c.dataset.theme === theme);
   });
+  applyNativeChrome();
 }
 function toggleTheme(){
   const i = THEME_ORDER.indexOf(themeName());
@@ -1648,6 +1686,11 @@ function renderOppList(){
   document.getElementById('tourList').innerHTML = tours.map(n => `<option value="${escapeHtml(n)}">`).join('');
 }
 function liveHaptic(ms){
+  const Haptics = capPlugin('Haptics');
+  if(Haptics){
+    Promise.resolve(Haptics.impact({style: 'LIGHT'})).catch(() => {});
+    return;
+  }
   try{
     if(typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(ms || 15);
   }catch(e){}
@@ -2033,15 +2076,22 @@ function downloadMatches(){
   if(!matches.length && !player.firstName){ showToast(t('toastNothingExport')); return; }
   const blob = new Blob([JSON.stringify(exportPayload(), null, 2)], {type:'application/json'});
   const filename = `ffk_${todayStr()}.json`;
-  const file = new File([blob], filename, {type:'application/json'});
-  if(navigator.canShare && navigator.canShare({files:[file]})){
-    navigator.share({files:[file], title:'FFK'}).then(() => {
+  nativeShareBlob(blob, filename, 'FFK').then(ok => {
+    if(ok){
       localStorage.setItem(EXPORT_KEY, todayStr());
       renderHistory();
-    }).catch(() => triggerDownload(blob, filename));
-    return;
-  }
-  triggerDownload(blob, filename);
+      return;
+    }
+    const file = new File([blob], filename, {type:'application/json'});
+    if(navigator.canShare && navigator.canShare({files:[file]})){
+      navigator.share({files:[file], title:'FFK'}).then(() => {
+        localStorage.setItem(EXPORT_KEY, todayStr());
+        renderHistory();
+      }).catch(() => triggerDownload(blob, filename));
+      return;
+    }
+    triggerDownload(blob, filename);
+  }).catch(() => triggerDownload(blob, filename));
 }
 function triggerDownload(blob, filename){
   const url = URL.createObjectURL(blob);
@@ -3022,6 +3072,9 @@ function futStatRows(list, pos){
 }
 async function exportPngFile(canvas, filename){
   const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
+  try{
+    if(await nativeShareBlob(blob, filename, 'FFK')) return true;
+  }catch(e){}
   const file = new File([blob], filename, {type:'image/png'});
   try{
     if(navigator.canShare && navigator.canShare({files:[file]})){
