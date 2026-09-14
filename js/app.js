@@ -854,6 +854,7 @@ function setCoverPreview(){
 function closePhotoSheet(){
   document.getElementById('photoSheet').hidden = true;
   document.getElementById('photoSheetBack').hidden = true;
+  syncNativeBackFlag();
 }
 function openPhotoSheet(target){
   photoSheetTarget = target;
@@ -862,6 +863,7 @@ function openPhotoSheet(target){
   document.getElementById('photoSheetClear').hidden = !has;
   document.getElementById('photoSheet').hidden = false;
   document.getElementById('photoSheetBack').hidden = false;
+  syncNativeBackFlag();
 }
 function pickPhotoFile(){
   const el = document.getElementById(photoSheetTarget === 'cover' ? 'p-cover' : 'p-photo');
@@ -1022,11 +1024,13 @@ function openCrop(img, target){
   if(hint) hint.textContent = t(target === 'cover' ? 'cropCoverHint' : 'cropHint');
   document.getElementById('cropZoom').value = '100';
   document.getElementById('cropModal').hidden = false;
+  syncNativeBackFlag();
   requestAnimationFrame(() => requestAnimationFrame(() => applyCropZoom(false)));
 }
 function closeCrop(){
   cropState = null;
   document.getElementById('cropModal').hidden = true;
+  syncNativeBackFlag();
 }
 function exportCrop(){
   const st = cropState;
@@ -1591,11 +1595,13 @@ function openPlayerEdit(){
   fillPlayerForm();
   const el = document.getElementById('playerEdit');
   if(el) el.hidden = false;
+  syncNativeBackFlag();
 }
 function closePlayerEdit(revert){
   const el = document.getElementById('playerEdit');
   if(el) el.hidden = true;
   if(revert !== false) fillPlayerForm();
+  syncNativeBackFlag();
 }
 function fillPlayerForm(){
   fillPrimarySelect();
@@ -2112,6 +2118,7 @@ function showView(name){
   renderLiveClock();
   if(clockPhase() === 'run') startClockTick();
   try{ sessionStorage.setItem(VIEW_KEY, name === 'report' ? 'history' : name); }catch(e){}
+  syncNativeBackFlag();
 }
 function restoreView(){
   let name = 'new';
@@ -2765,6 +2772,7 @@ function openLive(){
   updateHero();
   renderLiveClock();
   if(clockPhase() === 'run') startClockTick();
+  syncNativeBackFlag();
 }
 function closeLive(){
   document.getElementById('app').classList.remove('live-on');
@@ -2774,6 +2782,7 @@ function closeLive(){
   renderLiveClock();
   if(clockPhase() === 'run') startClockTick();
   persistDraft();
+  syncNativeBackFlag();
 }
 document.getElementById('liveStartBtn').addEventListener('click', openLive);
 document.getElementById('liveUndoBtn').addEventListener('click', () => undoLastLive());
@@ -2783,11 +2792,24 @@ document.querySelectorAll('.js-match-clock-btn').forEach(btn => {
 document.getElementById('liveDoneBtn').addEventListener('click', closeLive);
 function isElShown(id){
   const el = document.getElementById(id);
-  return !!(el && !el.hidden);
+  if(!el || el.hidden) return false;
+  const cs = window.getComputedStyle(el);
+  return cs.display !== 'none' && cs.visibility !== 'hidden';
 }
 function activeViewName(){
   const view = document.querySelector('.view.active');
   return view && view.id ? view.id.replace('view-', '') : '';
+}
+function peekAppBack(){
+  if(isElShown('onboard') || isElShown('cropModal') || isElShown('photoSheet') || isElShown('previewModal') || isElShown('playerEdit')) return true;
+  if(document.getElementById('app')?.classList.contains('live-on')) return true;
+  if(document.querySelector('#historyList .match-details.open')) return true;
+  return activeViewName() !== 'player';
+}
+function syncNativeBackFlag(){
+  try{
+    if(window.FfkHost && typeof window.FfkHost.setStay === 'function') window.FfkHost.setStay(peekAppBack());
+  }catch(e){}
 }
 function handleAppBack(){
   if(isElShown('onboard')){
@@ -2795,38 +2817,31 @@ function handleAppBack(){
       onboardStep -= 1;
       renderOnboard();
     }
+    syncNativeBackFlag();
     return true;
   }
-  if(isElShown('cropModal')){ closeCrop(); return true; }
-  if(isElShown('photoSheet')){ closePhotoSheet(); return true; }
-  if(isElShown('previewModal')){ closeCardPreview(); return true; }
-  if(isElShown('playerEdit')){ closePlayerEdit(true); return true; }
-  if(document.getElementById('app')?.classList.contains('live-on')){ closeLive(); return true; }
+  if(isElShown('cropModal')){ closeCrop(); syncNativeBackFlag(); return true; }
+  if(isElShown('photoSheet')){ closePhotoSheet(); syncNativeBackFlag(); return true; }
+  if(isElShown('previewModal')){ closeCardPreview(); syncNativeBackFlag(); return true; }
+  if(isElShown('playerEdit')){ closePlayerEdit(true); syncNativeBackFlag(); return true; }
+  if(document.getElementById('app')?.classList.contains('live-on')){ closeLive(); syncNativeBackFlag(); return true; }
   const openDetails = document.querySelector('#historyList .match-details.open');
-  if(openDetails){ openDetails.classList.remove('open'); return true; }
+  if(openDetails){ openDetails.classList.remove('open'); syncNativeBackFlag(); return true; }
   const name = activeViewName();
   if(name === 'report'){ showView('history'); return true; }
-  if(name && name !== 'player'){ showView('player'); return true; }
+  if(name !== 'player'){ showView('player'); return true; }
+  syncNativeBackFlag();
   return false;
 }
 window.handleAppBack = function(){
-  try{ return handleAppBack(); }catch(e){ return false; }
+  try{ return handleAppBack(); }catch(e){ syncNativeBackFlag(); return true; }
 };
-function bindAppBack(attempt){
-  const App = capPlugin('App');
-  if(!App || typeof App.addListener !== 'function'){
-    if((attempt || 0) < 40) setTimeout(() => bindAppBack((attempt || 0) + 1), 50);
-    return;
-  }
-  if(window.__ffkBackBound) return;
-  window.__ffkBackBound = true;
-  App.addListener('backButton', () => {
-    if(window.handleAppBack()) return;
-    if(typeof App.minimizeApp === 'function') App.minimizeApp();
-  }).catch(() => {
-    window.__ffkBackBound = false;
-    setTimeout(() => bindAppBack((attempt || 0) + 1), 80);
-  });
+function bindAppBack(){
+  const ping = n => {
+    syncNativeBackFlag();
+    if(n < 25) setTimeout(() => ping(n + 1), 40);
+  };
+  ping(0);
 }
 document.addEventListener('click', (e) => {
   const go = e.target.closest('[data-go-view]');
@@ -2892,6 +2907,7 @@ function finishOnboard(){
   settings.onboarded = true;
   saveSettings();
   document.getElementById('onboard').hidden = true;
+  syncNativeBackFlag();
 }
 function renderOnboard(){
   const pages = onboardPages();
@@ -2912,6 +2928,7 @@ function maybeOnboard(){
   onboardStep = 0;
   document.getElementById('onboard').hidden = false;
   renderOnboard();
+  syncNativeBackFlag();
 }
 document.getElementById('onboardNext').addEventListener('click', () => {
   if(onboardStep >= 2){ finishOnboard(); return; }
@@ -3279,6 +3296,7 @@ async function openCardPreview(state){
   try{
     await refreshCardPreview();
     document.getElementById('previewModal').hidden = false;
+    syncNativeBackFlag();
   }catch(e){
     shareBusy = false;
     previewState = null;
@@ -3293,6 +3311,7 @@ function closeCardPreview(){
   img.removeAttribute('src');
   previewState = null;
   shareBusy = false;
+  syncNativeBackFlag();
 }
 async function drawFutCardCanvas(list, period, mode){
     const pos = ratingPosOf(player.primary);

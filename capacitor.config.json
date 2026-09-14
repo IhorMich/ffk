@@ -21,6 +21,9 @@
     },
     "Keyboard": {
       "resize": "body"
+    },
+    "App": {
+      "disableBackButtonHandler": true
     }
   }
 }
