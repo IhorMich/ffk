@@ -3113,6 +3113,9 @@ ru:{
       onboard3Body:'Дані лише на телефоні. У налаштуваннях зробіть експорт JSON — це ваш бекап.',
       previewTitle:'Картка', previewShare:'Поділитися', previewSave:'Завантажити', previewCancel:'Скасувати',
       previewDark:'Темна', previewLight:'Світла',
+      legTitle:'Що означають літери', legOvr:'Велике число — середня оцінка за період, помножена на 10 (6,9 → 69).', legPos:'Код під ним — позиція: {pos}.',
+      legPac:'швидкість', legSho:'удар', legPas:'передачі', legDri:'дрибл', legDef:'оборона', legPhy:'фізика',
+      legDiv:'гра в падінні', legHan:'фіксація мʼяча', legKic:'удар від воріт', legRef:'реакція', legGkPos:'вибір позиції',
       histSearch:'Суперник', histSearchPh:'Назва команди', histKindAll:'Усі ігри', histEmpty:'Немає матчів з таким фільтром.',
       liveOnPitch:'Вести матч', pAddCover:'Додати фото'
     },
@@ -3128,6 +3131,9 @@ ru:{
       onboard3Body:'Dane są tylko na telefonie. W ustawieniach zrób eksport JSON — to kopia zapasowa.',
       previewTitle:'Karta', previewShare:'Udostępnij', previewSave:'Pobierz', previewCancel:'Anuluj',
       previewDark:'Ciemna', previewLight:'Jasna',
+      legTitle:'Co oznaczają litery', legOvr:'Duża liczba to średnia ocena z okresu pomnożona przez dziesięć (6,9 → 69).', legPos:'Kod poniżej to pozycja: {pos}.',
+      legPac:'szybkość', legSho:'strzał', legPas:'podania', legDri:'drybling', legDef:'obrona', legPhy:'fizyczność',
+      legDiv:'rzuty', legHan:'chwyt piłki', legKic:'wykop', legRef:'refleks', legGkPos:'pozycja',
       histSearch:'Rywal', histSearchPh:'Nazwa drużyny', histKindAll:'Wszystkie mecze', histEmpty:'Brak meczów dla tego filtra.',
       liveOnPitch:'Prowadź mecz', pAddCover:'Dodaj zdjęcie'
     },
@@ -3143,6 +3149,9 @@ ru:{
       onboard3Body:'Data lives only on this phone. In Settings, export JSON — that file is your backup.',
       previewTitle:'Card', previewShare:'Share', previewSave:'Download', previewCancel:'Cancel',
       previewDark:'Dark', previewLight:'Light',
+      legTitle:'What the letters mean', legOvr:'The big number is the average rating for the period times ten (6.9 → 69).', legPos:'The code under it is the position: {pos}.',
+      legPac:'pace', legSho:'shooting', legPas:'passing', legDri:'dribbling', legDef:'defending', legPhy:'physical',
+      legDiv:'diving', legHan:'handling', legKic:'kicking', legRef:'reflexes', legGkPos:'positioning',
       histSearch:'Opponent', histSearchPh:'Team name', histKindAll:'All games', histEmpty:'No matches for this filter.',
       liveOnPitch:'Track the match', pAddCover:'Add photo'
     },
@@ -3158,6 +3167,9 @@ ru:{
       onboard3Body:'Данные только на телефоне. В настройках сделайте экспорт JSON — это ваш бэкап.',
       previewTitle:'Карточка', previewShare:'Поделиться', previewSave:'Скачать', previewCancel:'Отмена',
       previewDark:'Тёмная', previewLight:'Светлая',
+      legTitle:'Что значат буквы', legOvr:'Крупное число — средняя оценка за период, умноженная на десять (6,9 → 69).', legPos:'Код под ним — позиция: {pos}.',
+      legPac:'скорость', legSho:'удар', legPas:'передачи', legDri:'дриблинг', legDef:'оборона', legPhy:'физика',
+      legDiv:'игра в падении', legHan:'фиксация мяча', legKic:'удар от ворот', legRef:'реакция', legGkPos:'выбор позиции',
       histSearch:'Соперник', histSearchPh:'Название команды', histKindAll:'Все игры', histEmpty:'Нет матчей с таким фильтром.',
       liveOnPitch:'Вести матч', pAddCover:'Добавить фото'
     },
@@ -3173,6 +3185,9 @@ ru:{
       onboard3Body:'Los datos están solo en el teléfono. En Ajustes exporta JSON: esa es tu copia.',
       previewTitle:'Carta', previewShare:'Compartir', previewSave:'Descargar', previewCancel:'Cancelar',
       previewDark:'Oscura', previewLight:'Clara',
+      legTitle:'Qué significan las letras', legOvr:'El número grande es la nota media del periodo multiplicada por diez (6,9 → 69).', legPos:'El código de abajo es la posición: {pos}.',
+      legPac:'velocidad', legSho:'tiro', legPas:'pase', legDri:'regate', legDef:'defensa', legPhy:'físico',
+      legDiv:'estirada', legHan:'manos', legKic:'saque', legRef:'reflejos', legGkPos:'colocación',
       histSearch:'Rival', histSearchPh:'Nombre del equipo', histKindAll:'Todos los partidos', histEmpty:'No hay partidos con este filtro.',
       liveOnPitch:'Seguir el partido', pAddCover:'Añadir foto'
     },
@@ -3188,6 +3203,9 @@ ru:{
       onboard3Body:'Daten liegen nur auf dem Telefon. Unter Einstellungen JSON exportieren — das ist das Backup.',
       previewTitle:'Karte', previewShare:'Teilen', previewSave:'Laden', previewCancel:'Abbrechen',
       previewDark:'Dunkel', previewLight:'Hell',
+      legTitle:'Was die Kürzel bedeuten', legOvr:'Die große Zahl ist die Durchschnittsnote des Zeitraums mal zehn (6,9 → 69).', legPos:'Das Kürzel darunter ist die Position: {pos}.',
+      legPac:'Schnelligkeit', legSho:'Schuss', legPas:'Passspiel', legDri:'Dribbling', legDef:'Defensive', legPhy:'Physis',
+      legDiv:'Flugparade', legHan:'Fangsicherheit', legKic:'Abschlag', legRef:'Reflexe', legGkPos:'Stellungsspiel',
       histSearch:'Gegner', histSearchPh:'Teamname', histKindAll:'Alle Spiele', histEmpty:'Keine Spiele für diesen Filter.',
       liveOnPitch:'Spiel mitschreiben', pAddCover:'Foto hinzufügen'
     },
@@ -3203,6 +3221,9 @@ ru:{
       onboard3Body:'I dati stanno solo sul telefono. Nelle Impostazioni esporta JSON: quello è il backup.',
       previewTitle:'Carta', previewShare:'Condividi', previewSave:'Scarica', previewCancel:'Annulla',
       previewDark:'Scura', previewLight:'Chiara',
+      legTitle:'Cosa significano le lettere', legOvr:'Il numero grande è la media del periodo moltiplicata per dieci (6,9 → 69).', legPos:'Il codice sotto è la posizione: {pos}.',
+      legPac:'velocità', legSho:'tiro', legPas:'passaggi', legDri:'dribbling', legDef:'difesa', legPhy:'fisico',
+      legDiv:'tuffo', legHan:'presa', legKic:'rinvio', legRef:'riflessi', legGkPos:'posizione',
       histSearch:'Avversario', histSearchPh:'Nome della squadra', histKindAll:'Tutte le partite', histEmpty:'Nessuna partita per questo filtro.',
       liveOnPitch:'Segui la partita', pAddCover:'Aggiungi foto'
     },
@@ -3218,6 +3239,9 @@ ru:{
       onboard3Body:'Les données sont seulement sur le téléphone. Dans Réglages, exportez le JSON — c’est la sauvegarde.',
       previewTitle:'Carte', previewShare:'Partager', previewSave:'Télécharger', previewCancel:'Annuler',
       previewDark:'Sombre', previewLight:'Claire',
+      legTitle:'Ce que signifient les lettres', legOvr:'Le grand nombre est la note moyenne de la période multipliée par dix (6,9 → 69).', legPos:'Le code en dessous est le poste : {pos}.',
+      legPac:'vitesse', legSho:'tir', legPas:'passes', legDri:'dribble', legDef:'défense', legPhy:'physique',
+      legDiv:'plongeon', legHan:'prise de balle', legKic:'dégagement', legRef:'réflexes', legGkPos:'placement',
       histSearch:'Adversaire', histSearchPh:'Nom de l’équipe', histKindAll:'Tous les matchs', histEmpty:'Aucun match pour ce filtre.',
       liveOnPitch:'Suivre le match', pAddCover:'Ajouter une photo'
     },
@@ -3233,6 +3257,9 @@ ru:{
       onboard3Body:'Os dados ficam só no telefone. Nas Definições exporte JSON — esse ficheiro é o backup.',
       previewTitle:'Carta', previewShare:'Partilhar', previewSave:'Descarregar', previewCancel:'Cancelar',
       previewDark:'Escura', previewLight:'Clara',
+      legTitle:'O que significam as letras', legOvr:'O número grande é a nota média do período multiplicada por dez (6,9 → 69).', legPos:'O código abaixo é a posição: {pos}.',
+      legPac:'velocidade', legSho:'remate', legPas:'passe', legDri:'drible', legDef:'defesa', legPhy:'físico',
+      legDiv:'voo', legHan:'segurança', legKic:'reposição', legRef:'reflexos', legGkPos:'posicionamento',
       histSearch:'Adversário', histSearchPh:'Nome da equipa', histKindAll:'Todos os jogos', histEmpty:'Não há jogos para este filtro.',
       liveOnPitch:'Acompanhar o jogo', pAddCover:'Adicionar foto'
     }

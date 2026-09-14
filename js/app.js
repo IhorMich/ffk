@@ -2576,7 +2576,7 @@ function cardPeriodMatches(range){
   return periodSlice(seasonPool(), range || currentRange);
 }
 function cardLocale(){
-  return ({uk:'uk-UA', pl:'pl-PL', en:'en-GB', ru:'ru-RU', es:'es-ES', de:'de-DE', it:'it-IT', fr:'fr-FR', pt:'pt-PT'})[settings.lang] || 'en-GB';
+  return LANG_LOCALE[settings.lang] || LANG_LOCALE.en;
 }
 function upperFirst(s){
   const str = String(s || '');
@@ -3732,8 +3732,28 @@ function syncPreviewPeriodChips(range){
     c.classList.toggle('active', c.dataset.range === range);
   });
 }
+// The card speaks FIFA shorthand, so the sheet spells it out while the picture
+// itself stays clean.
+function syncPreviewLegend(){
+  const el = document.getElementById('previewLegend');
+  if(!el) return;
+  if(!previewState || !previewState.legend){
+    el.hidden = true;
+    el.innerHTML = '';
+    return;
+  }
+  const rows = ratingPosOf(player.primary) === 'gk'
+    ? [['DIV','legDiv'], ['HAN','legHan'], ['KIC','legKic'], ['REF','legRef'], ['POS','legGkPos'], ['PAS','legPas']]
+    : [['PAC','legPac'], ['SHO','legSho'], ['PAS','legPas'], ['DRI','legDri'], ['DEF','legDef'], ['PHY','legPhy']];
+  el.innerHTML = `<h4>${escapeHtml(t('legTitle'))}</h4>
+    <div class="legend-grid">${rows.map(r => `<span><b>${r[0]}</b> ${escapeHtml(t(r[1]))}</span>`).join('')}</div>
+    <p>${escapeHtml(t('legOvr'))}</p>
+    <p>${escapeHtml(t('legPos', {pos: pitchPosLabel(cardPosCode())}))}</p>`;
+  el.hidden = false;
+}
 async function refreshCardPreview(){
   if(!previewState) return;
+  syncPreviewLegend();
   if(previewState.kind === 'period'){
     const range = RANGE_KEYS.includes(previewState.range) ? previewState.range : currentRange;
     previewState.range = range;
@@ -3894,6 +3914,7 @@ async function shareFutCard(list, period, tag){
   const slug = String(player.firstName || 'player').trim().replace(/\s+/g, '_').slice(0, 18) || 'player';
   const stamp = String(tag || 'card').replace(/\s+/g, '_').slice(0, 24);
   await openCardPreview({
+    legend: true,
     filename: `ffk_card_${slug}_${stamp}.png`,
     build: mode => drawFutCardCanvas(list, period, mode)
   });
@@ -3924,6 +3945,7 @@ function shareStatsCard(){
   const slug = String(player.firstName || 'player').trim().replace(/\s+/g, '_').slice(0, 18) || 'player';
   return openCardPreview({
     kind: 'period',
+    legend: true,
     range,
     filename: `ffk_card_${slug}_${range}.png`,
     build: mode => drawFutCardCanvas(list, cardPeriodLabel(range), mode)

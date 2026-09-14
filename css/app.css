@@ -347,6 +347,18 @@
     .preview-card{border-radius:22px;max-height:88vh;padding:0 16px 16px;}
   }
   .preview-card img{display:block;width:100%;border-radius:16px;margin:0 0 12px;background:var(--surface-2);}
+  .card-legend{
+    margin:0 0 12px;padding:12px 14px;border-radius:16px;
+    background:var(--surface-2);border:1px solid var(--border);
+  }
+  .card-legend h4{
+    margin:0 0 8px;font-size:.7rem;font-weight:800;letter-spacing:.08em;
+    text-transform:uppercase;color:var(--text-soft);
+  }
+  .card-legend .legend-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;}
+  .card-legend .legend-grid span{font-size:.8rem;font-weight:600;color:var(--text-soft);}
+  .card-legend .legend-grid b{color:var(--text);font-weight:800;margin-right:4px;}
+  .card-legend p{margin:8px 0 0;font-size:.78rem;font-weight:600;color:var(--text-soft);line-height:1.4;}
   #previewTheme{justify-content:center;overflow:visible;margin:0 0 8px;}
   #previewPeriod{
     display:flex;flex-direction:column;gap:6px;margin:0 0 10px;padding:6px;
