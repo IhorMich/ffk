@@ -71,6 +71,7 @@ public class GalleryPickerPlugin extends Plugin {
         values.put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES + "/FFK");
       }
       ContentResolver resolver = getContext().getContentResolver();
+      dropOldCopy(resolver, name);
       Uri target = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
       if (target == null) {
         call.reject("gallery rejected the file", "NO_TARGET");
@@ -111,6 +112,28 @@ public class GalleryPickerPlugin extends Plugin {
     } catch (Exception e) {
       call.reject(e.getMessage() == null ? "read failed" : e.getMessage(), "READ");
     }
+  }
+
+  // Saving the same card twice should replace it instead of leaving
+  // "card (1)", "card (2)" behind.
+  private void dropOldCopy(ContentResolver resolver, String name) {
+    String where = MediaStore.Images.Media.DISPLAY_NAME + "=?";
+    try (
+      Cursor c = resolver.query(
+        MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+        new String[] { MediaStore.Images.Media._ID },
+        where,
+        new String[] { name },
+        null
+      )
+    ) {
+      while (c != null && c.moveToNext()) {
+        Uri old = Uri.withAppendedPath(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, String.valueOf(c.getLong(0)));
+        try {
+          resolver.delete(old, null, null);
+        } catch (Exception ignored) {}
+      }
+    } catch (Exception ignored) {}
   }
 
   private String readAsJpegDataUrl(Uri uri) throws Exception {

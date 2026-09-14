@@ -3291,8 +3291,22 @@ document.getElementById('previewShare').addEventListener('click', async () => {
   if(ok) closeCardPreview();
 });
 document.getElementById('previewSave').addEventListener('click', async () => {
-  if(!previewState || !previewState.canvas) return;
-  await savePngFile(previewState.canvas, previewState.filename);
+  const btn = document.getElementById('previewSave');
+  if(!previewState || !previewState.canvas || btn.disabled) return;
+  // Writing the file is silent, so the button itself reports the result; a
+  // parent kept tapping it and collected ten copies of the same card.
+  btn.disabled = true;
+  btn.textContent = t('previewSaving');
+  let done = false;
+  try{
+    await savePngFile(previewState.canvas, previewState.filename);
+    done = true;
+  }catch(e){}
+  btn.textContent = done ? t('previewSaved') : t('previewSave');
+  window.setTimeout(() => {
+    btn.disabled = false;
+    btn.textContent = t('previewSave');
+  }, 2400);
 });
 document.getElementById('previewCancel').addEventListener('click', closeCardPreview);
 
