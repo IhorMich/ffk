@@ -324,11 +324,12 @@
     -webkit-appearance:none;width:24px;height:24px;border-radius:50%;
     background:linear-gradient(135deg, var(--accent), var(--violet));border:3px solid var(--bg);
   }
-  .insight,.banner{
+  .insight{
     margin-top:14px;padding:13px 15px;border-radius:16px;font-size:.86rem;line-height:1.45;font-weight:600;
+    background:var(--surface);border:1px solid var(--border);
   }
-  .insight{background:var(--surface);border:1px solid var(--border);}
   .insight b{color:var(--accent);}
+  .report .insight{background:var(--surface-2);}
   .report{
     background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:22px 20px 20px;
   }

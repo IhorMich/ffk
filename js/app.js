@@ -135,7 +135,6 @@ function applyI18n(){
   renderMetrics();
   renderBehaviors();
   renderLiveGrid();
-  renderFocusBanner();
   fillSeasonSelects();
   syncSeasonUi();
   renderHistory();
@@ -539,7 +538,7 @@ function renderReportHtml(m, compact){
   const body = lines.length
     ? lines.map(x => `<div class="report-line"><span class="ic">${x.icon}</span><span>${escapeHtml(x.text)}</span></div>`).join('')
     : `<div class="report-line">${escapeHtml(t('plusEven'))}</div>`;
-  return `${head}${body}
+  return `${head}${body}${matchInsightHtml(m)}
     <div class="report-split">
       <div class="report-pill plus">${fmtSigned(Math.max(0, split.plus), 2)}<small>${escapeHtml(t('actPlus'))}</small></div>
       <div class="report-pill minus">${'−' + fmtNum(Math.abs(split.minus), 2)}<small>${escapeHtml(t('actMinus'))}</small></div>
@@ -658,6 +657,12 @@ function buildInsights(m, history){
   else if(hasRating && rating >= 7) set('focusKeep', {r: fmtRating(rating)});
   else if(goals || assists) set('focusFinish');
   return {plus, focus: t(key, vars)};
+}
+function matchInsightHtml(m){
+  if(!m || matchIsBlank(m)) return '';
+  const rest = matches.filter(x => x.id !== m.id).sort((a,b)=> b.date.localeCompare(a.date) || b.id-a.id);
+  const ins = buildInsights(m, rest);
+  return `<div class="insight"><b>${escapeHtml(t('insightPlus'))}:</b> ${escapeHtml(ins.plus)}<br><b>${escapeHtml(t('insightFocus'))}:</b> ${escapeHtml(ins.focus)}</div>`;
 }
 function escapeHtml(s){
   return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -1364,7 +1369,6 @@ function applyPlayerContext(){
   renderMetrics();
   renderBehaviors();
   renderLiveGrid();
-  renderFocusBanner();
   renderHistory();
   renderStats();
   renderOppList();
@@ -1597,22 +1601,6 @@ function renderOppList(){
   const tours = [...new Set(matches.map(m => m.tournament).filter(Boolean))].sort();
   document.getElementById('tourList').innerHTML = tours.map(n => `<option value="${escapeHtml(n)}">`).join('');
 }
-function renderFocusBanner(){
-  const el = document.getElementById('focusBanner');
-  if(editingId || matches.length === 0){ el.hidden = true; return; }
-  const last = [...matches].sort((a,b)=> b.date.localeCompare(a.date) || b.id-a.id)[0];
-  const rest = matches.filter(x => x.id !== last.id).sort((a,b)=> b.date.localeCompare(a.date) || b.id-a.id);
-  const ins = buildInsights(last, rest);
-  el.hidden = false;
-  el.innerHTML = t('lastFocus', {
-    who: escapeHtml(last.opponent || t('unnamed')),
-    got: escapeHtml(t('gotLbl')),
-    next: escapeHtml(t('insightFocus')),
-    plus: escapeHtml(ins.plus),
-    focus: escapeHtml(ins.focus)
-  });
-}
-
 window.stepMetric = function(key, dir){
   const next = Math.max(0, (form.counts[key]||0) + dir);
   form.counts[key] = next;
@@ -1659,12 +1647,6 @@ function updateHero(){
   document.getElementById('heroEffort').textContent = fmtNum(s.effort, 1);
   const minutes = Number(document.getElementById('f-minutes').value) || 60;
   document.getElementById('heroLabel').textContent = minutes < 25 ? t('heroShort') : t('heroOverall');
-  const ins = buildInsights({
-    counts: form.counts, behaviors: form.behaviors, position: s.pos,
-    minutes, rating: s.overall, role: document.getElementById('f-role').value
-  }, matches);
-  document.getElementById('insightBox').innerHTML =
-    `<b>${escapeHtml(t('insightPlus'))}:</b> ${escapeHtml(ins.plus)}<br><b>${escapeHtml(t('insightFocus'))}:</b> ${escapeHtml(ins.focus)}`;
   document.getElementById('liveScore').textContent = fmtNum(s.action, 1);
 }
 
@@ -1696,7 +1678,6 @@ function resetForm(keepDraft){
   document.getElementById('f-date').value = todayStr();
   renderMetrics();
   renderBehaviors();
-  renderFocusBanner();
   updateHero();
   syncDateShown();
   if(!keepDraft){
@@ -1732,7 +1713,6 @@ function fillForm(m){
   setEditUi(true);
   renderMetrics();
   renderBehaviors();
-  renderFocusBanner();
   updateHero();
   syncDateShown();
   persistDraft();
@@ -1924,7 +1904,7 @@ window.deleteMatch = function(id){
   saveMatches();
   if(editingId === id) resetForm();
   fillSeasonSelects();
-  renderHistory(); renderStats(); renderOppList(); renderFocusBanner();
+  renderHistory(); renderStats(); renderOppList();
   showToast(t('toastDeleted'));
 };
 window.shareMatch = function(id){
