@@ -8,6 +8,73 @@ const FILTER_KEY = 'ffk_filters_v1';
 const PLAYER_KEY = 'ffk_player_v1';
 const ROSTER_KEY = 'ffk_roster_v1';
 const MAX_PLAYERS = 8;
+const IDB_NAME = 'ffk';
+const IDB_STORE = 'media';
+const mediaCache = {};
+
+function idbOpen(){
+  return new Promise((resolve, reject) => {
+    if(typeof indexedDB === 'undefined'){ reject(new Error('no idb')); return; }
+    const req = indexedDB.open(IDB_NAME, 1);
+    req.onupgradeneeded = () => {
+      const db = req.result;
+      if(!db.objectStoreNames.contains(IDB_STORE)) db.createObjectStore(IDB_STORE);
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+function idbGetMedia(id){
+  return idbOpen().then(db => new Promise((resolve, reject) => {
+    const tx = db.transaction(IDB_STORE, 'readonly');
+    const req = tx.objectStore(IDB_STORE).get(String(id));
+    req.onsuccess = () => resolve(req.result || null);
+    req.onerror = () => reject(req.error);
+  })).catch(() => null);
+}
+function idbPutMedia(id, photo, cover){
+  mediaCache[id] = {photo: photo || '', cover: cover || ''};
+  return idbOpen().then(db => new Promise((resolve, reject) => {
+    const tx = db.transaction(IDB_STORE, 'readwrite');
+    tx.objectStore(IDB_STORE).put({photo: photo || '', cover: cover || ''}, String(id));
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  })).catch(() => {});
+}
+function idbDeleteMedia(id){
+  delete mediaCache[id];
+  return idbOpen().then(db => new Promise((resolve, reject) => {
+    const tx = db.transaction(IDB_STORE, 'readwrite');
+    tx.objectStore(IDB_STORE).delete(String(id));
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  })).catch(() => {});
+}
+function playerRecordForLs(p){
+  return {...p, photo: '', cover: ''};
+}
+async function hydrateAllMedia(){
+  const ids = roster.ids.length ? roster.ids : (player && player.id ? [player.id] : []);
+  for(const id of ids){
+    const fromLs = readPlayerRecord(id, true);
+    const rec = await idbGetMedia(id);
+    let photo = (rec && rec.photo) || '';
+    let cover = (rec && rec.cover) || '';
+    if(!photo && fromLs && fromLs.photo) photo = fromLs.photo;
+    if(!cover && fromLs && fromLs.cover) cover = fromLs.cover;
+    mediaCache[id] = {photo, cover};
+    if(photo || cover) await idbPutMedia(id, photo, cover);
+    if(fromLs && (fromLs.photo || fromLs.cover)){
+      try{ localStorage.setItem(kidPlayerKey(id), JSON.stringify(playerRecordForLs({...fromLs, id}))); }catch(e){}
+    }
+  }
+  if(player && player.id){
+    const cur = mediaCache[player.id] || {photo:'', cover:''};
+    player.photo = cur.photo;
+    player.cover = cur.cover;
+    try{ localStorage.setItem(PLAYER_KEY, JSON.stringify(playerRecordForLs(player))); }catch(e){}
+  }
+}
 
 function loadSettings(){
   try{
@@ -38,22 +105,26 @@ function saveRoster(){
 }
 function writePlayerRecord(id, p){
   const row = {...p, id};
+  mediaCache[id] = {photo: row.photo || '', cover: row.cover || ''};
   try{
-    localStorage.setItem(kidPlayerKey(id), JSON.stringify(row));
+    localStorage.setItem(kidPlayerKey(id), JSON.stringify(playerRecordForLs(row)));
   }catch(e){
-    try{
-      const slim = {...row, photo:'', cover:''};
-      localStorage.setItem(kidPlayerKey(id), JSON.stringify(slim));
-      if(id === roster.currentId){ player.photo = ''; player.cover = ''; }
-      showToast(t('toastSaveFail'));
-    }catch(err){ showToast(t('toastSaveFail')); }
+    showToast(t('toastSaveFail'));
   }
+  idbPutMedia(id, row.photo, row.cover);
 }
-function readPlayerRecord(id){
+function readPlayerRecord(id, rawLs){
   try{
     const raw = localStorage.getItem(kidPlayerKey(id));
     if(!raw) return null;
-    return normalizePlayer(JSON.parse(raw), id);
+    const p = normalizePlayer(JSON.parse(raw), id);
+    if(rawLs) return p;
+    const m = mediaCache[id];
+    if(m){
+      p.photo = m.photo || '';
+      p.cover = m.cover || '';
+    }
+    return p;
   }catch(e){ return null; }
 }
 function parseMatchList(raw){
@@ -141,15 +212,9 @@ function savePlayer(){
   }
   writePlayerRecord(player.id, player);
   try{
-    localStorage.setItem(PLAYER_KEY, JSON.stringify({...player, photo: player.photo, cover: player.cover}));
+    localStorage.setItem(PLAYER_KEY, JSON.stringify(playerRecordForLs(player)));
   }catch(e){
-    try{
-      const slim = {...player, photo:'', cover:''};
-      localStorage.setItem(PLAYER_KEY, JSON.stringify(slim));
-      player.photo = '';
-      player.cover = '';
-      showToast(t('toastSaveFail'));
-    }catch(err){ showToast(t('toastSaveFail')); }
+    showToast(t('toastSaveFail'));
   }
 }
 

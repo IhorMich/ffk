@@ -813,7 +813,7 @@ function fileToImage(file){
     }
   });
 }
-const COVER_EXPORT_W = 1280;
+const COVER_EXPORT_W = 720;
 function coverDisplayAspect(){
   const el = document.getElementById('pCoverBtn');
   let r = 2.7;
@@ -1430,6 +1430,7 @@ function removePlayer(id){
     localStorage.removeItem(kidPlayerKey(id));
     localStorage.removeItem(kidMatchesKey(id));
     sessionStorage.removeItem(draftStorageKey(id));
+    idbDeleteMedia(id);
   }catch(e){}
   if(roster.currentId === id){
     roster.currentId = roster.ids[0];
@@ -3132,6 +3133,10 @@ async function shareCard(m){
 
 (function init(){
   try{
+    if('serviceWorker' in navigator){
+      const swUrl = new URL('sw.js', document.querySelector('base')?.href || location.href);
+      navigator.serviceWorker.register(swUrl.href).catch(() => {});
+    }
     loadSettings();
     loadFilters();
     applyFont();
@@ -3153,6 +3158,15 @@ async function shareCard(m){
     renderOppList();
     maybePromptSeasonClose();
     restoreView();
+    hydrateAllMedia().then(() => {
+      applyHeader();
+      if(document.getElementById('view-player')?.classList.contains('active')) fillPlayerForm();
+      else {
+        setBadge(document.getElementById('pPhotoBox'), currentPhoto(), initials());
+        setCoverPreview();
+        renderRoster();
+      }
+    }).catch(() => {});
   }catch(err){
     console.error(err);
     showToast(String(err && err.message || err));
