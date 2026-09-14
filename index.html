@@ -56,6 +56,7 @@
         <button class="profile-cover" id="pCoverBtn" type="button" data-i18n-aria="pCoverAria">
           <img class="cover-fill" id="pCoverBlur" alt="" hidden>
           <img class="cover-fit" id="pCoverImg" alt="" hidden>
+          <span class="cover-cta" data-i18n="pAddCover">Добавить фото</span>
           <span class="cam-chip" aria-hidden="true">📷</span>
         </button>
         <div class="avatar-pin" id="pPhotoWrap">
@@ -69,14 +70,19 @@
         <div class="fb-name" id="fbName"></div>
         <div class="fb-meta" id="fbMeta"></div>
       </div>
+      <div id="playerFeed"></div>
       <div class="pf-card">
         <h3 data-i18n="myPlayers">Мои игроки</h3>
         <div id="rosterList"></div>
         <button class="ghost-btn" id="addPlayerBtn" type="button" data-i18n="addPlayer">Добавить игрока</button>
       </div>
-      <div id="playerFeed"></div>
-      <details class="card-edit">
-        <summary data-i18n="pEditCard">Редактировать карточку</summary>
+      <button class="ghost-btn" id="editPlayerBtn" type="button" data-i18n="pEditCard">Редактировать карточку</button>
+      <div class="player-edit" id="playerEdit" hidden>
+        <div class="player-edit-card">
+          <div class="player-edit-head">
+            <h2 data-i18n="pEditCard">Редактировать карточку</h2>
+            <button class="ghost-btn" id="editPlayerClose" type="button" data-i18n="pSheetCancel">Отмена</button>
+          </div>
       <div class="hint" data-i18n="pPhotoHint" style="text-align:center;margin:0 0 16px;">Нажмите на фото или фон, чтобы сменить.</div>
       <div class="row2">
         <div class="field">
@@ -125,14 +131,15 @@
         <button class="ghost-btn" id="pCloseSeasonBtn" type="button" data-i18n="pCloseSeason" hidden>Закрыть сезон</button>
       </div>
       <button class="save-btn" id="savePlayerBtn" type="button" data-i18n="pSave">Сохранить данные</button>
-      </details>
+        </div>
+      </div>
     </div>
     <div class="view active" id="view-new">
       <div class="match-col match-col-ctx">
-      <button class="ghost-btn" id="liveStartBtn" type="button" data-i18n="livePitch">Быстрый доступ</button>
+      <button class="save-btn" id="liveStartBtn" type="button" data-i18n="liveOnPitch">На поле</button>
       <div class="match-clock-bar">
         <div class="live-clock" id="formClock"></div>
-        <button class="live-kick go js-match-clock-btn" id="formKickBtn" type="button" data-i18n="liveKick">Старт матча</button>
+        <button class="ghost-btn js-match-clock-btn" id="formKickBtn" type="button" data-i18n="liveKick">Старт матча</button>
       </div>
       <details class="match-context" id="matchContext" open>
       <summary data-i18n="matchDetails">Детали матча</summary>

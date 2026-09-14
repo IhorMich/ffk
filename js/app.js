@@ -1436,7 +1436,7 @@ function addPlayer(){
   saveMatches();
   applyPlayerContext();
   showView('player');
-  document.querySelector('.card-edit')?.setAttribute('open', '');
+  openPlayerEdit();
   window.scrollTo({top:0, behavior:'instant'});
   showToast(t('toastPlayerAdded'));
 }
@@ -1486,6 +1486,16 @@ function renderExtraChips(){
   document.getElementById('pExtraChips').innerHTML =
     `<div class="pos-group-title">${escapeHtml(t('posBasic'))}</div>${roles}` +
     `<div class="pos-group-title">${escapeHtml(t('posExtended'))}</div>${details}`;
+}
+function openPlayerEdit(){
+  fillPlayerForm();
+  const el = document.getElementById('playerEdit');
+  if(el) el.hidden = false;
+}
+function closePlayerEdit(revert){
+  const el = document.getElementById('playerEdit');
+  if(el) el.hidden = true;
+  if(revert !== false) fillPlayerForm();
 }
 function fillPlayerForm(){
   fillPrimarySelect();
@@ -1979,6 +1989,7 @@ window.shareMatch = function(id){
 function showView(name){
   const views = ['player','new','history','stats','settings','report'];
   if(!views.includes(name)) name = 'new';
+  if(name !== 'player') closePlayerEdit();
   document.querySelectorAll('.tabbtn').forEach(b => b.classList.toggle('active', b.dataset.view === name));
   document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id === 'view-'+name));
   document.querySelector('.topbar').classList.add('compact');
@@ -2571,8 +2582,9 @@ function renderLiveClock(){
   document.querySelectorAll('.js-match-clock-btn').forEach(btn => {
     btn.textContent = btnText;
     btn.disabled = phase === 'done';
-    btn.classList.toggle('go', phase === 'idle' || phase === 'break');
   });
+  const liveKick = document.getElementById('liveKickBtn');
+  if(liveKick) liveKick.classList.toggle('go', phase === 'idle' || phase === 'break');
 }
 function startMatchClock(){
   const now = Date.now();
@@ -2872,9 +2884,12 @@ document.getElementById('savePlayerBtn').addEventListener('click', () => {
   showToast(t('toastPlayer'));
   fillSeasonSelects();
   fillPlayerForm();
+  closePlayerEdit(false);
   showView('player');
   updateHero();
 });
+document.getElementById('editPlayerBtn').addEventListener('click', openPlayerEdit);
+document.getElementById('editPlayerClose').addEventListener('click', () => closePlayerEdit(true));
 
 function wrapText(ctx, text, x, y, maxWidth, lineHeight){
   const words = String(text).split(' ');
