@@ -49,7 +49,7 @@
     color-scheme:light;
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
-  html,body{margin:0;padding:0;}
+  html,body{margin:0;padding:0;overflow-x:hidden;}
   html,body,button,input,select,textarea{
     font-family:var(--font);
   }
@@ -90,33 +90,47 @@
     font-variant-numeric:tabular-nums;white-space:nowrap;
   }
   .player-head-top{display:flex;align-items:center;flex-wrap:wrap;gap:4px;}
-  .profile-hero{position:relative;margin-bottom:84px;}
+  .profile-hero{
+    position:relative;left:50%;width:100vw;margin-left:-50vw;margin-top:-18px;margin-bottom:84px;
+  }
   .profile-cover{
-    display:block;width:100%;height:210px;padding:0;border:0;border-radius:20px;overflow:hidden;
+    display:block;width:100%;min-height:180px;padding:0;border:0;border-radius:0;overflow:hidden;
     cursor:pointer;position:relative;color:inherit;
     background:
       radial-gradient(120% 90% at 20% 20%, rgba(34,211,166,.35) 0%, transparent 55%),
       radial-gradient(90% 80% at 90% 80%, rgba(124,92,252,.32) 0%, transparent 50%),
       var(--surface-2);
   }
-  @media (min-width:720px){
-    .profile-cover{height:280px;border-radius:24px;}
+  .profile-cover.has-photo{min-height:140px;}
+  .profile-cover.has-photo:not(.cover-tall){
+    aspect-ratio:16 / 9;max-height:42vh;min-height:0;
   }
-  .profile-cover img{
-    position:absolute;inset:0;width:100%;height:100%;
-    object-fit:cover;object-position:center 30%;display:block;
-    pointer-events:none;
+  .profile-cover .cover-fill{
+    display:none;position:absolute;inset:0;width:100%;height:100%;
+    object-fit:cover;filter:blur(28px) saturate(1.05);transform:scale(1.12);
+    pointer-events:none;z-index:0;
+  }
+  .profile-cover.cover-tall .cover-fill{display:block;}
+  .profile-cover .cover-fit{
+    position:relative;z-index:1;display:block;width:100%;height:auto;
+    pointer-events:none;object-position:center;
+  }
+  .profile-cover.has-photo:not(.cover-tall) .cover-fit{
+    position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
+  }
+  .profile-cover.cover-tall .cover-fit{
+    max-height:70vh;object-fit:contain;
   }
   .profile-cover::after{
-    content:"";position:absolute;inset:0;pointer-events:none;z-index:0;
-    background:linear-gradient(to top, rgba(8,14,24,.38), transparent 42%);
+    content:"";position:absolute;left:0;right:0;bottom:0;height:72px;pointer-events:none;z-index:1;
+    background:linear-gradient(to top, rgba(8,14,24,.28), transparent);
   }
   .cam-chip,.cam-badge{
     position:absolute;display:flex;align-items:center;justify-content:center;
     background:rgba(11,18,32,.78);border:2px solid var(--bg);color:#fff;
     pointer-events:none;z-index:1;
   }
-  .cam-chip{right:10px;bottom:10px;width:34px;height:34px;border-radius:50%;font-size:.9rem;}
+  .cam-chip{right:10px;bottom:10px;width:34px;height:34px;border-radius:50%;font-size:.9rem;z-index:2;}
   .avatar-pin{
     position:absolute;left:50%;bottom:-64px;transform:translateX(-50%);
     width:128px;height:128px;
@@ -579,7 +593,8 @@
     <div class="view" id="view-player">
       <div class="profile-hero">
         <button class="profile-cover" id="pCoverBtn" type="button" data-i18n-aria="pCoverAria">
-          <img id="pCoverImg" alt="" hidden>
+          <img class="cover-fill" id="pCoverBlur" alt="" hidden>
+          <img class="cover-fit" id="pCoverImg" alt="" hidden>
           <span class="cam-chip" aria-hidden="true">📷</span>
         </button>
         <div class="avatar-pin" id="pPhotoWrap">
@@ -2499,15 +2514,33 @@ function persistPlayerMedia(kind){
 }
 function setCoverPreview(){
   const img = document.getElementById('pCoverImg');
-  if(!img) return;
+  const blur = document.getElementById('pCoverBlur');
+  const btn = document.getElementById('pCoverBtn');
+  if(!img || !btn) return;
   const cover = currentCover();
-  if(cover){
-    img.hidden = false;
-    img.src = cover;
-  } else {
-    img.hidden = true;
-    img.removeAttribute('src');
+  const markTall = () => {
+    const tall = !!(img.naturalWidth && img.naturalHeight > img.naturalWidth * 1.08);
+    btn.classList.toggle('cover-tall', tall);
+    if(blur) blur.hidden = !cover || !tall;
+  };
+  btn.classList.toggle('has-photo', !!cover);
+  btn.classList.remove('cover-tall');
+  [img, blur].forEach(el => {
+    if(!el) return;
+    if(cover){
+      el.hidden = false;
+      el.src = cover;
+    } else {
+      el.hidden = true;
+      el.removeAttribute('src');
+    }
+  });
+  if(!cover){
+    if(blur) blur.hidden = true;
+    return;
   }
+  if(img.complete && img.naturalWidth) markTall();
+  else img.onload = markTall;
 }
 function closePhotoSheet(){
   document.getElementById('photoSheet').hidden = true;
@@ -2609,8 +2642,10 @@ function clampCrop(){
   if(!st) return;
   const win = cropWindow(st);
   const w = st.img.width * st.scale, h = st.img.height * st.scale;
-  st.ox = Math.min(win.x, Math.max(win.x + win.w - w, st.ox));
-  st.oy = Math.min(win.y, Math.max(win.y + win.h - h, st.oy));
+  if(w <= win.w) st.ox = win.x + (win.w - w) / 2;
+  else st.ox = Math.min(win.x, Math.max(win.x + win.w - w, st.ox));
+  if(h <= win.h) st.oy = win.y + (win.h - h) / 2;
+  else st.oy = Math.min(win.y, Math.max(win.y + win.h - h, st.oy));
 }
 function renderCrop(){
   const st = cropState;
@@ -2654,7 +2689,9 @@ function applyCropZoom(keepCenter){
   const imgCx = keepCenter ? (win.x + win.w/2 - st.ox) / st.scale : st.img.width/2;
   const imgCy = keepCenter ? (win.y + win.h/2 - st.oy) / st.scale : st.img.height/2;
   const z = Number(document.getElementById('cropZoom').value) / 100;
-  st.minScale = Math.max(win.w / st.img.width, win.h / st.img.height);
+  st.minScale = st.target === 'cover'
+    ? Math.min(win.w / st.img.width, win.h / st.img.height)
+    : Math.max(win.w / st.img.width, win.h / st.img.height);
   st.scale = st.minScale * z;
   st.ox = win.x + win.w/2 - imgCx * st.scale;
   st.oy = win.y + win.h/2 - imgCy * st.scale;
@@ -2687,8 +2724,10 @@ function exportCrop(){
   if(sy + sh > ih) sh = ih - sy;
   const out = document.createElement('canvas');
   if(st.target === 'cover'){
-    out.width = COVER_EXPORT_W;
-    out.height = Math.round(COVER_EXPORT_W / COVER_ASPECT);
+    const maxW = COVER_EXPORT_W;
+    const k = Math.min(1, maxW / Math.max(sw, 1));
+    out.width = Math.max(1, Math.round(sw * k));
+    out.height = Math.max(1, Math.round(sh * k));
   } else {
     out.width = 320; out.height = 320;
   }
@@ -2696,11 +2735,7 @@ function exportCrop(){
   ctx.fillStyle = '#0B1220';
   ctx.fillRect(0, 0, out.width, out.height);
   if(sw > 0 && sh > 0){
-    const ir = sw / sh, r = out.width / out.height;
-    let dw, dh, dx, dy;
-    if(ir > r){ dh = out.height; dw = dh * ir; dx = (out.width - dw) / 2; dy = 0; }
-    else { dw = out.width; dh = dw / ir; dx = 0; dy = (out.height - dh) / 2; }
-    ctx.drawImage(st.img, sx, sy, sw, sh, dx, dy, dw, dh);
+    ctx.drawImage(st.img, sx, sy, sw, sh, 0, 0, out.width, out.height);
   }
   return out.toDataURL('image/jpeg', 0.86);
 }
@@ -2723,6 +2758,14 @@ async function heicToJpegFile(file){
   const blob = await convert({blob: file, type: 'image/jpeg', quality: 0.88});
   return new File([blob], 'photo.jpg', {type: 'image/jpeg'});
 }
+function imageToJpegKeepAspect(img, maxSide){
+  const k = Math.min(1, maxSide / Math.max(img.width, img.height, 1));
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.max(1, Math.round(img.width * k));
+  canvas.height = Math.max(1, Math.round(img.height * k));
+  canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+  return canvas.toDataURL('image/jpeg', 0.86);
+}
 async function beginCrop(file, target){
   if(!file) return;
   try{
@@ -2738,6 +2781,12 @@ async function beginCrop(file, target){
       showToast(t('toastPhotoWait'));
       src = await heicToJpegFile(file);
       img = await fileToImage(src);
+    }
+    if(target === 'cover'){
+      coverDraft = imageToJpegKeepAspect(img, COVER_EXPORT_W);
+      setCoverPreview();
+      persistPlayerMedia('cover');
+      return;
     }
     openCrop(img, target);
   }catch(err){
@@ -3422,7 +3471,9 @@ function compressImage(file, w, h){
   });
 }
 function compressPhoto(file){ return compressImage(file, 256, 256); }
-function compressCover(file){ return compressImage(file, COVER_EXPORT_W, Math.round(COVER_EXPORT_W / COVER_ASPECT)); }
+function compressCover(file){
+  return fileToImage(file).then(img => imageToJpegKeepAspect(img, COVER_EXPORT_W));
+}
 
 function loadMatches(){
   try{
