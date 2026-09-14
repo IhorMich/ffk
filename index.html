@@ -226,7 +226,7 @@
     position:relative;width:100%;height:300px;border-radius:16px;overflow:hidden;
     background:#000;touch-action:none;cursor:grab;user-select:none;
   }
-  .crop-stage.cover{height:auto;aspect-ratio:16 / 9;}
+  .crop-stage.cover{height:auto;aspect-ratio:2.7 / 1;min-height:132px;}
   .crop-stage:active{cursor:grabbing;}
   .crop-stage canvas{width:100%;height:100%;display:block;}
   .crop-zoom{width:100%;margin:12px 0 8px;}
@@ -939,7 +939,7 @@ uk:{
   pPhoto:'Фото', pPhotoHint:'Натисніть на фото або фон, щоб змінити.',
   pRemovePhoto:'Прибрати', pPickPhoto:'Вибрати фото', pPickCover:'Вибрати фон',
   pPhotoAria:'Фото гравця', pCoverAria:'Фон картки', pSheetCancel:'Скасувати',
-  cropHint:'Перетягніть фото і виберіть, що буде видно.', cropDone:'Готово',
+  cropHint:'Перетягніть фото і виберіть, що буде видно.', cropCoverHint:'Перетягніть і оберіть фрагмент для фону.', cropDone:'Готово',
   toastHeic:'Це фото телефон зберігає у форматі, який браузер не відкриває. Збережіть як JPG і спробуйте знову.',
   toastPhotoWait:'Відкриваємо фото, зачекайте…',
   toastPhotoFail:'Не вдалося відкрити фото. Спробуйте інший знімок.',
@@ -1145,7 +1145,7 @@ pl:{
   pPhoto:'Zdjęcie', pPhotoHint:'Dotknij zdjęcia lub tła, żeby zmienić.',
   pRemovePhoto:'Usuń', pPickPhoto:'Wybierz zdjęcie', pPickCover:'Wybierz tło',
   pPhotoAria:'Zdjęcie zawodnika', pCoverAria:'Tło karty', pSheetCancel:'Anuluj',
-  cropHint:'Przeciągnij zdjęcie i wybierz, co ma być widać.', cropDone:'Gotowe',
+  cropHint:'Przeciągnij zdjęcie i wybierz, co ma być widać.', cropCoverHint:'Przeciągnij i wybierz fragment tła.', cropDone:'Gotowe',
   toastHeic:'Ten telefon trzyma zdjęcie w formacie, którego przeglądarka nie otwiera. Zapisz jako JPG i spróbuj ponownie.',
   toastPhotoWait:'Otwieramy zdjęcie, chwila…',
   toastPhotoFail:'Nie udało się otworzyć zdjęcia. Spróbuj innego zdjęcia.',
@@ -1351,7 +1351,7 @@ en:{
   pPhoto:'Photo', pPhotoHint:'Tap the photo or cover to change it.',
   pRemovePhoto:'Remove', pPickPhoto:'Choose photo', pPickCover:'Choose cover',
   pPhotoAria:'Player photo', pCoverAria:'Card cover', pSheetCancel:'Cancel',
-  cropHint:'Drag the photo and choose which part will be visible.', cropDone:'Done',
+  cropHint:'Drag the photo and choose which part will be visible.', cropCoverHint:'Drag to choose which part will be the cover.', cropDone:'Done',
   toastHeic:'This photo is in a format the browser cannot open. Save it as JPG and try again.',
   toastPhotoWait:'Opening photo, please wait…',
   toastPhotoFail:'Could not open the photo. Try another picture.',
@@ -1557,7 +1557,7 @@ ru:{
   pPhoto:'Фотография', pPhotoHint:'Нажмите на фото или фон, чтобы сменить.',
   pRemovePhoto:'Убрать', pPickPhoto:'Выбрать фото', pPickCover:'Выбрать фон',
   pPhotoAria:'Фото игрока', pCoverAria:'Фон карточки', pSheetCancel:'Отмена',
-  cropHint:'Перетащите фото и выберите, что будет видно.', cropDone:'Готово',
+  cropHint:'Перетащите фото и выберите, что будет видно.', cropCoverHint:'Перетащите и выберите фрагмент для фона.', cropDone:'Готово',
   toastHeic:'Это фото телефон хранит в формате, который браузер не открывает. Сохраните как JPG и попробуйте снова.',
   toastPhotoWait:'Открываем фото, подождите…',
   toastPhotoFail:'Не удалось открыть фото. Попробуйте другой снимок.',
@@ -2604,17 +2604,23 @@ function fileToImage(file){
     }
   });
 }
-const COVER_ASPECT = 16 / 9;
 const COVER_EXPORT_W = 1280;
+function coverDisplayAspect(){
+  const el = document.getElementById('pCoverBtn');
+  let r = 2.7;
+  if(el && el.clientWidth > 40 && el.clientHeight > 40) r = el.clientWidth / el.clientHeight;
+  return Math.min(3.1, Math.max(2.35, r));
+}
 function cropWindow(st){
   const {vw, vh, target} = st;
   if(target === 'cover'){
-    const pad = 14;
+    const pad = 8;
+    const ratio = st.coverAspect || coverDisplayAspect();
     let w = Math.max(40, vw - pad * 2);
-    let h = w / COVER_ASPECT;
+    let h = w / ratio;
     if(h > vh - pad * 2){
       h = Math.max(40, vh - pad * 2);
-      w = h * COVER_ASPECT;
+      w = h * ratio;
     }
     return {x:(vw-w)/2, y:(vh-h)/2, w, h, round:false};
   }
@@ -2673,9 +2679,7 @@ function applyCropZoom(keepCenter){
   const imgCx = keepCenter ? (win.x + win.w/2 - st.ox) / st.scale : st.img.width/2;
   const imgCy = keepCenter ? (win.y + win.h/2 - st.oy) / st.scale : st.img.height/2;
   const z = Number(document.getElementById('cropZoom').value) / 100;
-  st.minScale = st.target === 'cover'
-    ? Math.min(win.w / st.img.width, win.h / st.img.height)
-    : Math.max(win.w / st.img.width, win.h / st.img.height);
+  st.minScale = Math.max(win.w / st.img.width, win.h / st.img.height);
   st.scale = st.minScale * z;
   st.ox = win.x + win.w/2 - imgCx * st.scale;
   st.oy = win.y + win.h/2 - imgCy * st.scale;
@@ -2683,12 +2687,17 @@ function applyCropZoom(keepCenter){
   renderCrop();
 }
 function openCrop(img, target){
-  cropState = {img, target, ox:0, oy:0, scale:1, minScale:1, vw:300, vh:300, drag:null};
+  const coverAspect = target === 'cover' ? coverDisplayAspect() : 1;
+  cropState = {img, target, ox:0, oy:0, scale:1, minScale:1, vw:300, vh:300, drag:null, coverAspect};
   const stage = document.getElementById('cropStage');
   stage.classList.toggle('cover', target === 'cover');
+  if(target === 'cover') stage.style.aspectRatio = coverAspect + ' / 1';
+  else stage.style.aspectRatio = '';
+  const hint = document.querySelector('.crop-hint');
+  if(hint) hint.textContent = t(target === 'cover' ? 'cropCoverHint' : 'cropHint');
   document.getElementById('cropZoom').value = '100';
   document.getElementById('cropModal').hidden = false;
-  requestAnimationFrame(() => applyCropZoom(false));
+  requestAnimationFrame(() => requestAnimationFrame(() => applyCropZoom(false)));
 }
 function closeCrop(){
   cropState = null;
@@ -2708,10 +2717,9 @@ function exportCrop(){
   if(sy + sh > ih) sh = ih - sy;
   const out = document.createElement('canvas');
   if(st.target === 'cover'){
-    const maxW = COVER_EXPORT_W;
-    const k = Math.min(1, maxW / Math.max(sw, 1));
-    out.width = Math.max(1, Math.round(sw * k));
-    out.height = Math.max(1, Math.round(sh * k));
+    const ratio = win.w / Math.max(win.h, 1);
+    out.width = COVER_EXPORT_W;
+    out.height = Math.max(1, Math.round(COVER_EXPORT_W / ratio));
   } else {
     out.width = 320; out.height = 320;
   }
@@ -2765,12 +2773,6 @@ async function beginCrop(file, target){
       showToast(t('toastPhotoWait'));
       src = await heicToJpegFile(file);
       img = await fileToImage(src);
-    }
-    if(target === 'cover'){
-      coverDraft = imageToJpegKeepAspect(img, COVER_EXPORT_W);
-      setCoverPreview();
-      persistPlayerMedia('cover');
-      return;
     }
     openCrop(img, target);
   }catch(err){
