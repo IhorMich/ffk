@@ -927,43 +927,37 @@ function b64ToJpegFile(b64){
   for(let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
   return new File([arr], 'photo.jpg', {type:'image/jpeg'});
 }
-async function nativeMediaToFile(result){
-  if(!result) return null;
-  if(result.thumbnail) return b64ToJpegFile(result.thumbnail);
-  if(result.base64String) return b64ToJpegFile(result.base64String);
-  if(result.dataUrl){
+async function photoToDataUrl(result){
+  if(!result || typeof result !== 'object') return '';
+  if(result.dataUrl && /^data:image\//i.test(result.dataUrl)) return result.dataUrl;
+  if(result.base64String) return b64Src(result.base64String);
+  if(result.thumbnail) return b64Src(result.thumbnail);
+  const Http = capPlugin('CapacitorHttp');
+  const url = nativeSrc(result);
+  if(Http && url && !/^data:/i.test(url) && typeof Http.get === 'function'){
     try{
-      const blob = await (await fetch(result.dataUrl)).blob();
-      if(blob && blob.size) return new File([blob], 'photo.jpg', {type: blob.type || 'image/jpeg'});
+      const res = await Http.get({url, responseType: 'blob'});
+      if(res && res.data){
+        if(typeof res.data === 'string' && /^data:image\//i.test(res.data)) return res.data;
+        if(typeof res.data === 'string') return b64Src(res.data);
+      }
     }catch(e){}
   }
   const Filesystem = capPlugin('Filesystem');
   const disk = nativeFilePath(result);
-  if(disk && Filesystem && typeof Filesystem.readFile === 'function'){
+  if(Filesystem && disk && typeof Filesystem.readFile === 'function'){
     try{
       const got = await Filesystem.readFile({path: disk});
-      if(got && typeof got.data === 'string' && got.data) return b64ToJpegFile(got.data);
+      if(got && got.data) return b64Src(got.data);
     }catch(e){}
   }
-  return null;
+  return url && /^data:image\//i.test(url) ? url : '';
 }
 async function beginCropFromNative(result){
-  const tries = [];
-  if(result && result.thumbnail) tries.push(b64Src(result.thumbnail));
-  if(result && result.base64String) tries.push(b64Src(result.base64String));
-  if(result && result.dataUrl) tries.push(result.dataUrl);
-  const src = nativeSrc(result);
-  if(src) tries.push(src);
-  for(const c of tries){
-    try{
-      openCrop(await loadImageFromSrc(c), photoSheetTarget);
-      return;
-    }catch(e){}
-  }
   try{
-    const file = await nativeMediaToFile(result);
-    if(file){
-      await beginCrop(file, photoSheetTarget);
+    const dataUrl = await photoToDataUrl(result);
+    if(dataUrl){
+      openCrop(await loadImageFromSrc(dataUrl), photoSheetTarget);
       return;
     }
   }catch(e){}
@@ -972,15 +966,27 @@ async function beginCropFromNative(result){
 async function nativeGetPhoto(source){
   const Camera = capPlugin('Camera');
   if(!Camera) throw new Error('nocam');
-  if(source === 'CAMERA'){
-    if(typeof Camera.requestPermissions === 'function'){
-      try{ await Camera.requestPermissions({permissions: ['camera']}); }catch(e){}
-    }
-    if(typeof Camera.takePhoto !== 'function') throw new Error('nocam');
-    return Camera.takePhoto({quality: 80, saveToGallery: false, cameraDirection: 'REAR'});
+  const fromCamera = source === 'CAMERA';
+  if(fromCamera && typeof Camera.requestPermissions === 'function'){
+    try{ await Camera.requestPermissions({permissions: ['camera']}); }catch(e){}
   }
-  if(typeof Camera.chooseFromGallery === 'function'){
-    const pack = await Camera.chooseFromGallery({quality: 80, limit: 1, mediaType: 0});
+  if(typeof Camera.getPhoto === 'function'){
+    return Camera.getPhoto({
+      quality: 70,
+      allowEditing: false,
+      resultType: 'dataUrl',
+      source: fromCamera ? 'CAMERA' : 'PHOTOS',
+      saveToGallery: false,
+      correctOrientation: true,
+      width: 1280,
+      height: 1280
+    });
+  }
+  if(fromCamera && typeof Camera.takePhoto === 'function'){
+    return Camera.takePhoto({quality: 70, saveToGallery: false, cameraDirection: 'REAR'});
+  }
+  if(!fromCamera && typeof Camera.chooseFromGallery === 'function'){
+    const pack = await Camera.chooseFromGallery({quality: 70, limit: 1, mediaType: 0});
     return pack && pack.results && pack.results[0];
   }
   throw new Error('nocam');
@@ -1245,17 +1251,14 @@ async function beginCrop(file, target){
   try{
     let src = file;
     if(await looksLikeHeic(file)){
+      if(isNativeApp()){
+        showToast(t('toastHeic'));
+        return;
+      }
       showToast(t('toastPhotoWait'));
       src = await heicToJpegFile(file);
     }
-    let img;
-    try{
-      img = await fileToImage(src);
-    }catch(first){
-      showToast(t('toastPhotoWait'));
-      src = await heicToJpegFile(file);
-      img = await fileToImage(src);
-    }
+    const img = await fileToImage(src);
     openCrop(img, target);
   }catch(err){
     showToast(t('toastPhotoFail'));
