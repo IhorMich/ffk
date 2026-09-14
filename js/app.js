@@ -203,6 +203,7 @@ function applyI18n(){
   renderLiveClock();
   const tzEl = document.getElementById('tzHint');
   if(tzEl) tzEl.textContent = t('sTzHint', {tz: clockTimeZone().replace(/_/g, ' ')});
+  syncSeasonChipLabels();
 }
 
 let settings = {club:'', player:'', position:'fwd', format:'2x30', minutes:'60', lang:'ru', seasonCloseDeclined:'', theme:'dark', onboarded:false};
@@ -1124,6 +1125,12 @@ function nextSeasonLabel(s){
 }
 function matchSeason(m){
   return String(m?.season || '').trim() || seasonFromDate(m?.date);
+}
+function sameSeason(a, b){
+  const x = parseSeasonYears(a);
+  const y = parseSeasonYears(b);
+  if(x && y) return x.start === y.start;
+  return String(a || '').trim() === String(b || '').trim();
 }
 function seasonIsOpen(){ return player.seasonOpen !== false; }
 function parseSeasonYears(s){
@@ -2210,7 +2217,7 @@ let historyPage = 1;
 let historyQuery = '';
 let historyKind = 'all';
 const HISTORY_PAGE = 10;
-const RANGE_KEYS = ['10','100','7d','30d','year','all'];
+const RANGE_KEYS = ['10','100','7d','30d','year','all','season'];
 const KIND_KEYS = ['all','league','friendly','cup','tournament'];
 function loadFilters(){
   try{
@@ -2235,7 +2242,12 @@ function saveFilters(){
     }));
   }catch(e){}
 }
+function syncSeasonChipLabels(){
+  const label = currentSeason();
+  document.querySelectorAll('[data-season-chip]').forEach(el => { el.textContent = label; });
+}
 function syncFilterChips(){
+  syncSeasonChipLabels();
   document.querySelectorAll('#periodChips .chip').forEach(c => {
     c.classList.toggle('active', c.dataset.range === currentRange);
   });
@@ -2315,6 +2327,11 @@ document.getElementById('historySearch').addEventListener('input', e => {
   renderHistory();
 });
 function periodSlice(sorted, key){
+  if(key === 'season'){
+    const s = currentSeason();
+    return [...matches].sort((a,b)=> a.date.localeCompare(b.date) || a.id - b.id)
+      .filter(m => sameSeason(matchSeason(m), s));
+  }
   if(key === '10') return sorted.slice(-10);
   if(key === '100') return sorted.slice(-100);
   if(key === 'all') return sorted;
@@ -2326,6 +2343,7 @@ function periodSlice(sorted, key){
   return sorted.filter(m => m.date >= daysAgoStr(days));
 }
 function rangeLabel(key){
+  if(key === 'season') return currentSeason();
   return ({
     '10': t('chart10'),
     '100': t('chart100'),
@@ -2340,6 +2358,7 @@ function cardPeriodMatches(range){
 }
 function cardPeriodLabel(range){
   const key = range || currentRange;
+  if(key === 'season') return currentSeason();
   const label = rangeLabel(key);
   if(currentSeasonFilter === 'all'){
     if(key === 'all') return t('seasonAll');
@@ -3225,6 +3244,7 @@ function syncPreviewPeriodChips(range){
   const wrap = document.getElementById('previewPeriod');
   if(!wrap) return;
   wrap.hidden = !previewState || previewState.kind !== 'period';
+  syncSeasonChipLabels();
   wrap.querySelectorAll('.chip').forEach(c => {
     c.classList.toggle('active', c.dataset.range === range);
   });

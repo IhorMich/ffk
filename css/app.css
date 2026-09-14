@@ -611,6 +611,7 @@
     background:var(--surface);border:1px solid var(--border);
   }
   .period-switch-row{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+  .period-switch-row-full{grid-template-columns:1fr;}
   #periodChips .chip{
     width:100%;margin:0;padding:10px 8px;border-radius:14px;
     text-align:center;line-height:1.2;white-space:normal;
