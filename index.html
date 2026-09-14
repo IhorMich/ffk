@@ -699,7 +699,7 @@
         </div>
       </div>
       <div class="field" id="tournamentWrap">
-        <label id="tournamentLabel">Название чемпионата</label>
+        <label id="tournamentLabel" data-i18n="labelTournament">Название чемпионата</label>
         <input type="text" id="f-tournament" list="tourList" maxlength="48" placeholder="Название чемпионата">
         <datalist id="tourList"></datalist>
       </div>
@@ -809,7 +809,7 @@
         </div>
         <svg id="chartSvg" viewBox="0 0 320 200" role="img" data-i18n-aria="chartAria"></svg>
       </div>
-      <h3 class="period-head" id="periodHead">За выбранный период</h3>
+      <h3 class="period-head" id="periodHead" data-i18n="stPeriodCards">За выбранный период</h3>
       <div class="period-chips" id="periodChips">
         <button type="button" class="chip active" data-range="10" data-i18n="chart10">10 матчей</button>
         <button type="button" class="chip" data-range="100" data-i18n="chart100">100 матчей</button>
@@ -864,7 +864,7 @@
   <div class="toast" id="toast"></div>
   <button class="photo-sheet-back" id="photoSheetBack" type="button" hidden></button>
   <div class="photo-sheet" id="photoSheet" hidden>
-    <button type="button" id="photoSheetPick">Выбрать фото</button>
+    <button type="button" id="photoSheetPick" data-i18n="pPickPhoto">Выбрать фото</button>
     <button type="button" id="photoSheetClear" class="sheet-danger" hidden data-i18n="pRemovePhoto">Убрать</button>
     <button type="button" id="photoSheetCancel" class="sheet-mute" data-i18n="pSheetCancel">Отмена</button>
   </div>
@@ -1161,7 +1161,7 @@ pl:{
   secActions:'Akcje meczowe', secBehavior:'Jak grał (1–5)',
   saveMatch:'Zapisz mecz', saveChanges:'Zapisz zmiany', cancelEdit:'Anuluj edycję',
   backupBanner:'Dane są tylko na tym telefonie. Zrób eksport, żeby nie stracić sezonu.',
-  export:'Eksport', import:'Import', copy:'Kopiuj',
+  export:'Eksport', import:'Importuj', copy:'Kopiuj',
   periodLast10:'Ostatnie 10', periodWeek:'Tydzień', period10d:'10 dni', periodMonth:'Miesiąc', periodYear:'Rok', periodAll:'Cały czas',
   chartTitle:'Dynamika oceny', chartLastN:'Ostatnie {n} meczów', chart10:'10 meczów', chart100:'100 meczów', chartAria:'Wykres ocen', chartEmpty:'Brak danych',
   sLang:'Język', sBackup:'Dane w telefonie', sSave:'Zapisz ustawienia',
@@ -1317,7 +1317,7 @@ pl:{
   mn_openings:'wbiegnięcie|wbiegnięcia|wbiegnięć', mn_chances:'okazja dla partnera|okazje dla partnera|okazji dla partnera',
   mn_buildpass:'podanie|podania|podań', mn_interceptions:'przechwyt|przechwyty|przechwytów',
   mn_clearances:'wybicie|wybicia|wybić', mn_blocks:'blok|bloki|bloków',
-  stMatches:'Mecze', stAvg:'Średnia ocena', stBest:'Najlepszy mecz', stWorst:'Najsłabszy', stTrend:'Trend', stAction:'Średni wkład', stEffort:'Średnie zaangażowanie', stMins:'Minuty', stGoals:'Gole', stG90:'Gole / 90',
+  stMatches:'Mecze', stAvg:'Średnia ocena', stBest:'Najlepszy mecz', stWorst:'Najsłabszy', stTrend:'Tendencja', stAction:'Średni wkład', stEffort:'Średnie zaangażowanie', stMins:'Minuty', stGoals:'Gole', stG90:'Gole / 90',
   mn_matches:'mecz|mecze|meczów', mn_starts:'start|starty|startów', mn_subs:'wejście z ławki|wejścia z ławki|wejść z ławki', mn_mins:'minuta|minuty|minut',
   act_dribbles:'udany drybling|udane dryblingi|udanych dryblingów',
   act_duelswon:'wygrany pojedynek|wygrane pojedynki|wygranych pojedynków',
@@ -2101,15 +2101,15 @@ de:{
   tabHistory:'Verlauf',
   tabStats:'Statistik',
   pPhoto:'Foto',
-  pPhotoHint:'Tippe auf das Foto oder das Cover, um es zu ändern.',
+  pPhotoHint:'Tippe auf das Foto oder den Hintergrund, um ihn zu ändern.',
   pRemovePhoto:'Entfernen',
   pPickPhoto:'Foto wählen',
-  pPickCover:'Cover wählen',
+  pPickCover:'Hintergrund wählen',
   pPhotoAria:'Spielerfoto',
-  pCoverAria:'Karten-Cover',
+  pCoverAria:'Kartenhintergrund',
   pSheetCancel:'Abbrechen',
   cropHint:'Ziehe das Foto und wähle, welcher Teil sichtbar wird.',
-  cropCoverHint:'Ziehe, um zu wählen, welcher Teil das Cover wird.',
+  cropCoverHint:'Ziehe das Foto und wähle den Ausschnitt für den Hintergrund.',
   cropDone:'Fertig',
   toastHeic:'Dieses Foto hat ein Format, das der Browser nicht öffnen kann. Speichere es als JPG und versuche es erneut.',
   toastPhotoWait:'Foto wird geöffnet, bitte warten…',
@@ -2193,7 +2193,7 @@ de:{
   coachNowPair:'{name} ist stark bei {plus}. Das Entwicklungsfeld ist {minus}. Mach das zum Fokus im Training.',
   coachNowPlus:'Die aktuelle Stärke von {name} ist {plus}. Merk dir, wie sich das anfühlt, und mach es wieder.',
   coachNowMinus:'Das Entwicklungsfeld für {name} ist {minus}. Im nächsten Spiel achte von der ersten Minute darauf.',
-  pfEmpty:'Spiele Matches — hier erscheint ein Fußballprofil.',
+  pfEmpty:'Trag ein paar Spiele ein — hier erscheint ein Fußballprofil.',
   seasonFilter:'Saison',
   seasonCurrent:'{s} · aktuell',
   seasonAll:'Alle Saisons',
@@ -2225,7 +2225,7 @@ de:{
   clockHalfN:'Abschnitt {n}',
   eventAt:'{what} · {m} Min.',
   kickoffLine:'Anpfiff {clock}',
-  storyTitle:'Minute-für-Minute-Rückblick',
+  storyTitle:'Rückblick Minute für Minute',
   storyNoTime:'Dieses Spiel hat kein Minutenprotokoll. Ein kurzer Rückblick erscheint, wenn Aktionen nach dem Anpfiff getippt werden.',
   storyThin:'Nur {n} Aktionen mit Minute. Zu wenig, um Zufall von Muster zu trennen.',
   storyOpen:'gg. {who}. Anpfiff {kick}. Format {fmt}.',
@@ -2751,7 +2751,7 @@ it:{
   minLbl:'{n} min',
   actionsLbl:'Azioni',
   gotLbl:'È andata bene',
-  focusLbl:'Focus',
+  focusLbl:'Obiettivo',
   cardBtn:'Carta della partita',
   playerCardBtn:'Carta del giocatore',
   cardHint:'Carta FIFA per la stagione, il mese o le partite recenti.',
@@ -2897,7 +2897,7 @@ fr:{
   labelPos:'Poste',
   labelOpp:'Adversaire',
   phOpp:'Nom de l\'équipe',
-  labelScore:'Score',
+  labelScore:'Résultat',
   labelMin:'Minutes sur le terrain',
   labelFormat:'Format du match',
   labelMatchLen:'Durée du match, min',
@@ -2989,7 +2989,7 @@ fr:{
   tabPlayer:'Joueur',
   tabMatch:'Match',
   tabHistory:'Historique',
-  tabStats:'Stats',
+  tabStats:'Statistiques',
   pPhoto:'Photo',
   pPhotoHint:'Touchez la photo ou la couverture pour la changer.',
   pRemovePhoto:'Retirer',
@@ -3080,7 +3080,7 @@ fr:{
   coachLoss:'Sur les {n} derniers matchs, {name} donne plus souvent le ballon. Contrôle, puis passe. Ne tourne pas si un défenseur est collé.',
   coachBadtouch:'Sur les {n} derniers matchs, {name} perd plus le ballon au premier contrôle. Oriente-le dans l\'espace, pas dans les pieds de l\'adversaire.',
   coachNowDribbleLoss:'{name} élimine bien les joueurs, mais perd souvent le ballon après le dribble. Après le une-contre-un, passe ou frappe tout de suite.',
-  coachNowPair:'{name} est fort sur {plus}. L\'axe de progrès est {minus}. Fais-en le focus à l\'entraînement.',
+  coachNowPair:'{name} est fort sur {plus}. L\'axe de progrès est {minus}. Fais-en le thème de l\'entraînement.',
   coachNowPlus:'Le point fort actuel de {name} est {plus}. Retiens cette sensation et refais-le.',
   coachNowMinus:'L\'axe de progrès pour {name} est {minus}. Au prochain match, surveille ça dès la première minute.',
   pfEmpty:'Jouez des matchs — un profil football apparaîtra ici.',
@@ -3192,11 +3192,11 @@ fr:{
   focusBase:'Un match dur ({r}). D\'ici la prochaine fois : contrôle, puis passe. Ne dribble pas près de notre but.',
   lastFocus:'Après <b>{who}</b><br><b>{got}:</b> {plus}<br><b>{next}:</b> {focus}',
   unnamed:'Sans titre',
-  scoreLbl:'Score {s}',
+  scoreLbl:'Résultat {s}',
   minLbl:'{n} min',
   actionsLbl:'Actions',
   gotLbl:'Ça a bien marché',
-  focusLbl:'Focus',
+  focusLbl:'Objectif',
   cardBtn:'Carte du match',
   playerCardBtn:'Carte du joueur',
   cardHint:'Carte FIFA pour la saison, le mois ou les matchs récents.',
@@ -3255,7 +3255,7 @@ fr:{
   mn_mins:'minute|minutes',
   act_dribbles:'dribble réussi|dribbles réussis',
   act_duelswon:'duel gagné|duels gagnés',
-  stSeasonTitle:'Stats de saison',
+  stSeasonTitle:'Statistiques de saison',
   stSeasonAvg:'note moyenne',
   stActions:'Actions',
   stDynamics:'Tendance',
