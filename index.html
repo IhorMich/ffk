@@ -535,6 +535,9 @@
   }
   .live-kick:disabled{opacity:.55;cursor:default;}
   .match-clock-bar{margin:0 0 16px;}
+  .match-clock-bar .live-kick{margin:8px 0 0;}
+  #liveStartBtn{margin-top:0;margin-bottom:12px;}
+  #formKickBottom{margin-top:12px;}
   #formClock{margin:0;}
   .score-pair{display:flex;align-items:center;gap:8px;}
   .score-pair input{flex:1;min-width:0;text-align:center;font-variant-numeric:tabular-nums;font-weight:800;}
@@ -687,9 +690,10 @@
       </details>
     </div>
     <div class="view active" id="view-new">
-      <button class="live-start" id="liveStartBtn" type="button" data-i18n="livePitch">На поле</button>
+      <button class="ghost-btn" id="liveStartBtn" type="button" data-i18n="livePitch">Быстрый доступ</button>
       <div class="match-clock-bar">
         <div class="live-clock" id="formClock"></div>
+        <button class="live-kick go js-match-clock-btn" id="formKickBtn" type="button" data-i18n="liveKick">Старт матча</button>
       </div>
       <div class="banner" id="focusBanner" hidden></div>
       <div class="row2">
@@ -787,6 +791,7 @@
         <textarea id="f-comment" data-i18n-placeholder="phComment" placeholder="Что запомнилось"></textarea>
       </div>
       <div class="insight" id="insightBox"></div>
+      <button class="live-kick go js-match-clock-btn" id="formKickBottom" type="button" data-i18n="liveKick">Старт матча</button>
       <button class="save-btn" id="saveBtn" type="button" data-i18n="saveMatch">Сохранить матч</button>
       <button class="ghost-btn" id="cancelEditBtn" type="button" hidden data-i18n="cancelEdit">Отменить правку</button>
     </div>
@@ -924,7 +929,7 @@
       <select id="live-position" style="width:auto;max-width:62%;padding:10px 12px;border-radius:12px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-weight:700;font-size:.78rem;font-family:inherit;"></select>
     </div>
   </div>
-  <button class="live-kick go" id="liveKickBtn" type="button" data-i18n="liveKick">Старт матча</button>
+  <button class="live-kick go js-match-clock-btn" id="liveKickBtn" type="button" data-i18n="liveKick">Старт матча</button>
   <div class="live-grid" id="liveGrid"></div>
   <div class="live-foot">
     <button class="save-btn" id="liveDoneBtn" type="button" data-i18n="liveDone">Готово</button>
@@ -961,7 +966,7 @@ const I18N = {
 uk:{
   pageTitle:'FFK — оцінка матчу', settingsAria:'Налаштування', themeAria:'Тема',
   heroOverall:'загальна оцінка', heroShort:'короткий вихід', heroAction:'вклад', heroEffort:'старання',
-  liveStart:'Швидкий режим', livePitch:'На поле', labelDate:'Дата', labelPos:'Позиція', labelOpp:'Суперник', phOpp:'Назва команди',
+  liveStart:'Швидкий режим', livePitch:'Швидкий доступ', labelDate:'Дата', labelPos:'Позиція', labelOpp:'Суперник', phOpp:'Назва команди',
   labelScore:'Рахунок', scoreUsAria:'Наші голи', scoreThemAria:'Голи суперника', emptyGoMatch:'Записати матч', labelMin:'Хвилини на полі', labelFormat:'Формат матчу', labelMatchLen:'Довжина матчу, хв', fmtCustom:'Свій',
   labelKind:'Тип гри', labelTournament:'Турнір', phTournament:'Назва турніру',
   labelVenue:'Де грали', venueHome:'Вдома', venueAway:'На виїзді', labelRole:'Вихід',
@@ -1168,7 +1173,7 @@ uk:{
 pl:{
   pageTitle:'FFK — ocena meczu', settingsAria:'Ustawienia', themeAria:'Motyw',
   heroOverall:'ocena ogólna', heroShort:'krótki występ', heroAction:'wkład', heroEffort:'zaangażowanie',
-  liveStart:'Tryb szybki', livePitch:'Na boisko', labelDate:'Data', labelPos:'Pozycja', labelOpp:'Rywal', phOpp:'Nazwa drużyny',
+  liveStart:'Tryb szybki', livePitch:'Szybki dostęp', labelDate:'Data', labelPos:'Pozycja', labelOpp:'Rywal', phOpp:'Nazwa drużyny',
   labelScore:'Wynik', scoreUsAria:'Nasze gole', scoreThemAria:'Gole rywala', emptyGoMatch:'Zapisz mecz', labelMin:'Minuty na boisku', labelFormat:'Format meczu', labelMatchLen:'Długość meczu, min', fmtCustom:'Własny',
   labelKind:'Typ meczu', labelTournament:'Turniej', phTournament:'Nazwa turnieju',
   labelVenue:'Gdzie grali', venueHome:'U siebie', venueAway:'Na wyjeździe', labelRole:'Skład',
@@ -1375,7 +1380,7 @@ pl:{
 en:{
   pageTitle:'FFK — match rating', settingsAria:'Settings', themeAria:'Theme',
   heroOverall:'overall rating', heroShort:'short appearance', heroAction:'impact', heroEffort:'effort',
-  liveStart:'Quick mode', livePitch:'On the pitch', labelDate:'Date', labelPos:'Position', labelOpp:'Opponent', phOpp:'Team name',
+  liveStart:'Quick mode', livePitch:'Quick access', labelDate:'Date', labelPos:'Position', labelOpp:'Opponent', phOpp:'Team name',
   labelScore:'Score', scoreUsAria:'Our goals', scoreThemAria:'Opponent goals', emptyGoMatch:'Record a match', labelMin:'Minutes on the pitch', labelFormat:'Match format', labelMatchLen:'Match length, min', fmtCustom:'Custom',
   labelKind:'Match type', labelTournament:'Competition', phTournament:'Competition name',
   labelVenue:'Venue', venueHome:'Home', venueAway:'Away', labelRole:'Line-up',
@@ -1588,7 +1593,7 @@ es:{
   heroAction:'impacto',
   heroEffort:'esfuerzo',
   liveStart:'Modo rápido',
-  livePitch:'Al campo',
+  livePitch:'Acceso rápido',
   scoreUsAria:'Nuestros goles',
   scoreThemAria:'Goles del rival',
   emptyGoMatch:'Registrar partido',
@@ -2037,7 +2042,7 @@ de:{
   heroAction:'Einfluss',
   heroEffort:'Einsatz',
   liveStart:'Schnellmodus',
-  livePitch:'Auf den Platz',
+  livePitch:'Schnellzugriff',
   scoreUsAria:'Unsere Tore',
   scoreThemAria:'Gegentore',
   emptyGoMatch:'Spiel eintragen',
@@ -2486,7 +2491,7 @@ it:{
   heroAction:'impatto',
   heroEffort:'impegno',
   liveStart:'Modalità rapida',
-  livePitch:'In campo',
+  livePitch:'Accesso rapido',
   scoreUsAria:'I nostri gol',
   scoreThemAria:'Gol avversari',
   emptyGoMatch:'Registra partita',
@@ -2935,7 +2940,7 @@ fr:{
   heroAction:'impact',
   heroEffort:'implication',
   liveStart:'Mode rapide',
-  livePitch:'Sur le terrain',
+  livePitch:'Accès rapide',
   scoreUsAria:'Nos buts',
   scoreThemAria:'Buts adverses',
   emptyGoMatch:'Enregistrer un match',
@@ -3384,7 +3389,7 @@ pt:{
   heroAction:'impacto',
   heroEffort:'empenho',
   liveStart:'Modo rápido',
-  livePitch:'No campo',
+  livePitch:'Acesso rápido',
   scoreUsAria:'Os nossos golos',
   scoreThemAria:'Golos do adversário',
   emptyGoMatch:'Registar jogo',
@@ -3828,7 +3833,7 @@ pt:{
 ru:{
   pageTitle:'FFK — Оценка матча', settingsAria:'Настройки', themeAria:'Тема',
   heroOverall:'общая оценка', heroShort:'короткий выход', heroAction:'вклад', heroEffort:'старание',
-  liveStart:'Быстрый режим', livePitch:'На поле', labelDate:'Дата', labelPos:'Позиция', labelOpp:'Соперник', phOpp:'Название команды',
+  liveStart:'Быстрый режим', livePitch:'Быстрый доступ', labelDate:'Дата', labelPos:'Позиция', labelOpp:'Соперник', phOpp:'Название команды',
   labelScore:'Счёт', scoreUsAria:'Наши голы', scoreThemAria:'Голы соперника', emptyGoMatch:'Записать матч', labelMin:'Минуты на поле', labelFormat:'Формат матча', labelMatchLen:'Длина матча, мин', fmtCustom:'Свой',
   labelKind:'Тип игры', labelTournament:'Турнир', phTournament:'Название турнира',
   labelVenue:'Где играли', venueHome:'Дома', venueAway:'На выезде', labelRole:'Выход',
@@ -6907,9 +6912,7 @@ function renderLiveClock(){
     el.textContent = text;
     el.classList.toggle('on', running);
   });
-  ['liveKickBtn'].forEach(id => {
-    const btn = document.getElementById(id);
-    if(!btn) return;
+  document.querySelectorAll('.js-match-clock-btn').forEach(btn => {
     btn.textContent = btnText;
     btn.disabled = phase === 'done';
     btn.classList.toggle('go', phase === 'idle' || phase === 'break');
@@ -6974,7 +6977,9 @@ function closeLive(){
   persistDraft();
 }
 document.getElementById('liveStartBtn').addEventListener('click', openLive);
-document.getElementById('liveKickBtn').addEventListener('click', toggleMatchClock);
+document.querySelectorAll('.js-match-clock-btn').forEach(btn => {
+  btn.addEventListener('click', toggleMatchClock);
+});
 document.getElementById('liveDoneBtn').addEventListener('click', closeLive);
 document.addEventListener('click', (e) => {
   const go = e.target.closest('[data-go-view]');
