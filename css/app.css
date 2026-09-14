@@ -313,6 +313,14 @@
   .onboard-card .ghost-btn{margin-top:8px;}
   .preview-card img{display:block;width:100%;border-radius:16px;margin:0 0 12px;background:var(--surface-2);}
   #previewTheme{justify-content:center;overflow:visible;margin:0 0 8px;}
+  #previewPeriod{
+    display:flex;flex-direction:column;gap:6px;margin:0 0 10px;padding:6px;
+    border-radius:18px;background:var(--surface);border:1px solid var(--border);
+  }
+  #previewPeriod[hidden]{display:none !important;}
+  #previewPeriod .chip{
+    width:100%;margin:0;padding:10px 8px;border-radius:14px;text-align:center;
+  }
   .crop-modal{
     position:fixed;inset:0;z-index:96;background:rgba(8,14,24,.82);
     display:flex;align-items:center;justify-content:center;padding:16px;
@@ -507,8 +515,6 @@
     display:grid;grid-template-columns:1fr 1fr;gap:10px;max-width:420px;margin:0 0 16px;padding:10px 12px;
     border-radius:18px;background:var(--surface);border:1px solid var(--border);
   }
-  .period-custom[hidden]{display:grid !important;}
-  .period-switch-row:last-child{grid-template-columns:1fr;}
   .match-rating{font-size:1.4rem;font-weight:800;color:var(--accent);font-variant-numeric:tabular-nums;}
   .match-rating.low{color:var(--danger);}
   .match-rating.mid{color:var(--gold);}

@@ -26,6 +26,7 @@ function capPlugin(name){
     const C = window.Capacitor;
     if(!C) return null;
     if(C.Plugins && C.Plugins[name]) return C.Plugins[name];
+    if(typeof C.registerPlugin === 'function') return C.registerPlugin(name);
   }catch(e){}
   return null;
 }
@@ -2204,14 +2205,12 @@ document.getElementById('importFile').addEventListener('change', async (e) => {
 });
 
 let currentRange = '10';
-let currentRangeFrom = '';
-let currentRangeTo = '';
 let currentSeasonFilter = 'current';
 let historyPage = 1;
 let historyQuery = '';
 let historyKind = 'all';
 const HISTORY_PAGE = 10;
-const RANGE_KEYS = ['10','100','7d','30d','year','all','custom'];
+const RANGE_KEYS = ['10','100','7d','30d','year','all'];
 const KIND_KEYS = ['all','league','friendly','cup','tournament'];
 function loadFilters(){
   try{
@@ -2220,8 +2219,6 @@ function loadFilters(){
     if(RANGE_KEYS.includes(f.range)) currentRange = f.range;
     else if(RANGE_KEYS.includes(f.chart)) currentRange = f.chart;
     else if(RANGE_KEYS.includes(f.cardPeriod)) currentRange = f.cardPeriod;
-    if(/^\d{4}-\d{2}-\d{2}$/.test(String(f.rangeFrom || ''))) currentRangeFrom = f.rangeFrom;
-    if(/^\d{4}-\d{2}-\d{2}$/.test(String(f.rangeTo || ''))) currentRangeTo = f.rangeTo;
     historyQuery = String(f.historyQuery || '').slice(0, 80);
     if(KIND_KEYS.includes(f.historyKind)) historyKind = f.historyKind;
   }catch(e){}
@@ -2231,8 +2228,6 @@ function saveFilters(){
     localStorage.setItem(FILTER_KEY, JSON.stringify({
       season: currentSeasonFilter,
       range: currentRange,
-      rangeFrom: currentRangeFrom,
-      rangeTo: currentRangeTo,
       chart: currentRange,
       cardPeriod: currentRange,
       historyQuery,
@@ -2244,14 +2239,6 @@ function syncFilterChips(){
   document.querySelectorAll('#periodChips .chip').forEach(c => {
     c.classList.toggle('active', c.dataset.range === currentRange);
   });
-  const custom = document.getElementById('periodCustomRow');
-  if(custom) custom.hidden = false;
-  if(!currentRangeFrom) currentRangeFrom = daysAgoStr(30);
-  if(!currentRangeTo) currentRangeTo = todayStr();
-  const fromEl = document.getElementById('periodFrom');
-  const toEl = document.getElementById('periodTo');
-  if(fromEl && document.activeElement !== fromEl) fromEl.value = currentRangeFrom;
-  if(toEl && document.activeElement !== toEl) toEl.value = currentRangeTo;
 }
 function knownSeasons(){
   const set = new Set();
@@ -2309,23 +2296,9 @@ document.getElementById('periodChips').addEventListener('click', e => {
   document.querySelectorAll('#periodChips .chip').forEach(c=>c.classList.remove('active'));
   chip.classList.add('active');
   currentRange = chip.dataset.range || '10';
-  if(currentRange === 'custom' && (!currentRangeFrom || !currentRangeTo)){
-    currentRangeTo = todayStr();
-    currentRangeFrom = daysAgoStr(30);
-  }
   saveFilters();
   syncFilterChips();
   renderStats();
-});
-['periodFrom','periodTo'].forEach(id => {
-  document.getElementById(id)?.addEventListener('change', () => {
-    currentRange = 'custom';
-    currentRangeFrom = document.getElementById('periodFrom').value || currentRangeFrom;
-    currentRangeTo = document.getElementById('periodTo').value || currentRangeTo;
-    saveFilters();
-    syncFilterChips();
-    renderStats();
-  });
 });
 document.getElementById('historyKind').addEventListener('click', e => {
   const chip = e.target.closest('.chip');
@@ -2345,12 +2318,6 @@ function periodSlice(sorted, key){
   if(key === '10') return sorted.slice(-10);
   if(key === '100') return sorted.slice(-100);
   if(key === 'all') return sorted;
-  if(key === 'custom'){
-    let from = currentRangeFrom || '0000-01-01';
-    let to = currentRangeTo || '9999-12-31';
-    if(from > to){ const x = from; from = to; to = x; }
-    return sorted.filter(m => m.date >= from && m.date <= to);
-  }
   if(key === 'year'){
     const y = String(new Date().getFullYear());
     return sorted.filter(m => String(m.date).startsWith(y));
@@ -2359,10 +2326,6 @@ function periodSlice(sorted, key){
   return sorted.filter(m => m.date >= daysAgoStr(days));
 }
 function rangeLabel(key){
-  if(key === 'custom'){
-    if(currentRangeFrom && currentRangeTo) return formatDate(currentRangeFrom) + ' – ' + formatDate(currentRangeTo);
-    return t('periodCustom');
-  }
   return ({
     '10': t('chart10'),
     '100': t('chart100'),
@@ -2372,17 +2335,18 @@ function rangeLabel(key){
     'all': t('periodAll')
   })[key] || t('chart10');
 }
-function cardPeriodMatches(){
-  return periodSlice(seasonPool(), currentRange);
+function cardPeriodMatches(range){
+  return periodSlice(seasonPool(), range || currentRange);
 }
-function cardPeriodLabel(){
-  const range = rangeLabel(currentRange);
+function cardPeriodLabel(range){
+  const key = range || currentRange;
+  const label = rangeLabel(key);
   if(currentSeasonFilter === 'all'){
-    if(currentRange === 'all') return t('seasonAll');
-    return t('seasonAll') + ' · ' + range;
+    if(key === 'all') return t('seasonAll');
+    return t('seasonAll') + ' · ' + label;
   }
-  if(currentRange === 'all') return seasonNameLabel();
-  return seasonNameLabel() + ' · ' + range;
+  if(key === 'all') return seasonNameLabel();
+  return seasonNameLabel() + ' · ' + label;
 }
 function chartMatches(){
   return periodSlice(seasonPool(), currentRange);
@@ -2826,15 +2790,24 @@ function handleAppBack(){
   if(name && name !== 'player'){ showView('player'); return true; }
   return false;
 }
-let backLock = false;
 window.handleAppBack = function(){
-  if(backLock) return true;
-  backLock = true;
-  setTimeout(() => { backLock = false; }, 280);
   try{ return handleAppBack(); }catch(e){ return false; }
 };
-function bindAppBack(){
-  /* Android back is handled in MainActivity so the system swipe cannot WebView.goBack(). */
+function bindAppBack(attempt){
+  const App = capPlugin('App');
+  if(!App || typeof App.addListener !== 'function'){
+    if((attempt || 0) < 40) setTimeout(() => bindAppBack((attempt || 0) + 1), 50);
+    return;
+  }
+  if(window.__ffkBackBound) return;
+  window.__ffkBackBound = true;
+  App.addListener('backButton', () => {
+    if(window.handleAppBack()) return;
+    if(typeof App.minimizeApp === 'function') App.minimizeApp();
+  }).catch(() => {
+    window.__ffkBackBound = false;
+    setTimeout(() => bindAppBack((attempt || 0) + 1), 80);
+  });
 }
 document.addEventListener('click', (e) => {
   const go = e.target.closest('[data-go-view]');
@@ -2855,6 +2828,21 @@ document.getElementById('themeChips').addEventListener('click', e => {
   saveSettings();
   applyTheme();
   if(typeof chartMatches === 'function') drawChart(chartMatches());
+});
+document.getElementById('previewPeriod').addEventListener('click', e => {
+  const chip = e.target.closest('.chip');
+  if(!chip || !previewState || previewState.kind !== 'period') return;
+  const range = chip.dataset.range || '10';
+  if(!cardPeriodMatches(range).length){
+    showToast(t('noPeriod'));
+    return;
+  }
+  previewState.range = range;
+  currentRange = range;
+  saveFilters();
+  syncFilterChips();
+  renderStats();
+  refreshCardPreview().catch(() => {});
 });
 document.getElementById('previewTheme').addEventListener('click', e => {
   const chip = e.target.closest('.chip');
@@ -3233,8 +3221,28 @@ let previewState = null;
 function defaultCardMode(){
   return themeName() === 'dark' ? 'dark' : 'light';
 }
+function syncPreviewPeriodChips(range){
+  const wrap = document.getElementById('previewPeriod');
+  if(!wrap) return;
+  wrap.hidden = !previewState || previewState.kind !== 'period';
+  wrap.querySelectorAll('.chip').forEach(c => {
+    c.classList.toggle('active', c.dataset.range === range);
+  });
+}
 async function refreshCardPreview(){
   if(!previewState) return;
+  if(previewState.kind === 'period'){
+    const range = RANGE_KEYS.includes(previewState.range) ? previewState.range : currentRange;
+    previewState.range = range;
+    const list = cardPeriodMatches(range);
+    const label = cardPeriodLabel(range);
+    const slug = String(player.firstName || 'player').trim().replace(/\s+/g, '_').slice(0, 18) || 'player';
+    previewState.filename = `ffk_card_${slug}_${range}.png`;
+    previewState.build = mode => drawFutCardCanvas(list, label, mode);
+    syncPreviewPeriodChips(range);
+  } else {
+    syncPreviewPeriodChips('');
+  }
   const canvas = await previewState.build(previewState.mode);
   previewState.canvas = canvas;
   const img = document.getElementById('previewImg');
@@ -3259,6 +3267,8 @@ async function openCardPreview(state){
 }
 function closeCardPreview(){
   document.getElementById('previewModal').hidden = true;
+  const period = document.getElementById('previewPeriod');
+  if(period) period.hidden = true;
   const img = document.getElementById('previewImg');
   img.removeAttribute('src');
   previewState = null;
@@ -3410,7 +3420,19 @@ function sharePlayerCard(kind){
   return shareFutCard(playerCardList(kind || 'season'), playerCardPeriod(kind || 'season'), kind || 'season');
 }
 function shareStatsCard(){
-  return shareFutCard(cardPeriodMatches(), cardPeriodLabel(), currentRange);
+  const range = RANGE_KEYS.includes(currentRange) ? currentRange : '10';
+  const list = cardPeriodMatches(range);
+  if(!list.length){
+    showToast(t('noPeriod'));
+    return;
+  }
+  const slug = String(player.firstName || 'player').trim().replace(/\s+/g, '_').slice(0, 18) || 'player';
+  return openCardPreview({
+    kind: 'period',
+    range,
+    filename: `ffk_card_${slug}_${range}.png`,
+    build: mode => drawFutCardCanvas(list, cardPeriodLabel(range), mode)
+  });
 }
 function shareHistoryCard(){
   return shareFutCard(seasonPool(), seasonNameLabel(), 'season');
