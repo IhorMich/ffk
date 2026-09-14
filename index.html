@@ -375,7 +375,21 @@
     opacity:0;transition:opacity .25s,transform .25s;pointer-events:none;z-index:80;white-space:normal;
   }
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
-  .empty{text-align:center;padding:50px 20px;color:var(--text-soft);font-weight:600;}
+  .hist-pager{
+    display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap;
+    margin:6px 0 18px;
+  }
+  .hist-pager .hist-meta{
+    width:100%;text-align:center;font-size:.78rem;color:var(--text-soft);font-weight:600;margin-bottom:2px;
+  }
+  .hist-pager button{
+    min-width:42px;padding:10px 12px;border-radius:12px;border:1px solid var(--border);
+    background:var(--surface);color:var(--text);font:inherit;font-weight:800;cursor:pointer;
+  }
+  .hist-pager button:disabled{opacity:.38;cursor:default;}
+  .hist-pager button.on{
+    background:linear-gradient(135deg, var(--accent), var(--violet));border-color:transparent;color:#08121C;
+  }
   .match-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:13px 15px;margin-bottom:10px;}
   .match-card-top{display:flex;justify-content:space-between;align-items:center;cursor:pointer;}
   .match-meta{display:flex;flex-direction:column;gap:2px;}
@@ -776,6 +790,7 @@
       </div>
       <button class="save-btn" id="historyCardBtn" type="button" data-i18n="cardSeasonBtn">Карточка сезона</button>
       <div id="historyList"></div>
+      <div class="hist-pager" id="historyPager" hidden></div>
     </div>
 
     <div class="view" id="view-stats">
@@ -1074,6 +1089,7 @@ uk:{
   scoreLbl:'Рахунок {s}', minLbl:'{n} хв', actionsLbl:'Дії', gotLbl:'Вдалося', focusLbl:'Фокус',
   cardBtn:'Картка', playerCardBtn:'Картка гравця', cardHint:'FIFA-картка за сезон, місяць або останні матчі.',
   cardSeason:'Сезон', cardPeriodBtn:'Картка періоду', cardSeasonBtn:'Картка сезону', editBtn:'Правити', delBtn:'Видалити', noMatches:'Поки немає збережених матчів.', noPeriod:'За цей період матчів немає.',
+  histPrev:'Назад', histNext:'Далі', histPage:'Сторінка {n} з {total}', histRange:'{from}–{to} з {total}',
   reportTitle:'Матч', reportNew:'Новий матч', actPlus:'позитивних дій', actMinus:'негативних дій',
   mn_duels:'єдиноборств',
   mn_goals:'гол|голи|голів', mn_assists:'асист|асисти|асистів', mn_shots:'удар у площину|удари в площину|ударів у площину',
@@ -1280,6 +1296,7 @@ pl:{
   scoreLbl:'Wynik {s}', minLbl:'{n} min', actionsLbl:'Akcje', gotLbl:'Udało się', focusLbl:'Cel',
   cardBtn:'Karta', playerCardBtn:'Karta zawodnika', cardHint:'Karta FIFA za sezon, miesiąc albo ostatnie mecze.',
   cardSeason:'Sezon', cardPeriodBtn:'Karta okresu', cardSeasonBtn:'Karta sezonu', editBtn:'Edytuj', delBtn:'Usuń', noMatches:'Nie ma jeszcze zapisanych meczów.', noPeriod:'Brak meczów w tym okresie.',
+  histPrev:'Wstecz', histNext:'Dalej', histPage:'Strona {n} z {total}', histRange:'{from}–{to} z {total}',
   reportTitle:'Mecz', reportNew:'Nowy mecz', actPlus:'pozytywnych akcji', actMinus:'negatywnych akcji',
   mn_duels:'pojedynków',
   mn_goals:'gol|gole|goli', mn_assists:'asysta|asysty|asyst', mn_shots:'strzał celny|strzały celne|strzałów celnych',
@@ -1486,6 +1503,7 @@ en:{
   scoreLbl:'Score {s}', minLbl:'{n} min', actionsLbl:'Actions', gotLbl:'Went well', focusLbl:'Focus',
   cardBtn:'Match card', playerCardBtn:'Player card', cardHint:'FIFA card for the season, month or recent matches.',
   cardSeason:'Season', cardPeriodBtn:'Period card', cardSeasonBtn:'Season card', editBtn:'Edit', delBtn:'Delete', noMatches:'No saved matches yet.', noPeriod:'No matches in this period.',
+  histPrev:'Back', histNext:'Next', histPage:'Page {n} of {total}', histRange:'{from}–{to} of {total}',
   reportTitle:'Match', reportNew:'New match', actPlus:'positive actions', actMinus:'negative actions',
   mn_duels:'duels',
   mn_goals:'goal|goals', mn_assists:'assist|assists', mn_shots:'shot on target|shots on target',
@@ -1692,6 +1710,7 @@ ru:{
   scoreLbl:'Счёт {s}', minLbl:'{n} мин', actionsLbl:'Действия', gotLbl:'Получилось', focusLbl:'Фокус',
   cardBtn:'Карточка', playerCardBtn:'Карточка игрока', cardHint:'FIFA-карточка за сезон, месяц или последние матчи.',
   cardSeason:'Сезон', cardPeriodBtn:'Карточка периода', cardSeasonBtn:'Карточка сезона', editBtn:'Править', delBtn:'Удалить', noMatches:'Пока нет сохранённых матчей.', noPeriod:'За этот период матчей нет.',
+  histPrev:'Назад', histNext:'Дальше', histPage:'Страница {n} из {total}', histRange:'{from}–{to} из {total}',
   reportTitle:'Матч', reportNew:'Новый матч', actPlus:'положительных действий', actMinus:'отрицательных действий',
   mn_duels:'единоборств',
   mn_goals:'гол|гола|голов', mn_assists:'ассист|ассиста|ассистов', mn_shots:'удар в створ|удара в створ|ударов в створ',
@@ -3824,6 +3843,7 @@ document.getElementById('saveBtn').addEventListener('click', () => {
   }
   if(editingId) matches = matches.map(m => m.id === editingId ? row : m);
   else matches.push(row);
+  if(!editingId) historyPage = 1;
   saveMatches();
   fillSeasonSelects();
   lastReportMatch = row;
@@ -3874,17 +3894,26 @@ function refreshBackupBanner(){
 function renderHistory(){
   refreshBackupBanner();
   const el = document.getElementById('historyList');
+  const pager = document.getElementById('historyPager');
+  const hidePager = () => { if(pager){ pager.hidden = true; pager.innerHTML = ''; } };
   if(matches.length === 0){
     el.innerHTML = `<div class="empty">${escapeHtml(t('noMatches'))}</div>`;
+    hidePager();
     return;
   }
   const list = [...seasonPool()].reverse();
   if(!list.length){
     el.innerHTML = `<div class="empty">${escapeHtml(t('noPeriod'))}</div>`;
+    hidePager();
     return;
   }
+  const pages = Math.max(1, Math.ceil(list.length / HISTORY_PAGE));
+  if(historyPage > pages) historyPage = pages;
+  if(historyPage < 1) historyPage = 1;
+  const start = (historyPage - 1) * HISTORY_PAGE;
+  const slice = list.slice(start, start + HISTORY_PAGE);
   const showSeason = currentSeasonFilter === 'all';
-  el.innerHTML = list.map(m => {
+  el.innerHTML = slice.map(m => {
     return `<div class="match-card">
       <div class="match-card-top" onclick="toggleDetails(${m.id})">
         <div class="match-meta">
@@ -3907,7 +3936,28 @@ function renderHistory(){
       </div>
     </div>`;
   }).join('');
+  if(!pager) return;
+  if(pages <= 1){ hidePager(); return; }
+  const from = start + 1;
+  const to = start + slice.length;
+  const nums = [];
+  const span = 5;
+  let a = Math.max(1, historyPage - 2);
+  let b = Math.min(pages, a + span - 1);
+  a = Math.max(1, b - span + 1);
+  for(let i = a; i <= b; i++) nums.push(i);
+  pager.hidden = false;
+  pager.innerHTML =
+    `<div class="hist-meta">${escapeHtml(t('histRange', {from, to, total: list.length}))} · ${escapeHtml(t('histPage', {n: historyPage, total: pages}))}</div>` +
+    `<button type="button" ${historyPage <= 1 ? 'disabled' : ''} onclick="historyGo(${historyPage - 1})">${escapeHtml(t('histPrev'))}</button>` +
+    nums.map(n => `<button type="button" class="${n === historyPage ? 'on' : ''}" onclick="historyGo(${n})">${n}</button>`).join('') +
+    `<button type="button" ${historyPage >= pages ? 'disabled' : ''} onclick="historyGo(${historyPage + 1})">${escapeHtml(t('histNext'))}</button>`;
 }
+window.historyGo = function(p){
+  historyPage = p;
+  renderHistory();
+  document.getElementById('view-history')?.scrollIntoView({block:'start'});
+};
 
 window.toggleDetails = function(id){ document.getElementById('details-'+id)?.classList.toggle('open'); };
 window.toggleStory = function(id){
@@ -4044,6 +4094,8 @@ let currentRange = '10';
 let chartRange = '10';
 let cardPeriod = '10';
 let currentSeasonFilter = 'current';
+let historyPage = 1;
+const HISTORY_PAGE = 10;
 function loadFilters(){
   try{
     const f = JSON.parse(localStorage.getItem(FILTER_KEY) || '{}');
@@ -4106,6 +4158,7 @@ function seasonPool(){
 ['statsSeason','historySeason'].forEach(id => {
   document.getElementById(id).addEventListener('change', e => {
     currentSeasonFilter = e.target.value;
+    historyPage = 1;
     saveFilters();
     fillSeasonSelects();
     renderHistory();
