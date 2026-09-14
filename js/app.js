@@ -21,21 +21,29 @@ function t(key, vars){
 function applyFont(){
   document.documentElement.style.setProperty('--font', APP_FONT);
 }
-function isLightTheme(){ return settings.theme === 'light'; }
+const THEME_ORDER = ['dark','light','day'];
+function themeName(){
+  return THEME_ORDER.includes(settings.theme) ? settings.theme : 'dark';
+}
+function isLightTheme(){ return themeName() !== 'dark'; }
 function applyTheme(){
-  const light = isLightTheme();
-  document.documentElement.dataset.theme = light ? 'light' : 'dark';
+  const theme = themeName();
+  document.documentElement.dataset.theme = theme;
   const meta = document.querySelector('meta[name="theme-color"]');
-  if(meta) meta.content = light ? '#F3F5FA' : '#0B1220';
+  if(meta) meta.content = theme === 'day' ? '#FFF8D6' : (theme === 'light' ? '#F3F5FA' : '#0B1220');
   const apple = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
-  if(apple) apple.content = light ? 'default' : 'black-translucent';
+  if(apple) apple.content = theme === 'dark' ? 'black-translucent' : 'default';
   document.querySelectorAll('.theme-toggle').forEach(btn => {
-    btn.textContent = light ? '☾' : '☀';
-    btn.setAttribute('aria-label', t('themeAria'));
+    btn.textContent = theme === 'dark' ? '☀' : (theme === 'light' ? '▣' : '☾');
+    btn.setAttribute('aria-label', t('themeAria') + ' · ' + t('theme_' + theme));
+  });
+  document.querySelectorAll('#themeChips .chip').forEach(c => {
+    c.classList.toggle('active', c.dataset.theme === theme);
   });
 }
 function toggleTheme(){
-  settings.theme = isLightTheme() ? 'dark' : 'light';
+  const i = THEME_ORDER.indexOf(themeName());
+  settings.theme = THEME_ORDER[(i + 1) % THEME_ORDER.length];
   saveSettings();
   applyTheme();
   if(typeof chartMatches === 'function') drawChart(chartMatches());
@@ -154,9 +162,11 @@ function applyI18n(){
     document.getElementById('reportStory').innerHTML = matchStoryHtml(lastReportMatch);
   }
   renderLiveClock();
+  const tzEl = document.getElementById('tzHint');
+  if(tzEl) tzEl.textContent = t('sTzHint', {tz: clockTimeZone().replace(/_/g, ' ')});
 }
 
-let settings = {club:'', player:'', position:'fwd', format:'2x30', minutes:'60', lang:'ru', seasonCloseDeclined:'', theme:'dark'};
+let settings = {club:'', player:'', position:'fwd', format:'2x30', minutes:'60', lang:'ru', seasonCloseDeclined:'', theme:'dark', onboarded:false};
 let roster = {currentId:'', ids:[]};
 let player = defaultPlayer();
 let extraSelected = [];
@@ -170,7 +180,29 @@ let form = emptyForm();
 let liveStack = [];
 let matchClock = emptyClock();
 let liveClockTimer = 0;
-const WARSAW_TZ = 'Europe/Warsaw';
+function deviceTimeZone(){
+  try{ return Intl.DateTimeFormat().resolvedOptions().timeZone || ''; }catch(e){ return ''; }
+}
+function clockTimeZone(){
+  const lang = LANGS.includes(settings.lang) ? settings.lang : detectLang();
+  if(lang === 'pl') return 'Europe/Warsaw';
+  return deviceTimeZone() || 'Europe/Warsaw';
+}
+function clockLocale(){
+  const lang = LANGS.includes(settings.lang) ? settings.lang : detectLang();
+  return LANG_LOCALE[lang] || 'en-GB';
+}
+function tzShort(){
+  return clockTimeZone().split('/').pop().replace(/_/g, ' ');
+}
+function localClock(ms){
+  try{
+    return new Intl.DateTimeFormat(clockLocale(), {timeZone: clockTimeZone(), hour:'2-digit', minute:'2-digit', hour12:false}).format(new Date(ms));
+  }catch(e){
+    const d = new Date(ms);
+    return String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+  }
+}
 function emptyClock(){
   return {startedAt:null, pausedAt:null, pauseMs:0, events:[], period:1, phase:'idle', periodPlayMs:0, periodRunAt:null, playMs:0};
 }
@@ -204,14 +236,6 @@ function clockPhase(){
   if(matchClock.pausedAt) return 'break';
   return 'run';
 }
-function warsawClock(ms){
-  try{
-    return new Intl.DateTimeFormat('pl-PL', {timeZone: WARSAW_TZ, hour:'2-digit', minute:'2-digit', hour12:false}).format(new Date(ms));
-  }catch(e){
-    const d = new Date(ms);
-    return String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
-  }
-}
 function halfLabel(n, fmt, custom){
   const {parts} = periodShape(fmt, custom);
   n = Math.max(1, Number(n) || 1);
@@ -239,7 +263,7 @@ function clockStamp(now){
   const playMin = periodPlayNow(now) / 60000;
   const minute = Math.max(1, Math.floor(playMin));
   const matchMin = Math.max(1, Math.floor(playingMs(now) / 60000));
-  return {clock: warsawClock(now), period, minute, matchMin, playMin, each, parts};
+  return {clock: localClock(now) + ' · ' + tzShort(), period, minute, matchMin, playMin, each, parts};
 }
 function hydrateClock(raw){
   const base = emptyClock();
@@ -1779,7 +1803,7 @@ function collectMatch(){
     counts, behaviors,
     timeline: matchClock.events.slice(),
     kickoffAt: matchClock.startedAt || 0,
-    kickoffClock: matchClock.startedAt ? warsawClock(matchClock.startedAt) : '',
+    kickoffClock: matchClock.startedAt ? localClock(matchClock.startedAt) + ' · ' + tzShort() : '',
     actionRating: action,
     effortRating: effort,
     rating: overallScore(counts, behaviors, pos)
@@ -2030,7 +2054,7 @@ document.getElementById('importFile').addEventListener('change', async (e) => {
         }
         if(bundle.settings.format) settings.format = bundle.settings.format;
         if(bundle.settings.minutes) settings.minutes = String(bundle.settings.minutes);
-        if(bundle.settings.theme === 'light' || bundle.settings.theme === 'dark') settings.theme = bundle.settings.theme;
+        if(THEME_ORDER.includes(bundle.settings.theme)) settings.theme = bundle.settings.theme;
       }
       saveSettings();
       applyHeader();
@@ -2481,7 +2505,7 @@ function renderLiveClock(){
   const stamp = matchClock.startedAt ? clockStamp(now) : null;
   const fmt = formatTag();
   const {parts} = periodShape();
-  let text = t('liveClockWait', {clock: warsawClock(now), fmt});
+  let text = t('liveClockWait', {clock: localClock(now) + ' · ' + tzShort(), fmt});
   let btnText = t('liveKick');
   let running = false;
   if(phase === 'done'){
@@ -2587,6 +2611,70 @@ document.getElementById('live-position').addEventListener('change', () => {
 });
 
 document.querySelectorAll('.theme-toggle').forEach(btn => btn.addEventListener('click', toggleTheme));
+document.getElementById('themeChips').addEventListener('click', e => {
+  const chip = e.target.closest('.chip');
+  if(!chip || !THEME_ORDER.includes(chip.dataset.theme)) return;
+  settings.theme = chip.dataset.theme;
+  saveSettings();
+  applyTheme();
+  if(typeof chartMatches === 'function') drawChart(chartMatches());
+});
+document.getElementById('previewTheme').addEventListener('click', e => {
+  const chip = e.target.closest('.chip');
+  if(!chip || !previewState) return;
+  previewState.mode = chip.dataset.card === 'light' ? 'light' : 'dark';
+  refreshCardPreview().catch(() => {});
+});
+document.getElementById('previewShare').addEventListener('click', async () => {
+  if(!previewState || !previewState.canvas) return;
+  const ok = await exportPngFile(previewState.canvas, previewState.filename);
+  if(ok) closeCardPreview();
+});
+document.getElementById('previewSave').addEventListener('click', async () => {
+  if(!previewState || !previewState.canvas) return;
+  await savePngFile(previewState.canvas, previewState.filename);
+});
+document.getElementById('previewCancel').addEventListener('click', closeCardPreview);
+
+let onboardStep = 0;
+function onboardPages(){
+  return [
+    {title: t('onboard1Title'), body: t('onboard1Body')},
+    {title: t('onboard2Title'), body: t('onboard2Body')},
+    {title: t('onboard3Title'), body: t('onboard3Body')}
+  ];
+}
+function finishOnboard(){
+  settings.onboarded = true;
+  saveSettings();
+  document.getElementById('onboard').hidden = true;
+}
+function renderOnboard(){
+  const pages = onboardPages();
+  const step = Math.min(pages.length - 1, Math.max(0, onboardStep));
+  document.getElementById('onboardTitle').textContent = pages[step].title;
+  document.getElementById('onboardBody').textContent = pages[step].body;
+  document.getElementById('onboardNext').textContent = step === pages.length - 1 ? t('onboardDone') : t('onboardNext');
+  document.getElementById('onboardSkip').textContent = t('onboardSkip');
+  document.querySelectorAll('#onboardDots span').forEach((el, i) => el.classList.toggle('on', i === step));
+}
+function maybeOnboard(){
+  if(settings.onboarded) return;
+  if(matches.length || (player && (player.firstName || player.lastName))){
+    settings.onboarded = true;
+    saveSettings();
+    return;
+  }
+  onboardStep = 0;
+  document.getElementById('onboard').hidden = false;
+  renderOnboard();
+}
+document.getElementById('onboardNext').addEventListener('click', () => {
+  if(onboardStep >= 2){ finishOnboard(); return; }
+  onboardStep += 1;
+  renderOnboard();
+});
+document.getElementById('onboardSkip').addEventListener('click', finishOnboard);
 document.getElementById('settingsBtn').addEventListener('click', () => {
   document.getElementById('s-lang').value = settings.lang;
   refreshBackupBanner();
@@ -2828,22 +2916,25 @@ function blendCardGrade(list, pos, keys){
 function to99(grade){
   return Math.round(Math.min(99, Math.max(40, grade * 10)));
 }
-function futTheme(ovr){
-  if(ovr >= 85) return {
+function futTheme(ovr, mode){
+  const dark = ovr >= 85 ? {
     foil:'#F5D76E', foil2:'#C9A227', ink:'#140C28', paper:['#2A1658', '#0E1A36', '#12382E'],
     glow:'rgba(34,211,166,.45)', plate:'#F5D76E', muted:'#D9C27A'
-  };
-  if(ovr >= 75) return {
+  } : ovr >= 75 ? {
     foil:'#F3D27A', foil2:'#B8860B', ink:'#2A1A06', paper:['#5A3E12', '#2C1C08', '#7A5418'],
     glow:'rgba(245,185,66,.35)', plate:'#F6DE9A', muted:'#E8D5A0'
-  };
-  if(ovr >= 65) return {
+  } : ovr >= 65 ? {
     foil:'#D9E2EC', foil2:'#7C8A99', ink:'#1A2430', paper:['#3D4A5C', '#1B2430', '#5C6B7A'],
     glow:'rgba(180,198,214,.3)', plate:'#E8EEF4', muted:'#C5D0DA'
-  };
-  return {
+  } : {
     foil:'#E0B089', foil2:'#8A5A32', ink:'#2A160C', paper:['#5A3518', '#24140A', '#7A4A22'],
     glow:'rgba(196,122,62,.3)', plate:'#E8C4A0', muted:'#D7B08A'
+  };
+  if(mode !== 'light') return dark;
+  return {
+    foil: dark.foil, foil2: dark.foil2, ink:'#0B1220',
+    paper:['#F7F1E3', '#EFE6D4', '#E7D8B8'],
+    glow:'rgba(34,211,166,.18)', plate:'#0B1220', muted:'#4A5568'
   };
 }
 function futStatRows(list, pos){
@@ -2885,22 +2976,59 @@ async function exportPngFile(canvas, filename){
   return false;
 }
 
+async function savePngFile(canvas, filename){
+  const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename; a.click();
+  URL.revokeObjectURL(url);
+  showToast(t('toastCard'));
+}
+
 let shareBusy = false;
-async function shareFutCard(list, period, tag){
+let previewState = null;
+function defaultCardMode(){
+  return themeName() === 'dark' ? 'dark' : 'light';
+}
+async function refreshCardPreview(){
+  if(!previewState) return;
+  const canvas = await previewState.build(previewState.mode);
+  previewState.canvas = canvas;
+  const img = document.getElementById('previewImg');
+  img.src = canvas.toDataURL('image/png');
+  img.alt = t('previewTitle');
+  document.querySelectorAll('#previewTheme .chip').forEach(c => {
+    c.classList.toggle('active', c.dataset.card === previewState.mode);
+  });
+}
+async function openCardPreview(state){
   if(shareBusy) return;
-  if(!list || !list.length){
-    showToast(t('noPeriod'));
-    return;
-  }
   shareBusy = true;
+  previewState = {mode: defaultCardMode(), ...state};
   try{
+    await refreshCardPreview();
+    document.getElementById('previewModal').hidden = false;
+  }catch(e){
+    shareBusy = false;
+    previewState = null;
+    throw e;
+  }
+}
+function closeCardPreview(){
+  document.getElementById('previewModal').hidden = true;
+  const img = document.getElementById('previewImg');
+  img.removeAttribute('src');
+  previewState = null;
+  shareBusy = false;
+}
+async function drawFutCardCanvas(list, period, mode){
     const pos = ratingPosOf(player.primary);
     const ovr = fifaOvr(list);
-    const theme = futTheme(ovr);
+    const theme = futTheme(ovr, mode);
     const photo = await loadCanvasImage(currentPhoto() || player.photo);
     const cover = await loadCanvasImage(currentCover() || player.cover);
     const {canvas, ctx, w, h} = makeHiCanvas(780, 1120);
-    ctx.fillStyle = '#070B14';
+    ctx.fillStyle = mode === 'light' ? '#F3F5FA' : '#070B14';
     ctx.fillRect(0, 0, w, h);
     const g = ctx.createLinearGradient(0, 0, w, h);
     g.addColorStop(0, theme.paper[0]);
@@ -2913,7 +3041,7 @@ async function shareFutCard(list, period, tag){
     pathRoundRect(ctx, 36, 36, w - 72, h - 72, 36);
     ctx.clip();
     if(cover){
-      ctx.globalAlpha = 0.28;
+      ctx.globalAlpha = mode === 'light' ? 0.18 : 0.28;
       drawCovered(ctx, cover, 36, 36, w - 72, 420);
       ctx.globalAlpha = 1;
     }
@@ -2930,7 +3058,7 @@ async function shareFutCard(list, period, tag){
       drawCovered(ctx, photo, photoBox.x, photoBox.y, photoBox.w, photoBox.h);
       ctx.restore();
     } else {
-      ctx.fillStyle = 'rgba(0,0,0,.25)';
+      ctx.fillStyle = mode === 'light' ? 'rgba(0,0,0,.08)' : 'rgba(0,0,0,.25)';
       pathRoundRect(ctx, photoBox.x, photoBox.y, photoBox.w, photoBox.h, 24);
       ctx.fill();
       ctx.fillStyle = theme.plate;
@@ -2978,7 +3106,7 @@ async function shareFutCard(list, period, tag){
 
     const name = (displayName() || '').toUpperCase();
     pathRoundRect(ctx, 70, 700, w - 140, 78, 16);
-    ctx.fillStyle = theme.plate;
+    ctx.fillStyle = mode === 'light' ? theme.foil : theme.plate;
     ctx.fill();
     ctx.fillStyle = theme.ink;
     ctx.font = canvasFont('900', name.length > 18 ? 28 : 34);
@@ -3008,13 +3136,19 @@ async function shareFutCard(list, period, tag){
     const foot = [player.team || player.club, matchCountLabel(list.length)].filter(Boolean).join('  ·  ');
     ctx.fillText(foot.slice(0, 44), w / 2, h - 86);
     ctx.textAlign = 'left';
-
-    const slug = String(player.firstName || 'player').trim().replace(/\s+/g, '_').slice(0, 18) || 'player';
-    const stamp = String(tag || 'card').replace(/\s+/g, '_').slice(0, 24);
-    await exportPngFile(canvas, `ffk_card_${slug}_${stamp}.png`);
-  } finally {
-    shareBusy = false;
+    return canvas;
+}
+async function shareFutCard(list, period, tag){
+  if(!list || !list.length){
+    showToast(t('noPeriod'));
+    return;
   }
+  const slug = String(player.firstName || 'player').trim().replace(/\s+/g, '_').slice(0, 18) || 'player';
+  const stamp = String(tag || 'card').replace(/\s+/g, '_').slice(0, 24);
+  await openCardPreview({
+    filename: `ffk_card_${slug}_${stamp}.png`,
+    build: mode => drawFutCardCanvas(list, period, mode)
+  });
 }
 function playerCardList(kind){
   if(kind === 'month') return sortedMatches().filter(m => m.date >= daysAgoStr(30));
@@ -3038,19 +3172,16 @@ function shareStatsCard(){
 function shareHistoryCard(){
   return shareFutCard(seasonPool(), seasonNameLabel(), 'season');
 }
-async function shareCard(m){
-  if(shareBusy) return;
-  shareBusy = true;
-  try{
+async function drawMatchCardCanvas(m, mode){
   const lines = reportLines(m);
   const split = actionSplit(m.counts, m.position);
   const photo = await loadCanvasImage(currentPhoto() || player.photo);
   const ovr = Math.round(Math.min(99, Math.max(45, Number(m.rating) * 10)));
-  const theme = futTheme(ovr);
+  const theme = futTheme(ovr, mode);
   const rows = Math.max(1, Math.ceil((lines.length || 1) / 2));
   const w = 1280, h = Math.max(840, 460 + rows * 50 + 130);
   const {canvas, ctx} = makeHiCanvas(w, h);
-  ctx.fillStyle = '#070B14';
+  ctx.fillStyle = mode === 'light' ? '#F3F5FA' : '#070B14';
   ctx.fillRect(0, 0, w, h);
   const bg = ctx.createLinearGradient(0, 0, w, h);
   bg.addColorStop(0, theme.paper[0]);
@@ -3123,11 +3254,13 @@ async function shareCard(m){
   ctx.fillStyle = theme.muted;
   ctx.font = canvasFont('700', 22);
   ctx.fillText(t('actMinus'), col2, y + 36);
-
-  await exportPngFile(canvas, `ffk_${m.date}.png`);
-  } finally {
-    shareBusy = false;
-  }
+  return canvas;
+}
+async function shareCard(m){
+  await openCardPreview({
+    filename: `ffk_${m.date}.png`,
+    build: mode => drawMatchCardCanvas(m, mode)
+  });
 }
 
 (function init(){
@@ -3157,6 +3290,7 @@ async function shareCard(m){
     renderOppList();
     maybePromptSeasonClose();
     restoreView();
+    maybeOnboard();
     hydrateAllMedia().then(() => {
       applyHeader();
       if(document.getElementById('view-player')?.classList.contains('active')) fillPlayerForm();

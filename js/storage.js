@@ -88,7 +88,8 @@ function loadSettings(){
       lang: (s.langManual === true && LANGS.includes(s.lang)) ? s.lang : detectLang(),
       langManual: s.langManual === true,
       seasonCloseDeclined: String(s.seasonCloseDeclined || ''),
-      theme: s.theme === 'light' ? 'light' : 'dark'
+      theme: (s.theme === 'light' || s.theme === 'day') ? s.theme : 'dark',
+      onboarded: s.onboarded === true
     };
     if(s.langManual !== true) saveSettings();
   }catch(e){}

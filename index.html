@@ -320,6 +320,13 @@
           <option value="pt">Português</option>
         </select>
       </div>
+      <h3 class="period-head" data-i18n="sTheme">Тема</h3>
+      <div class="period-chips" id="themeChips">
+        <button type="button" class="chip" data-theme="dark" data-i18n="theme_dark">Ночь</button>
+        <button type="button" class="chip" data-theme="light" data-i18n="theme_light">Комната</button>
+        <button type="button" class="chip" data-theme="day" data-i18n="theme_day">Улица</button>
+      </div>
+      <p class="hint" id="tzHint"></p>
       <h3 class="period-head" data-i18n="sBackup">Данные на телефоне</h3>
       <p class="hint" id="backupBanner" hidden data-i18n="backupBanner">Данные только на этом телефоне. Сделайте экспорт, чтобы не потерять сезон.</p>
       <div class="backup-row">
@@ -369,6 +376,30 @@
         <button class="ghost-btn" id="cropCancelBtn" type="button" data-i18n="pSheetCancel">Отмена</button>
         <button class="save-btn" id="cropOkBtn" type="button" data-i18n="cropDone">Готово</button>
       </div>
+    </div>
+  </div>
+
+  <div class="onboard" id="onboard" hidden>
+    <div class="onboard-card">
+      <div class="onboard-kicker">FFK</div>
+      <h2 id="onboardTitle"></h2>
+      <p id="onboardBody"></p>
+      <div class="onboard-dots" id="onboardDots"><span></span><span></span><span></span></div>
+      <button class="save-btn" id="onboardNext" type="button"></button>
+      <button class="ghost-btn" id="onboardSkip" type="button"></button>
+    </div>
+  </div>
+
+  <div class="preview-modal" id="previewModal" hidden>
+    <div class="preview-card">
+      <img id="previewImg" alt="">
+      <div class="period-chips" id="previewTheme">
+        <button type="button" class="chip" data-card="dark" data-i18n="previewDark">Тёмная</button>
+        <button type="button" class="chip" data-card="light" data-i18n="previewLight">Светлая</button>
+      </div>
+      <button class="save-btn" id="previewShare" type="button" data-i18n="previewShare">Поделиться</button>
+      <button class="ghost-btn" id="previewSave" type="button" data-i18n="previewSave">Скачать</button>
+      <button class="ghost-btn" id="previewCancel" type="button" data-i18n="previewCancel">Отмена</button>
     </div>
   </div>
   <div class="live" id="livePad">
