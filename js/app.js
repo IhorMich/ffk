@@ -862,7 +862,7 @@ function openPhotoSheet(target){
   document.getElementById('photoSheetClear').hidden = !has;
   document.getElementById('photoSheet').hidden = false;
   document.getElementById('photoSheetBack').hidden = false;
-  pushAppState();
+  pushAppState('layer');
 }
 function pickPhotoFile(){
   const el = document.getElementById(photoSheetTarget === 'cover' ? 'p-cover' : 'p-photo');
@@ -1023,7 +1023,7 @@ function openCrop(img, target){
   if(hint) hint.textContent = t(target === 'cover' ? 'cropCoverHint' : 'cropHint');
   document.getElementById('cropZoom').value = '100';
   document.getElementById('cropModal').hidden = false;
-  pushAppState();
+  pushAppState('layer');
   requestAnimationFrame(() => requestAnimationFrame(() => applyCropZoom(false)));
 }
 function closeCrop(){
@@ -1593,7 +1593,7 @@ function openPlayerEdit(){
   fillPlayerForm();
   const el = document.getElementById('playerEdit');
   if(el) el.hidden = false;
-  pushAppState();
+  pushAppState('layer');
 }
 function closePlayerEdit(revert){
   const el = document.getElementById('playerEdit');
@@ -2077,7 +2077,7 @@ window.toggleDetails = function(id){
   if(!el) return;
   const willOpen = !el.classList.contains('open');
   el.classList.toggle('open');
-  if(willOpen) pushAppState();
+  if(willOpen) pushAppState('layer');
 };
 window.toggleStory = function(id){
   const el = document.getElementById('story-'+id);
@@ -2121,7 +2121,7 @@ function showView(name){
   renderLiveClock();
   if(clockPhase() === 'run') startClockTick();
   try{ sessionStorage.setItem(VIEW_KEY, name === 'report' ? 'history' : name); }catch(e){}
-  if(!popping && name !== 'player') pushAppState();
+  if(!popping && name !== 'player') pushAppState('tab');
 }
 function restoreView(){
   let name = 'new';
@@ -2775,7 +2775,7 @@ function openLive(){
   updateHero();
   renderLiveClock();
   if(clockPhase() === 'run') startClockTick();
-  pushAppState();
+  pushAppState('layer');
 }
 function closeLive(){
   document.getElementById('app').classList.remove('live-on');
@@ -2803,9 +2803,21 @@ function activeViewName(){
   return view && view.id ? view.id.replace('view-', '') : '';
 }
 let popping = false;
-function pushAppState(){
+let lastAppBack = 0;
+function pushAppState(kind){
   if(popping) return;
-  try{ history.pushState({ffk: Date.now()}, ''); }catch(e){}
+  try{
+    const has = !!(history.state && history.state.ffk);
+    if(kind === 'layer' || !has) history.pushState({ffk: kind || 'tab'}, '');
+    else history.replaceState({ffk: kind || 'tab'}, '');
+  }catch(e){}
+}
+function requestAppBack(){
+  const now = Date.now();
+  if(now - lastAppBack < 400) return true;
+  lastAppBack = now;
+  popping = true;
+  try{ return handleAppBack(); } finally { popping = false; }
 }
 function handleAppBack(){
   if(isElShown('onboard')){
@@ -2828,15 +2840,13 @@ function handleAppBack(){
   return false;
 }
 window.handleAppBack = function(){
-  try{ return handleAppBack(); }catch(e){ return true; }
+  try{ return requestAppBack(); }catch(e){ return true; }
 };
+window.requestAppBack = requestAppBack;
 function bindAppBack(){
   if(window.__ffkPopBound) return;
   window.__ffkPopBound = true;
-  window.addEventListener('popstate', () => {
-    popping = true;
-    try{ handleAppBack(); } finally { popping = false; }
-  });
+  window.addEventListener('popstate', () => { requestAppBack(); });
 }
 document.addEventListener('click', (e) => {
   const go = e.target.closest('[data-go-view]');
@@ -2922,7 +2932,7 @@ function maybeOnboard(){
   onboardStep = 0;
   document.getElementById('onboard').hidden = false;
   renderOnboard();
-  pushAppState();
+  pushAppState('layer');
 }
 document.getElementById('onboardNext').addEventListener('click', () => {
   if(onboardStep >= 2){ finishOnboard(); return; }
@@ -3290,7 +3300,7 @@ async function openCardPreview(state){
   try{
     await refreshCardPreview();
     document.getElementById('previewModal').hidden = false;
-    pushAppState();
+    pushAppState('layer');
   }catch(e){
     shareBusy = false;
     previewState = null;
