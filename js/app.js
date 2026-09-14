@@ -364,8 +364,19 @@ function syncPlayedDefault(fromSettings){
   document.getElementById('customLengthWrap').hidden = fmt !== 'custom';
   if(fromSettings) document.getElementById('f-minutes').value = String(len);
 }
+// Ratings are kept with all their decimals, so 6.55 must show as 6.6. Plain
+// toFixed would give 6.5 because the binary value is 6.5499…, hence the
+// exponent shift before rounding.
+function roundTo(n, digits){
+  const v = Number(n);
+  if(!isFinite(v)) return 0;
+  const shifted = Math.round(Number(Math.abs(v).toExponential(12).replace(/e([+-]\d+)/, (s, e) => 'e' + (Number(e) + digits))));
+  const out = Number(shifted + 'e-' + digits);
+  if(!isFinite(out)) return v;
+  return v < 0 ? -out : out;
+}
 function fmtNum(n, digits){
-  const s = Number(n).toFixed(digits);
+  const s = roundTo(n, digits).toFixed(digits);
   return settings.lang === 'en' ? s : s.replace('.', ',');
 }
 function fmtRating(r){
@@ -622,7 +633,7 @@ function renderReportHtml(m, compact){
   return `${head}${body}${matchInsightHtml(m)}
     <div class="report-split">
       <div class="report-pill plus">${fmtSigned(Math.max(0, split.plus), 2)}<small>${escapeHtml(t('actPlus'))}</small></div>
-      <div class="report-pill minus">${'−' + fmtNum(Math.abs(split.minus), 2)}<small>${escapeHtml(t('actMinus'))}</small></div>
+      <div class="report-pill minus">${split.minus ? '−' + fmtNum(Math.abs(split.minus), 2) : fmtNum(0, 2)}<small>${escapeHtml(t('actMinus'))}</small></div>
     </div>`;
 }
 
@@ -2091,7 +2102,7 @@ function collectMatch(){
     counts, behaviors,
     timeline: matchClock.events.slice(),
     kickoffAt: matchClock.startedAt || 0,
-    kickoffClock: matchClock.startedAt ? localClock(matchClock.startedAt) + ' · ' + tzShort() : '',
+    kickoffClock: matchClock.startedAt ? [localClock(matchClock.startedAt), tzShort()].filter(Boolean).join(' · ') : '',
     actionRating: action,
     effortRating: effort,
     rating: overallScore(counts, behaviors, pos)
@@ -3498,6 +3509,46 @@ function drawCovered(ctx, img, x, y, w, h, focusY){
   else { dw = w; dh = w / ir; dx = x; dy = y - (dh - h) * fy; }
   ctx.drawImage(img, dx, dy, dw, dh);
 }
+// Keeps canvas text inside its box: shrinks the size first, then clips with an
+// ellipsis. Honours the current textAlign, so x is the anchor point.
+function fitText(ctx, text, x, y, maxWidth, weight, size, minSize){
+  const str = String(text == null ? '' : text).trim();
+  if(!str) return size;
+  let px = size;
+  const min = Math.max(10, minSize || Math.round(size * 0.62));
+  ctx.font = canvasFont(weight, px);
+  while(px > min && ctx.measureText(str).width > maxWidth){
+    px -= 1;
+    ctx.font = canvasFont(weight, px);
+  }
+  let out = str;
+  if(ctx.measureText(out).width > maxWidth){
+    while(out.length > 1 && ctx.measureText(out + '…').width > maxWidth) out = out.slice(0, -1);
+    out = out.replace(/[\s·]+$/, '') + '…';
+  }
+  ctx.fillText(out, x, y);
+  return px;
+}
+// The photo on its own layer so the bottom can fade to nothing and the player
+// looks cut out of the card instead of pasted on it.
+function photoLayer(img, w, h, fade, focusY, radius){
+  const layer = makeHiCanvas(w, h);
+  if(radius){
+    layer.ctx.save();
+    pathRoundRect(layer.ctx, 0, 0, w, h + radius, radius);
+    layer.ctx.clip();
+  }
+  if(img) drawCovered(layer.ctx, img, 0, 0, w, h, focusY);
+  if(radius) layer.ctx.restore();
+  const cut = layer.ctx.createLinearGradient(0, h - fade, 0, h);
+  cut.addColorStop(0, 'rgba(0,0,0,0)');
+  cut.addColorStop(1, 'rgba(0,0,0,1)');
+  layer.ctx.globalCompositeOperation = 'destination-out';
+  layer.ctx.fillStyle = cut;
+  layer.ctx.fillRect(0, h - fade, w, fade);
+  layer.ctx.globalCompositeOperation = 'source-over';
+  return layer.canvas;
+}
 function makeHiCanvas(w, h){
   const canvas = document.createElement('canvas');
   const dpr = 2;
@@ -3669,121 +3720,110 @@ function closeCardPreview(){
   shareBusy = false;
 }
 async function drawFutCardCanvas(list, period, mode){
-    const pos = ratingPosOf(player.primary);
-    const ovr = fifaOvr(list);
-    const theme = futTheme(ovr, mode);
-    const photo = await loadCanvasImage(currentPhoto() || player.photo);
-    const cover = await loadCanvasImage(currentCover() || player.cover);
-    const {canvas, ctx, w, h} = makeHiCanvas(780, 1120);
-    ctx.fillStyle = mode === 'light' ? '#F3F5FA' : '#070B14';
-    ctx.fillRect(0, 0, w, h);
-    const g = ctx.createLinearGradient(0, 0, w, h);
-    g.addColorStop(0, theme.paper[0]);
-    g.addColorStop(0.55, theme.paper[1]);
-    g.addColorStop(1, theme.paper[2]);
-    pathRoundRect(ctx, 36, 36, w - 72, h - 72, 36);
-    ctx.fillStyle = g;
-    ctx.fill();
-    ctx.save();
-    pathRoundRect(ctx, 36, 36, w - 72, h - 72, 36);
-    ctx.clip();
-    if(cover){
-      ctx.globalAlpha = mode === 'light' ? 0.18 : 0.28;
-      drawCovered(ctx, cover, 36, 36, w - 72, 420);
-      ctx.globalAlpha = 1;
-    }
-    const glow = ctx.createRadialGradient(w * 0.55, 280, 20, w * 0.5, 340, 420);
-    glow.addColorStop(0, theme.glow);
-    glow.addColorStop(1, 'rgba(0,0,0,0)');
-    ctx.fillStyle = glow;
-    ctx.fillRect(36, 36, w - 72, 520);
-    const photoBox = {x: 210, y: 168, w: 430, h: 520};
-    if(photo){
-      ctx.save();
-      pathRoundRect(ctx, photoBox.x, photoBox.y, photoBox.w, photoBox.h, 24);
-      ctx.clip();
-      drawCovered(ctx, photo, photoBox.x, photoBox.y, photoBox.w, photoBox.h);
-      ctx.restore();
-    } else {
-      ctx.fillStyle = mode === 'light' ? 'rgba(0,0,0,.08)' : 'rgba(0,0,0,.25)';
-      pathRoundRect(ctx, photoBox.x, photoBox.y, photoBox.w, photoBox.h, 24);
-      ctx.fill();
-      ctx.fillStyle = theme.plate;
-      ctx.font = canvasFont('900', 92);
-      ctx.textAlign = 'center';
-      ctx.fillText(initials(), photoBox.x + photoBox.w / 2, photoBox.y + 300);
-      ctx.textAlign = 'left';
-    }
-    const fade = ctx.createLinearGradient(0, 620, 0, 760);
-    fade.addColorStop(0, 'rgba(0,0,0,0)');
-    fade.addColorStop(1, theme.paper[1]);
-    ctx.fillStyle = fade;
-    ctx.fillRect(36, 600, w - 72, 180);
-    ctx.restore();
+  const pos = ratingPosOf(player.primary);
+  const ovr = fifaOvr(list);
+  const theme = futTheme(ovr, mode);
+  const photo = await loadCanvasImage(currentPhoto() || player.photo);
+  const cover = await loadCanvasImage(currentCover() || player.cover);
+  const {canvas, ctx, w, h} = makeHiCanvas(780, 1120);
+  ctx.fillStyle = mode === 'light' ? '#F3F5FA' : '#070B14';
+  ctx.fillRect(0, 0, w, h);
+  const paper = ctx.createLinearGradient(0, 0, w, h);
+  paper.addColorStop(0, theme.paper[0]);
+  paper.addColorStop(0.55, theme.paper[1]);
+  paper.addColorStop(1, theme.paper[2]);
+  pathRoundRect(ctx, 36, 36, w - 72, h - 72, 36);
+  ctx.fillStyle = paper;
+  ctx.fill();
 
-    pathRoundRect(ctx, 36, 36, w - 72, h - 72, 36);
-    ctx.strokeStyle = theme.foil;
-    ctx.lineWidth = 10;
-    ctx.stroke();
-    pathRoundRect(ctx, 52, 52, w - 104, h - 104, 28);
-    ctx.strokeStyle = theme.foil2;
-    ctx.lineWidth = 2;
-    ctx.stroke();
+  ctx.save();
+  pathRoundRect(ctx, 36, 36, w - 72, h - 72, 36);
+  ctx.clip();
+  if(cover){
+    ctx.globalAlpha = mode === 'light' ? 0.16 : 0.26;
+    drawCovered(ctx, cover, 36, 36, w - 72, 460);
+    ctx.globalAlpha = 1;
+  }
+  const glow = ctx.createRadialGradient(w * 0.55, 300, 20, w * 0.52, 360, 440);
+  glow.addColorStop(0, theme.glow);
+  glow.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = glow;
+  ctx.fillRect(36, 36, w - 72, 600);
 
+  const box = {x: 212, y: 126, w: 436, h: 588};
+  if(photo){
+    ctx.drawImage(photoLayer(photo, box.w, box.h, 210, 0.18, 26), box.x, box.y, box.w, box.h);
+  } else {
     ctx.fillStyle = theme.plate;
-    ctx.font = canvasFont('900', 118);
-    ctx.fillText(String(ovr), 78, 200);
-    ctx.font = canvasFont('800', 36);
-    ctx.fillStyle = theme.muted;
-    ctx.fillText(cardPosCode(), 86, 248);
-    const no = shirtNo();
-    if(no){
-      ctx.textAlign = 'right';
-      ctx.fillStyle = theme.plate;
-      ctx.font = canvasFont('800', 42);
-      ctx.fillText((langLatin() ? '#' : '№') + no, w - 78, 118);
-      ctx.textAlign = 'left';
-    }
-    ctx.fillStyle = theme.muted;
-    ctx.font = canvasFont('700', 20);
-    ctx.fillText('FFK', 86, 282);
-    ctx.font = canvasFont('700', 16);
-    const periodLine = String(period || '').slice(0, 28);
-    ctx.fillText(periodLine, 86, 308);
-
-    const name = (displayName() || '').toUpperCase();
-    pathRoundRect(ctx, 70, 700, w - 140, 78, 16);
-    ctx.fillStyle = mode === 'light' ? theme.foil : theme.plate;
-    ctx.fill();
-    ctx.fillStyle = theme.ink;
-    ctx.font = canvasFont('900', name.length > 18 ? 28 : 34);
     ctx.textAlign = 'center';
-    ctx.fillText(name.slice(0, 28), w / 2, 750);
+    fitText(ctx, initials(), box.x + box.w / 2, box.y + 392, box.w - 150, '900', 170, 80);
     ctx.textAlign = 'left';
+  }
+  const shine = ctx.createLinearGradient(36, 36, w - 36, 620);
+  shine.addColorStop(0, 'rgba(255,255,255,.10)');
+  shine.addColorStop(0.45, 'rgba(255,255,255,0)');
+  ctx.fillStyle = shine;
+  ctx.fillRect(36, 36, w - 72, 600);
+  ctx.restore();
 
-    const stats = futStatRows(list, pos);
-    const colW = 280;
-    const left = 110;
-    stats.forEach((row, i) => {
-      const col = i % 2;
-      const line = Math.floor(i / 2);
-      const x = left + col * colW;
-      const y = 830 + line * 64;
-      ctx.fillStyle = theme.plate;
-      ctx.font = canvasFont('900', 40);
-      ctx.fillText(String(row[1]), x, y);
-      ctx.fillStyle = theme.muted;
-      ctx.font = canvasFont('800', 18);
-      ctx.fillText(row[0], x + 86, y - 6);
-    });
+  pathRoundRect(ctx, 36, 36, w - 72, h - 72, 36);
+  ctx.strokeStyle = theme.foil;
+  ctx.lineWidth = 10;
+  ctx.stroke();
+  pathRoundRect(ctx, 52, 52, w - 104, h - 104, 28);
+  ctx.strokeStyle = theme.foil2;
+  ctx.lineWidth = 2;
+  ctx.stroke();
 
+  // Left rail: rating, position and the brand, each clamped to its own width.
+  const rail = 120;
+  ctx.fillStyle = theme.plate;
+  fitText(ctx, String(ovr), 76, 206, rail, '900', 116, 70);
+  ctx.fillStyle = theme.muted;
+  fitText(ctx, cardPosCode(), 84, 256, rail, '800', 36, 22);
+  ctx.strokeStyle = theme.foil2;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(84, 276);
+  ctx.lineTo(84 + 96, 276);
+  ctx.stroke();
+  ctx.fillStyle = theme.muted;
+  fitText(ctx, 'FFK', 84, 308, rail, '800', 22, 16);
+  const no = shirtNo();
+  if(no){
+    ctx.textAlign = 'right';
+    ctx.fillStyle = theme.plate;
+    fitText(ctx, (langLatin() ? '#' : '№') + no, w - 78, 120, 150, '800', 42, 26);
+    ctx.textAlign = 'left';
+  }
+
+  const plate = {x: 70, y: 700, w: w - 140, h: 80};
+  pathRoundRect(ctx, plate.x, plate.y, plate.w, plate.h, 16);
+  ctx.fillStyle = mode === 'light' ? theme.foil : theme.plate;
+  ctx.fill();
+  ctx.fillStyle = theme.ink;
+  ctx.textAlign = 'center';
+  fitText(ctx, (displayName() || '').toUpperCase(), w / 2, plate.y + 54, plate.w - 56, '900', 36, 20);
+  ctx.textAlign = 'left';
+
+  const stats = futStatRows(list, pos);
+  const colX = [118, 400];
+  stats.forEach((row, i) => {
+    const x = colX[i % 2];
+    const y = 838 + Math.floor(i / 2) * 64;
+    ctx.fillStyle = theme.plate;
+    fitText(ctx, String(row[1]), x, y, 80, '900', 42, 28);
     ctx.fillStyle = theme.muted;
-    ctx.font = canvasFont('600', 17);
-    ctx.textAlign = 'center';
-    const foot = [player.team || player.club, matchCountLabel(list.length)].filter(Boolean).join('  ·  ');
-    ctx.fillText(foot.slice(0, 44), w / 2, h - 86);
-    ctx.textAlign = 'left';
-    return canvas;
+    fitText(ctx, row[0], x + 88, y - 6, 150, '800', 20, 14);
+  });
+
+  ctx.fillStyle = theme.muted;
+  ctx.textAlign = 'center';
+  const foot = [period, player.team || player.club, matchCountLabel(list.length)]
+    .map(x => String(x || '').trim()).filter(Boolean).join('  ·  ');
+  fitText(ctx, foot, w / 2, h - 84, w - 200, '600', 20, 13);
+  ctx.textAlign = 'left';
+  return canvas;
 }
 async function shareFutCard(list, period, tag){
   if(!list || !list.length){
@@ -3837,82 +3877,102 @@ async function drawMatchCardCanvas(m, mode){
   const photo = await loadCanvasImage(currentPhoto() || player.photo);
   const ovr = Math.round(Math.min(99, Math.max(45, Number(m.rating) * 10)));
   const theme = futTheme(ovr, mode);
-  const rows = Math.max(1, Math.ceil((lines.length || 1) / 2));
-  const w = 1280, h = Math.max(840, 460 + rows * 50 + 130);
+  const w = 1280;
+  const left = 52, right = w - 52, textX = 248;
+  const headX = right - 330;
+  const headW = headX - textX - 32;
+  const kickoff = m.kickoffClock ? t('kickoffLine', {clock: m.kickoffClock}) : '';
+  const metaBase = kickoff ? 268 : 232;
+  const headBottom = Math.max(262, metaBase + 22);
+  const listTop = headBottom + 86;
+  const rows = Math.max(1, Math.ceil(lines.length / 2));
+  const sumY = listTop + (rows - 1) * 50 + 96;
+  const h = Math.round(sumY + 104);
   const {canvas, ctx} = makeHiCanvas(w, h);
+
   ctx.fillStyle = mode === 'light' ? '#F3F5FA' : '#070B14';
   ctx.fillRect(0, 0, w, h);
   const bg = ctx.createLinearGradient(0, 0, w, h);
   bg.addColorStop(0, theme.paper[0]);
   bg.addColorStop(1, theme.paper[1]);
-  pathRoundRect(ctx, 18, 18, w - 36, h - 36, 10);
+  pathRoundRect(ctx, 18, 18, w - 36, h - 36, 28);
   ctx.fillStyle = bg;
   ctx.fill();
-  pathRoundRect(ctx, 18, 18, w - 36, h - 36, 10);
+  ctx.save();
+  pathRoundRect(ctx, 18, 18, w - 36, h - 36, 28);
+  ctx.clip();
+  const glow = ctx.createRadialGradient(w - 260, 140, 20, w - 260, 180, 520);
+  glow.addColorStop(0, theme.glow);
+  glow.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = glow;
+  ctx.fillRect(18, 18, w - 36, h - 36);
+  ctx.restore();
+  pathRoundRect(ctx, 18, 18, w - 36, h - 36, 28);
   ctx.strokeStyle = theme.foil;
   ctx.lineWidth = 6;
   ctx.stroke();
 
-  const left = 52, top = 52;
   if(photo){
-    pathRoundRect(ctx, left, top, 168, 210, 8);
     ctx.save();
+    pathRoundRect(ctx, left, 52, 168, 210, 14);
     ctx.clip();
-    drawCovered(ctx, photo, left, top, 168, 210);
+    drawCovered(ctx, photo, left, 52, 168, 210, 0.2);
     ctx.restore();
-    pathRoundRect(ctx, left, top, 168, 210, 8);
+    pathRoundRect(ctx, left, 52, 168, 210, 14);
     ctx.strokeStyle = theme.foil;
     ctx.lineWidth = 3;
     ctx.stroke();
   }
-  const tx = photo ? 248 : left;
+  const tx = photo ? textX : left;
+  const tw = photo ? headW : headX - left - 32;
   ctx.fillStyle = theme.muted;
-  ctx.font = canvasFont('800', 22);
-  ctx.fillText('FFK  ·  ' + t('reportTitle').toUpperCase(), tx, 82);
+  fitText(ctx, 'FFK  ·  ' + t('reportTitle').toUpperCase(), tx, 84, tw, '800', 22, 16);
   ctx.fillStyle = theme.plate;
-  ctx.font = canvasFont('900', 52);
-  ctx.fillText(String(reportPlayerName(m)).slice(0, 22), tx, 148);
-  ctx.font = canvasFont('900', 84);
-  ctx.fillText(fmtNum(m.rating, 1), tx, 242);
+  fitText(ctx, reportPlayerName(m), tx, 150, tw, '900', 54, 30);
   ctx.fillStyle = theme.muted;
-  ctx.font = canvasFont('700', 26);
-  ctx.fillText(`${formatDate(m.date)}  ·  ${m.opponent || t('shareVs')}  ·  ${m.score ? scoreLine(m) : '—'}`, tx, 292);
-  if(m.kickoffClock){
-    ctx.fillText(t('kickoffLine', {clock: m.kickoffClock}), tx, 330);
-  }
-  ctx.fillText(`${t('heroAction')} ${fmtNum(m.actionRating, 1)}    ${t('heroEffort')} ${fmtNum(m.effortRating, 1)}`, tx, m.kickoffClock ? 368 : 330);
+  const vs = `${formatDate(m.date)}  ·  ${m.opponent || t('shareVs')}  ·  ${m.score ? scoreLine(m) : '—'}`;
+  fitText(ctx, vs, tx, 200, tw, '700', 26, 17);
+  if(kickoff) fitText(ctx, kickoff, tx, 236, tw, '700', 24, 16);
+  fitText(ctx, `${t('heroAction')} ${fmtNum(m.actionRating, 1)}    ${t('heroEffort')} ${fmtNum(m.effortRating, 1)}`, tx, metaBase, tw, '700', 24, 16);
 
-  const col1 = 52;
-  const col2 = 660;
-  let y1 = 430, y2 = 430;
-  ctx.font = canvasFont('700', 32);
+  ctx.textAlign = 'right';
+  ctx.fillStyle = theme.plate;
+  fitText(ctx, fmtNum(m.rating, 1), right, 178, 300, '900', 110, 60);
+  ctx.fillStyle = theme.muted;
+  fitText(ctx, t('heroOverall'), right, 218, 320, '700', 24, 15);
+  ctx.textAlign = 'left';
+
+  ctx.strokeStyle = theme.foil2;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(left, headBottom + 28);
+  ctx.lineTo(right, headBottom + 28);
+  ctx.stroke();
+
+  const col2 = 664;
+  const colW = 520;
   if(!lines.length){
     ctx.fillStyle = theme.plate;
-    ctx.fillText(t('plusEven'), col1, y1);
-    y1 += 48;
+    fitText(ctx, t('plusEven'), left, listTop, right - left, '700', 32, 20);
   } else {
     lines.forEach((line, i) => {
-      const x = i % 2 === 0 ? col1 : col2;
-      let y = i % 2 === 0 ? y1 : y2;
+      const x = i % 2 === 0 ? left : col2;
+      const y = listTop + Math.floor(i / 2) * 50;
       ctx.fillStyle = theme.plate;
-      ctx.fillText(`${line.icon}   ${line.text}`.slice(0, 42), x, y);
-      if(i % 2 === 0) y1 += 48;
-      else y2 += 48;
+      ctx.font = canvasFont('700', 32);
+      ctx.fillText(line.icon, x, y);
+      fitText(ctx, line.text, x + 52, y, colW - 52, '700', 32, 20);
     });
   }
-  let y = Math.max(y1, y2) + 28;
+
   ctx.fillStyle = '#22D3A6';
-  ctx.font = canvasFont('800', 44);
-  ctx.fillText(fmtSigned(split.plus, 2), col1, y);
+  fitText(ctx, fmtSigned(split.plus, 2), left, sumY, colW, '800', 46, 30);
   ctx.fillStyle = theme.muted;
-  ctx.font = canvasFont('700', 22);
-  ctx.fillText(t('actPlus'), col1, y + 36);
+  fitText(ctx, t('actPlus'), left, sumY + 36, colW, '700', 22, 15);
   ctx.fillStyle = '#FB6767';
-  ctx.font = canvasFont('800', 44);
-  ctx.fillText('−' + fmtNum(Math.abs(split.minus), 2), col2, y);
+  fitText(ctx, split.minus ? '−' + fmtNum(Math.abs(split.minus), 2) : fmtNum(0, 2), col2, sumY, colW, '800', 46, 30);
   ctx.fillStyle = theme.muted;
-  ctx.font = canvasFont('700', 22);
-  ctx.fillText(t('actMinus'), col2, y + 36);
+  fitText(ctx, t('actMinus'), col2, sumY + 36, colW, '700', 22, 15);
   return canvas;
 }
 async function shareCard(m){

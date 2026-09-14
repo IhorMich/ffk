@@ -278,7 +278,7 @@ function normalizeMatch(m){
     counts, behaviors,
     timeline: normalizeTimeline(m.timeline),
     kickoffAt: Number(m.kickoffAt) || 0,
-    kickoffClock: String(m.kickoffClock || '').slice(0, 8),
+    kickoffClock: String(m.kickoffClock || '').slice(0, 24).replace(/[\s·]+$/, ''),
     actionRating: action,
     effortRating: effort,
     rating: overallScore(counts, behaviors, pos)

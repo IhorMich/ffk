@@ -87,6 +87,9 @@ function emptyForm(){
 function metricsFor(pos){ return METRICS.filter(m => m.positions.includes(pos)); }
 function weightOf(m, pos){ return m.w[pos] ?? 0; }
 function clamp10(n){ return Math.round(Math.max(0, Math.min(10, n)) * 10) / 10; }
+// Scores keep every decimal the weights produce; rounding happens on display,
+// so a 0.55 goal really adds 0.55 instead of jumping to 0.6.
+function clampScore(n){ return Math.max(0, Math.min(10, Math.round(n * 1000) / 1000)); }
 
 function behaviorAvg(behaviors){
   const rated = BEHAVIOR.filter(b => b.inRating).map(b => Number(behaviors[b.key]) || 3);
@@ -106,13 +109,13 @@ function actionSum(counts, pos){
   return sum;
 }
 function actionScore(counts, pos){
-  return clamp10(BASE_RATING + actionSum(counts, pos));
+  return clampScore(BASE_RATING + actionSum(counts, pos));
 }
 function effortScore(behaviors){
-  return clamp10(BASE_RATING + (behaviorAvg(behaviors) - 3) * 2);
+  return clampScore(BASE_RATING + (behaviorAvg(behaviors) - 3) * 2);
 }
 function overallScore(counts, behaviors, pos){
-  return clamp10(BASE_RATING + actionSum(counts, pos) + (behaviorAvg(behaviors) - 3) * 0.5);
+  return clampScore(BASE_RATING + actionSum(counts, pos) + (behaviorAvg(behaviors) - 3) * 0.5);
 }
 
 function actionSplit(counts, pos){
@@ -161,9 +164,9 @@ function ratingFixtureFail(){
     const form = emptyForm();
     Object.keys(f.counts || {}).forEach(k => { form.counts[k] = f.counts[k]; });
     Object.keys(f.behaviors || {}).forEach(k => { form.behaviors[k] = f.behaviors[k]; });
-    const overall = overallScore(form.counts, form.behaviors, f.pos);
-    const action = actionScore(form.counts, f.pos);
-    const effort = effortScore(form.behaviors);
+    const overall = clamp10(overallScore(form.counts, form.behaviors, f.pos));
+    const action = clamp10(actionScore(form.counts, f.pos));
+    const effort = clamp10(effortScore(form.behaviors));
     if(overall !== f.overall || action !== f.action || effort !== f.effort){
       return f.name + ' got ' + overall + '/' + action + '/' + effort;
     }
