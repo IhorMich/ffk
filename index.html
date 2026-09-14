@@ -94,27 +94,26 @@
     position:relative;left:50%;width:100vw;margin-left:-50vw;margin-top:-18px;margin-bottom:88px;
   }
   .profile-cover{
+    appearance:none;-webkit-appearance:none;
     display:block;width:100%;height:148px;min-height:148px;padding:0;border:0;border-radius:0;overflow:hidden;
     cursor:pointer;position:relative;color:inherit;z-index:0;
-    background:
-      radial-gradient(120% 90% at 20% 20%, rgba(34,211,166,.35) 0%, transparent 55%),
-      radial-gradient(90% 80% at 90% 80%, rgba(124,92,252,.32) 0%, transparent 50%),
-      var(--surface-2);
+    background-color:var(--surface-2);
+    background-size:cover;background-position:center;background-repeat:no-repeat;
   }
   @media (min-width:720px){
     .profile-cover{height:176px;min-height:176px;}
   }
-  .profile-cover .cover-fill{
-    display:none;position:absolute;inset:0;width:100%;height:100%;
-    object-fit:cover;filter:blur(24px) saturate(1.05);transform:scale(1.12);
-    pointer-events:none;z-index:0;
+  .profile-cover:not(.has-photo){
+    background-image:
+      radial-gradient(120% 90% at 20% 20%, rgba(34,211,166,.35) 0%, transparent 55%),
+      radial-gradient(90% 80% at 90% 80%, rgba(124,92,252,.32) 0%, transparent 50%);
   }
-  .profile-cover.cover-tall .cover-fill{display:block;}
+  .profile-cover .cover-fill{display:none;}
   .profile-cover .cover-fit{
-    position:absolute;inset:0;z-index:1;display:block;width:100%;height:100%;
+    position:absolute;inset:0;z-index:1;display:block;
+    width:100%;height:100%;min-width:100%;min-height:100%;
     object-fit:cover;object-position:center;pointer-events:none;
   }
-  .profile-cover.cover-tall .cover-fit{object-fit:contain;}
   .profile-cover::after{
     content:"";position:absolute;left:0;right:0;bottom:0;height:48px;pointer-events:none;z-index:1;
     background:linear-gradient(to top, rgba(8,14,24,.22), transparent);
@@ -2512,29 +2511,20 @@ function setCoverPreview(){
   const btn = document.getElementById('pCoverBtn');
   if(!img || !btn) return;
   const cover = currentCover();
-  const markTall = () => {
-    const tall = !!(img.naturalWidth && img.naturalHeight > img.naturalWidth * 1.08);
-    btn.classList.toggle('cover-tall', tall);
-    if(blur) blur.hidden = !cover || !tall;
-  };
   btn.classList.toggle('has-photo', !!cover);
   btn.classList.remove('cover-tall');
-  [img, blur].forEach(el => {
-    if(!el) return;
-    if(cover){
-      el.hidden = false;
-      el.src = cover;
-    } else {
-      el.hidden = true;
-      el.removeAttribute('src');
-    }
-  });
-  if(!cover){
-    if(blur) blur.hidden = true;
-    return;
+  btn.style.backgroundImage = cover ? 'url("' + cover.replace(/"/g, '') + '")' : '';
+  if(cover){
+    img.hidden = false;
+    img.src = cover;
+  } else {
+    img.hidden = true;
+    img.removeAttribute('src');
   }
-  if(img.complete && img.naturalWidth) markTall();
-  else img.onload = markTall;
+  if(blur){
+    blur.hidden = true;
+    blur.removeAttribute('src');
+  }
 }
 function closePhotoSheet(){
   document.getElementById('photoSheet').hidden = true;
