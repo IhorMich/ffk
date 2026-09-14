@@ -1,9 +1,12 @@
 package app.ffk.rating;
 
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebView;
 import androidx.activity.OnBackPressedCallback;
+import com.getcapacitor.Bridge;
 import com.getcapacitor.BridgeActivity;
 
 public class MainActivity extends BridgeActivity {
@@ -21,6 +24,7 @@ public class MainActivity extends BridgeActivity {
   }
 
   private final Host host = new Host();
+  private final Handler mainHandler = new Handler(Looper.getMainLooper());
   private OnBackPressedCallback backCallback;
 
   @Override
@@ -30,14 +34,11 @@ public class MainActivity extends BridgeActivity {
     backCallback = new OnBackPressedCallback(true) {
       @Override
       public void handleOnBackPressed() {
-        WebView webView = getBridge() != null ? getBridge().getWebView() : null;
-        if (webView != null) {
-          webView.evaluateJavascript(
-            "(function(){try{return window.handleAppBack&&window.handleAppBack()?'1':'0';}catch(e){return '1';}})()",
-            null
-          );
+        if (!host.stay()) {
+          moveTaskToBack(true);
+          return;
         }
-        if (!host.stay()) moveTaskToBack(true);
+        runInAppBack();
       }
     };
     getOnBackPressedDispatcher().addCallback(this, backCallback);
@@ -53,10 +54,19 @@ public class MainActivity extends BridgeActivity {
     }
   }
 
+  private void runInAppBack() {
+    Bridge bridge = getBridge();
+    if (bridge == null) return;
+    // Run after the system gesture finishes — Samsung drops JS during the swipe.
+    mainHandler.postDelayed(() -> bridge.eval(
+      "(function(){try{window.handleAppBack&&window.handleAppBack()}catch(e){}})()",
+      null
+    ), 32);
+  }
+
   private void attachHost() {
     if (getBridge() == null || getBridge().getWebView() == null) return;
     WebView webView = getBridge().getWebView();
     webView.addJavascriptInterface(host, "FfkHost");
-    webView.clearHistory();
   }
 }
