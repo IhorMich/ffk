@@ -893,6 +893,12 @@ function cameraUserStopped(err){
   const code = String((err && err.code) || '');
   return /cancel|cancell|user denied|no image|no photo|no media/i.test(s) || /0003|0005|0006/.test(code);
 }
+function b64Src(raw){
+  const s = String(raw || '').trim();
+  if(!s) return '';
+  if(/^data:image\//i.test(s)) return s;
+  return 'data:image/jpeg;base64,' + s;
+}
 function nativeFilePath(result){
   if(!result || typeof result !== 'object') return '';
   return result.path || result.uri || '';
@@ -923,17 +929,11 @@ function b64ToJpegFile(b64){
 }
 async function nativeMediaToFile(result){
   if(!result) return null;
+  if(result.thumbnail) return b64ToJpegFile(result.thumbnail);
+  if(result.base64String) return b64ToJpegFile(result.base64String);
   if(result.dataUrl){
     try{
       const blob = await (await fetch(result.dataUrl)).blob();
-      if(blob && blob.size) return new File([blob], 'photo.jpg', {type: blob.type || 'image/jpeg'});
-    }catch(e){}
-  }
-  const src = nativeSrc(result);
-  if(src && !/^data:/i.test(src)){
-    try{
-      const res = await fetch(src);
-      const blob = await res.blob();
       if(blob && blob.size) return new File([blob], 'photo.jpg', {type: blob.type || 'image/jpeg'});
     }catch(e){}
   }
@@ -945,28 +945,22 @@ async function nativeMediaToFile(result){
       if(got && typeof got.data === 'string' && got.data) return b64ToJpegFile(got.data);
     }catch(e){}
   }
-  if(result.base64String) return b64ToJpegFile(result.base64String);
-  if(result.thumbnail) return b64ToJpegFile(result.thumbnail);
   return null;
 }
 async function beginCropFromNative(result){
+  const tries = [];
+  if(result && result.thumbnail) tries.push(b64Src(result.thumbnail));
+  if(result && result.base64String) tries.push(b64Src(result.base64String));
+  if(result && result.dataUrl) tries.push(result.dataUrl);
+  const src = nativeSrc(result);
+  if(src) tries.push(src);
+  for(const c of tries){
+    try{
+      openCrop(await loadImageFromSrc(c), photoSheetTarget);
+      return;
+    }catch(e){}
+  }
   try{
-    const src = nativeSrc(result);
-    if(src){
-      try{
-        openCrop(await loadImageFromSrc(src), photoSheetTarget);
-        return;
-      }catch(e){}
-    }
-    if(result && result.base64String){
-      const fmt = String(result.format || 'jpeg').replace(/^jpg$/i, 'jpeg');
-      openCrop(await loadImageFromSrc('data:image/' + fmt + ';base64,' + result.base64String), photoSheetTarget);
-      return;
-    }
-    if(result && result.thumbnail){
-      openCrop(await loadImageFromSrc('data:image/jpeg;base64,' + String(result.thumbnail).replace(/^data:image\/[^;]+;base64,/, '')), photoSheetTarget);
-      return;
-    }
     const file = await nativeMediaToFile(result);
     if(file){
       await beginCrop(file, photoSheetTarget);
@@ -982,31 +976,12 @@ async function nativeGetPhoto(source){
     if(typeof Camera.requestPermissions === 'function'){
       try{ await Camera.requestPermissions({permissions: ['camera']}); }catch(e){}
     }
-    try{
-      if(typeof Camera.getPhoto === 'function'){
-        return await Camera.getPhoto({
-          quality: 80,
-          allowEditing: false,
-          resultType: 'uri',
-          source: 'CAMERA',
-          saveToGallery: false,
-          correctOrientation: true
-        });
-      }
-    }catch(err){
-      if(cameraUserStopped(err)) throw err;
-    }
-    if(typeof Camera.takePhoto === 'function'){
-      return Camera.takePhoto({quality: 80, saveToGallery: false, cameraDirection: 'REAR'});
-    }
-    throw new Error('nocam');
+    if(typeof Camera.takePhoto !== 'function') throw new Error('nocam');
+    return Camera.takePhoto({quality: 80, saveToGallery: false, cameraDirection: 'REAR'});
   }
   if(typeof Camera.chooseFromGallery === 'function'){
     const pack = await Camera.chooseFromGallery({quality: 80, limit: 1, mediaType: 0});
     return pack && pack.results && pack.results[0];
-  }
-  if(typeof Camera.getPhoto === 'function'){
-    return Camera.getPhoto({quality: 80, allowEditing: false, resultType: 'uri', source: 'PHOTOS'});
   }
   throw new Error('nocam');
 }
