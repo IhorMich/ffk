@@ -1625,11 +1625,6 @@ function applyHeader(){
     avgEl.hidden = false;
     avgEl.textContent = '⭐ ' + fmtNum(seasonAvg, 2);
   }
-  const numEl = document.getElementById('playerNumberDisplay');
-  if(no){
-    numEl.hidden = false;
-    numEl.textContent = (langLatin() ? '#' : '№') + no;
-  } else numEl.hidden = true;
   document.getElementById('playerMetaLine').textContent = meta;
   document.getElementById('playerClubLine').textContent = clubBits;
   setBadge(document.getElementById('clubBadge'), player.photo, initials());
