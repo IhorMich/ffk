@@ -18,15 +18,8 @@ function t(key, vars){
   if(vars) Object.keys(vars).forEach(k => { s = s.split('{'+k+'}').join(vars[k]); });
   return s;
 }
-function applyFont(){
-  document.documentElement.style.setProperty('--font', FONT_FALLBACK);
-  const link = document.getElementById('appFontLink');
-  if(!link) return;
-  const useWeb = () => {
-    document.documentElement.style.setProperty('--font', '"Plus Jakarta Sans",' + FONT_FALLBACK);
-  };
-  link.addEventListener('load', useWeb);
-  if(link.sheet) useWeb();
+function isNativeApp(){
+  return typeof window.ffkIsNative === 'function' && window.ffkIsNative();
 }
 const THEME_ORDER = ['dark','light','day'];
 function themeName(){
@@ -3335,7 +3328,7 @@ async function shareCard(m){
 
 (function init(){
   try{
-    if('serviceWorker' in navigator){
+    if('serviceWorker' in navigator && !isNativeApp()){
       const swUrl = new URL('sw.js', document.querySelector('base')?.href || location.href);
       navigator.serviceWorker.register(swUrl.href).catch(() => {});
     }
@@ -3343,7 +3336,6 @@ async function shareCard(m){
     const ratingFail = ratingFixtureFail();
     if(ratingFail) console.error('FFK rating', ratingFail);
     loadFilters();
-    applyFont();
     applyTheme();
     loadPlayer();
     fillPrimarySelect();

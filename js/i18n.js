@@ -2,8 +2,6 @@ const LANGS = ['uk','pl','en','ru','es','de','it','fr','pt'];
 const LANG_LATIN = ['en','es','de','it','fr','pt'];
 const LANG_HTML = {uk:'uk', pl:'pl', en:'en-GB', ru:'ru', es:'es', de:'de', it:'it', fr:'fr', pt:'pt'};
 const LANG_LOCALE = {uk:'uk-UA', pl:'pl-PL', en:'en-GB', ru:'ru-RU', es:'es-ES', de:'de-DE', it:'it-IT', fr:'fr-FR', pt:'pt-PT'};
-const FONT_FALLBACK = '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif';
-const APP_FONT = '"Plus Jakarta Sans",' + FONT_FALLBACK;
 const I18N = {
 uk:{
   pageTitle:'FFK — оцінка матчу', settingsAria:'Налаштування', themeAria:'Тема',

@@ -1,4 +1,4 @@
-const CACHE = 'ffk_v8';
+const CACHE = 'ffk_v9';
 const ASSETS = [
   './',
   './index.html',
@@ -10,7 +10,15 @@ const ASSETS = [
   './manifest.webmanifest',
   './icons/icon-192.png',
   './icons/icon-512.png',
-  './icons/apple-touch-icon.png'
+  './icons/apple-touch-icon.png',
+  './fonts/plus-jakarta-sans-latin-400-normal.woff2',
+  './fonts/plus-jakarta-sans-latin-600-normal.woff2',
+  './fonts/plus-jakarta-sans-latin-700-normal.woff2',
+  './fonts/plus-jakarta-sans-latin-800-normal.woff2',
+  './fonts/plus-jakarta-sans-latin-ext-400-normal.woff2',
+  './fonts/plus-jakarta-sans-latin-ext-600-normal.woff2',
+  './fonts/plus-jakarta-sans-latin-ext-700-normal.woff2',
+  './fonts/plus-jakarta-sans-latin-ext-800-normal.woff2'
 ];
 
 self.addEventListener('install', event => {
