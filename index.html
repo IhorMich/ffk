@@ -102,7 +102,15 @@
   @media (min-width:720px){
     .profile-cover{height:280px;border-radius:24px;}
   }
-  .profile-cover img{width:100%;height:100%;object-fit:cover;display:block;}
+  .profile-cover img{
+    position:absolute;inset:0;width:100%;height:100%;
+    object-fit:cover;object-position:center 30%;display:block;
+    pointer-events:none;
+  }
+  .profile-cover::after{
+    content:"";position:absolute;inset:0;pointer-events:none;z-index:0;
+    background:linear-gradient(to top, rgba(8,14,24,.38), transparent 42%);
+  }
   .cam-chip,.cam-badge{
     position:absolute;display:flex;align-items:center;justify-content:center;
     background:rgba(11,18,32,.78);border:2px solid var(--bg);color:#fff;
@@ -211,7 +219,7 @@
     position:relative;width:100%;height:300px;border-radius:16px;overflow:hidden;
     background:#000;touch-action:none;cursor:grab;user-select:none;
   }
-  .crop-stage.cover{height:168px;}
+  .crop-stage.cover{height:auto;aspect-ratio:16 / 9;}
   .crop-stage:active{cursor:grabbing;}
   .crop-stage canvas{width:100%;height:100%;display:block;}
   .crop-zoom{width:100%;margin:12px 0 8px;}
@@ -2579,10 +2587,18 @@ function fileToImage(file){
     }
   });
 }
+const COVER_ASPECT = 16 / 9;
+const COVER_EXPORT_W = 1280;
 function cropWindow(st){
   const {vw, vh, target} = st;
   if(target === 'cover'){
-    const w = vw * 0.94, h = vh * 0.86;
+    const pad = 14;
+    let w = Math.max(40, vw - pad * 2);
+    let h = w / COVER_ASPECT;
+    if(h > vh - pad * 2){
+      h = Math.max(40, vh - pad * 2);
+      w = h * COVER_ASPECT;
+    }
     return {x:(vw-w)/2, y:(vh-h)/2, w, h, round:false};
   }
   const r = Math.min(vw, vh) * 0.42;
@@ -2660,15 +2676,33 @@ function closeCrop(){
 function exportCrop(){
   const st = cropState;
   const win = cropWindow(st);
-  const sx = (win.x - st.ox) / st.scale;
-  const sy = (win.y - st.oy) / st.scale;
-  const sw = win.w / st.scale;
-  const sh = win.h / st.scale;
+  let sx = (win.x - st.ox) / st.scale;
+  let sy = (win.y - st.oy) / st.scale;
+  let sw = win.w / st.scale;
+  let sh = win.h / st.scale;
+  const iw = st.img.width, ih = st.img.height;
+  if(sx < 0){ sw += sx; sx = 0; }
+  if(sy < 0){ sh += sy; sy = 0; }
+  if(sx + sw > iw) sw = iw - sx;
+  if(sy + sh > ih) sh = ih - sy;
   const out = document.createElement('canvas');
-  if(st.target === 'cover'){ out.width = 960; out.height = 360; }
-  else { out.width = 320; out.height = 320; }
-  out.getContext('2d').drawImage(st.img, sx, sy, sw, sh, 0, 0, out.width, out.height);
-  return out.toDataURL('image/jpeg', 0.82);
+  if(st.target === 'cover'){
+    out.width = COVER_EXPORT_W;
+    out.height = Math.round(COVER_EXPORT_W / COVER_ASPECT);
+  } else {
+    out.width = 320; out.height = 320;
+  }
+  const ctx = out.getContext('2d');
+  ctx.fillStyle = '#0B1220';
+  ctx.fillRect(0, 0, out.width, out.height);
+  if(sw > 0 && sh > 0){
+    const ir = sw / sh, r = out.width / out.height;
+    let dw, dh, dx, dy;
+    if(ir > r){ dh = out.height; dw = dh * ir; dx = (out.width - dw) / 2; dy = 0; }
+    else { dw = out.width; dh = dw / ir; dx = 0; dy = (out.height - dh) / 2; }
+    ctx.drawImage(st.img, sx, sy, sw, sh, dx, dy, dw, dh);
+  }
+  return out.toDataURL('image/jpeg', 0.86);
 }
 function loadScriptOnce(src){
   if(loadScriptOnce.got && loadScriptOnce.got[src]) return loadScriptOnce.got[src];
@@ -3388,7 +3422,7 @@ function compressImage(file, w, h){
   });
 }
 function compressPhoto(file){ return compressImage(file, 256, 256); }
-function compressCover(file){ return compressImage(file, 720, 270); }
+function compressCover(file){ return compressImage(file, COVER_EXPORT_W, Math.round(COVER_EXPORT_W / COVER_ASPECT)); }
 
 function loadMatches(){
   try{
@@ -4717,12 +4751,13 @@ function loadCanvasImage(src){
     img.src = src;
   });
 }
-function drawCovered(ctx, img, x, y, w, h){
+function drawCovered(ctx, img, x, y, w, h, focusY){
   if(!img || !img.width) return;
   const ir = img.width / img.height, r = w / h;
+  const fy = focusY == null ? 0.35 : focusY;
   let dw, dh, dx, dy;
   if(ir > r){ dh = h; dw = h * ir; dx = x - (dw - w) / 2; dy = y; }
-  else { dw = w; dh = w / ir; dx = x; dy = y - (dh - h) / 2; }
+  else { dw = w; dh = w / ir; dx = x; dy = y - (dh - h) * fy; }
   ctx.drawImage(img, dx, dy, dw, dh);
 }
 function makeHiCanvas(w, h){
