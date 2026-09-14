@@ -142,6 +142,8 @@
         <div class="live-clock" id="formClock"></div>
         <button class="live-kick go js-match-clock-btn" id="formKickBtn" type="button" data-i18n="liveKick">Старт матча</button>
       </div>
+      <details class="match-context" id="matchContext" open>
+      <summary data-i18n="matchDetails">Детали матча</summary>
       <div class="row2">
         <div class="field">
           <label data-i18n="labelDate">Дата</label>
@@ -226,6 +228,7 @@
           <input type="number" id="f-minutes" min="1" max="120" value="60">
         </div>
       </div>
+      </details>
 
       <div class="section-title" data-i18n="secActions">Игровые действия</div>
       <p class="hint" id="weightsHint"></p>
@@ -376,6 +379,7 @@
   <button class="live-kick go js-match-clock-btn" id="liveKickBtn" type="button" data-i18n="liveKick">Старт матча</button>
   <div class="live-grid" id="liveGrid"></div>
   <div class="live-foot">
+    <button class="ghost-btn" id="liveUndoBtn" type="button" data-i18n="liveUndo" disabled>Отменить</button>
     <button class="save-btn" id="liveDoneBtn" type="button" data-i18n="liveDone">Готово</button>
   </div>
   </div>

@@ -1561,7 +1561,11 @@ function restoreDraft(){
     if(d.matchClock && typeof d.matchClock === 'object'){
       matchClock = hydrateClock(d.matchClock);
     }
+    if(Array.isArray(matchClock.events) && matchClock.events.length){
+      liveStack = matchClock.events.map(e => e.key);
+    }
   }catch(e){}
+  syncMatchContextFold();
 }
 
 function renderMetrics(){
@@ -1601,6 +1605,28 @@ function renderOppList(){
   const tours = [...new Set(matches.map(m => m.tournament).filter(Boolean))].sort();
   document.getElementById('tourList').innerHTML = tours.map(n => `<option value="${escapeHtml(n)}">`).join('');
 }
+function liveHaptic(ms){
+  try{
+    if(typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(ms || 15);
+  }catch(e){}
+}
+function syncLiveUndo(){
+  const btn = document.getElementById('liveUndoBtn');
+  if(btn) btn.disabled = liveStack.length === 0;
+}
+function syncMatchContextFold(){
+  const el = document.getElementById('matchContext');
+  if(!el) return;
+  if(editingId){ el.open = true; return; }
+  if(clockPhase() !== 'idle') el.open = false;
+}
+window.undoLastLive = function(){
+  if(!liveStack.length){
+    showToast(t('toastNoUndo'));
+    return;
+  }
+  stepMetric(liveStack[liveStack.length - 1], -1);
+};
 window.stepMetric = function(key, dir){
   const next = Math.max(0, (form.counts[key]||0) + dir);
   form.counts[key] = next;
@@ -1616,6 +1642,7 @@ window.stepMetric = function(key, dir){
       const stamp = clockStamp();
       matchClock.events.push({key, at: Date.now(), minute: stamp.matchMin, period: stamp.period, inPeriod: stamp.minute});
     }
+    if(document.getElementById('app').classList.contains('live-on')) liveHaptic(15);
   } else {
     const i = liveStack.lastIndexOf(key);
     if(i >= 0) liveStack.splice(i, 1);
@@ -1648,6 +1675,7 @@ function updateHero(){
   const minutes = Number(document.getElementById('f-minutes').value) || 60;
   document.getElementById('heroLabel').textContent = minutes < 25 ? t('heroShort') : t('heroOverall');
   document.getElementById('liveScore').textContent = fmtNum(s.action, 1);
+  syncLiveUndo();
 }
 
 function setEditUi(on){
@@ -1680,6 +1708,8 @@ function resetForm(keepDraft){
   renderBehaviors();
   updateHero();
   syncDateShown();
+  const ctx = document.getElementById('matchContext');
+  if(ctx && !keepDraft) ctx.open = true;
   if(!keepDraft){
     sessionStorage.removeItem(draftStorageKey());
     sessionStorage.removeItem(DRAFT_KEY);
@@ -1718,6 +1748,7 @@ function fillForm(m){
   persistDraft();
   renderLiveClock();
   if(clockPhase() === 'run') startClockTick();
+  syncMatchContextFold();
 }
 
 function collectMatch(){
@@ -2456,7 +2487,8 @@ function drawChart(list){
 
 function renderLiveGrid(){
   const pos = ratingPosOf(document.getElementById('live-position').value || currentPitch());
-  document.getElementById('liveGrid').innerHTML = metricsFor(pos).map(m => {
+  const list = METRICS.filter(m => (m.live || []).includes(pos));
+  document.getElementById('liveGrid').innerHTML = list.map(m => {
     const neg = weightOf(m, pos) < 0;
     return `<div class="live-cell ${neg?'neg':''}">
       <button class="live-plus" type="button" onclick="stepMetric('${m.key}',1)">
@@ -2465,6 +2497,7 @@ function renderLiveGrid(){
       <button class="live-minus" type="button" onclick="stepMetric('${m.key}',-1)">−</button>
     </div>`;
   }).join('');
+  syncLiveUndo();
 }
 function stopClockTick(){
   if(liveClockTimer){ clearInterval(liveClockTimer); liveClockTimer = 0; }
@@ -2528,6 +2561,7 @@ function startMatchClock(){
   startClockTick();
   renderLiveClock();
   persistDraft();
+  syncMatchContextFold();
 }
 function endCurrentPeriod(){
   const now = Date.now();
@@ -2567,6 +2601,7 @@ function closeLive(){
   persistDraft();
 }
 document.getElementById('liveStartBtn').addEventListener('click', openLive);
+document.getElementById('liveUndoBtn').addEventListener('click', () => undoLastLive());
 document.querySelectorAll('.js-match-clock-btn').forEach(btn => {
   btn.addEventListener('click', toggleMatchClock);
 });
