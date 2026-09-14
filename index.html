@@ -410,6 +410,17 @@ window.ffkIsNative = function () {
     </div>
   </div>
 
+  <div class="onboard" id="transfer" hidden>
+    <div class="onboard-card">
+      <div class="onboard-kicker">FFK</div>
+      <h2 data-i18n="transferTitle">Был сезон на сайте?</h2>
+      <p data-i18n="transferBody">Сайт в браузере и это приложение хранят данные отдельно. Если матчи уже есть на сайте FFK, откройте там Настройки → Экспорт и выберите тот JSON здесь.</p>
+      <button class="save-btn" id="transferPick" type="button" data-i18n="transferPick">Выбрать JSON</button>
+      <button class="ghost-btn" id="transferSkip" type="button" data-i18n="transferSkip">Начать с чистого</button>
+      <input type="file" id="transferFile" accept="application/json" hidden>
+    </div>
+  </div>
+
   <div class="onboard" id="onboard" hidden>
     <div class="onboard-card">
       <div class="onboard-kicker">FFK</div>

@@ -3241,3 +3241,65 @@ ru:{
     Object.assign(I18N[lang], extra.en, extra[lang] || {});
   });
 })();
+
+(function mergeTransferI18n(){
+  const extra = {
+    uk:{
+      transferTitle:'Був сезон на сайті?',
+      transferBody:'Сайт у браузері і цей застосунок зберігають дані окремо. Якщо матчі вже є на сайті FFK, відкрийте там Налаштування → Експорт і виберіть той JSON тут.',
+      transferPick:'Вибрати JSON',
+      transferSkip:'Почати з чистого'
+    },
+    pl:{
+      transferTitle:'Sezon był na stronie?',
+      transferBody:'Strona w przeglądarce i ta aplikacja trzymają dane osobno. Jeśli mecze są już na stronie FFK, otwórz tam Ustawienia → Eksport i wybierz ten JSON tutaj.',
+      transferPick:'Wybierz JSON',
+      transferSkip:'Zacznij od zera'
+    },
+    en:{
+      transferTitle:'Season already on the website?',
+      transferBody:'The website in the browser and this app keep data separately. If you already logged matches on the FFK site, open Settings → Export there, then pick that JSON here.',
+      transferPick:'Choose JSON',
+      transferSkip:'Start empty'
+    },
+    ru:{
+      transferTitle:'Был сезон на сайте?',
+      transferBody:'Сайт в браузере и это приложение хранят данные отдельно. Если матчи уже есть на сайте FFK, откройте там Настройки → Экспорт и выберите тот JSON здесь.',
+      transferPick:'Выбрать JSON',
+      transferSkip:'Начать с чистого'
+    },
+    es:{
+      transferTitle:'¿La temporada está en la web?',
+      transferBody:'La web del navegador y esta app guardan los datos por separado. Si ya tienes partidos en el sitio FFK, abre Ajustes → Exportar allí y elige ese JSON aquí.',
+      transferPick:'Elegir JSON',
+      transferSkip:'Empezar vacío'
+    },
+    de:{
+      transferTitle:'Saison schon auf der Website?',
+      transferBody:'Website im Browser und diese App speichern getrennt. Wenn die Spiele schon auf der FFK-Seite liegen: Einstellungen → Export, dann die JSON-Datei hier wählen.',
+      transferPick:'JSON wählen',
+      transferSkip:'Leer starten'
+    },
+    it:{
+      transferTitle:'La stagione è sul sito?',
+      transferBody:'Il sito nel browser e questa app tengono i dati separati. Se le partite sono già sul sito FFK, apri Impostazioni → Esporta e scegli quel JSON qui.',
+      transferPick:'Scegli JSON',
+      transferSkip:'Inizia vuoto'
+    },
+    fr:{
+      transferTitle:'Saison déjà sur le site ?',
+      transferBody:'Le site dans le navigateur et cette appli stockent les données à part. Si les matchs sont déjà sur le site FFK, ouvrez Réglages → Exporter, puis choisissez ce JSON ici.',
+      transferPick:'Choisir le JSON',
+      transferSkip:'Commencer vide'
+    },
+    pt:{
+      transferTitle:'A época está no site?',
+      transferBody:'O site no browser e esta app guardam os dados à parte. Se os jogos já estão no site FFK, abre Definições → Exportar e escolhe esse JSON aqui.',
+      transferPick:'Escolher JSON',
+      transferSkip:'Começar vazio'
+    }
+  };
+  LANGS.forEach(lang => {
+    Object.assign(I18N[lang], extra.en, extra[lang] || {});
+  });
+})();

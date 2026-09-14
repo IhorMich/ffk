@@ -206,7 +206,7 @@ function applyI18n(){
   syncSeasonChipLabels();
 }
 
-let settings = {club:'', player:'', position:'fwd', format:'2x30', minutes:'60', lang:'ru', seasonCloseDeclined:'', theme:'dark', onboarded:false};
+let settings = {club:'', player:'', position:'fwd', format:'2x30', minutes:'60', lang:'ru', seasonCloseDeclined:'', theme:'dark', onboarded:false, pwaTransferSeen:false};
 let roster = {currentId:'', ids:[]};
 let player = defaultPlayer();
 let extraSelected = [];
@@ -2140,6 +2140,42 @@ function exportPayload(){
     matches
   };
 }
+function applyImportBundle(imported){
+  const bundle = Array.isArray(imported) ? {matches: imported} : imported;
+  if(!bundle || typeof bundle !== 'object') throw new Error('bad');
+  let playerTouched = false;
+  if(bundle.player && typeof bundle.player === 'object'){
+    player = normalizePlayer({...player, ...bundle.player}, player.id);
+    extraSelected = [...(player.extra || [])];
+    savePlayer();
+    syncSettingsFromPlayer();
+    if(bundle.settings && typeof bundle.settings === 'object'){
+      if(LANGS.includes(bundle.settings.lang)){
+        settings.lang = bundle.settings.lang;
+        settings.langManual = true;
+      }
+      if(bundle.settings.format) settings.format = bundle.settings.format;
+      if(bundle.settings.minutes) settings.minutes = String(bundle.settings.minutes);
+      if(THEME_ORDER.includes(bundle.settings.theme)) settings.theme = bundle.settings.theme;
+    }
+    saveSettings();
+    playerTouched = true;
+  }
+  const incoming = Array.isArray(bundle.matches) ? bundle.matches : (Array.isArray(imported) ? imported : []);
+  if(!incoming.length && !playerTouched) throw new Error('bad');
+  const ids = new Set(matches.map(m => m.id));
+  let added = 0;
+  incoming.forEach(raw => {
+    const m = normalizeMatch(raw);
+    if(!m || ids.has(m.id)) return;
+    matches.push(m); ids.add(m.id); added++;
+  });
+  saveMatches();
+  applyI18n();
+  applyTheme();
+  applyPlayerContext();
+  return {added, playerTouched};
+}
 function downloadMatches(){
   if(!matches.length && !player.firstName){ showToast(t('toastNothingExport')); return; }
   const blob = new Blob([JSON.stringify(exportPayload(), null, 2)], {type:'application/json'});
@@ -2185,38 +2221,8 @@ document.getElementById('importFile').addEventListener('change', async (e) => {
   const file = e.target.files[0];
   if(!file) return;
   try{
-    const imported = JSON.parse(await file.text());
-    const bundle = Array.isArray(imported) ? {matches: imported} : imported;
-    if(bundle.player && typeof bundle.player === 'object'){
-      player = normalizePlayer({...player, ...bundle.player}, player.id);
-      extraSelected = [...(player.extra || [])];
-      savePlayer();
-      syncSettingsFromPlayer();
-      if(bundle.settings && typeof bundle.settings === 'object'){
-        if(LANGS.includes(bundle.settings.lang)){
-          settings.lang = bundle.settings.lang;
-          settings.langManual = true;
-        }
-        if(bundle.settings.format) settings.format = bundle.settings.format;
-        if(bundle.settings.minutes) settings.minutes = String(bundle.settings.minutes);
-        if(THEME_ORDER.includes(bundle.settings.theme)) settings.theme = bundle.settings.theme;
-      }
-      saveSettings();
-      applyHeader();
-      applyI18n();
-      applyTheme();
-    }
-    const incoming = Array.isArray(bundle.matches) ? bundle.matches : (Array.isArray(imported) ? imported : []);
-    if(!incoming.length && !bundle.player) throw new Error('bad');
-    const ids = new Set(matches.map(m => m.id));
-    let added = 0;
-    incoming.forEach(raw => {
-      const m = normalizeMatch(raw);
-      if(!m || ids.has(m.id)) return;
-      matches.push(m); ids.add(m.id); added++;
-    });
-    saveMatches(); fillSeasonSelects(); renderHistory(); renderStats(); renderOppList();
-    showToast(added ? t('toastAdded', {n: added}) : (bundle.player ? t('toastPlayer') : t('toastNoNew')));
+    const result = applyImportBundle(JSON.parse(await file.text()));
+    showToast(result.added ? t('toastAdded', {n: result.added}) : (result.playerTouched ? t('toastPlayer') : t('toastNoNew')));
   }catch(err){ showToast(t('toastReadFail')); }
   e.target.value = '';
 });
@@ -2820,6 +2826,10 @@ function requestAppBack(){
   try{ return handleAppBack(); } finally { popping = false; }
 }
 function handleAppBack(){
+  if(isElShown('transfer')){
+    finishTransfer();
+    return true;
+  }
   if(isElShown('onboard')){
     if(onboardStep > 0){
       onboardStep -= 1;
@@ -2934,12 +2944,43 @@ function maybeOnboard(){
   renderOnboard();
   pushAppState('layer');
 }
+function finishTransfer(){
+  settings.pwaTransferSeen = true;
+  saveSettings();
+  const el = document.getElementById('transfer');
+  if(el) el.hidden = true;
+  maybeOnboard();
+}
+function maybeTransfer(){
+  if(settings.pwaTransferSeen) return false;
+  if(!isNativeApp() && !/[?&]ffktransfer=1(?:&|$)/.test(location.search)) return false;
+  if(matches.length){
+    settings.pwaTransferSeen = true;
+    saveSettings();
+    return false;
+  }
+  document.getElementById('transfer').hidden = false;
+  pushAppState('layer');
+  return true;
+}
 document.getElementById('onboardNext').addEventListener('click', () => {
   if(onboardStep >= 2){ finishOnboard(); return; }
   onboardStep += 1;
   renderOnboard();
 });
 document.getElementById('onboardSkip').addEventListener('click', finishOnboard);
+document.getElementById('transferPick').addEventListener('click', () => document.getElementById('transferFile').click());
+document.getElementById('transferSkip').addEventListener('click', finishTransfer);
+document.getElementById('transferFile').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if(!file) return;
+  try{
+    const result = applyImportBundle(JSON.parse(await file.text()));
+    showToast(result.added ? t('toastAdded', {n: result.added}) : (result.playerTouched ? t('toastPlayer') : t('toastNoNew')));
+    finishTransfer();
+  }catch(err){ showToast(t('toastReadFail')); }
+  e.target.value = '';
+});
 document.getElementById('settingsBtn').addEventListener('click', () => {
   document.getElementById('s-lang').value = settings.lang;
   refreshBackupBanner();
@@ -3598,7 +3639,7 @@ async function shareCard(m){
     renderOppList();
     maybePromptSeasonClose();
     restoreView();
-    maybeOnboard();
+    if(!maybeTransfer()) maybeOnboard();
     bindAppBack();
     syncScoreResultHint();
     hydrateAllMedia().then(() => {
