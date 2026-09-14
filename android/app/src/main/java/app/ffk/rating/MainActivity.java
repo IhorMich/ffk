@@ -10,6 +10,7 @@ public class MainActivity extends BridgeActivity {
 
   @Override
   public void onCreate(Bundle savedInstanceState) {
+    registerPlugin(GalleryPickerPlugin.class);
     super.onCreate(savedInstanceState);
     // Added after the plugins, so this callback is the top of the stack and gets
     // both the back key and the edge gesture.

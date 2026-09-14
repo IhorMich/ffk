@@ -1021,6 +1021,21 @@ async function pickFromGallery(){
     pickPhotoFile(false);
     return;
   }
+  // The system picker on Android is served by Google Photos, which hides the
+  // albums of the phone itself, so ask the installed gallery apps first.
+  const Gallery = capPlugin('GalleryPicker');
+  if(Gallery && typeof Gallery.pickImage === 'function'){
+    try{
+      const picked = await Gallery.pickImage();
+      if(picked && picked.dataUrl){
+        await beginCropFromNative(picked);
+        return;
+      }
+    }catch(err){
+      camLog('device gallery fail', String((err && (err.message || err.errorMessage)) || err), String((err && err.code) || ''));
+      if(cameraUserStopped(err)) return;
+    }
+  }
   try{
     const result = await nativeGetPhoto('PHOTOS');
     if(result) await beginCropFromNative(result);
@@ -1035,8 +1050,15 @@ function bindCameraRestore(){
   if(!isNativeApp() || !App || typeof App.addListener !== 'function' || window.__ffkCamRestore) return;
   window.__ffkCamRestore = true;
   App.addListener('appRestoredResult', ev => {
-    if(!ev || ev.pluginId !== 'Camera' || ev.success === false) return;
+    if(!ev || ev.success === false) return;
     const data = ev.data || {};
+    // Picking from the phone gallery can push the app out of memory, so the
+    // photo comes back through the restored result instead of the promise.
+    if(ev.pluginId === 'GalleryPicker'){
+      if(data.dataUrl) beginCropFromNative(data).catch(() => {});
+      return;
+    }
+    if(ev.pluginId !== 'Camera') return;
     const media = data.webPath || data.uri ? data : (data.results && data.results[0]);
     if(media) beginCropFromNative(media).catch(() => {});
   });
