@@ -266,7 +266,7 @@
     .player-edit-card{border-radius:22px;max-height:88vh;}
   }
   .match-context{
-    margin:0 0 18px;border:1px solid var(--border);border-radius:18px;
+    margin:0 0 14px;border:1px solid var(--border);border-radius:18px;
     background:var(--surface);padding:4px 14px 10px;
   }
   .match-context > summary{
