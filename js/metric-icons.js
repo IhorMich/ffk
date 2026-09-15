@@ -79,6 +79,14 @@ function iconSetName(){
   return 'clear';
 }
 
+function metricIconUrl(rel){
+  try{
+    return new URL(rel, document.baseURI || location.href).href;
+  }catch(e){
+    return rel;
+  }
+}
+
 function metricIconStroke(body, width, tint, cls){
   const klass = cls ? ` class="${cls}"` : '';
   return `<svg${klass} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${width}" stroke-linecap="round" stroke-linejoin="round" style="color:${tint}" aria-hidden="true" focusable="false">${body}</svg>`;
@@ -89,10 +97,12 @@ function metricIconSvg(key, cls){
   const tint = pack.tint ? (METRIC_ICON_TINT[key] || 'currentColor') : 'currentColor';
 
   if(pack.kind === 'mask'){
-    const src = pack.images[key];
-    if(src){
+    const rel = pack.images[key];
+    if(rel){
+      const src = metricIconUrl(rel);
       const klass = cls ? ` ${cls}` : '';
-      return `<span class="metric-glyph${klass}" style="--glyph:url('${src}');color:${tint}" aria-hidden="true"></span>`;
+      /* mask-image must be inline — urls inside CSS vars resolve against css/app.css */
+      return `<span class="metric-glyph${klass}" style="color:${tint};-webkit-mask-image:url('${src}');mask-image:url('${src}')" aria-hidden="true"></span>`;
     }
     const body = (pack.fallback && pack.fallback[key]) || METRIC_ICON_LINE.losses;
     return metricIconStroke(body, pack.width, tint, cls);
