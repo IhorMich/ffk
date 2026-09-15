@@ -533,14 +533,16 @@
   .metric-row.key .metric-icon{background:rgba(34,211,166,.16);}
   .metric-row.key .metric-name{font-weight:800;}
   .metric-name{display:flex;align-items:center;gap:11px;font-size:.9rem;font-weight:600;}
-  .metric-icon{width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:var(--surface-2);flex-shrink:0;color:var(--text);}
-  .metric-icon svg{width:18px;height:18px;display:block;}
+  .metric-icon{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:var(--surface-2);flex-shrink:0;color:var(--text);}
+  .metric-icon svg{width:20px;height:20px;display:block;}
   .pf-row .ic,.report-line .ic{
     width:28px;height:28px;flex-shrink:0;
     display:inline-flex;align-items:center;justify-content:center;color:var(--text-soft);
   }
   .pf-row .ic svg,.report-line .ic svg{width:18px;height:18px;display:block;}
   .metric-row.key .metric-icon{color:var(--accent);}
+  html[data-icons="bright"] .metric-row.key .metric-icon{color:inherit;}
+  html[data-icons="bright"] .pf-row .ic,html[data-icons="bright"] .report-line .ic{color:inherit;}
   .metric-weight{font-size:.72rem;color:var(--text-soft);display:block;font-weight:600;}
   .stepper{display:flex;align-items:center;gap:12px;}
   .stepper button{

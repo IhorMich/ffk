@@ -103,11 +103,13 @@ function applyTheme(){
 }
 function syncIconSetChips(){
   const set = iconSetName();
+  document.documentElement.dataset.icons = set;
   document.querySelectorAll('#iconSetChips .chip').forEach(c => {
     c.classList.toggle('active', c.dataset.icons === set);
   });
 }
 function applyIconSet(){
+  document.documentElement.dataset.icons = iconSetName();
   syncIconSetChips();
   if(typeof renderMetrics === 'function') renderMetrics();
   if(typeof renderPlayerFeed === 'function') renderPlayerFeed();
