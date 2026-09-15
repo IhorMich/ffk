@@ -3319,12 +3319,26 @@ function onboardPages(){
 }
 let introBusy = false;
 let introWipeRaf = 0;
+const INTRO_WIPE_FROM = 224;
+const INTRO_WIPE_SWEEP = 252;
+const INTRO_WIPE_AT = '50% 45%';
 function setGaugeWipe(gauge, progress){
   if(!gauge) return;
-  const sweep = 252;
-  const deg = Math.max(0, Math.min(1, progress)) * sweep;
-  const soft = Math.min(6, Math.max(0.5, 252 * 0.02));
-  const mask = `conic-gradient(from 222deg at 50% 44.9%, #000 0deg, #000 ${deg}deg, transparent ${deg + soft}deg)`;
+  const p = Math.max(0, Math.min(1, progress));
+  if(p <= 0){
+    const blank = `conic-gradient(from ${INTRO_WIPE_FROM}deg at ${INTRO_WIPE_AT}, transparent 0deg, transparent 360deg)`;
+    gauge.style.webkitMaskImage = blank;
+    gauge.style.maskImage = blank;
+    return;
+  }
+  if(p >= 1){
+    gauge.style.webkitMaskImage = 'none';
+    gauge.style.maskImage = 'none';
+    return;
+  }
+  const deg = p * INTRO_WIPE_SWEEP;
+  const soft = 3;
+  const mask = `conic-gradient(from ${INTRO_WIPE_FROM}deg at ${INTRO_WIPE_AT}, #000 0deg, #000 ${deg}deg, transparent ${deg + soft}deg)`;
   gauge.style.webkitMaskImage = mask;
   gauge.style.maskImage = mask;
 }
@@ -3342,6 +3356,7 @@ function playGaugeWipe(gauge, delayMs, durMs){
   const tick = now => {
     const t = now - t0 - delayMs;
     if(t < 0){
+      setGaugeWipe(gauge, 0);
       introWipeRaf = requestAnimationFrame(tick);
       return;
     }
@@ -3386,9 +3401,9 @@ function playIntro(){
   setGaugeWipe(gauge, 0);
   void el.offsetWidth;
   el.classList.add('play');
-  playGaugeWipe(gauge, 850, 3000);
+  playGaugeWipe(gauge, 900, 3200);
   el.addEventListener('click', finishIntro, {once:true});
-  window.setTimeout(finishIntro, 5600);
+  window.setTimeout(finishIntro, 5800);
   return true;
 }
 function finishOnboard(){
