@@ -362,10 +362,10 @@
   }
   .intro-orbit-star img{
     width:100%;height:100%;display:block;object-fit:contain;
-    filter:drop-shadow(0 4px 5px rgba(0,0,0,.55)) drop-shadow(0 0 8px rgba(245,185,66,.5));
+    filter:drop-shadow(0 3px 4px rgba(0,0,0,.4)) drop-shadow(0 0 10px rgba(245,185,66,.35));
   }
   .intro.play .intro-orbit-star{
-    animation:introOrbitStar .55s cubic-bezier(.16,1.2,.28,1) calc(.95s + (var(--d)* .18s)) forwards;
+    animation:introOrbitStar 1.05s cubic-bezier(.22,.62,.28,1) calc(.72s + (var(--d)* .14s)) forwards;
   }
   .intro-name{
     position:relative;z-index:1;
@@ -388,13 +388,12 @@
     transform-origin:center bottom;
   }
   .intro.play .intro-name-ch{
-    animation:introBallBounce .85s cubic-bezier(.22,.9,.3,1.15) calc(2.7s + (var(--i) * .09s)) forwards;
+    animation:introBallBounce .85s cubic-bezier(.22,.9,.3,1.15) calc(2.85s + (var(--i) * .09s)) forwards;
   }
   @keyframes introCup{to{opacity:1;transform:scale(1) translateY(0)}}
   @keyframes introGlowIn{to{opacity:1}}
   @keyframes introOrbitStar{
-    0%{opacity:0;scale:.18}
-    58%{opacity:1;scale:1.12}
+    0%{opacity:0;scale:.78}
     100%{opacity:1;scale:1}
   }
   @keyframes introBallBounce{
