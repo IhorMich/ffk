@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">FFK</string>
-    <string name="title_activity_main">FFK</string>
+    <string name="app_name">Matchcard</string>
+    <string name="title_activity_main">Matchcard</string>
     <string name="package_name">app.ffk.rating</string>
     <string name="custom_url_scheme">app.ffk.rating</string>
 </resources>

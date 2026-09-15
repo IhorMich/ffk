@@ -1,6 +1,6 @@
 {
-  "name": "FFK — Оценка матча",
-  "short_name": "FFK",
+  "name": "Matchcard — Оценка матча",
+  "short_name": "Matchcard",
   "start_url": ".",
   "display": "standalone",
   "background_color": "#0B1220",

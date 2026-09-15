@@ -4,7 +4,7 @@ const LANG_HTML = {uk:'uk', pl:'pl', en:'en-GB', ru:'ru', es:'es', de:'de', it:'
 const LANG_LOCALE = {uk:'uk-UA', pl:'pl-PL', en:'en-GB', ru:'ru-RU', es:'es-ES', de:'de-DE', it:'it-IT', fr:'fr-FR', pt:'pt-PT'};
 const I18N = {
 uk:{
-  pageTitle:'FFK — оцінка матчу', settingsAria:'Налаштування', themeAria:'Тема',
+  pageTitle:'Matchcard — оцінка матчу', settingsAria:'Налаштування', themeAria:'Тема',
   heroOverall:'загальна оцінка', heroShort:'короткий вихід', heroAction:'вклад', heroEffort:'старання',
   liveStart:'Швидкий режим', livePitch:'Швидкий доступ', matchDetails:'Деталі матчу', labelDate:'Дата', labelPos:'Позиція', labelOpp:'Суперник', phOpp:'Команда',
   labelScore:'Рахунок', scoreUsAria:'Наші голи', scoreThemAria:'Голи суперника', emptyGoMatch:'Записати матч', labelMin:'Хвилини на полі', labelFormat:'Формат матчу', labelMatchLen:'Довжина матчу, хв', fmtCustom:'Свій',
@@ -211,7 +211,7 @@ uk:{
   b_effort:'Старання і боротьба за м’яч', b_team:'Гра в команді', b_coach:'Слухав тренера', b_discipline:'Дисципліна / повага до судді', b_mood:'Настрій (не в оцінці)'
 },
 pl:{
-  pageTitle:'FFK — ocena meczu', settingsAria:'Ustawienia', themeAria:'Motyw',
+  pageTitle:'Matchcard — ocena meczu', settingsAria:'Ustawienia', themeAria:'Motyw',
   heroOverall:'ocena ogólna', heroShort:'krótki występ', heroAction:'wkład', heroEffort:'zaangażowanie',
   liveStart:'Tryb szybki', livePitch:'Szybki dostęp', matchDetails:'Szczegóły meczu', labelDate:'Data', labelPos:'Pozycja', labelOpp:'Rywal', phOpp:'Drużyna',
   labelScore:'Wynik', scoreUsAria:'Nasze gole', scoreThemAria:'Gole rywala', emptyGoMatch:'Zapisz mecz', labelMin:'Minuty na boisku', labelFormat:'Format meczu', labelMatchLen:'Długość meczu, min', fmtCustom:'Własny',
@@ -418,7 +418,7 @@ pl:{
   b_effort:'Zaangażowanie i walka o piłkę', b_team:'Gra zespołowa', b_coach:'Słuchał trenera', b_discipline:'Dyscyplina / szacunek dla sędziego', b_mood:'Nastrój (nie w ocenie)'
 },
 en:{
-  pageTitle:'FFK — match rating', settingsAria:'Settings', themeAria:'Theme',
+  pageTitle:'Matchcard — match rating', settingsAria:'Settings', themeAria:'Theme',
   heroOverall:'overall rating', heroShort:'short appearance', heroAction:'impact', heroEffort:'effort',
   liveStart:'Quick mode', livePitch:'Quick access', matchDetails:'Match details', labelDate:'Date', labelPos:'Position', labelOpp:'Opponent', phOpp:'Team',
   labelScore:'Score', scoreUsAria:'Our goals', scoreThemAria:'Opponent goals', emptyGoMatch:'Record a match', labelMin:'Minutes on the pitch', labelFormat:'Match format', labelMatchLen:'Match length, min', fmtCustom:'Custom',
@@ -625,7 +625,7 @@ en:{
   b_effort:'Work rate and duels', b_team:'Team play', b_coach:'Listened to the coach', b_discipline:'Discipline / respect for the referee', b_mood:'Mood (not in the rating)'
 },
 es:{
-  pageTitle:'FFK — valoración del partido',
+  pageTitle:'Matchcard — valoración del partido',
   settingsAria:'Ajustes',
   themeAria:'Tema',
   heroOverall:'nota global',
@@ -1078,7 +1078,7 @@ es:{
   b_mood:'Ánimo (no entra en la nota)'
 },
 de:{
-  pageTitle:'FFK — Spielbewertung',
+  pageTitle:'Matchcard — Spielbewertung',
   settingsAria:'Einstellungen',
   themeAria:'Design',
   heroOverall:'Gesamtnote',
@@ -1531,7 +1531,7 @@ de:{
   b_mood:'Stimmung (nicht in der Note)'
 },
 it:{
-  pageTitle:'FFK — voto della partita',
+  pageTitle:'Matchcard — voto della partita',
   settingsAria:'Impostazioni',
   themeAria:'Tema',
   heroOverall:'voto complessivo',
@@ -1984,7 +1984,7 @@ it:{
   b_mood:'Umore (non entra nel voto)'
 },
 fr:{
-  pageTitle:'FFK — note du match',
+  pageTitle:'Matchcard — note du match',
   settingsAria:'Réglages',
   themeAria:'Thème',
   heroOverall:'note globale',
@@ -2437,7 +2437,7 @@ fr:{
   b_mood:'Humeur (hors note)'
 },
 pt:{
-  pageTitle:'FFK — classificação do jogo',
+  pageTitle:'Matchcard — classificação do jogo',
   settingsAria:'Definições',
   themeAria:'Tema',
   heroOverall:'classificação geral',
@@ -2891,7 +2891,7 @@ pt:{
 },
 
 ru:{
-  pageTitle:'FFK — Оценка матча', settingsAria:'Настройки', themeAria:'Тема',
+  pageTitle:'Matchcard — Оценка матча', settingsAria:'Настройки', themeAria:'Тема',
   heroOverall:'общая оценка', heroShort:'короткий выход', heroAction:'вклад', heroEffort:'старание',
   liveStart:'Быстрый режим', livePitch:'Быстрый доступ', matchDetails:'Детали матча', labelDate:'Дата', labelPos:'Позиция', labelOpp:'Соперник', phOpp:'Команда',
   labelScore:'Счёт', scoreUsAria:'Наши голы', scoreThemAria:'Голы соперника', emptyGoMatch:'Записать матч', labelMin:'Минуты на поле', labelFormat:'Формат матча', labelMatchLen:'Длина матча, мин', fmtCustom:'Свой',
@@ -3106,7 +3106,7 @@ ru:{
       sTzHint:'Час матчу з цього телефону ({tz}). Для польської мови типово Варшава.',
       onboardSkip:'Пропустити', onboardNext:'Далі', onboardDone:'Почати',
       onboard1Title:'Оцінка матчу дитини',
-      onboard1Body:'FFK — щоденник одного гравця: дії на полі, оцінка і картка. Без акаунта, усе на цьому телефоні.',
+      onboard1Body:'Matchcard — щоденник одного гравця: дії на полі, оцінка і картка. Без акаунта, усе на цьому телефоні.',
       onboard2Title:'Як рахується оцінка',
       onboard2Body:'Старт з 6.0. Корисні дії піднімають, помилки опускають. Старання дає менший внесок. Підсумок від 0 до 10.',
       onboard3Title:'Не втратьте сезон',
@@ -3126,7 +3126,7 @@ ru:{
       sTzHint:'Czas meczu z tego telefonu ({tz}). Dla języka polskiego domyślnie Warszawa.',
       onboardSkip:'Pomiń', onboardNext:'Dalej', onboardDone:'Zaczynamy',
       onboard1Title:'Ocena meczu dziecka',
-      onboard1Body:'FFK to dziennik jednego zawodnika: akcje, ocena i karta. Bez konta, wszystko na tym telefonie.',
+      onboard1Body:'Matchcard to dziennik jednego zawodnika: akcje, ocena i karta. Bez konta, wszystko na tym telefonie.',
       onboard2Title:'Jak liczona jest ocena',
       onboard2Body:'Start od 6.0. Udane akcje podnoszą, błędy obniżają. Wysiłek liczy się słabiej. Wynik od 0 do 10.',
       onboard3Title:'Nie zgub sezonu',
@@ -3146,7 +3146,7 @@ ru:{
       sTzHint:'Match time comes from this phone ({tz}). Polish language defaults to Warsaw.',
       onboardSkip:'Skip', onboardNext:'Next', onboardDone:'Start',
       onboard1Title:'Rate a child’s match',
-      onboard1Body:'FFK is a diary for one player: actions on the pitch, a rating, and a card. No account — everything stays on this phone.',
+      onboard1Body:'Matchcard is a diary for one player: actions on the pitch, a rating, and a card. No account — everything stays on this phone.',
       onboard2Title:'How the rating works',
       onboard2Body:'Start at 6.0. Useful actions lift it, mistakes drop it. Effort counts less. The total is 0 to 10.',
       onboard3Title:'Don’t lose the season',
@@ -3166,7 +3166,7 @@ ru:{
       sTzHint:'Время матча с этого телефона ({tz}). Для польского языка по умолчанию Варшава.',
       onboardSkip:'Пропустить', onboardNext:'Дальше', onboardDone:'Начать',
       onboard1Title:'Оценка матча ребёнка',
-      onboard1Body:'FFK — дневник одного игрока: действия на поле, оценка и карточка. Без аккаунта, всё на этом телефоне.',
+      onboard1Body:'Matchcard — дневник одного игрока: действия на поле, оценка и карточка. Без аккаунта, всё на этом телефоне.',
       onboard2Title:'Как считается оценка',
       onboard2Body:'Старт с 6.0. Полезные действия поднимают, ошибки опускают. Старание даёт меньший вклад. Итог от 0 до 10.',
       onboard3Title:'Не потеряйте сезон',
@@ -3186,7 +3186,7 @@ ru:{
       sTzHint:'La hora del partido sale de este teléfono ({tz}). En polaco el valor por defecto es Varsovia.',
       onboardSkip:'Saltar', onboardNext:'Siguiente', onboardDone:'Empezar',
       onboard1Title:'Nota del partido de un niño',
-      onboard1Body:'FFK es el diario de un jugador: acciones, nota y carta. Sin cuenta, todo en este teléfono.',
+      onboard1Body:'Matchcard es el diario de un jugador: acciones, nota y carta. Sin cuenta, todo en este teléfono.',
       onboard2Title:'Cómo se calcula la nota',
       onboard2Body:'Empieza en 6.0. Las acciones útiles suben, los errores bajan. El esfuerzo cuenta menos. Total de 0 a 10.',
       onboard3Title:'No pierdas la temporada',
@@ -3206,7 +3206,7 @@ ru:{
       sTzHint:'Die Spielzeit kommt von diesem Telefon ({tz}). Bei Polnisch ist Warschau der Standard.',
       onboardSkip:'Überspringen', onboardNext:'Weiter', onboardDone:'Start',
       onboard1Title:'Note für ein Kinderspiel',
-      onboard1Body:'FFK ist das Tagebuch eines Spielers: Aktionen, Note und Karte. Kein Konto — alles auf diesem Telefon.',
+      onboard1Body:'Matchcard ist das Tagebuch eines Spielers: Aktionen, Note und Karte. Kein Konto — alles auf diesem Telefon.',
       onboard2Title:'So zählt die Note',
       onboard2Body:'Start bei 6.0. Gute Aktionen heben, Fehler senken. Einsatz zählt weniger. Gesamt 0 bis 10.',
       onboard3Title:'Saison nicht verlieren',
@@ -3226,7 +3226,7 @@ ru:{
       sTzHint:'L’orario della partita arriva da questo telefono ({tz}). In polacco il predefinito è Varsavia.',
       onboardSkip:'Salta', onboardNext:'Avanti', onboardDone:'Inizia',
       onboard1Title:'Voto della partita di un bambino',
-      onboard1Body:'FFK è il diario di un giocatore: azioni, voto e carta. Senza account, tutto su questo telefono.',
+      onboard1Body:'Matchcard è il diario di un giocatore: azioni, voto e carta. Senza account, tutto su questo telefono.',
       onboard2Title:'Come si calcola il voto',
       onboard2Body:'Si parte da 6.0. Le azioni utili alzano, gli errori abbassano. L’impegno conta meno. Totale da 0 a 10.',
       onboard3Title:'Non perdere la stagione',
@@ -3246,7 +3246,7 @@ ru:{
       sTzHint:'L’heure du match vient de ce téléphone ({tz}). En polonais, Varsovie est la valeur par défaut.',
       onboardSkip:'Passer', onboardNext:'Suivant', onboardDone:'Commencer',
       onboard1Title:'Note du match d’un enfant',
-      onboard1Body:'FFK est le journal d’un joueur : actions, note et carte. Sans compte, tout reste sur ce téléphone.',
+      onboard1Body:'Matchcard est le journal d’un joueur : actions, note et carte. Sans compte, tout reste sur ce téléphone.',
       onboard2Title:'Comment la note est calculée',
       onboard2Body:'Départ à 6.0. Les actions utiles montent, les erreurs baissent. L’effort compte moins. Total de 0 à 10.',
       onboard3Title:'Ne perdez pas la saison',
@@ -3266,7 +3266,7 @@ ru:{
       sTzHint:'A hora do jogo vem deste telefone ({tz}). Em polaco o padrão é Varsóvia.',
       onboardSkip:'Saltar', onboardNext:'Seguinte', onboardDone:'Começar',
       onboard1Title:'Nota do jogo de uma criança',
-      onboard1Body:'FFK é o diário de um jogador: ações, nota e carta. Sem conta, tudo neste telefone.',
+      onboard1Body:'Matchcard é o diário de um jogador: ações, nota e carta. Sem conta, tudo neste telefone.',
       onboard2Title:'Como a nota é calculada',
       onboard2Body:'Começa em 6.0. Ações úteis sobem, erros descem. O esforço conta menos. Total de 0 a 10.',
       onboard3Title:'Não perca a época',
@@ -3291,55 +3291,55 @@ ru:{
   const extra = {
     uk:{
       transferTitle:'Був сезон на сайті?',
-      transferBody:'Сайт у браузері і цей застосунок зберігають дані окремо. Якщо матчі вже є на сайті FFK, відкрийте там Налаштування → Експорт і виберіть той JSON тут.',
+      transferBody:'Сайт у браузері і цей застосунок зберігають дані окремо. Якщо матчі вже є на сайті, відкрийте там Налаштування → Експорт і виберіть той JSON тут.',
       transferPick:'Вибрати JSON',
       transferSkip:'Почати з чистого'
     },
     pl:{
       transferTitle:'Sezon był na stronie?',
-      transferBody:'Strona w przeglądarce i ta aplikacja trzymają dane osobno. Jeśli mecze są już na stronie FFK, otwórz tam Ustawienia → Eksport i wybierz ten JSON tutaj.',
+      transferBody:'Strona w przeglądarce i ta aplikacja trzymają dane osobno. Jeśli mecze są już na stronie, otwórz tam Ustawienia → Eksport i wybierz ten JSON tutaj.',
       transferPick:'Wybierz JSON',
       transferSkip:'Zacznij od zera'
     },
     en:{
       transferTitle:'Season already on the website?',
-      transferBody:'The website in the browser and this app keep data separately. If you already logged matches on the FFK site, open Settings → Export there, then pick that JSON here.',
+      transferBody:'The website in the browser and this app keep data separately. If you already logged matches on the site, open Settings → Export there, then pick that JSON here.',
       transferPick:'Choose JSON',
       transferSkip:'Start empty'
     },
     ru:{
       transferTitle:'Был сезон на сайте?',
-      transferBody:'Сайт в браузере и это приложение хранят данные отдельно. Если матчи уже есть на сайте FFK, откройте там Настройки → Экспорт и выберите тот JSON здесь.',
+      transferBody:'Сайт в браузере и это приложение хранят данные отдельно. Если матчи уже есть на сайте, откройте там Настройки → Экспорт и выберите тот JSON здесь.',
       transferPick:'Выбрать JSON',
       transferSkip:'Начать с чистого'
     },
     es:{
       transferTitle:'¿La temporada está en la web?',
-      transferBody:'La web del navegador y esta app guardan los datos por separado. Si ya tienes partidos en el sitio FFK, abre Ajustes → Exportar allí y elige ese JSON aquí.',
+      transferBody:'La web del navegador y esta app guardan los datos por separado. Si ya tienes partidos en el sitio, abre Ajustes → Exportar allí y elige ese JSON aquí.',
       transferPick:'Elegir JSON',
       transferSkip:'Empezar vacío'
     },
     de:{
       transferTitle:'Saison schon auf der Website?',
-      transferBody:'Website im Browser und diese App speichern getrennt. Wenn die Spiele schon auf der FFK-Seite liegen: Einstellungen → Export, dann die JSON-Datei hier wählen.',
+      transferBody:'Website im Browser und diese App speichern getrennt. Wenn die Spiele schon auf der Website liegen: Einstellungen → Export, dann die JSON-Datei hier wählen.',
       transferPick:'JSON wählen',
       transferSkip:'Leer starten'
     },
     it:{
       transferTitle:'La stagione è sul sito?',
-      transferBody:'Il sito nel browser e questa app tengono i dati separati. Se le partite sono già sul sito FFK, apri Impostazioni → Esporta e scegli quel JSON qui.',
+      transferBody:'Il sito nel browser e questa app tengono i dati separati. Se le partite sono già sul sito, apri Impostazioni → Esporta e scegli quel JSON qui.',
       transferPick:'Scegli JSON',
       transferSkip:'Inizia vuoto'
     },
     fr:{
       transferTitle:'Saison déjà sur le site ?',
-      transferBody:'Le site dans le navigateur et cette appli stockent les données à part. Si les matchs sont déjà sur le site FFK, ouvrez Réglages → Exporter, puis choisissez ce JSON ici.',
+      transferBody:'Le site dans le navigateur et cette appli stockent les données à part. Si les matchs sont déjà sur le site, ouvrez Réglages → Exporter, puis choisissez ce JSON ici.',
       transferPick:'Choisir le JSON',
       transferSkip:'Commencer vide'
     },
     pt:{
       transferTitle:'A época está no site?',
-      transferBody:'O site no browser e esta app guardam os dados à parte. Se os jogos já estão no site FFK, abre Definições → Exportar e escolhe esse JSON aqui.',
+      transferBody:'O site no browser e esta app guardam os dados à parte. Se os jogos já estão no site, abre Definições → Exportar e escolhe esse JSON aqui.',
       transferPick:'Escolher JSON',
       transferSkip:'Começar vazio'
     }

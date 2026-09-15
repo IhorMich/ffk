@@ -1,7 +1,7 @@
 {
   "name": "ffk",
   "private": true,
-  "description": "FFK match rating — GitHub Pages PWA and Capacitor Android/iOS shells",
+  "description": "Matchcard — GitHub Pages PWA and Capacitor Android/iOS shells",
   "scripts": {
     "www": "node scripts/sync-www.js",
     "cap:sync": "npm run www && npx cap sync",

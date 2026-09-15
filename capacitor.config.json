@@ -1,6 +1,6 @@
 {
   "appId": "app.ffk.rating",
-  "appName": "FFK",
+  "appName": "Matchcard",
   "webDir": "www",
   "android": {
     "allowMixedContent": false

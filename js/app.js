@@ -63,7 +63,7 @@ async function nativeShareBlob(blob, filename, title){
   const directory = 'CACHE';
   await Filesystem.writeFile({path: filename, data, directory});
   const got = await Filesystem.getUri({path: filename, directory});
-  await Share.share({title: title || 'FFK', files: [got.uri], dialogTitle: title || 'FFK'});
+  await Share.share({title: title || 'Matchcard', files: [got.uri], dialogTitle: title || 'Matchcard'});
   return true;
 }
 function applyNativeChrome(){
@@ -1460,7 +1460,7 @@ function ageLabel(n){
 function initialsOf(p){
   const a = (p.firstName || '').trim().charAt(0);
   const b = (p.lastName || '').trim().charAt(0);
-  return ((a + b) || (p.club || 'FFK').slice(0,2) || 'FF').toUpperCase();
+  return ((a + b) || (p.club || 'Matchcard').slice(0,2) || 'MC').toUpperCase();
 }
 function initials(){
   return initialsOf(player);
@@ -2378,7 +2378,7 @@ function downloadMatches(){
   if(!matches.length && !player.firstName){ showToast(t('toastNothingExport')); return; }
   const blob = new Blob([JSON.stringify(exportPayload(), null, 2)], {type:'application/json'});
   const filename = `ffk_${todayStr()}.json`;
-  nativeShareBlob(blob, filename, 'FFK').then(ok => {
+  nativeShareBlob(blob, filename, 'Matchcard').then(ok => {
     if(ok){
       localStorage.setItem(EXPORT_KEY, todayStr());
       renderHistory();
@@ -2386,7 +2386,7 @@ function downloadMatches(){
     }
     const file = new File([blob], filename, {type:'application/json'});
     if(navigator.canShare && navigator.canShare({files:[file]})){
-      navigator.share({files:[file], title:'FFK'}).then(() => {
+      navigator.share({files:[file], title:'Matchcard'}).then(() => {
         localStorage.setItem(EXPORT_KEY, todayStr());
         renderHistory();
       }).catch(() => triggerDownload(blob, filename));
@@ -3699,12 +3699,12 @@ function futStatRows(list, pos){
 async function exportPngFile(canvas, filename){
   const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
   try{
-    if(await nativeShareBlob(blob, filename, 'FFK')) return true;
+    if(await nativeShareBlob(blob, filename, 'Matchcard')) return true;
   }catch(e){}
   const file = new File([blob], filename, {type:'image/png'});
   try{
     if(navigator.canShare && navigator.canShare({files:[file]})){
-      await navigator.share({files:[file], title:'FFK'});
+      await navigator.share({files:[file], title:'Matchcard'});
       return true;
     }
   }catch(e){
@@ -3785,7 +3785,7 @@ async function refreshCardPreview(){
     const list = cardPeriodMatches(range);
     const label = cardPeriodLabel(range);
     const slug = String(player.firstName || 'player').trim().replace(/\s+/g, '_').slice(0, 18) || 'player';
-    previewState.filename = `ffk_card_${slug}_${range}.png`;
+    previewState.filename = `matchcard_${slug}_${range}.png`;
     previewState.build = mode => drawFutCardCanvas(list, label, mode);
     syncPreviewPeriodChips(range);
   } else {
@@ -3894,7 +3894,7 @@ async function drawFutCardCanvas(list, period, mode){
   ctx.lineTo(84 + 96, 276);
   ctx.stroke();
   ctx.fillStyle = theme.muted;
-  fitText(ctx, 'FFK', 84, 308, rail, '800', 22, 16);
+  fitText(ctx, 'MATCHCARD', 84, 308, rail, '800', 18, 12);
   const no = shirtNo();
   if(no){
     ctx.textAlign = 'right';
@@ -3940,7 +3940,7 @@ async function shareFutCard(list, period, tag){
   const stamp = String(tag || 'card').replace(/\s+/g, '_').slice(0, 24);
   await openCardPreview({
     legend: true,
-    filename: `ffk_card_${slug}_${stamp}.png`,
+    filename: `matchcard_${slug}_${stamp}.png`,
     build: mode => drawFutCardCanvas(list, period, mode)
   });
 }
@@ -3972,7 +3972,7 @@ function shareStatsCard(){
     kind: 'period',
     legend: true,
     range,
-    filename: `ffk_card_${slug}_${range}.png`,
+    filename: `matchcard_${slug}_${range}.png`,
     build: mode => drawFutCardCanvas(list, cardPeriodLabel(range), mode)
   });
 }
@@ -4034,7 +4034,7 @@ async function drawMatchCardCanvas(m, mode){
   const tx = photo ? textX : left;
   const tw = photo ? headW : headX - left - 32;
   ctx.fillStyle = theme.muted;
-  fitText(ctx, 'FFK  ·  ' + t('reportTitle').toUpperCase(), tx, 84, tw, '800', 22, 16);
+  fitText(ctx, 'MATCHCARD  ·  ' + t('reportTitle').toUpperCase(), tx, 84, tw, '800', 22, 16);
   ctx.fillStyle = theme.plate;
   fitText(ctx, reportPlayerName(m), tx, 150, tw, '900', 54, 30);
   ctx.fillStyle = theme.muted;
@@ -4085,7 +4085,7 @@ async function drawMatchCardCanvas(m, mode){
 }
 async function shareCard(m){
   await openCardPreview({
-    filename: `ffk_${m.date}.png`,
+    filename: `matchcard_${m.date}.png`,
     build: mode => drawMatchCardCanvas(m, mode)
   });
 }
@@ -4103,7 +4103,7 @@ async function shareCard(m){
     }
     loadSettings();
     const ratingFail = ratingFixtureFail();
-    if(ratingFail) console.error('FFK rating', ratingFail);
+    if(ratingFail) console.error('Matchcard rating', ratingFail);
     loadFilters();
     applyTheme();
     loadPlayer();
