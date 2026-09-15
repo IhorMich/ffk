@@ -3396,7 +3396,10 @@ function finishIntro(){
       track.style.transform = '';
     }
     const name = el.querySelector('.intro-name');
-    if(name) name.style.removeProperty('--intro-m-w');
+    if(name){
+      name.style.removeProperty('--intro-m-w');
+      name.style.removeProperty('--intro-stem-w');
+    }
     introBusy = false;
     afterIntro();
   }, 420);
@@ -3415,9 +3418,14 @@ function prepareIntroName(el){
   text.style.display = 'block';
   const width = Math.ceil(text.getBoundingClientRect().width);
   const mWidth = m ? Math.ceil(m.getBoundingClientRect().width) : Math.round(width * 0.12);
+  // Left stem of bold M ≈ 18% of the glyph advance.
+  const stemWidth = Math.max(4, Math.round(mWidth * 0.18));
   text.style.cssText = prev;
   if(width > 0) track.style.width = width + 'px';
-  if(name && mWidth > 0) name.style.setProperty('--intro-m-w', mWidth + 'px');
+  if(name){
+    if(mWidth > 0) name.style.setProperty('--intro-m-w', mWidth + 'px');
+    if(stemWidth > 0) name.style.setProperty('--intro-stem-w', stemWidth + 'px');
+  }
 }
 function playIntro(){
   const el = document.getElementById('intro');
