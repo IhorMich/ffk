@@ -370,11 +370,12 @@ window.ffkIsNative = function () {
       <p class="hint" data-i18n="sIconsHint">Сравни на вкладке «Матч» — список игровых действий.</p>
       <p class="hint" id="tzHint"></p>
       <h3 class="period-head" data-i18n="sBackup">Данные на телефоне</h3>
-      <p class="hint" id="backupBanner" hidden data-i18n="backupBanner">Данные только на этом телефоне. Сохраните копию в Файлы или отправьте себе — так сезон не пропадёт.</p>
+      <p class="hint" id="backupBanner" hidden data-i18n="backupBanner">Данные только на этом телефоне. «На телефон» кладёт файл в Загрузки / Matchcard. «В облако» — в Drive, почту или чат.</p>
       <div class="backup-row">
-        <button class="backup-btn" id="exportBtn" type="button" data-i18n="saveCopy">Сохранить копию</button>
+        <button class="backup-btn" id="exportBtn" type="button" data-i18n="saveCopy">На телефон</button>
+        <button class="backup-btn" id="sendBtn" type="button" data-i18n="sendCopy">В облако</button>
         <button class="backup-btn" id="importBtn" type="button" data-i18n="restoreCopy">Восстановить</button>
-        <button class="backup-btn" id="copyBtn" type="button" data-i18n="copyJson">Копировать JSON</button>
+        <button class="backup-btn" id="copyBtn" type="button" data-i18n="copyJson">JSON</button>
         <input type="file" id="importFile" accept="application/json" hidden>
       </div>
       <button class="save-btn" id="saveSettingsBtn" type="button" data-i18n="sSave">Сохранить настройки</button>

@@ -69,6 +69,30 @@ async function nativeShareBlob(blob, filename, title){
   await Share.share({title: title || 'Matchcard', files: [got.uri], dialogTitle: title || 'Matchcard'});
   return true;
 }
+async function nativeSaveDocument(blob, filename){
+  if(!isNativeApp() || !blob) return null;
+  const data = await blobToBase64(blob);
+  const Gallery = capPlugin('GalleryPicker');
+  if(Gallery && typeof Gallery.saveDocument === 'function'){
+    try{
+      const ret = await Gallery.saveDocument({data, filename, mimeType:'application/json'});
+      return {folder: (ret && ret.folder) || 'Download/Matchcard'};
+    }catch(e){}
+  }
+  const Filesystem = capPlugin('Filesystem');
+  if(!Filesystem) return null;
+  try{
+    await Filesystem.writeFile({
+      path: 'Matchcard/' + filename,
+      data,
+      directory: 'DOCUMENTS',
+      recursive: true
+    });
+    return {folder: 'Files / Matchcard'};
+  }catch(e){
+    return null;
+  }
+}
 function applyNativeChrome(){
   const Bar = capPlugin('StatusBar');
   if(!isNativeApp() || !Bar) return;
@@ -2544,21 +2568,38 @@ function applyImportBundle(imported){
   applyPlayerContext();
   return {added, playerTouched};
 }
+function exportBlob(){
+  return {
+    blob: new Blob([JSON.stringify(exportPayload(), null, 2)], {type:'application/json'}),
+    filename: `matchcard_${todayStr()}.json`
+  };
+}
 function downloadMatches(){
   if(!matches.length && !player.firstName){ showToast(t('toastNothingExport')); return; }
-  const blob = new Blob([JSON.stringify(exportPayload(), null, 2)], {type:'application/json'});
-  const filename = `matchcard_${todayStr()}.json`;
+  const {blob, filename} = exportBlob();
+  nativeSaveDocument(blob, filename).then(saved => {
+    if(saved){
+      markExportDone();
+      showToast(t('toastCopyOnPhone', {folder: saved.folder}));
+      return;
+    }
+    triggerDownload(blob, filename);
+  }).catch(() => triggerDownload(blob, filename));
+}
+function sendCopy(){
+  if(!matches.length && !player.firstName){ showToast(t('toastNothingExport')); return; }
+  const {blob, filename} = exportBlob();
   nativeShareBlob(blob, filename, 'Matchcard').then(ok => {
     if(ok){
       markExportDone();
-      showToast(t('toastCopySaved'));
+      showToast(t('toastCopySent'));
       return;
     }
     const file = new File([blob], filename, {type:'application/json'});
     if(navigator.canShare && navigator.canShare({files:[file]})){
       navigator.share({files:[file], title:'Matchcard'}).then(() => {
         markExportDone();
-        showToast(t('toastCopySaved'));
+        showToast(t('toastCopySent'));
       }).catch(() => triggerDownload(blob, filename));
       return;
     }
@@ -2580,6 +2621,7 @@ function triggerDownload(blob, filename){
 }
 
 document.getElementById('exportBtn').addEventListener('click', downloadMatches);
+document.getElementById('sendBtn')?.addEventListener('click', sendCopy);
 document.getElementById('importBtn').addEventListener('click', () => document.getElementById('importFile').click());
 document.getElementById('copyBtn').addEventListener('click', async () => {
   try{

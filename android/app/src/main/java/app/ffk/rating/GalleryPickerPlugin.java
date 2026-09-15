@@ -23,6 +23,8 @@ import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.ActivityCallback;
 import com.getcapacitor.annotation.CapacitorPlugin;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 
@@ -92,6 +94,67 @@ public class GalleryPickerPlugin extends Plugin {
     }
   }
 
+  /**
+   * Season backup: write JSON into Downloads/Matchcard so it sits in Files
+   * on the phone, not only in a share sheet.
+   */
+  @PluginMethod
+  public void saveDocument(PluginCall call) {
+    String raw = call.getString("data", "");
+    String name = call.getString("filename", "matchcard.json");
+    String mime = call.getString("mimeType", "application/json");
+    int comma = raw.indexOf(',');
+    if (comma >= 0) raw = raw.substring(comma + 1);
+    if (raw.length() == 0) {
+      call.reject("no file data", "NO_DATA");
+      return;
+    }
+    try {
+      byte[] bytes = Base64.decode(raw, Base64.DEFAULT);
+      JSObject ret = new JSObject();
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        ContentValues values = new ContentValues();
+        values.put(MediaStore.Downloads.DISPLAY_NAME, name);
+        values.put(MediaStore.Downloads.MIME_TYPE, mime);
+        values.put(MediaStore.Downloads.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS + "/Matchcard");
+        ContentResolver resolver = getContext().getContentResolver();
+        dropOldDownload(resolver, name);
+        Uri target = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values);
+        if (target == null) {
+          call.reject("downloads rejected the file", "NO_TARGET");
+          return;
+        }
+        try (OutputStream out = resolver.openOutputStream(target)) {
+          if (out == null) {
+            call.reject("cannot write", "NO_STREAM");
+            return;
+          }
+          out.write(bytes);
+        }
+        ret.put("uri", target.toString());
+        ret.put("folder", "Download/Matchcard");
+      } else {
+        File dir = new File(
+          Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
+          "Matchcard"
+        );
+        if (!dir.exists() && !dir.mkdirs()) {
+          call.reject("cannot create folder", "NO_DIR");
+          return;
+        }
+        File file = new File(dir, name);
+        try (OutputStream out = new FileOutputStream(file)) {
+          out.write(bytes);
+        }
+        ret.put("path", file.getAbsolutePath());
+        ret.put("folder", "Download/Matchcard");
+      }
+      call.resolve(ret);
+    } catch (Exception e) {
+      call.reject(e.getMessage() == null ? "save failed" : e.getMessage(), "SAVE");
+    }
+  }
+
   @ActivityCallback
   private void pickResult(PluginCall call, ActivityResult result) {
     if (call == null) return;
@@ -112,6 +175,27 @@ public class GalleryPickerPlugin extends Plugin {
     } catch (Exception e) {
       call.reject(e.getMessage() == null ? "read failed" : e.getMessage(), "READ");
     }
+  }
+
+  private void dropOldDownload(ContentResolver resolver, String name) {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return;
+    String where = MediaStore.Downloads.DISPLAY_NAME + "=?";
+    try (
+      Cursor c = resolver.query(
+        MediaStore.Downloads.EXTERNAL_CONTENT_URI,
+        new String[] { MediaStore.Downloads._ID },
+        where,
+        new String[] { name },
+        null
+      )
+    ) {
+      while (c != null && c.moveToNext()) {
+        Uri old = Uri.withAppendedPath(MediaStore.Downloads.EXTERNAL_CONTENT_URI, String.valueOf(c.getLong(0)));
+        try {
+          resolver.delete(old, null, null);
+        } catch (Exception ignored) {}
+      }
+    } catch (Exception ignored) {}
   }
 
   // Saving the same card twice should replace it instead of leaving

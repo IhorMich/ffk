@@ -855,7 +855,7 @@
   .del-btn{background:none;border:1.5px solid var(--danger);color:var(--danger);}
   .backup-row{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
   .backup-btn{
-    flex:1;padding:11px 8px;border-radius:14px;border:1px solid var(--border);
+    flex:1 1 calc(50% - 8px);min-width:118px;padding:11px 8px;border-radius:14px;border:1px solid var(--border);
     background:var(--surface);color:var(--text);font-size:.78rem;font-weight:700;cursor:pointer;
   }
   .period-chips{display:flex;gap:8px;margin-bottom:18px;overflow-x:auto;}
