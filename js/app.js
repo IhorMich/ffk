@@ -3390,35 +3390,41 @@ function finishIntro(){
       gauge.style.maskImage = '';
       gauge.style.opacity = '';
     }
-    const track = el.querySelector('.intro-name-track');
-    if(track){
-      track.style.width = '';
-      track.style.transform = '';
-    }
     const name = el.querySelector('.intro-name');
-    if(name) name.style.removeProperty('--intro-stem-w');
+    if(name){
+      name.style.removeProperty('--intro-left-w');
+      name.style.removeProperty('--intro-right-w');
+    }
     introBusy = false;
     afterIntro();
   }, 420);
 }
 function prepareIntroName(el){
   const name = el.querySelector('.intro-name');
-  const track = el.querySelector('.intro-name-track');
-  const text = el.querySelector('.intro-name-text');
-  const m = el.querySelector('.intro-name-m');
-  if(!track || !text) return;
-  track.style.width = '';
-  track.style.transform = 'translateX(50%)';
-  const prev = text.style.cssText;
-  text.style.visibility = 'hidden';
-  text.style.position = 'absolute';
-  text.style.display = 'block';
-  const width = Math.ceil(text.getBoundingClientRect().width);
-  const mWidth = m ? Math.ceil(m.getBoundingClientRect().width) : Math.round(width * 0.12);
-  const stemWidth = Math.max(8, Math.round(mWidth * 0.42));
-  text.style.cssText = prev;
-  if(width > 0) track.style.width = width + 'px';
-  if(name && stemWidth > 0) name.style.setProperty('--intro-stem-w', stemWidth + 'px');
+  const leftClip = el.querySelector('.intro-name-left-clip');
+  const rightClip = el.querySelector('.intro-name-right-clip');
+  const leftText = el.querySelector('.intro-name-left-text');
+  const rightText = el.querySelector('.intro-name-right-text');
+  if(!name || !leftClip || !rightClip || !leftText || !rightText) return;
+  const measure = (clip, node) => {
+    const prevClip = clip.style.cssText;
+    const prevNode = node.style.cssText;
+    clip.style.overflow = 'visible';
+    clip.style.width = 'auto';
+    clip.style.transform = 'none';
+    clip.style.opacity = '1';
+    node.style.visibility = 'hidden';
+    node.style.position = 'static';
+    node.style.display = 'block';
+    const width = Math.ceil(node.getBoundingClientRect().width);
+    clip.style.cssText = prevClip;
+    node.style.cssText = prevNode;
+    return width;
+  };
+  const leftW = measure(leftClip, leftText);
+  const rightW = measure(rightClip, rightText);
+  if(leftW > 0) name.style.setProperty('--intro-left-w', leftW + 'px');
+  if(rightW > 0) name.style.setProperty('--intro-right-w', rightW + 'px');
 }
 function playIntro(){
   const el = document.getElementById('intro');

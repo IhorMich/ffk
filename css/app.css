@@ -338,43 +338,54 @@
   .intro-name{
     position:relative;
     display:flex;justify-content:center;
-    width:min(100vw - 20px,28rem);
+    width:100%;
+    max-width:100vw;
     margin-top:-46px;
     min-height:1.2em;
     overflow:visible;
-    --intro-stem-w:.55em;
+    --intro-left-w:4.2em;
+    --intro-right-w:3.4em;
   }
-  .intro-name-track{
-    position:relative;
-    width:0;
-    transform:translateX(50%);
+  .intro-name-split{
+    display:flex;justify-content:center;align-items:center;
+    max-width:100%;
   }
-  /* Settle runs with the reveal so M draws while moving left (two-sided grow from center). */
-  .intro.play .intro-name-track{
-    animation:introNameSettle 1.7s cubic-bezier(.22,.61,.36,1) 4.95s forwards;
-  }
-  .intro-name-clip{
-    display:block;overflow:hidden;
-    width:var(--intro-stem-w);
+  /* Left half: M leads from the center and runs left. */
+  .intro-name-left-clip{
+    overflow:hidden;width:0;
+    display:flex;justify-content:flex-start;
     transform:scaleY(0);opacity:0;
-    transform-origin:center center;
+    transform-origin:right center;
   }
-  .intro.play .intro-name-clip{
-    animation:introNameReveal 1.95s cubic-bezier(.22,.61,.36,1) 4.7s forwards;
+  /* Right half: last letter D leads from the center and runs right. */
+  .intro-name-right-clip{
+    overflow:hidden;width:0;
+    display:flex;justify-content:flex-end;
+    transform:scaleY(0);opacity:0;
+    transform-origin:left center;
+  }
+  .intro.play .intro-name-left-clip{
+    animation:introNameLeft 1.85s cubic-bezier(.22,.61,.36,1) 4.7s forwards;
+  }
+  .intro.play .intro-name-right-clip{
+    animation:introNameRight 1.85s cubic-bezier(.22,.61,.36,1) 4.7s forwards;
   }
   .intro-name-text{
-    display:block;white-space:nowrap;
-    font-size:clamp(2.05rem,7.6vw,2.85rem);font-weight:800;letter-spacing:.06em;text-transform:uppercase;
+    flex:0 0 auto;white-space:nowrap;
+    font-size:clamp(1.55rem,5.8vw,2.35rem);font-weight:800;letter-spacing:.04em;text-transform:uppercase;
     color:#fff;line-height:1.05;
   }
-  .intro-name-m,.intro-name-rest{display:inline;}
   @keyframes introCup{to{opacity:1;transform:scale(1)}}
-  @keyframes introNameReveal{
-    0%{width:var(--intro-stem-w);transform:scaleY(0);opacity:0}
-    12%{width:var(--intro-stem-w);transform:scaleY(1);opacity:1}
-    100%{width:100%;transform:scaleY(1);opacity:1}
+  @keyframes introNameLeft{
+    0%{width:0;transform:scaleY(0);opacity:0}
+    12%{width:0;transform:scaleY(1);opacity:1}
+    100%{width:var(--intro-left-w);transform:scaleY(1);opacity:1}
   }
-  @keyframes introNameSettle{from{transform:translateX(50%)}to{transform:translateX(0)}}
+  @keyframes introNameRight{
+    0%{width:0;transform:scaleY(0);opacity:0}
+    12%{width:0;transform:scaleY(1);opacity:1}
+    100%{width:var(--intro-right-w);transform:scaleY(1);opacity:1}
+  }
   @keyframes introFade{to{opacity:0}}
   .onboard,.preview-modal{
     position:fixed;inset:0;z-index:92;background:rgba(8,14,24,.88);
