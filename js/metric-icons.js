@@ -28,65 +28,33 @@ const METRIC_ICON_LINE = {
   owngoal: '<circle cx="12" cy="12" r="7"/><path d="M12 8.2v5.2"/><circle cx="12" cy="16.2" r="1.1"/>'
 };
 
-/* Filled pictograms — denser, poster-like. */
-const METRIC_ICON_SOLID = {
-  goals: '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3.2" fill="none" stroke="var(--bg, #0B1220)" stroke-width="2"/>',
-  shots: '<path d="M4.5 19.5V7.8h15V19.5h-2.4V10.2H6.9V19.5z"/><circle cx="12" cy="14.8" r="2.4"/>',
-  assists: '<circle cx="6.2" cy="12" r="2.6"/><path d="M9.4 10.4h6.2l-.1-2.6L20 12l-4.5 4.2.1-2.6H9.4z"/>',
-  dribbles: '<path d="M4.2 17c2.6-5.2 4.8-5.2 7.4 0 2.5 5 4.8 5 7.4 0l1.7 1c-3.2 6.2-7 6.2-10.5 0-2.1-3.8-3.6-3.8-5.7 0z"/><circle cx="18.4" cy="7.6" r="2.4"/>',
-  openings: '<path d="M5.2 17.4 11 6.8l2.8 4.8L19.2 5.6l1.5 1.2-6.4 7.6-2.7-4.6-4.8 8.8z"/>',
-  chances: '<path d="M12 3.8 14.1 9.4l6 .2-4.7 3.8 1.6 5.8L12 16.2 7 19.2l1.6-5.8L3.9 9.6l6-.2z"/>',
-  passes: '<circle cx="5.8" cy="12" r="2.5"/><path d="M9 10.3h7l-.1-2.5L20.4 12 15.9 16.2l.1-2.5H9z"/>',
-  buildpass: '<path d="M3.6 10.3h11.2l-.1-2.8L21 12l-6.3 4.5.1-2.8H3.6z"/>',
-  tackles: '<path d="M12 3.9 19 6.8v4.8c0 4.2-2.9 7.3-7 8.6-4.1-1.3-7-4.4-7-8.6V6.8z"/>',
-  interceptions: '<path d="M4.8 8.2c4-3.6 10.4-3.6 14.4 0l-1.5 1.5c-3.2-2.7-8.2-2.7-11.4 0z"/><path d="M10.8 10.2h2.4V15l2.2-2.1 1.5 1.6L12 19.2 7.1 14.5l1.5-1.6 2.2 2.1z"/>',
-  clearances: '<circle cx="7.8" cy="15" r="2.6"/><path d="M10.2 13.2 18.4 5.4l2 2-8.2 7.8z"/>',
-  blocks: '<path d="M4.2 7.4h15.6v4H4.2zm0 5.4h15.6v4H4.2z"/>',
-  duelswon: '<path d="M6.2 17.2 12 6.6l5.8 10.6H6.2zm3.4-3.2h4.8v1.8H9.6z"/>',
-  support: '<circle cx="6.6" cy="12" r="2.8"/><circle cx="17.4" cy="12" r="2.8"/><path d="M9.4 10.8h5.2v2.4H9.4z"/>',
-  saves: '<path d="M6.4 10c0-2.6 2.2-4.5 5.6-4.5S17.6 7.4 17.6 10v5.6c0 1.7-1.3 3.1-3 3.1H9.4c-1.7 0-3-1.4-3-3.1z"/>',
-  claims: '<path d="M10.8 4.8h2.4v5.2l3.2-2.1 1.2 1.8L12 13.2 6.4 9.7l1.2-1.8 3.2 2.1z"/><path d="M5.4 15.2c2 3.6 11.2 3.6 13.2 0l1.7 1c-2.7 4.8-13.9 4.8-16.6 0z"/>',
-  gkpass: '<circle cx="6.6" cy="13.4" r="2.5"/><path d="M9.4 11.6 18.2 6.4l1.5 1.3-8.8 5.2z"/>',
-  conceded: '<path d="M4.2 6.8h15.6v2.2L12 18.4 4.2 9z"/>',
-  losses: '<path d="M6.2 5.8 18.2 17.8l-1.8 1.8L4.4 7.6zm12 0 1.8 1.8L8 19.6 6.2 17.8z"/>',
-  ledtogoal: '<path fill-rule="evenodd" d="M12 3.6A8.4 8.4 0 1 1 3.6 12 8.4 8.4 0 0 1 12 3.6zm3.7 3.1L8.7 15.7l-1.6-1.6 7-7z"/>',
-  badpass: '<path d="M4.2 10.4h7.6l-.1-2.4L16 12l-4.3 4 .1-2.4H4.2zm12.2-3.2 4.2-2.2v9.2l-4.2-2.2z"/>',
-  badtouch: '<path fill-rule="evenodd" d="M12 3.8a8.2 8.2 0 1 1 0 16.4 8.2 8.2 0 0 1 0-16.4zm3.2 4.2L8.8 14.4l-1.4-1.4 6.4-6.4z"/>',
-  duelslost: '<path d="M6.2 6.8h11.6L12 17.4 6.2 6.8zm3.4 2.4h4.8v1.8H9.6z"/>',
-  fouls: '<rect x="6.6" y="4.6" width="10.8" height="14.8" rx="1.6"/>',
-  owngoal: '<circle cx="12" cy="12" r="8"/><rect x="11" y="7.2" width="2" height="6.2" rx="1" fill="var(--bg, #0B1220)"/><circle cx="12" cy="16.2" r="1.3" fill="var(--bg, #0B1220)"/>'
-};
-
-/* Stamp marks kept for anyone who saved that preference; UI offers clearer packs. */
-const METRIC_ICON_MARK = METRIC_ICON_SOLID;
-
-/* Clearer football glyphs — thicker, more literal. */
+/* Literal football outlines — stroke only, no filled arrow blobs. */
 const METRIC_ICON_CLEAR = {
-  goals: '<circle cx="12" cy="12" r="7.5"/><path d="M12 6.2 14.6 9.4 18.2 9.8 15.4 12.6 16.2 16.4 12 14.4 7.8 16.4 8.6 12.6 5.8 9.8 9.4 9.4Z"/>',
-  shots: '<path d="M4.8 19.2V7.6h14.4v11.6"/><path d="M4.8 7.6h14.4"/><circle cx="12" cy="13.8" r="2.6"/><path d="M12 11.2V9"/>',
-  assists: '<circle cx="5.8" cy="12" r="2.4"/><circle cx="18.2" cy="12" r="2.4"/><path d="M8.4 12h5.4"/><path d="M12 9.2 15.2 12 12 14.8"/><circle cx="11.2" cy="12" r="1.3"/>',
-  dribbles: '<circle cx="7" cy="15.2" r="2.3"/><circle cx="12.2" cy="10.2" r="2.3"/><circle cx="17.4" cy="7.4" r="2.3"/><path d="M8.8 13.6 10.6 11.4M14 9.2 15.6 8.2"/>',
-  openings: '<circle cx="7.2" cy="15.6" r="2.1"/><path d="M9.4 14.2 14.8 8.2 18.2 8.2 18.2 11.4"/><path d="M14.2 8.2h4"/>',
-  chances: '<path d="M5 18.5V8h14v10.5"/><path d="M5 8h14"/><circle cx="12" cy="13" r="2"/><path d="M10.2 11.2 12 9.2 13.8 11.2"/>',
-  passes: '<circle cx="6" cy="14.5" r="2.2"/><circle cx="18" cy="9.5" r="2.2"/><path d="M8 13.2 15.8 10.2"/><path d="M13.6 8.8 16.4 10.2 14 12.2"/>',
-  buildpass: '<circle cx="5.2" cy="16" r="2"/><path d="M7.2 14.6 16.8 7.4"/><path d="M14.2 7.2h4.2v4"/><path d="M7.8 17.6H19"/>',
-  tackles: '<circle cx="8.2" cy="13.5" r="3.2"/><path d="M11.4 12.2 17.8 7.4 19 8.8 12.8 14"/><path d="M15.6 7.8h3.4v3.2"/>',
-  interceptions: '<path d="M4.8 8.5c3.8-3.2 10.6-3.2 14.4 0"/><circle cx="12" cy="14.8" r="3"/><path d="M12 8.8v3"/>',
-  clearances: '<circle cx="8" cy="15.4" r="2.5"/><path d="M10.2 13.8 17.6 6.6"/><path d="M14.8 6.5h4v4"/><path d="M6.2 18.2h12.6"/>',
-  blocks: '<path d="M4.5 6.8h15v4.2H4.5zm0 6.2h15v4.2H4.5z"/><circle cx="12" cy="9" r="1.4"/><circle cx="12" cy="15.2" r="1.4"/>',
-  duelswon: '<circle cx="8" cy="13" r="2.8"/><circle cx="16" cy="13" r="2.8"/><path d="M10.4 11.2 13.6 8.2 16 11"/><path d="M12 8.2V6.4"/>',
-  support: '<circle cx="7" cy="10.5" r="2.4"/><circle cx="17" cy="10.5" r="2.4"/><circle cx="12" cy="16.2" r="2.4"/><path d="M8.8 12.2 10.6 14.4M15.2 12.2 13.4 14.4"/>',
-  saves: '<path d="M6.5 11.2c0-2.8 2.2-4.8 5.5-4.8s5.5 2 5.5 4.8v5.2c0 1.5-1.2 2.8-2.8 2.8H9.3c-1.6 0-2.8-1.3-2.8-2.8z"/><circle cx="12" cy="13" r="2"/>',
-  claims: '<path d="M7.2 9.2c2.8-2.6 7.8-2.6 10.6 0"/><path d="M12 5.2v5.6"/><path d="M8.5 15.5c1.8 2.8 5.2 2.8 7 0"/><circle cx="12" cy="13.2" r="2.2"/>',
-  gkpass: '<path d="M5.5 10.5h5.2v7.2H5.5z"/><circle cx="8.1" cy="12.4" r="1.5"/><path d="M10.8 13.5 18.2 8"/><path d="M15.2 7.8h3.6v3.4"/>',
-  conceded: '<path d="M4.5 7.2h15v2.4L12 18.5 4.5 9.6z"/><circle cx="12" cy="11.5" r="1.8" fill="none"/>',
-  losses: '<circle cx="12" cy="12" r="7.4"/><path d="M8.2 8.2 15.8 15.8M15.8 8.2 8.2 15.8"/>',
-  ledtogoal: '<path d="M4.8 18.8V7.5h14.4v11.3"/><circle cx="12" cy="13.5" r="2.3"/><path d="M9.2 10.4 14.8 16.2"/>',
-  badpass: '<circle cx="6.2" cy="13.5" r="2.1"/><path d="M8.4 12.4 14 9.2"/><path d="M14.8 7.5 14.8 16.5M12.8 10 17.2 7.8 12.8 5.8"/>',
-  badtouch: '<circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.2"/><path d="M8.4 8.4 15.6 15.6"/>',
-  duelslost: '<circle cx="8" cy="11.5" r="2.8"/><circle cx="16" cy="11.5" r="2.8"/><path d="M10.5 13.8 12 17.2 13.5 13.8"/>',
-  fouls: '<rect x="7" y="4.8" width="10" height="14.4" rx="1.6"/><path d="M9.2 9h5.6M9.2 12.2h5.6M9.2 15.4h3.6"/>',
-  owngoal: '<path d="M4.8 18.5V7.8h14.4V18.5"/><circle cx="12" cy="13.2" r="2.5"/><path d="M12 8.5v2.2"/>'
+  goals: '<circle cx="12" cy="12" r="7.6"/><path d="M12 5.8 14.8 8.6 12 10.2 9.2 8.6Z"/><path d="M9.2 8.6 6.6 11.2 8.4 14.4 12 10.2"/><path d="M14.8 8.6 17.4 11.2 15.6 14.4 12 10.2"/><path d="M8.4 14.4 12 18.2 15.6 14.4"/>',
+  shots: '<path d="M5 19V8h14v11"/><path d="M5 8h14"/><circle cx="12" cy="14.2" r="2.4"/>',
+  assists: '<circle cx="5.5" cy="8.2" r="1.7"/><path d="M5.5 10.2v4.2l-2.2 3.4M5.5 14.4l2.2 3.4"/><circle cx="16.8" cy="8.2" r="1.7"/><path d="M16.8 10.2v4.2l-2.2 3.4M16.8 14.4l2.2 3.4"/><circle cx="11.2" cy="11.5" r="1.6"/><path d="M13 11.5h2.2"/>',
+  dribbles: '<path d="M6 17.2V12.5"/><path d="M4.6 12.5h2.8"/><circle cx="10.2" cy="14.8" r="2"/><circle cx="15.6" cy="9.4" r="2"/><path d="M11.8 13.4c1.2-1.6 2.4-2.4 3.2-2.8"/>',
+  openings: '<circle cx="6.4" cy="7.6" r="1.7"/><path d="M6.4 9.6v3.6l-2.1 4M6.4 13.2l2.1 4"/><path d="M9.6 11.5h5.4"/><path d="M12.8 9 16.2 11.5 12.8 14"/>',
+  chances: '<path d="M4.8 19V9.2h14.4V19"/><path d="M4.8 9.2h14.4"/><circle cx="9.2" cy="14.5" r="2"/><path d="M11.4 14.5h4.2"/><path d="M13.8 12.4 16.4 14.5 13.8 16.6"/>',
+  passes: '<circle cx="5.8" cy="7.8" r="1.6"/><path d="M5.8 9.7v3.8l-2 3.4M5.8 13.5l2 3.4"/><circle cx="18.2" cy="7.8" r="1.6"/><path d="M18.2 9.7v3.8l-2 3.4M18.2 13.5l2 3.4"/><path d="M8.2 12h5.6"/><path d="M12 9.8 14.6 12 12 14.2"/>',
+  buildpass: '<path d="M4.5 17.5h15"/><circle cx="6.2" cy="12.2" r="2"/><path d="M8.4 12.2h7"/><path d="M13.4 9.6 17.2 12.2 13.4 14.8"/>',
+  tackles: '<circle cx="16.2" cy="9.2" r="2.3"/><path d="M4.8 16.2c2.2-1 4.6-2.2 7.2-4.2l2.2 2.2c-2.4 1.6-4.8 3-7.4 4.2z"/><path d="M11.6 13.2 14.4 10.6"/>',
+  interceptions: '<circle cx="5.2" cy="8.5" r="1.5"/><circle cx="18.8" cy="8.5" r="1.5"/><path d="M6.8 9.2 10.2 12"/><path d="M17.2 9.2 13.8 12"/><circle cx="12" cy="14.8" r="2.4"/><path d="M12 10.8v1.6"/>',
+  clearances: '<path d="M4.8 18h14.4"/><path d="M7.2 18c0-3.2 1.4-5.6 3.6-7.2"/><circle cx="14.8" cy="7.6" r="2.2"/><path d="M11.2 10.4 13.2 8.6"/>',
+  blocks: '<path d="M5 7.2h14v3.6H5z"/><path d="M5 13.2h14v3.6H5z"/><circle cx="18.2" cy="5.6" r="1.5"/><path d="M17 6.8 14.8 9"/>',
+  duelswon: '<circle cx="6.2" cy="7.5" r="1.6"/><path d="M6.2 9.4v3.4l-2 3.6M6.2 12.8l2 3.6"/><circle cx="17.8" cy="7.5" r="1.6"/><path d="M17.8 9.4v3.4l-2 3.6M17.8 12.8l2 3.6"/><path d="M9.2 11.2 11.2 13.2 15.2 9"/>',
+  support: '<circle cx="6.4" cy="7.6" r="1.6"/><path d="M6.4 9.5v3.2l-2 3.6M6.4 12.7l2 3.6"/><circle cx="17.6" cy="7.6" r="1.6"/><path d="M17.6 9.5v3.2l-2 3.6M17.6 12.7l2 3.6"/><path d="M8.8 12.2h6.4"/>',
+  saves: '<path d="M5.8 10.5c0-2.2 1.6-3.8 4-3.8h1.2c.6 0 1.2.2 1.6.6L14 9l1.4-1.7c.4-.4 1-.6 1.6-.6h.2c2.2 0 3.8 1.6 3.8 3.8V16c0 1.3-1 2.4-2.3 2.4h-2.2c-.7 0-1.3-.3-1.7-.8L14 15.4l-1.2 1.4c-.4.5-1 .8-1.7.8H8.1C6.8 17.6 5.8 16.5 5.8 15.2z"/><circle cx="12" cy="12.6" r="1.7"/>',
+  claims: '<circle cx="12" cy="6.4" r="2"/><path d="M8.2 11.2c1.1-1.4 2.4-2.2 3.8-2.2s2.7.8 3.8 2.2"/><path d="M7.4 14.5c1.4 3 7.8 3 9.2 0"/><path d="M12 9.2v3.4"/>',
+  gkpass: '<path d="M5.2 9.5h5v8.2h-5z"/><circle cx="7.7" cy="12" r="1.4"/><circle cx="16.8" cy="8.2" r="2"/><path d="M10.4 12.4 14.6 9.2"/>',
+  conceded: '<path d="M4.6 7.5h14.8v2.2"/><path d="M4.6 9.7 12 18.2 19.4 9.7"/><path d="M7.2 9.7 12 15.2 16.8 9.7"/><circle cx="12" cy="11.6" r="1.5"/>',
+  losses: '<circle cx="9.2" cy="12" r="3.2"/><path d="M13.2 10.2 19 6.8M13.6 13.8 19 17.2"/><path d="M16.4 8.2 19 6.8 17.4 4.8"/>',
+  ledtogoal: '<path d="M5 19V8.2h14V19"/><path d="M5 8.2h14"/><circle cx="8.5" cy="14" r="2"/><path d="M10.8 14H16"/><path d="M7.2 7.2 10.2 10.2"/>',
+  badpass: '<circle cx="5.6" cy="8" r="1.5"/><path d="M5.6 9.8v3.6l-2 3.4M5.6 13.4l2 3.4"/><path d="M8.2 11.5c2.4.2 4.2 1.8 5.4 4"/><path d="M12.2 13.8 14.8 16.8M14.2 17.4h2.2v-2"/>',
+  badtouch: '<circle cx="7.2" cy="7.8" r="1.5"/><path d="M7.2 9.6v3.2l-2 3.8M7.2 12.8l2 3.8"/><circle cx="16.4" cy="9.2" r="2.4"/><path d="M9.6 13.2 13.8 10.4"/><path d="M14.8 11.2 17.8 13.8"/>',
+  duelslost: '<circle cx="6.2" cy="7.5" r="1.6"/><path d="M6.2 9.4v3.4l-2 3.6M6.2 12.8l2 3.6"/><circle cx="17.8" cy="7.5" r="1.6"/><path d="M17.8 9.4v3.4l-2 3.6M17.8 12.8l2 3.6"/><path d="M9.4 11.5 14.6 14.8"/>',
+  fouls: '<rect x="7.2" y="4.6" width="9.6" height="14.8" rx="1.2"/><path d="M9.4 9.2h5.2M9.4 12.4h5.2"/>',
+  owngoal: '<path d="M5 19V8h14v11"/><path d="M5 8h14"/><circle cx="12" cy="13.8" r="2.3"/><path d="M12 6.2v2.4"/>'
 };
 
 const METRIC_ICON_TINT = {
@@ -99,30 +67,28 @@ const METRIC_ICON_TINT = {
   duelslost:'var(--danger)', fouls:'var(--gold)', owngoal:'var(--danger)'
 };
 
-const ICON_SET_ORDER = ['line', 'clear', 'bright', 'solid'];
+const ICON_SET_ORDER = ['clear', 'bright', 'line'];
 
 const METRIC_ICON_PACKS = {
-  line: {paths: METRIC_ICON_LINE, fill: 'none', stroke: 'currentColor', width: '1.75', tint: false},
-  clear: {paths: METRIC_ICON_CLEAR, fill: 'none', stroke: 'currentColor', width: '2.15', tint: false},
-  bright: {paths: METRIC_ICON_CLEAR, fill: 'none', stroke: 'currentColor', width: '2.15', tint: true},
-  solid: {paths: METRIC_ICON_SOLID, fill: 'currentColor', stroke: 'none', width: '0', tint: false},
-  mark: {paths: METRIC_ICON_MARK, fill: 'currentColor', stroke: 'none', width: '0', tint: false}
+  clear: {paths: METRIC_ICON_CLEAR, width: '1.85', tint: false},
+  bright: {paths: METRIC_ICON_CLEAR, width: '1.85', tint: true},
+  line: {paths: METRIC_ICON_LINE, width: '1.75', tint: false}
 };
 
 function iconSetName(){
   try{
     if(typeof settings !== 'undefined'){
-      if(settings.iconSet === 'mark') return 'clear';
+      if(settings.iconSet === 'mark' || settings.iconSet === 'solid') return 'clear';
       if(ICON_SET_ORDER.includes(settings.iconSet)) return settings.iconSet;
     }
   }catch(e){}
-  return 'line';
+  return 'clear';
 }
 
 function metricIconSvg(key, cls){
-  const pack = METRIC_ICON_PACKS[iconSetName()] || METRIC_ICON_PACKS.line;
+  const pack = METRIC_ICON_PACKS[iconSetName()] || METRIC_ICON_PACKS.clear;
   const body = pack.paths[key] || pack.paths.losses;
   const klass = cls ? ` class="${cls}"` : '';
   const tint = pack.tint ? (METRIC_ICON_TINT[key] || 'currentColor') : 'currentColor';
-  return `<svg${klass} viewBox="0 0 24 24" fill="${pack.fill}" stroke="${pack.stroke}" stroke-width="${pack.width}" stroke-linecap="round" stroke-linejoin="round" style="color:${tint}" aria-hidden="true" focusable="false">${body}</svg>`;
+  return `<svg${klass} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${pack.width}" stroke-linecap="round" stroke-linejoin="round" style="color:${tint}" aria-hidden="true" focusable="false">${body}</svg>`;
 }
