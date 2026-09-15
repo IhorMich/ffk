@@ -605,7 +605,7 @@ function reportLines(m){
       if(duelsDone) return;
       duelsDone = true;
       const w = counts.duelswon || 0, l = counts.duelslost || 0;
-      if(w + l > 0) lines.push({icon:'💪', text: `${w}/${w+l} ${t('mn_duels')}`});
+      if(w + l > 0) lines.push({key:'duelswon', text: `${w}/${w+l} ${t('mn_duels')}`});
       return;
     }
     const n = counts[met.key] || 0;
@@ -615,7 +615,7 @@ function reportLines(m){
       const mins = goalMinutes(m);
       if(mins.length) extra = ' · ' + mins.map(x => t('minLbl', {n:x})).join(', ');
     }
-    lines.push({icon: met.icon, text: `${n} ${metricNoun(met.key, n)}${extra}`});
+    lines.push({key: met.key, text: `${n} ${metricNoun(met.key, n)}${extra}`});
   });
   return lines;
 }
@@ -633,7 +633,7 @@ function renderReportHtml(m, compact){
     ${meta}
     <div class="report-sub"><span>${escapeHtml(t('heroAction'))} ${fmtNum(m.actionRating, 2)}</span><span>${escapeHtml(t('heroEffort'))} ${fmtNum(m.effortRating, 2)}</span></div>`;
   const body = lines.length
-    ? lines.map(x => `<div class="report-line"><span class="ic">${x.icon}</span><span>${escapeHtml(x.text)}</span></div>`).join('')
+    ? lines.map(x => `<div class="report-line"><span class="ic">${metricIconSvg(x.key)}</span><span>${escapeHtml(x.text)}</span></div>`).join('')
     : `<div class="report-line">${escapeHtml(t('plusEven'))}</div>`;
   return `${head}${body}${matchInsightHtml(m)}
     <div class="report-split">
@@ -1602,7 +1602,7 @@ function renderPlayerFeed(){
   const weakNeg = grades.filter(g => g.w < 0).sort((a,b)=> a.grade - b.grade).slice(0, 3);
   const weakPos = grades.filter(g => g.w > 0 && g.grade < 6.6).sort((a,b)=> a.grade - b.grade);
   const focus = (weakNeg.length ? weakNeg : weakPos).slice(0, 3);
-  const row = (g, bad) => `<div class="pf-row${bad ? ' bad' : ''}"><span class="pf-lab"><span class="ic">${g.m.icon}</span>${escapeHtml(profileMetricLabel(g.m.key))}</span><span class="g">${fmtNum(g.grade, 1)}</span></div>`;
+    const row = (g, bad) => `<div class="pf-row${bad ? ' bad' : ''}"><span class="pf-lab"><span class="ic">${metricIconSvg(g.m.key)}</span>${escapeHtml(profileMetricLabel(g.m.key))}</span><span class="g">${fmtNum(g.grade, 1)}</span></div>`;
   const note = profileCoachNote(list, strengths, focus);
   el.innerHTML = `<div class="pf-card">
       <div class="pf-rate">${fmtNum(avg, 2)}<small>${escapeHtml(season ? t('pfSeasonAvg') : t('pfAllAvg'))}</small></div>
@@ -1908,7 +1908,7 @@ function renderMetrics(){
     const keyRow = (m.live || []).includes(pos);
     return `<div class="metric-row${keyRow ? ' key' : ''}">
       <div class="metric-name">
-        <div class="metric-icon">${m.icon}</div>
+        <div class="metric-icon">${metricIconSvg(m.key)}</div>
         <div>${escapeHtml(metricLabel(m.key))}<span class="metric-weight">${shown}</span></div>
       </div>
       <div class="stepper">
@@ -4167,10 +4167,12 @@ async function drawMatchCardCanvas(m, mode){
     lines.forEach((line, i) => {
       const x = i % 2 === 0 ? left : col2;
       const y = listTop + Math.floor(i / 2) * 50;
+      ctx.fillStyle = theme.accent || '#22D3A6';
+      ctx.beginPath();
+      ctx.arc(x + 12, y - 10, 5, 0, Math.PI * 2);
+      ctx.fill();
       ctx.fillStyle = theme.plate;
-      ctx.font = canvasFont('700', 32);
-      ctx.fillText(line.icon, x, y);
-      fitText(ctx, line.text, x + 52, y, colW - 52, '700', 32, 20);
+      fitText(ctx, line.text, x + 36, y, colW - 36, '700', 32, 20);
     });
   }
 

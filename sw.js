@@ -1,4 +1,4 @@
-const CACHE = 'ffk_v72';
+const CACHE = 'ffk_v73';
 const ASSETS = [
   './',
   './index.html',
@@ -7,6 +7,7 @@ const ASSETS = [
   './js/version.js',
   './js/i18n.js',
   './js/rating.js',
+  './js/metric-icons.js',
   './js/storage.js',
   './js/app.js',
   './manifest.webmanifest',
