@@ -101,8 +101,11 @@ function metricIconSvg(key, cls){
     if(rel){
       const src = metricIconUrl(rel);
       const klass = cls ? ` ${cls}` : '';
-      /* mask-image must be inline — urls inside CSS vars resolve against css/app.css */
-      return `<span class="metric-glyph${klass}" style="color:${tint};-webkit-mask-image:url('${src}');mask-image:url('${src}')" aria-hidden="true"></span>`;
+      if(pack.tint){
+        return `<span class="metric-glyph${klass}" style="color:${tint};-webkit-mask-image:url('${src}');mask-image:url('${src}')" aria-hidden="true"></span>`;
+      }
+      /* clear pack: plain img — full silhouette, no mask clipping */
+      return `<img class="metric-glyph-img${klass}" src="${src}" alt="" decoding="async" aria-hidden="true">`;
     }
     const body = (pack.fallback && pack.fallback[key]) || METRIC_ICON_LINE.losses;
     return metricIconStroke(body, pack.width, tint, cls);
