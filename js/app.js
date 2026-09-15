@@ -3395,13 +3395,17 @@ function finishIntro(){
       track.style.width = '';
       track.style.transform = '';
     }
+    const name = el.querySelector('.intro-name');
+    if(name) name.style.removeProperty('--intro-m-w');
     introBusy = false;
     afterIntro();
   }, 420);
 }
 function prepareIntroName(el){
+  const name = el.querySelector('.intro-name');
   const track = el.querySelector('.intro-name-track');
   const text = el.querySelector('.intro-name-text');
+  const m = el.querySelector('.intro-name-m');
   if(!track || !text) return;
   track.style.width = '';
   track.style.transform = 'translateX(50%)';
@@ -3410,8 +3414,10 @@ function prepareIntroName(el){
   text.style.position = 'absolute';
   text.style.display = 'block';
   const width = Math.ceil(text.getBoundingClientRect().width);
+  const mWidth = m ? Math.ceil(m.getBoundingClientRect().width) : Math.round(width * 0.12);
   text.style.cssText = prev;
   if(width > 0) track.style.width = width + 'px';
+  if(name && mWidth > 0) name.style.setProperty('--intro-m-w', mWidth + 'px');
 }
 function playIntro(){
   const el = document.getElementById('intro');
@@ -3426,7 +3432,7 @@ function playIntro(){
   el.classList.add('play');
   playGaugeWipe(gauge, 1400, 3200);
   el.addEventListener('click', finishIntro, {once:true});
-  window.setTimeout(finishIntro, 7400);
+  window.setTimeout(finishIntro, 7800);
   return true;
 }
 function finishOnboard(){
