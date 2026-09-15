@@ -3391,7 +3391,10 @@ function finishIntro(){
       gauge.style.opacity = '';
     }
     const track = el.querySelector('.intro-name-track');
-    if(track) track.style.width = '';
+    if(track){
+      track.style.width = '';
+      track.style.transform = '';
+    }
     introBusy = false;
     afterIntro();
   }, 420);
@@ -3401,6 +3404,7 @@ function prepareIntroName(el){
   const text = el.querySelector('.intro-name-text');
   if(!track || !text) return;
   track.style.width = '';
+  track.style.transform = 'translateX(50%)';
   const prev = text.style.cssText;
   text.style.visibility = 'hidden';
   text.style.position = 'absolute';
