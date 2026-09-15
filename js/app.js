@@ -1203,7 +1203,7 @@ function renderCrop(){
     ctx.rect(win.x, win.y, win.w, win.h);
   }
   ctx.fill('evenodd');
-  ctx.strokeStyle = 'rgba(34,211,166,.9)';
+  ctx.strokeStyle = 'rgba(245,185,66,.9)';
   ctx.lineWidth = 2;
   if(win.round){
     ctx.beginPath();
@@ -2935,10 +2935,10 @@ function drawChart(list){
   }
   const xs = list.map((_,i)=> xAt(i));
   const ys = ratings.map(r => yAt(r));
-  const path = list.length === 1 ? '' : `<path d="${xs.map((x,i)=> `${i===0?'M':'L'}${x.toFixed(1)},${ys[i].toFixed(1)}`).join(' ')}" fill="none" stroke="${cssVar('--accent','#22D3A6')}" stroke-width="2.5"/>`;
+  const path = list.length === 1 ? '' : `<path d="${xs.map((x,i)=> `${i===0?'M':'L'}${x.toFixed(1)},${ys[i].toFixed(1)}`).join(' ')}" fill="none" stroke="${cssVar('--accent','#E8C56A')}" stroke-width="2.5"/>`;
   const step = list.length > 10 ? Math.ceil(list.length / 8) : 1;
   const dots = xs.map((x,i)=> {
-    return `<circle cx="${x.toFixed(1)}" cy="${ys[i].toFixed(1)}" r="${i === xs.length-1?5:3.2}" fill="${i === xs.length-1?cssVar('--gold','#F5B942'):cssVar('--accent','#22D3A6')}"/>`;
+    return `<circle cx="${x.toFixed(1)}" cy="${ys[i].toFixed(1)}" r="${i === xs.length-1?5:3.2}" fill="${i === xs.length-1?cssVar('--gold','#F5B942'):cssVar('--accent','#E8C56A')}"/>`;
   }).join('');
   const labels = xs.map((x,i)=> {
     if(i !== 0 && i !== xs.length-1 && i % step) return '';
@@ -3008,12 +3008,11 @@ function renderLiveClock(){
   document.querySelectorAll('.js-match-clock-btn').forEach(btn => {
     btn.textContent = btnText;
     btn.disabled = phase === 'done';
+    btn.classList.toggle('go', phase === 'idle' || phase === 'break');
   });
   // Match over: nothing to do but save, so the live entry stays locked until then.
   const startBtn = document.getElementById('liveStartBtn');
   if(startBtn) startBtn.disabled = phase === 'done';
-  const liveKick = document.getElementById('liveKickBtn');
-  if(liveKick) liveKick.classList.toggle('go', phase === 'idle' || phase === 'break');
 }
 let cueCtx = null;
 function audioCtx(){
@@ -3754,7 +3753,7 @@ function to99(grade){
 function futTheme(ovr, mode){
   const dark = ovr >= 85 ? {
     foil:'#F5D76E', foil2:'#C9A227', ink:'#140C28', paper:['#2A1658', '#0E1A36', '#12382E'],
-    glow:'rgba(34,211,166,.45)', plate:'#F5D76E', muted:'#D9C27A'
+    glow:'rgba(245,185,66,.45)', plate:'#F5D76E', muted:'#D9C27A'
   } : ovr >= 75 ? {
     foil:'#F3D27A', foil2:'#B8860B', ink:'#2A1A06', paper:['#5A3E12', '#2C1C08', '#7A5418'],
     glow:'rgba(245,185,66,.35)', plate:'#F6DE9A', muted:'#E8D5A0'
@@ -3769,7 +3768,7 @@ function futTheme(ovr, mode){
   return {
     foil: dark.foil, foil2: dark.foil2, ink:'#0B1220',
     paper:['#F7F1E3', '#EFE6D4', '#E7D8B8'],
-    glow:'rgba(34,211,166,.18)', plate:'#0B1220', muted:'#4A5568'
+    glow:'rgba(245,185,66,.18)', plate:'#0B1220', muted:'#4A5568'
   };
 }
 function futStatRows(list, pos){
@@ -4162,7 +4161,7 @@ async function drawMatchCardCanvas(m, mode){
     lines.forEach((line, i) => {
       const x = i % 2 === 0 ? left : col2;
       const y = listTop + Math.floor(i / 2) * 50;
-      ctx.fillStyle = theme.accent || '#22D3A6';
+      ctx.fillStyle = theme.foil;
       ctx.beginPath();
       ctx.arc(x + 12, y - 10, 5, 0, Math.PI * 2);
       ctx.fill();
@@ -4171,7 +4170,7 @@ async function drawMatchCardCanvas(m, mode){
     });
   }
 
-  ctx.fillStyle = '#22D3A6';
+  ctx.fillStyle = theme.foil;
   fitText(ctx, fmtSigned(split.plus, 2), left, sumY, colW, '800', 46, 30);
   ctx.fillStyle = theme.muted;
   fitText(ctx, t('actPlus'), left, sumY + 36, colW, '700', 22, 15);
