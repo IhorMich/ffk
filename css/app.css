@@ -322,27 +322,22 @@
   .intro-stage{position:relative;width:min(68vw,268px);aspect-ratio:1;}
   .intro-layer{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block;}
   .intro-cup{
-    clip-path:ellipse(38% 42% at 50% 61%);
     opacity:0;transform:scale(.9);
   }
   .intro.play .intro-cup{animation:introCup .8s cubic-bezier(.22,.7,.2,1) forwards;}
   .intro-gauge{
-    -webkit-mask-image:linear-gradient(90deg,#000 46%,transparent 54%);
-    mask-image:linear-gradient(90deg,#000 46%,transparent 54%);
-    -webkit-mask-size:230% 100%;mask-size:230% 100%;
-    -webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;
-    -webkit-mask-position:100% 0;mask-position:100% 0;
+    clip-path:inset(0 100% 0 0);
   }
-  .intro.play .intro-gauge{animation:introWipe 2s cubic-bezier(.22,.61,.36,1) .85s forwards;}
+  .intro.play .intro-gauge{animation:introWipe 2.2s cubic-bezier(.22,.61,.36,1) .9s forwards;}
   .intro-name{
     font-size:.84rem;font-weight:800;letter-spacing:.22em;text-transform:uppercase;
     color:#E8C15A;opacity:0;
   }
-  .intro.play .intro-name{animation:introName .55s ease 2.85s forwards;}
+  .intro.play .intro-name{animation:introName .55s ease 3.15s forwards;}
   @keyframes introCup{to{opacity:1;transform:scale(1)}}
   @keyframes introWipe{
-    from{-webkit-mask-position:100% 0;mask-position:100% 0;}
-    to{-webkit-mask-position:0 0;mask-position:0 0;}
+    from{clip-path:inset(0 100% 0 0);}
+    to{clip-path:inset(0 0 0 0);}
   }
   @keyframes introName{to{opacity:1}}
   @keyframes introFade{to{opacity:0}}

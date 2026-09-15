@@ -1,4 +1,4 @@
-const CACHE = 'ffk_v52';
+const CACHE = 'ffk_v53';
 const ASSETS = [
   './',
   './index.html',
@@ -10,6 +10,8 @@ const ASSETS = [
   './manifest.webmanifest',
   './icons/icon-192.png',
   './icons/icon-512.png',
+  './icons/intro-cup.png',
+  './icons/intro-gauge.png',
   './icons/apple-touch-icon.png',
   './fonts/plus-jakarta-sans-latin-400-normal.woff2',
   './fonts/plus-jakarta-sans-latin-600-normal.woff2',
