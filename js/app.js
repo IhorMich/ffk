@@ -3344,6 +3344,57 @@ function onboardPages(){
   ];
 }
 let introBusy = false;
+let introWipeRaf = 0;
+const INTRO_STAR_FROM = 228;
+const INTRO_STAR_SWEEP = 268;
+function setStarSweep(stars, progress){
+  if(!stars) return;
+  const p = Math.max(0, Math.min(1, progress));
+  if(p <= 0){
+    const blank = `conic-gradient(from ${INTRO_STAR_FROM}deg at 50% 50%, transparent 0deg, transparent 360deg)`;
+    stars.style.webkitMaskImage = blank;
+    stars.style.maskImage = blank;
+    return;
+  }
+  if(p >= 1){
+    stars.style.webkitMaskImage = 'none';
+    stars.style.maskImage = 'none';
+    return;
+  }
+  const deg = p * INTRO_STAR_SWEEP;
+  const soft = 22;
+  const mask = `conic-gradient(from ${INTRO_STAR_FROM}deg at 50% 50%, #000 0deg, #000 ${Math.max(0, deg - 2)}deg, transparent ${deg + soft}deg)`;
+  stars.style.webkitMaskImage = mask;
+  stars.style.maskImage = mask;
+}
+function stopStarSweep(){
+  if(introWipeRaf){
+    cancelAnimationFrame(introWipeRaf);
+    introWipeRaf = 0;
+  }
+}
+function playStarSweep(stars, delayMs, durMs){
+  stopStarSweep();
+  setStarSweep(stars, 0);
+  const t0 = performance.now();
+  const ease = p => (p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2);
+  const tick = now => {
+    const t = now - t0 - delayMs;
+    if(t < 0){
+      setStarSweep(stars, 0);
+      introWipeRaf = requestAnimationFrame(tick);
+      return;
+    }
+    const p = Math.min(1, t / durMs);
+    setStarSweep(stars, ease(p));
+    if(p < 1) introWipeRaf = requestAnimationFrame(tick);
+    else{
+      setStarSweep(stars, 1);
+      introWipeRaf = 0;
+    }
+  };
+  introWipeRaf = requestAnimationFrame(tick);
+}
 function afterIntro(){
   if(!maybeTransfer()) maybeOnboard();
 }
@@ -3351,10 +3402,16 @@ function finishIntro(){
   const el = document.getElementById('intro');
   if(!el || el.hidden || introBusy) return;
   introBusy = true;
+  stopStarSweep();
   el.classList.add('out');
   window.setTimeout(() => {
     el.hidden = true;
     el.classList.remove('out', 'play');
+    const stars = el.querySelector('.intro-stars');
+    if(stars){
+      stars.style.webkitMaskImage = '';
+      stars.style.maskImage = '';
+    }
     introBusy = false;
     afterIntro();
   }, 420);
@@ -3365,10 +3422,13 @@ function playIntro(){
   introBusy = false;
   el.hidden = false;
   el.classList.remove('out', 'play');
+  const stars = el.querySelector('.intro-stars');
+  setStarSweep(stars, 0);
   void el.offsetWidth;
   el.classList.add('play');
+  playStarSweep(stars, 700, 2600);
   el.addEventListener('click', finishIntro, {once:true});
-  window.setTimeout(finishIntro, 7500);
+  window.setTimeout(finishIntro, 7200);
   return true;
 }
 function finishOnboard(){
