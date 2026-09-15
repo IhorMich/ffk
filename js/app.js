@@ -74,7 +74,7 @@ function applyNativeChrome(){
   if(!isNativeApp() || !Bar) return;
   if(document.documentElement.classList.contains('intro-on')) return;
   const theme = themeName();
-  const color = theme === 'day' ? '#FFF8D6' : (theme === 'light' ? '#F3F5FA' : '#0B1220');
+  const color = theme === 'day' ? '#FFF8D6' : (theme === 'light' ? '#F3F5FA' : '#05060c');
   const style = theme === 'dark' ? 'LIGHT' : 'DARK';
   Promise.resolve(Bar.setOverlaysWebView({overlay: true})).catch(() => {});
   Promise.resolve(Bar.setBackgroundColor({color})).catch(() => {});
@@ -89,7 +89,7 @@ function applyTheme(){
   const theme = themeName();
   document.documentElement.dataset.theme = theme;
   const meta = document.querySelector('meta[name="theme-color"]');
-  if(meta) meta.content = theme === 'day' ? '#FFF8D6' : (theme === 'light' ? '#F3F5FA' : '#0B1220');
+  if(meta) meta.content = theme === 'day' ? '#FFF8D6' : (theme === 'light' ? '#F3F5FA' : '#05060c');
   const apple = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
   if(apple) apple.content = theme === 'dark' ? 'black-translucent' : 'default';
   document.querySelectorAll('.theme-toggle').forEach(btn => {
@@ -695,7 +695,8 @@ function fillScoreFields(s){
   syncScoreResultHint();
 }
 function emptyCtaHtml(msg){
-  return `<div class="empty-card"><p>${escapeHtml(msg)}</p><button type="button" class="save-btn" data-go-view="new">${escapeHtml(t('emptyGoMatch'))}</button></div>`;
+  const cup = 'icons/intro-cup.png' + (window.FFK_VERSION ? '?v=' + window.FFK_VERSION : '');
+  return `<div class="empty-card empty-card-cup"><img class="empty-cup" src="${cup}" alt=""><p>${escapeHtml(msg)}</p><button type="button" class="save-btn" data-go-view="new">${escapeHtml(t('emptyGoMatch'))}</button></div>`;
 }
 function matchResult(m){
   const p = scoreSides(m && m.score);
@@ -1914,16 +1915,16 @@ function restoreDraft(){
   syncMatchContextFold();
 }
 
-function renderMetrics(){
-  const pos = currentPos();
-  document.getElementById('weightsHint').textContent = t(({gk:'hintGk', fwd:'hintFwd', mid:'hintMid', def:'hintDef'})[pos] || 'hintOut');
-  document.getElementById('metricsList').innerHTML = metricsFor(pos).map(m => {
-    const w = weightOf(m, pos);
-    const shown = (w > 0 ? '+' : '') + (settings.lang === 'en' ? String(w) : String(w).replace('.', ','));
-    const keyRow = (m.live || []).includes(pos);
-    return `<div class="metric-row${keyRow ? ' key' : ''}">
+function metricGroupTitle(id){
+  return t(id === 'attack' ? 'grpAttack' : (id === 'defense' ? 'grpDefense' : 'grpDiscipline'));
+}
+function metricTileHtml(m, pos){
+  const w = weightOf(m, pos);
+  const shown = (w > 0 ? '+' : '') + (settings.lang === 'en' ? String(w) : String(w).replace('.', ','));
+  const keyRow = (m.live || []).includes(pos);
+  return `<div class="metric-tile${keyRow ? ' key' : ''}">
+      <div class="metric-icon">${metricIconSvg(m.key)}</div>
       <div class="metric-name">
-        <div class="metric-icon">${metricIconSvg(m.key)}</div>
         <div>${escapeHtml(metricLabel(m.key))}<span class="metric-weight">${shown}</span></div>
       </div>
       <div class="stepper">
@@ -1932,6 +1933,19 @@ function renderMetrics(){
         <button type="button" onclick="stepMetric('${m.key}',1)">+</button>
       </div>
     </div>`;
+}
+function renderMetrics(){
+  const pos = currentPos();
+  document.getElementById('weightsHint').textContent = t(({gk:'hintGk', fwd:'hintFwd', mid:'hintMid', def:'hintDef'})[pos] || 'hintOut');
+  const byKey = {};
+  metricsFor(pos).forEach(m => { byKey[m.key] = m; });
+  document.getElementById('metricsList').innerHTML = METRIC_GROUPS.map(g => {
+    const rows = g.keys.map(k => byKey[k]).filter(Boolean);
+    if(!rows.length) return '';
+    return `<section class="metric-group">
+      <div class="metric-group-title">${escapeHtml(metricGroupTitle(g.id))}</div>
+      <div class="metric-grid">${rows.map(m => metricTileHtml(m, pos)).join('')}</div>
+    </section>`;
   }).join('');
 }
 function renderBehaviors(){
@@ -2233,7 +2247,7 @@ function renderHistory(){
   if(!list.length){
     const filtered = !!(historyQuery.trim() || (historyKind && historyKind !== 'all'));
     el.innerHTML = filtered
-      ? `<div class="empty-card"><p>${escapeHtml(t('histEmpty'))}</p></div>`
+      ? `<div class="empty-card empty-card-cup"><img class="empty-cup" src="icons/intro-cup.png${window.FFK_VERSION ? '?v=' + window.FFK_VERSION : ''}" alt=""><p>${escapeHtml(t('histEmpty'))}</p></div>`
       : emptyCtaHtml(t('noPeriod'));
     hidePager();
     return;
@@ -2935,14 +2949,23 @@ function drawChart(list){
 
 function renderLiveGrid(){
   const pos = ratingPosOf(document.getElementById('live-position').value || currentPitch());
-  document.getElementById('liveGrid').innerHTML = metricsFor(pos).map(m => {
-    const neg = weightOf(m, pos) < 0;
-    return `<div class="live-cell ${neg?'neg':''}">
-      <button class="live-plus" type="button" onclick="stepMetric('${m.key}',1)">
-        ${escapeHtml(metricLabel(m.key))}<span class="n" id="live-cnt-${m.key}">${form.counts[m.key]||0}</span>
-      </button>
-      <button class="live-minus" type="button" onclick="stepMetric('${m.key}',-1)">−</button>
-    </div>`;
+  const byKey = {};
+  metricsFor(pos).forEach(m => { byKey[m.key] = m; });
+  document.getElementById('liveGrid').innerHTML = METRIC_GROUPS.map(g => {
+    const rows = g.keys.map(k => byKey[k]).filter(Boolean);
+    if(!rows.length) return '';
+    return `<section class="live-group">
+      <div class="metric-group-title">${escapeHtml(metricGroupTitle(g.id))}</div>
+      <div class="live-grid-inner">${rows.map(m => {
+        const neg = weightOf(m, pos) < 0;
+        return `<div class="live-cell ${neg?'neg':''}">
+          <button class="live-plus" type="button" onclick="stepMetric('${m.key}',1)">
+            ${escapeHtml(metricLabel(m.key))}<span class="n" id="live-cnt-${m.key}">${form.counts[m.key]||0}</span>
+          </button>
+          <button class="live-minus" type="button" onclick="stepMetric('${m.key}',-1)">−</button>
+        </div>`;
+      }).join('')}</div>
+    </section>`;
   }).join('');
   syncLiveUndo();
 }

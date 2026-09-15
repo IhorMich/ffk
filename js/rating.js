@@ -43,6 +43,11 @@ const BEHAVIOR = [
   {key:'discipline', inRating:true},
   {key:'mood', inRating:false},
 ];
+const METRIC_GROUPS = [
+  {id:'attack', keys:['goals','shots','assists','dribbles','openings','chances','passes','buildpass','support','gkpass']},
+  {id:'defense', keys:['tackles','interceptions','clearances','blocks','duelswon','saves','claims']},
+  {id:'discipline', keys:['losses','ledtogoal','badpass','badtouch','duelslost','fouls','owngoal','conceded']}
+];
 
 const GRADE_TYPICAL = {
   goals:0.6, assists:0.5, shots:1.2, dribbles:2.2, openings:2, chances:1.2,
