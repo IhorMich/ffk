@@ -30,9 +30,9 @@ const METRIC_ICON_LINE = {
 
 /* Real cutouts only. Missing poses use the line pack — never invented figures. */
 const METRIC_ICON_SIL_KEYS = [
-  'goals','shots','assists','dribbles','openings','passes',
-  'tackles','duelswon','duelslost','clearances','blocks',
-  'saves','claims','gkpass','conceded'
+  'goals','shots','assists','dribbles','openings','chances','passes','buildpass',
+  'tackles','interceptions','duelswon','support','duelslost','clearances','blocks',
+  'saves','claims','gkpass','conceded','losses','fouls'
 ];
 
 const METRIC_ICON_SIL = Object.fromEntries(
