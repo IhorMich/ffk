@@ -362,10 +362,10 @@
   }
   .intro-orbit-star img{
     width:100%;height:100%;display:block;object-fit:contain;
-    filter:drop-shadow(0 3px 4px rgba(0,0,0,.4)) drop-shadow(0 0 10px rgba(245,185,66,.35));
+    filter:drop-shadow(0 2px 6px rgba(0,0,0,.32)) drop-shadow(0 0 12px rgba(245,185,66,.28));
   }
   .intro.play .intro-orbit-star{
-    animation:introOrbitStar 1.05s cubic-bezier(.22,.62,.28,1) calc(.72s + (var(--d)* .14s)) forwards;
+    animation:introOrbitStar 2.2s cubic-bezier(.33,0,.18,1) calc(.55s + (var(--d)* .05s)) forwards;
   }
   .intro-name{
     position:relative;z-index:1;
@@ -388,13 +388,14 @@
     transform-origin:center bottom;
   }
   .intro.play .intro-name-ch{
-    animation:introBallBounce .85s cubic-bezier(.22,.9,.3,1.15) calc(2.85s + (var(--i) * .09s)) forwards;
+    animation:introBallBounce .85s cubic-bezier(.22,.9,.3,1.15) calc(3.35s + (var(--i) * .09s)) forwards;
   }
   @keyframes introCup{to{opacity:1;transform:scale(1) translateY(0)}}
   @keyframes introGlowIn{to{opacity:1}}
   @keyframes introOrbitStar{
-    0%{opacity:0;scale:.78}
-    100%{opacity:1;scale:1}
+    0%{opacity:0;filter:blur(7px)}
+    28%{opacity:.4;filter:blur(2.5px)}
+    100%{opacity:1;filter:blur(0)}
   }
   @keyframes introBallBounce{
     0%{opacity:0;transform:translateY(-1.35em) scaleY(1)}

@@ -3368,7 +3368,7 @@ function playIntro(){
   void el.offsetWidth;
   el.classList.add('play');
   el.addEventListener('click', finishIntro, {once:true});
-  window.setTimeout(finishIntro, 6500);
+  window.setTimeout(finishIntro, 7500);
   return true;
 }
 function finishOnboard(){
