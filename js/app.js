@@ -3390,41 +3390,9 @@ function finishIntro(){
       gauge.style.maskImage = '';
       gauge.style.opacity = '';
     }
-    const name = el.querySelector('.intro-name');
-    if(name){
-      name.style.removeProperty('--intro-left-w');
-      name.style.removeProperty('--intro-right-w');
-    }
     introBusy = false;
     afterIntro();
   }, 420);
-}
-function prepareIntroName(el){
-  const name = el.querySelector('.intro-name');
-  const leftClip = el.querySelector('.intro-name-left-clip');
-  const rightClip = el.querySelector('.intro-name-right-clip');
-  const leftText = el.querySelector('.intro-name-left-text');
-  const rightText = el.querySelector('.intro-name-right-text');
-  if(!name || !leftClip || !rightClip || !leftText || !rightText) return;
-  const measure = (clip, node) => {
-    const prevClip = clip.style.cssText;
-    const prevNode = node.style.cssText;
-    clip.style.overflow = 'visible';
-    clip.style.width = 'auto';
-    clip.style.transform = 'none';
-    clip.style.opacity = '1';
-    node.style.visibility = 'hidden';
-    node.style.position = 'static';
-    node.style.display = 'block';
-    const width = Math.ceil(node.getBoundingClientRect().width);
-    clip.style.cssText = prevClip;
-    node.style.cssText = prevNode;
-    return width;
-  };
-  const leftW = measure(leftClip, leftText);
-  const rightW = measure(rightClip, rightText);
-  if(leftW > 0) name.style.setProperty('--intro-left-w', leftW + 'px');
-  if(rightW > 0) name.style.setProperty('--intro-right-w', rightW + 'px');
 }
 function playIntro(){
   const el = document.getElementById('intro');
@@ -3434,12 +3402,11 @@ function playIntro(){
   el.classList.remove('out', 'play');
   const gauge = el.querySelector('.intro-gauge');
   setGaugeWipe(gauge, 0);
-  prepareIntroName(el);
   void el.offsetWidth;
   el.classList.add('play');
   playGaugeWipe(gauge, 1400, 3200);
   el.addEventListener('click', finishIntro, {once:true});
-  window.setTimeout(finishIntro, 7800);
+  window.setTimeout(finishIntro, 7600);
   return true;
 }
 function finishOnboard(){
