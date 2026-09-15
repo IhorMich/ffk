@@ -1949,15 +1949,19 @@ function renderMetrics(){
   }).join('');
 }
 function renderBehaviors(){
-  document.getElementById('behaviorList').innerHTML = BEHAVIOR.map(b => `
-    <div class="behavior-row">
+  document.getElementById('behaviorList').innerHTML = BEHAVIOR.map(b => {
+    const now = form.behaviors[b.key];
+    const pips = [1,2,3,4,5].map(n =>
+      `<button type="button" class="behavior-pip${n===now?' on':''}" data-behavior="${b.key}" data-n="${n}">${n}</button>`
+    ).join('');
+    return `<div class="behavior-row">
       <div class="behavior-top">
         <span>${escapeHtml(behaviorLabel(b.key))}</span>
-        <span class="val" id="bval-${b.key}">${form.behaviors[b.key]}</span>
+        <span class="val" id="bval-${b.key}">${now}</span>
       </div>
-      <input type="range" min="1" max="5" step="1" value="${form.behaviors[b.key]}"
-             data-behavior="${b.key}" oninput="setBehavior('${b.key}', this.value)">
-    </div>`).join('');
+      <div class="behavior-pips" role="radiogroup">${pips}</div>
+    </div>`;
+  }).join('');
 }
 function renderOppList(){
   const names = [...new Set(matches.map(m => m.opponent).filter(Boolean))].sort();
@@ -2029,64 +2033,23 @@ window.stepMetric = function(key, dir){
   persistDraft();
 };
 window.setBehavior = function(key, val){
-  if(behaviorRangeIgnore){
-    const input = document.querySelector('input[data-behavior="'+key+'"]');
-    if(input) input.value = form.behaviors[key];
-    const el = document.getElementById('bval-'+key);
-    if(el) el.textContent = form.behaviors[key];
-    return;
-  }
   form.behaviors[key] = parseInt(val, 10);
   const el = document.getElementById('bval-'+key);
   if(el) el.textContent = val;
+  document.querySelectorAll('.behavior-pip[data-behavior="'+key+'"]').forEach(b => {
+    b.classList.toggle('on', b.dataset.n === String(val));
+  });
   updateHero();
   persistDraft();
 };
-let behaviorRangeIgnore = false;
-function bindRangeScrollGuard(){
-  if(window.__ffkRangeGuard) return;
-  window.__ffkRangeGuard = true;
-  let startX = 0, startY = 0, startVal = '', range = null;
-  const isBehaviorRange = t => t && t.type === 'range' && t.closest('.behavior-row');
-  const pt = e => e.touches && e.touches[0] ? e.touches[0] : e;
-  const down = e => {
-    const t = e.target;
-    if(!isBehaviorRange(t)) return;
-    range = t;
-    const p = pt(e);
-    startX = p.clientX;
-    startY = p.clientY;
-    startVal = t.value;
-    behaviorRangeIgnore = false;
-  };
-  const move = e => {
-    if(!range) return;
-    const p = pt(e);
-    if(!p) return;
-    const dx = Math.abs(p.clientX - startX);
-    const dy = Math.abs(p.clientY - startY);
-    if(dy > 10 && dy >= dx){
-      behaviorRangeIgnore = true;
-      range.value = startVal;
-      const key = range.dataset.behavior;
-      if(key){
-        const el = document.getElementById('bval-'+key);
-        if(el) el.textContent = startVal;
-      }
-    }
-  };
-  const up = () => {
-    if(range && behaviorRangeIgnore) range.value = startVal;
-    range = null;
-    setTimeout(() => { behaviorRangeIgnore = false; }, 80);
-  };
-  document.addEventListener('pointerdown', down, true);
-  document.addEventListener('pointermove', move, true);
-  document.addEventListener('pointerup', up, true);
-  document.addEventListener('pointercancel', up, true);
-  document.addEventListener('touchstart', down, {capture:true, passive:true});
-  document.addEventListener('touchmove', move, {capture:true, passive:true});
-  document.addEventListener('touchend', up, {capture:true, passive:true});
+function bindBehaviorPips(){
+  if(window.__ffkBehaviorPips) return;
+  window.__ffkBehaviorPips = true;
+  document.addEventListener('click', e => {
+    const pip = e.target.closest('.behavior-pip');
+    if(!pip) return;
+    setBehavior(pip.dataset.behavior, pip.dataset.n);
+  });
 }
 
 function scoresNow(){
@@ -4276,7 +4239,7 @@ async function shareCard(m){
     if(!playIntro()) if(!maybeTransfer()) maybeOnboard();
     bindAppBack();
     bindTapHaptics();
-    bindRangeScrollGuard();
+    bindBehaviorPips();
     bindSheets();
     bindCameraRestore();
     syncScoreResultHint();

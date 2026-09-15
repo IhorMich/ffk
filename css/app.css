@@ -686,7 +686,14 @@
   html[data-theme="light"] .behavior-top .val,html[data-theme="day"] .behavior-top .val{
     color:var(--accent);background:rgba(34,211,166,.12);
   }
-  .behavior-row input[type=range]{touch-action:pan-y;}
+  .behavior-pips{display:flex;gap:6px;}
+  .behavior-pip{
+    flex:1;min-height:40px;border-radius:12px;border:1px solid var(--border);
+    background:var(--surface-2);color:var(--text-soft);font:inherit;font-weight:800;cursor:pointer;
+  }
+  .behavior-pip.on{
+    background:linear-gradient(135deg, var(--cta), var(--cta-2));color:#08121C;border-color:transparent;
+  }
   input[type=range]{width:100%;-webkit-appearance:none;height:6px;border-radius:3px;background:var(--surface-2);}
   input[type=range]::-webkit-slider-thumb{
     -webkit-appearance:none;width:24px;height:24px;border-radius:50%;
