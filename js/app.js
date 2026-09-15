@@ -251,8 +251,9 @@ function applyI18n(){
     const s = scoresNow();
     const scale = document.getElementById('wrapScale');
     if(scale){
-      const note = isShortOuting(s.minutes, s.matchLen) ? t('ratingForMins', {n: s.minutes}) : t('ratingBaseHint');
-      scale.textContent = fmtNum(s.overall, 2) + '/10 · ' + note;
+      scale.textContent = isShortOuting(s.minutes, s.matchLen)
+        ? fmtNum(s.overall, 2) + '/10 · ' + t('ratingForMins', {n: s.minutes})
+        : fmtNum(s.overall, 2) + '/10';
     }
   }
 }
@@ -684,7 +685,9 @@ function renderReportHtml(m, compact){
   const vs = `${escapeHtml(m.opponent || t('unnamed'))}${m.score ? ' · ' + scoreLineHtml(m) : ''}${mins ? ' · ' + escapeHtml(mins) : ''}`;
   const kick = m.kickoffClock ? escapeHtml(t('kickoffLine', {clock: m.kickoffClock})) : '';
   const meta = `<div class="report-sub"><span>${vs}</span>${kick ? `<span>${kick}</span>` : ''}</div>`;
-  const scale = `<p class="hero-scale">${escapeHtml(isShortOuting(m.minutes, m.matchLen) ? outingCaption(m) : t('ratingBaseHint'))}</p>`;
+  const scale = isShortOuting(m.minutes, m.matchLen)
+    ? `<p class="hero-scale">${escapeHtml(outingCaption(m))}</p>`
+    : '';
   const head = compact ? meta : `<div class="report-kicker">${escapeHtml(t('reportTitle'))}</div>
     <div class="report-title">${escapeHtml(reportPlayerName(m))} — <span class="n">${fmtNum(m.rating, 2)}</span></div>
     ${meta}${scale}
@@ -3325,8 +3328,9 @@ function openWrapUp(){
   document.getElementById('wrap-minutes').value = document.getElementById('f-minutes').value;
   document.getElementById('wrapBehaviors').innerHTML = wrapBehaviorHtml('effort') + wrapBehaviorHtml('team');
   const s = scoresNow();
-  const scaleNote = isShortOuting(s.minutes, s.matchLen) ? t('ratingForMins', {n: s.minutes}) : t('ratingBaseHint');
-  document.getElementById('wrapScale').textContent = fmtNum(s.overall, 2) + '/10 · ' + scaleNote;
+  document.getElementById('wrapScale').textContent = isShortOuting(s.minutes, s.matchLen)
+    ? fmtNum(s.overall, 2) + '/10 · ' + t('ratingForMins', {n: s.minutes})
+    : fmtNum(s.overall, 2) + '/10';
   el.hidden = false;
   pushAppState('layer');
 }
@@ -4373,7 +4377,6 @@ async function drawMatchCardCanvas(m, mode){
   fitText(ctx, fmtNum(m.rating, 1), right, 178, 300, '900', 110, 60);
   ctx.fillStyle = theme.muted;
   fitText(ctx, outingCaption(m), right, 218, 320, '700', 24, 15);
-  fitText(ctx, t('ratingBaseHint'), right, 248, 320, '600', 18, 13);
   ctx.textAlign = 'left';
 
   ctx.strokeStyle = theme.foil2;
