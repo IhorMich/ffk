@@ -1,4 +1,4 @@
-const CACHE = 'ffk_v101';
+const CACHE = 'ffk_v102';
 const ASSETS = [
   './',
   './index.html',
@@ -15,7 +15,6 @@ const ASSETS = [
   './icons/icon-512.png',
   './icons/intro-cup.png',
   './icons/intro-gauge.png',
-  './icons/intro-star.png',
   './icons/apple-touch-icon.png',
   './icons/metrics/assists.png',
   './icons/metrics/blocks.png',

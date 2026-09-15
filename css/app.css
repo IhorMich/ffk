@@ -352,7 +352,7 @@
   .intro.play .intro-cup{animation:introCup .85s cubic-bezier(.22,.7,.2,1) forwards;}
   .intro-gauge{
     z-index:1;opacity:0;
-    filter:drop-shadow(0 16px 18px rgba(0,0,0,.58)) drop-shadow(0 5px 4px rgba(0,0,0,.4)) drop-shadow(0 0 12px rgba(40,120,255,.32));
+    filter:drop-shadow(0 16px 18px rgba(0,0,0,.58)) drop-shadow(0 5px 4px rgba(0,0,0,.4)) drop-shadow(0 0 12px rgba(255,255,255,.16));
     -webkit-mask-image:conic-gradient(from 223deg at 50% 45%, transparent 0deg, transparent 360deg);
     mask-image:conic-gradient(from 223deg at 50% 45%, transparent 0deg, transparent 360deg);
     -webkit-mask-size:100% 100%;mask-size:100% 100%;
@@ -378,45 +378,11 @@
     transform:translateY(-1.35em);
     transform-origin:center bottom;
   }
-  .intro-star{
-    position:absolute;left:50%;top:43%;z-index:3;
-    width:0;height:0;
-    display:flex;align-items:center;justify-content:center;
-    pointer-events:none;
-    opacity:0;
-    font-size:calc(var(--intro-size) * .09);
-    transform:translate(-50%,-50%) scale(0);
-  }
-  .intro.play .intro-star{
-    animation:introStarIn .55s cubic-bezier(.16,1.2,.28,1) 4.52s forwards;
-  }
-  .intro-star-glow{
-    position:absolute;width:2.4em;height:2.4em;border-radius:50%;
-    background:radial-gradient(circle, #fff 0%, rgba(255,236,170,.75) 28%, rgba(245,185,66,.25) 52%, rgba(245,185,66,0) 72%);
-    opacity:0;pointer-events:none;
-  }
-  .intro.play .intro-star-glow{
-    animation:introStarFlash .85s ease-out 4.52s forwards;
-  }
-  .intro-star-mark{
-    position:relative;z-index:1;width:1em;height:1em;display:block;object-fit:contain;
-    filter:drop-shadow(0 4px 5px rgba(0,0,0,.55)) drop-shadow(0 0 8px rgba(245,185,66,.5));
-  }
   .intro.play .intro-name-ch{
-    animation:introBallBounce .85s cubic-bezier(.22,.9,.3,1.15) calc(5.45s + (var(--i) * .09s)) forwards;
+    animation:introBallBounce .85s cubic-bezier(.22,.9,.3,1.15) calc(4.75s + (var(--i) * .09s)) forwards;
   }
   @keyframes introCup{to{opacity:1;transform:scale(1) translateY(0)}}
   @keyframes introGlowIn{to{opacity:1}}
-  @keyframes introStarIn{
-    0%{opacity:0;transform:translate(-50%,-50%) scale(0)}
-    58%{opacity:1;transform:translate(-50%,-50%) scale(1.06)}
-    100%{opacity:1;transform:translate(-50%,-50%) scale(1)}
-  }
-  @keyframes introStarFlash{
-    0%{opacity:0;transform:scale(.25)}
-    16%{opacity:1;transform:scale(1)}
-    100%{opacity:0;transform:scale(1.85)}
-  }
   @keyframes introBallBounce{
     0%{opacity:0;transform:translateY(-1.35em) scaleY(1)}
     18%{opacity:1}
