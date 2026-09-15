@@ -483,7 +483,7 @@
   }
   @keyframes introFade{to{opacity:0}}
   .onboard,.preview-modal{
-    position:fixed;inset:0;z-index:92;background:rgba(8,14,24,.88);
+    position:fixed;inset:0;z-index:94;background:rgba(8,14,24,.88);
     display:flex;align-items:center;justify-content:center;
     padding:calc(16px + env(safe-area-inset-top, 0px)) 16px calc(16px + env(safe-area-inset-bottom, 0px));
   }
@@ -967,6 +967,9 @@
   }
   .live-kick.go{
     background:linear-gradient(135deg, var(--cta), var(--cta-2));color:#08121C;border:none;opacity:1;
+  }
+  .match-clock-bar .js-match-clock-btn.go{
+    background:linear-gradient(135deg, var(--cta), var(--cta-2));color:#08121C;border:none;
   }
   .live-kick:disabled{opacity:.55;cursor:default;}
   .match-clock-bar{

@@ -3171,7 +3171,7 @@ function renderLiveClock(){
   let running = false;
   if(phase === 'done'){
     text = t('liveClockDone', {fmt});
-    btnText = t('liveMatchOver');
+    btnText = t('wrapSave');
   } else if(phase === 'break'){
     const next = halfLabel((Number(matchClock.period) || 1) + 1);
     text = t('liveClockBreak', {half: next, fmt});
@@ -3191,12 +3191,11 @@ function renderLiveClock(){
   });
   document.querySelectorAll('.js-match-clock-btn').forEach(btn => {
     btn.textContent = btnText;
-    btn.disabled = phase === 'done';
-    btn.classList.toggle('go', phase === 'idle' || phase === 'break');
+    btn.disabled = false;
+    btn.classList.toggle('go', phase === 'idle' || phase === 'break' || phase === 'done');
   });
-  // Match over: nothing to do but save, so the live entry stays locked until then.
   const startBtn = document.getElementById('liveStartBtn');
-  if(startBtn) startBtn.disabled = phase === 'done';
+  if(startBtn) startBtn.disabled = false;
 }
 let cueCtx = null;
 function audioCtx(){
@@ -3278,10 +3277,14 @@ function endCurrentPeriod(){
   if(matchClock.phase === 'done') stopClockTick();
   renderLiveClock();
   persistDraft();
+  if(matchClock.phase === 'done') openWrapUp();
 }
 function toggleMatchClock(){
   const phase = clockPhase();
-  if(phase === 'done') return;
+  if(phase === 'done'){
+    openWrapUp();
+    return;
+  }
   if(phase === 'idle' || phase === 'break') startMatchClock();
   else if(phase === 'run') endCurrentPeriod();
 }
@@ -3311,6 +3314,7 @@ document.querySelectorAll('.js-match-clock-btn').forEach(btn => {
 document.getElementById('liveDoneBtn').addEventListener('click', () => {
   closeLive();
   if(shouldWrapUp()) openWrapUp();
+  else syncMatchContextFold();
 });
 function suggestMinutesFromClock(){
   if(!matchClock.startedAt) return;
@@ -3359,9 +3363,10 @@ function syncWrapToForm(){
   if(minutes && minutes.value) document.getElementById('f-minutes').value = minutes.value;
 }
 function openWrapUp(){
-  suggestMinutesFromClock();
+  if(editingId) return;
   const el = document.getElementById('wrapUp');
   if(!el) return;
+  suggestMinutesFromClock();
   const oppVal = document.getElementById('f-opponent').value.trim();
   document.getElementById('wrapOppWrap').hidden = !!oppVal;
   document.getElementById('wrap-opponent').value = oppVal;
@@ -3394,7 +3399,10 @@ document.getElementById('wrapLaterBtn').addEventListener('click', () => {
 });
 document.getElementById('wrapSaveBtn').addEventListener('click', () => {
   syncWrapToForm();
-  if(saveCurrentMatch()) closeWrapUp();
+  if(saveCurrentMatch()){
+    closeWrapUp();
+    closeLive();
+  }
 });
 document.getElementById('historyBackup')?.addEventListener('click', downloadMatches);
 function isElShown(id){
