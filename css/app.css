@@ -535,11 +535,18 @@
   .metric-name{display:flex;align-items:center;gap:11px;font-size:.9rem;font-weight:600;}
   .metric-icon{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:var(--surface-2);flex-shrink:0;color:var(--text);}
   .metric-icon svg{width:20px;height:20px;display:block;}
+  .metric-glyph{
+    width:20px;height:20px;display:block;flex-shrink:0;
+    background:currentColor;
+    -webkit-mask:var(--glyph) center / contain no-repeat;
+    mask:var(--glyph) center / contain no-repeat;
+  }
   .pf-row .ic,.report-line .ic{
     width:28px;height:28px;flex-shrink:0;
     display:inline-flex;align-items:center;justify-content:center;color:var(--text-soft);
   }
   .pf-row .ic svg,.report-line .ic svg{width:18px;height:18px;display:block;}
+  .pf-row .ic .metric-glyph,.report-line .ic .metric-glyph{width:18px;height:18px;}
   .metric-row.key .metric-icon{color:var(--accent);}
   html[data-icons="bright"] .metric-row.key .metric-icon{color:inherit;}
   html[data-icons="bright"] .pf-row .ic,html[data-icons="bright"] .report-line .ic{color:inherit;}

@@ -28,34 +28,28 @@ const METRIC_ICON_LINE = {
   owngoal: '<circle cx="12" cy="12" r="7"/><path d="M12 8.2v5.2"/><circle cx="12" cy="16.2" r="1.1"/>'
 };
 
-/* Literal football outlines — stroke only, no filled arrow blobs. */
-const METRIC_ICON_CLEAR = {
-  goals: '<circle cx="12" cy="12" r="7.6"/><path d="M12 5.8 14.8 8.6 12 10.2 9.2 8.6Z"/><path d="M9.2 8.6 6.6 11.2 8.4 14.4 12 10.2"/><path d="M14.8 8.6 17.4 11.2 15.6 14.4 12 10.2"/><path d="M8.4 14.4 12 18.2 15.6 14.4"/>',
-  shots: '<path d="M5 19V8h14v11"/><path d="M5 8h14"/><circle cx="12" cy="14.2" r="2.4"/>',
-  assists: '<circle cx="5.5" cy="8.2" r="1.7"/><path d="M5.5 10.2v4.2l-2.2 3.4M5.5 14.4l2.2 3.4"/><circle cx="16.8" cy="8.2" r="1.7"/><path d="M16.8 10.2v4.2l-2.2 3.4M16.8 14.4l2.2 3.4"/><circle cx="11.2" cy="11.5" r="1.6"/><path d="M13 11.5h2.2"/>',
-  dribbles: '<path d="M6 17.2V12.5"/><path d="M4.6 12.5h2.8"/><circle cx="10.2" cy="14.8" r="2"/><circle cx="15.6" cy="9.4" r="2"/><path d="M11.8 13.4c1.2-1.6 2.4-2.4 3.2-2.8"/>',
-  openings: '<circle cx="6.4" cy="7.6" r="1.7"/><path d="M6.4 9.6v3.6l-2.1 4M6.4 13.2l2.1 4"/><path d="M9.6 11.5h5.4"/><path d="M12.8 9 16.2 11.5 12.8 14"/>',
-  chances: '<path d="M4.8 19V9.2h14.4V19"/><path d="M4.8 9.2h14.4"/><circle cx="9.2" cy="14.5" r="2"/><path d="M11.4 14.5h4.2"/><path d="M13.8 12.4 16.4 14.5 13.8 16.6"/>',
+/* Stroke fallbacks for keys missing from the silhouette sheet (GK + sharp pass). */
+const METRIC_ICON_FALLBACK = {
   passes: '<circle cx="5.8" cy="7.8" r="1.6"/><path d="M5.8 9.7v3.8l-2 3.4M5.8 13.5l2 3.4"/><circle cx="18.2" cy="7.8" r="1.6"/><path d="M18.2 9.7v3.8l-2 3.4M18.2 13.5l2 3.4"/><path d="M8.2 12h5.6"/><path d="M12 9.8 14.6 12 12 14.2"/>',
-  buildpass: '<path d="M4.5 17.5h15"/><circle cx="6.2" cy="12.2" r="2"/><path d="M8.4 12.2h7"/><path d="M13.4 9.6 17.2 12.2 13.4 14.8"/>',
-  tackles: '<circle cx="16.2" cy="9.2" r="2.3"/><path d="M4.8 16.2c2.2-1 4.6-2.2 7.2-4.2l2.2 2.2c-2.4 1.6-4.8 3-7.4 4.2z"/><path d="M11.6 13.2 14.4 10.6"/>',
-  interceptions: '<circle cx="5.2" cy="8.5" r="1.5"/><circle cx="18.8" cy="8.5" r="1.5"/><path d="M6.8 9.2 10.2 12"/><path d="M17.2 9.2 13.8 12"/><circle cx="12" cy="14.8" r="2.4"/><path d="M12 10.8v1.6"/>',
-  clearances: '<path d="M4.8 18h14.4"/><path d="M7.2 18c0-3.2 1.4-5.6 3.6-7.2"/><circle cx="14.8" cy="7.6" r="2.2"/><path d="M11.2 10.4 13.2 8.6"/>',
-  blocks: '<path d="M5 7.2h14v3.6H5z"/><path d="M5 13.2h14v3.6H5z"/><circle cx="18.2" cy="5.6" r="1.5"/><path d="M17 6.8 14.8 9"/>',
-  duelswon: '<circle cx="5.5" cy="7.2" r="1.55"/><path d="M5.5 9.1v3.2l-1.7 4M5.5 12.3l1.7 4"/><circle cx="18.5" cy="7.2" r="1.55"/><path d="M18.5 9.1v3.2l-1.7 4M18.5 12.3l1.7 4"/><circle cx="12" cy="11.3" r="1.9"/><path d="M8 11.3h1.4M14.6 11.3h1.4"/>',
-  support: '<circle cx="6" cy="7.6" r="1.6"/><path d="M6 9.5v3.4l-1.8 4M6 12.9l1.8 4"/><path d="M9 12c2.8-3.4 6.2-4.8 9.2-4.2"/><path d="M15.8 6.4h2.8v2.8"/><circle cx="18.2" cy="15.8" r="1.55"/>',
   saves: '<path d="M5.8 10.5c0-2.2 1.6-3.8 4-3.8h1.2c.6 0 1.2.2 1.6.6L14 9l1.4-1.7c.4-.4 1-.6 1.6-.6h.2c2.2 0 3.8 1.6 3.8 3.8V16c0 1.3-1 2.4-2.3 2.4h-2.2c-.7 0-1.3-.3-1.7-.8L14 15.4l-1.2 1.4c-.4.5-1 .8-1.7.8H8.1C6.8 17.6 5.8 16.5 5.8 15.2z"/><circle cx="12" cy="12.6" r="1.7"/>',
   claims: '<circle cx="12" cy="6.4" r="2"/><path d="M8.2 11.2c1.1-1.4 2.4-2.2 3.8-2.2s2.7.8 3.8 2.2"/><path d="M7.4 14.5c1.4 3 7.8 3 9.2 0"/><path d="M12 9.2v3.4"/>',
   gkpass: '<path d="M5.2 9.5h5v8.2h-5z"/><circle cx="7.7" cy="12" r="1.4"/><circle cx="16.8" cy="8.2" r="2"/><path d="M10.4 12.4 14.6 9.2"/>',
-  conceded: '<path d="M4.6 7.5h14.8v2.2"/><path d="M4.6 9.7 12 18.2 19.4 9.7"/><path d="M7.2 9.7 12 15.2 16.8 9.7"/><circle cx="12" cy="11.6" r="1.5"/>',
-  losses: '<circle cx="8.2" cy="13.6" r="2.4"/><path d="M10.6 12c1.8-2.1 4.2-3.4 6.8-3.6"/><path d="M15.2 7h3v3"/>',
-  ledtogoal: '<path d="M4.6 19V7.6h14.8V19"/><path d="M4.6 7.6h14.8"/><circle cx="14.8" cy="14.2" r="2.15"/><path d="M6 12c2.6.9 5.2 1.8 6.8 2.1"/>',
-  badpass: '<circle cx="5.4" cy="7.6" r="1.55"/><path d="M5.4 9.5v3.3l-1.7 3.9M5.4 12.8l1.7 3.9"/><circle cx="18.6" cy="7.6" r="1.55"/><path d="M18.6 9.5v3.3l-1.7 3.9M18.6 12.8l1.7 3.9"/><path d="M8 11.6c2.5.3 4.4 2.4 5.8 5.2"/><path d="M12.4 15 14.4 17.8"/>',
-  badtouch: '<path d="M4.5 17.2h6.2"/><path d="M6 17.2c.2-3.4 1.8-5.4 4.2-6.2"/><circle cx="15.4" cy="8" r="2.25"/><path d="M10.6 12.2 13.2 9.6"/><path d="M17.4 9.5c.9 2.6 1.6 5.2 1.6 7.2"/>',
-  duelslost: '<circle cx="5.5" cy="7.2" r="1.55"/><path d="M5.5 9.1v3.2l-1.7 4M5.5 12.3l1.7 4"/><circle cx="18.5" cy="7.2" r="1.55"/><path d="M18.5 9.1v3.2l-1.7 4M18.5 12.3l1.7 4"/><circle cx="12" cy="16.6" r="1.7"/><path d="M12 12.4v2.2"/>',
-  fouls: '<rect x="7.2" y="4.6" width="9.6" height="14.8" rx="1.2"/><path d="M9.4 9.2h5.2M9.4 12.4h5.2"/>',
-  owngoal: '<path d="M5 19V8h14v11"/><path d="M5 8h14"/><circle cx="12" cy="13.8" r="2.3"/><path d="M12 6.2v2.4"/>'
+  conceded: '<path d="M4.6 7.5h14.8v2.2"/><path d="M4.6 9.7 12 18.2 19.4 9.7"/><path d="M7.2 9.7 12 15.2 16.8 9.7"/><circle cx="12" cy="11.6" r="1.5"/>'
 };
+
+/* Silhouette pack cut from the action sheet (white glyph → CSS mask). */
+const METRIC_ICON_SIL_KEYS = [
+  'goals','shots','assists','dribbles','buildpass',
+  'openings','chances','tackles','interceptions','duelswon',
+  'support','clearances','losses','ledtogoal','badpass',
+  'badtouch','duelslost','fouls','blocks','owngoal'
+];
+
+const METRIC_ICON_SIL = Object.fromEntries(
+  METRIC_ICON_SIL_KEYS.map(k => [k, `icons/metrics/${k}.png`])
+);
+/* Sharp pass is not on the sheet — reuse buildpass silhouette. */
+METRIC_ICON_SIL.passes = 'icons/metrics/buildpass.png';
 
 const METRIC_ICON_TINT = {
   goals:'var(--gold)', shots:'var(--gold)', assists:'var(--accent)', dribbles:'var(--accent)',
@@ -70,9 +64,9 @@ const METRIC_ICON_TINT = {
 const ICON_SET_ORDER = ['clear', 'bright', 'line'];
 
 const METRIC_ICON_PACKS = {
-  clear: {paths: METRIC_ICON_CLEAR, width: '1.85', tint: false},
-  bright: {paths: METRIC_ICON_CLEAR, width: '1.85', tint: true},
-  line: {paths: METRIC_ICON_LINE, width: '1.75', tint: false}
+  clear: {kind: 'mask', images: METRIC_ICON_SIL, fallback: METRIC_ICON_FALLBACK, width: '1.85', tint: false},
+  bright: {kind: 'mask', images: METRIC_ICON_SIL, fallback: METRIC_ICON_FALLBACK, width: '1.85', tint: true},
+  line: {kind: 'stroke', paths: METRIC_ICON_LINE, width: '1.75', tint: false}
 };
 
 function iconSetName(){
@@ -85,10 +79,25 @@ function iconSetName(){
   return 'clear';
 }
 
+function metricIconStroke(body, width, tint, cls){
+  const klass = cls ? ` class="${cls}"` : '';
+  return `<svg${klass} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${width}" stroke-linecap="round" stroke-linejoin="round" style="color:${tint}" aria-hidden="true" focusable="false">${body}</svg>`;
+}
+
 function metricIconSvg(key, cls){
   const pack = METRIC_ICON_PACKS[iconSetName()] || METRIC_ICON_PACKS.clear;
-  const body = pack.paths[key] || pack.paths.losses;
-  const klass = cls ? ` class="${cls}"` : '';
   const tint = pack.tint ? (METRIC_ICON_TINT[key] || 'currentColor') : 'currentColor';
-  return `<svg${klass} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${pack.width}" stroke-linecap="round" stroke-linejoin="round" style="color:${tint}" aria-hidden="true" focusable="false">${body}</svg>`;
+
+  if(pack.kind === 'mask'){
+    const src = pack.images[key];
+    if(src){
+      const klass = cls ? ` ${cls}` : '';
+      return `<span class="metric-glyph${klass}" style="--glyph:url('${src}');color:${tint}" aria-hidden="true"></span>`;
+    }
+    const body = (pack.fallback && pack.fallback[key]) || METRIC_ICON_LINE.losses;
+    return metricIconStroke(body, pack.width, tint, cls);
+  }
+
+  const body = pack.paths[key] || pack.paths.losses;
+  return metricIconStroke(body, pack.width, tint, cls);
 }

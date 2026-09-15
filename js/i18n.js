@@ -3368,15 +3368,15 @@ ru:{
 
 (function mergeReleaseI18n(){
   const extra = {
-    uk:{ sVersion:'Версія {v}', sPrivacy:'Конфіденційність', sIcons:'Іконки дій', sIconsHint:'Порівняй на вкладці «Матч».', icons_line:'Лінія', icons_clear:'Зрозуміліше', icons_bright:'Яскраві', icons_solid:'Заливка' },
-    pl:{ sVersion:'Wersja {v}', sPrivacy:'Prywatność', sIcons:'Ikony akcji', sIconsHint:'Porównaj w zakładce Mecz.', icons_line:'Linia', icons_clear:'Czytelne', icons_bright:'Kolorowe', icons_solid:'Wypełnienie' },
-    en:{ sVersion:'Version {v}', sPrivacy:'Privacy', sIcons:'Action icons', sIconsHint:'Compare on the Match tab.', icons_line:'Line', icons_clear:'Clearer', icons_bright:'Bright', icons_solid:'Solid' },
-    ru:{ sVersion:'Версия {v}', sPrivacy:'Конфиденциальность', sIcons:'Иконки действий', sIconsHint:'Сравни на вкладке «Матч» — список игровых действий.', icons_line:'Линия', icons_clear:'Понятнее', icons_bright:'Яркие', icons_solid:'Заливка' },
-    es:{ sVersion:'Versión {v}', sPrivacy:'Privacidad', sIcons:'Iconos de acciones', sIconsHint:'Compáralos en la pestaña Partido.', icons_line:'Línea', icons_clear:'Más claros', icons_bright:'Vivos', icons_solid:'Relleno' },
-    de:{ sVersion:'Version {v}', sPrivacy:'Datenschutz', sIcons:'Aktions-Icons', sIconsHint:'Vergleiche unter Spiel.', icons_line:'Linie', icons_clear:'Klarer', icons_bright:'Bunt', icons_solid:'Fläche' },
-    it:{ sVersion:'Versione {v}', sPrivacy:'Privacy', sIcons:'Icone azioni', sIconsHint:'Confronta nella scheda Partita.', icons_line:'Linea', icons_clear:'Più chiari', icons_bright:'Vividi', icons_solid:'Pieno' },
-    fr:{ sVersion:'Version {v}', sPrivacy:'Confidentialité', sIcons:'Icônes d’actions', sIconsHint:'Comparez dans l’onglet Match.', icons_line:'Ligne', icons_clear:'Plus clairs', icons_bright:'Vifs', icons_solid:'Plein' },
-    pt:{ sVersion:'Versão {v}', sPrivacy:'Privacidade', sIcons:'Ícones de ações', sIconsHint:'Compara no separador Jogo.', icons_line:'Linha', icons_clear:'Mais claros', icons_bright:'Vivos', icons_solid:'Preenchido' }
+    uk:{ sVersion:'Версія {v}', sPrivacy:'Конфіденційність', sIcons:'Іконки дій', sIconsHint:'Порівняй на вкладці «Матч».', icons_line:'Лінія', icons_clear:'Силуети', icons_bright:'Яскраві', icons_solid:'Заливка' },
+    pl:{ sVersion:'Wersja {v}', sPrivacy:'Prywatność', sIcons:'Ikony akcji', sIconsHint:'Porównaj w zakładce Mecz.', icons_line:'Linia', icons_clear:'Sylwetki', icons_bright:'Kolorowe', icons_solid:'Wypełnienie' },
+    en:{ sVersion:'Version {v}', sPrivacy:'Privacy', sIcons:'Action icons', sIconsHint:'Compare on the Match tab.', icons_line:'Line', icons_clear:'Silhouettes', icons_bright:'Bright', icons_solid:'Solid' },
+    ru:{ sVersion:'Версия {v}', sPrivacy:'Конфиденциальность', sIcons:'Иконки действий', sIconsHint:'Сравни на вкладке «Матч» — список игровых действий.', icons_line:'Линия', icons_clear:'Силуэты', icons_bright:'Яркие', icons_solid:'Заливка' },
+    es:{ sVersion:'Versión {v}', sPrivacy:'Privacidad', sIcons:'Iconos de acciones', sIconsHint:'Compáralos en la pestaña Partido.', icons_line:'Línea', icons_clear:'Siluetas', icons_bright:'Vivos', icons_solid:'Relleno' },
+    de:{ sVersion:'Version {v}', sPrivacy:'Datenschutz', sIcons:'Aktions-Icons', sIconsHint:'Vergleiche unter Spiel.', icons_line:'Linie', icons_clear:'Silhouetten', icons_bright:'Bunt', icons_solid:'Fläche' },
+    it:{ sVersion:'Versione {v}', sPrivacy:'Privacy', sIcons:'Icone azioni', sIconsHint:'Confronta nella scheda Partita.', icons_line:'Linea', icons_clear:'Silhouette', icons_bright:'Vividi', icons_solid:'Pieno' },
+    fr:{ sVersion:'Version {v}', sPrivacy:'Confidentialité', sIcons:'Icônes d’actions', sIconsHint:'Comparez dans l’onglet Match.', icons_line:'Ligne', icons_clear:'Silhouettes', icons_bright:'Vifs', icons_solid:'Plein' },
+    pt:{ sVersion:'Versão {v}', sPrivacy:'Privacidade', sIcons:'Ícones de ações', sIconsHint:'Compara no separador Jogo.', icons_line:'Linha', icons_clear:'Silhuetas', icons_bright:'Vivos', icons_solid:'Preenchido' }
   };
   LANGS.forEach(lang => {
     Object.assign(I18N[lang], extra.en, extra[lang] || {});
