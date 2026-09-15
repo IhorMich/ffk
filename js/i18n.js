@@ -3368,15 +3368,15 @@ ru:{
 
 (function mergeReleaseI18n(){
   const extra = {
-    uk:{ sVersion:'Версія {v}', sPrivacy:'Конфіденційність' },
-    pl:{ sVersion:'Wersja {v}', sPrivacy:'Prywatność' },
-    en:{ sVersion:'Version {v}', sPrivacy:'Privacy' },
-    ru:{ sVersion:'Версия {v}', sPrivacy:'Конфиденциальность' },
-    es:{ sVersion:'Versión {v}', sPrivacy:'Privacidad' },
-    de:{ sVersion:'Version {v}', sPrivacy:'Datenschutz' },
-    it:{ sVersion:'Versione {v}', sPrivacy:'Privacy' },
-    fr:{ sVersion:'Version {v}', sPrivacy:'Confidentialité' },
-    pt:{ sVersion:'Versão {v}', sPrivacy:'Privacidade' }
+    uk:{ sVersion:'Версія {v}', sPrivacy:'Конфіденційність', sIcons:'Іконки дій', sIconsHint:'Порівняй на вкладці «Матч».', icons_line:'Лінія', icons_solid:'Заливка', icons_mark:'Знаки' },
+    pl:{ sVersion:'Wersja {v}', sPrivacy:'Prywatność', sIcons:'Ikony akcji', sIconsHint:'Porównaj w zakładce Mecz.', icons_line:'Linia', icons_solid:'Wypełnienie', icons_mark:'Znaki' },
+    en:{ sVersion:'Version {v}', sPrivacy:'Privacy', sIcons:'Action icons', sIconsHint:'Compare on the Match tab.', icons_line:'Line', icons_solid:'Solid', icons_mark:'Marks' },
+    ru:{ sVersion:'Версия {v}', sPrivacy:'Конфиденциальность', sIcons:'Иконки действий', sIconsHint:'Сравни на вкладке «Матч» — список игровых действий.', icons_line:'Линия', icons_solid:'Заливка', icons_mark:'Знаки' },
+    es:{ sVersion:'Versión {v}', sPrivacy:'Privacidad', sIcons:'Iconos de acciones', sIconsHint:'Compáralos en la pestaña Partido.', icons_line:'Línea', icons_solid:'Relleno', icons_mark:'Marcas' },
+    de:{ sVersion:'Version {v}', sPrivacy:'Datenschutz', sIcons:'Aktions-Icons', sIconsHint:'Vergleiche unter Spiel.', icons_line:'Linie', icons_solid:'Fläche', icons_mark:'Zeichen' },
+    it:{ sVersion:'Versione {v}', sPrivacy:'Privacy', sIcons:'Icone azioni', sIconsHint:'Confronta nella scheda Partita.', icons_line:'Linea', icons_solid:'Pieno', icons_mark:'Segni' },
+    fr:{ sVersion:'Version {v}', sPrivacy:'Confidentialité', sIcons:'Icônes d’actions', sIconsHint:'Comparez dans l’onglet Match.', icons_line:'Ligne', icons_solid:'Plein', icons_mark:'Signes' },
+    pt:{ sVersion:'Versão {v}', sPrivacy:'Privacidade', sIcons:'Ícones de ações', sIconsHint:'Compara no separador Jogo.', icons_line:'Linha', icons_solid:'Preenchido', icons_mark:'Marcas' }
   };
   LANGS.forEach(lang => {
     Object.assign(I18N[lang], extra.en, extra[lang] || {});

@@ -98,7 +98,19 @@ function applyTheme(){
   document.querySelectorAll('#themeChips .chip').forEach(c => {
     c.classList.toggle('active', c.dataset.theme === theme);
   });
+  syncIconSetChips();
   applyNativeChrome();
+}
+function syncIconSetChips(){
+  const set = iconSetName();
+  document.querySelectorAll('#iconSetChips .chip').forEach(c => {
+    c.classList.toggle('active', c.dataset.icons === set);
+  });
+}
+function applyIconSet(){
+  syncIconSetChips();
+  if(typeof renderMetrics === 'function') renderMetrics();
+  if(typeof renderPlayerFeed === 'function') renderPlayerFeed();
 }
 function toggleTheme(){
   const i = THEME_ORDER.indexOf(themeName());
@@ -228,7 +240,7 @@ function applyI18n(){
   syncSeasonChipLabels();
 }
 
-let settings = {club:'', player:'', position:'fwd', format:'2x30', minutes:'60', lang:'ru', seasonCloseDeclined:'', theme:'dark', onboarded:false, pwaTransferSeen:false, introMark:''};
+let settings = {club:'', player:'', position:'fwd', format:'2x30', minutes:'60', lang:'ru', seasonCloseDeclined:'', theme:'dark', iconSet:'line', onboarded:false, pwaTransferSeen:false, introMark:''};
 let roster = {currentId:'', ids:[]};
 let player = defaultPlayer();
 let extraSelected = [];
@@ -3267,6 +3279,13 @@ document.getElementById('themeChips').addEventListener('click', e => {
   saveSettings();
   applyTheme();
   if(typeof chartMatches === 'function') drawChart(chartMatches());
+});
+document.getElementById('iconSetChips').addEventListener('click', e => {
+  const chip = e.target.closest('.chip');
+  if(!chip || !ICON_SET_ORDER.includes(chip.dataset.icons)) return;
+  settings.iconSet = chip.dataset.icons;
+  saveSettings();
+  applyIconSet();
 });
 document.getElementById('previewPeriod').addEventListener('click', e => {
   const chip = e.target.closest('.chip');
