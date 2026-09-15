@@ -54,7 +54,9 @@
     --text:#EDF1F7;
     --text-soft:#8D9AB5;
     --accent:#E8C56A;
-    --violet:#8B7AE0;
+    --violet:#CDB56E;
+    --tint-def:#C4A574;
+    --tint-gk:#E8C56A;
     --gold:#F5B942;
     --cta:#F5B942;
     --cta-2:#D4921A;
@@ -74,6 +76,8 @@
     --text-soft:#64748B;
     --accent:#0F9F7A;
     --violet:#6D4DE8;
+    --tint-def:#5B8CFF;
+    --tint-gk:#0EA5C9;
     --gold:#C48512;
     --danger:#E24B4B;
     --ink:#08121C;
@@ -92,6 +96,8 @@
     --text-soft:#1A1A1A;
     --accent:#007A4D;
     --violet:#3D1FB8;
+    --tint-def:#2457C4;
+    --tint-gk:#007A4D;
     --gold:#7A4E00;
     --danger:#B00000;
     --ink:#000000;
@@ -110,6 +116,8 @@
     background:var(--bg);color:var(--text);min-height:100vh;
     min-height:100dvh;
   }
+  a{color:var(--accent);}
+  a:visited{color:var(--gold);}
   .app{max-width:480px;margin:0 auto;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;}
   .topbar{
     padding:calc(18px + env(safe-area-inset-top, 0px)) 18px 16px;
@@ -747,11 +755,20 @@
   }
   .warn{background:rgba(245,185,66,.12);border:1px solid rgba(245,185,66,.35);}
   .save-btn,.ghost-btn,.live-start{
-    width:100%;margin-top:12px;padding:15px;border:none;border-radius:16px;font-size:1rem;font-weight:800;cursor:pointer;
+    width:100%;margin-top:12px;padding:15px;border-radius:16px;font-size:1rem;font-weight:800;cursor:pointer;
   }
   #savePlayerBtn,#saveBtn{margin-bottom:12px;position:relative;z-index:41;}
-  .save-btn,.live-start{background:linear-gradient(135deg, var(--cta), var(--cta-2));color:#08121C;}
+  .save-btn,.live-start{
+    border:none;background:linear-gradient(135deg, var(--cta), var(--cta-2));color:#08121C;
+  }
   .live-start{margin-top:0;margin-bottom:16px;}
+  .ghost-btn{
+    background:var(--surface-2);color:var(--text);
+    border:1px solid rgba(245,185,66,.2);
+  }
+  html[data-theme="light"] .ghost-btn,html[data-theme="day"] .ghost-btn{
+    border-color:var(--border);
+  }
   .ghost-btn.go{
     background:linear-gradient(135deg, var(--cta), var(--cta-2));color:#08121C;border-color:transparent;
   }
@@ -991,6 +1008,13 @@
   }
   .empty-card p{margin:0 0 14px;font-size:.92rem;font-weight:600;color:var(--text-soft);line-height:1.45;}
   .empty-card .save-btn{margin:0;}
+  #view-stats.stats-empty .field:has(#statsSeason),
+  #view-stats.stats-empty #periodHead,
+  #view-stats.stats-empty #periodChips,
+  #view-stats.stats-empty .chart-wrap,
+  #view-stats.stats-empty [data-i18n="statsPeriodHint"],
+  #view-stats.stats-empty #statsCardBtn,
+  #view-stats.stats-empty #timingBoard{display:none;}
   .live-grid{
     display:flex;flex-direction:column;gap:14px;
     flex:1;min-height:0;overflow:auto;-webkit-overflow-scrolling:touch;padding-bottom:8px;

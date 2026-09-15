@@ -2799,10 +2799,7 @@ function renderSeasonBoard(){
   const list = seasonPool();
   const name = seasonNameLabel();
   if(!list.length){
-    el.innerHTML = `<article class="season-board"><div class="season-head">
-      <div class="season-kicker">${escapeHtml(t('stSeasonTitle'))}</div>
-      <div class="season-name">${escapeHtml(name)}</div>
-    </div><div style="padding:8px 12px 16px;">${emptyCtaHtml(t(matches.length ? 'noPeriod' : 'noMatches'))}</div></article>`;
+    el.innerHTML = emptyCtaHtml(t(matches.length ? 'noPeriod' : 'noMatches'));
     return;
   }
   const avg = list.reduce((a,m)=>a+m.rating,0)/list.length;
@@ -2938,6 +2935,7 @@ function renderCompare(){
   </article>`;
 }
 function renderStats(){
+  document.getElementById('view-stats').classList.toggle('stats-empty', !matches.length);
   renderSeasonBoard();
   renderCompare();
   renderPlayerFeed();

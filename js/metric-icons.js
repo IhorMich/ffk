@@ -43,9 +43,9 @@ const METRIC_ICON_SIL = Object.fromEntries(
 const METRIC_ICON_TINT = {
   goals:'var(--gold)', shots:'var(--gold)', assists:'var(--accent)', dribbles:'var(--accent)',
   openings:'var(--accent)', chances:'var(--violet)', passes:'var(--accent)', buildpass:'var(--accent)',
-  tackles:'#5B8CFF', interceptions:'#5B8CFF', clearances:'#5B8CFF', blocks:'#5B8CFF',
+  tackles:'var(--tint-def)', interceptions:'var(--tint-def)', clearances:'var(--tint-def)', blocks:'var(--tint-def)',
   duelswon:'var(--accent)', support:'var(--violet)',
-  saves:'#3EC6FF', claims:'#3EC6FF', gkpass:'#3EC6FF', conceded:'var(--danger)',
+  saves:'var(--tint-gk)', claims:'var(--tint-gk)', gkpass:'var(--tint-gk)', conceded:'var(--danger)',
   losses:'var(--danger)', ledtogoal:'var(--danger)', badpass:'var(--danger)', badtouch:'var(--danger)',
   duelslost:'var(--danger)', fouls:'var(--gold)', owngoal:'var(--danger)'
 };
