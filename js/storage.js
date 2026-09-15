@@ -90,7 +90,8 @@ function loadSettings(){
       seasonCloseDeclined: String(s.seasonCloseDeclined || ''),
       theme: (s.theme === 'light' || s.theme === 'day') ? s.theme : 'dark',
       onboarded: s.onboarded === true,
-      pwaTransferSeen: s.pwaTransferSeen === true
+      pwaTransferSeen: s.pwaTransferSeen === true,
+      introSeen: s.introSeen === true
     };
     if(s.langManual !== true) saveSettings();
   }catch(e){}

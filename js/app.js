@@ -223,7 +223,7 @@ function applyI18n(){
   syncSeasonChipLabels();
 }
 
-let settings = {club:'', player:'', position:'fwd', format:'2x30', minutes:'60', lang:'ru', seasonCloseDeclined:'', theme:'dark', onboarded:false, pwaTransferSeen:false};
+let settings = {club:'', player:'', position:'fwd', format:'2x30', minutes:'60', lang:'ru', seasonCloseDeclined:'', theme:'dark', onboarded:false, pwaTransferSeen:false, introSeen:false};
 let roster = {currentId:'', ids:[]};
 let player = defaultPlayer();
 let extraSelected = [];
@@ -3113,6 +3113,10 @@ function requestAppBack(){
   try{ return handleAppBack(); } finally { popping = false; }
 }
 function handleAppBack(){
+  if(isElShown('intro')){
+    finishIntro();
+    return true;
+  }
   if(isElShown('transfer')){
     finishTransfer();
     return true;
@@ -3312,6 +3316,39 @@ function onboardPages(){
     {title: t('onboard2Title'), body: t('onboard2Body')},
     {title: t('onboard3Title'), body: t('onboard3Body')}
   ];
+}
+let introBusy = false;
+function afterIntro(){
+  if(!maybeTransfer()) maybeOnboard();
+}
+function finishIntro(){
+  const el = document.getElementById('intro');
+  if(!el || el.hidden || introBusy) return;
+  introBusy = true;
+  settings.introSeen = true;
+  saveSettings();
+  el.classList.add('out');
+  window.setTimeout(() => {
+    el.hidden = true;
+    el.classList.remove('out');
+    introBusy = false;
+    afterIntro();
+  }, 420);
+}
+function playIntro(){
+  if(settings.introSeen){
+    const el = document.getElementById('intro');
+    if(el) el.hidden = true;
+    return false;
+  }
+  const el = document.getElementById('intro');
+  if(!el) return false;
+  el.hidden = false;
+  const skip = () => finishIntro();
+  el.addEventListener('click', skip, {once:true});
+  const short = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  window.setTimeout(finishIntro, short ? 350 : 1750);
+  return true;
 }
 function finishOnboard(){
   settings.onboarded = true;
@@ -4123,7 +4160,7 @@ async function shareCard(m){
     renderOppList();
     maybePromptSeasonClose();
     restoreView();
-    if(!maybeTransfer()) maybeOnboard();
+    if(!playIntro()) if(!maybeTransfer()) maybeOnboard();
     bindAppBack();
     bindTapHaptics();
     bindSheets();

@@ -415,6 +415,18 @@ window.ffkIsNative = function () {
     </div>
   </div>
 
+  <div class="intro" id="intro">
+    <img class="intro-mark" src="icons/icon-512.png" alt="">
+    <div class="intro-name">Matchcard</div>
+  </div>
+  <script>
+  (function(){
+    try{
+      if(JSON.parse(localStorage.getItem('ffk_settings') || '{}').introSeen)
+        document.getElementById('intro').hidden = true;
+    }catch(e){}
+  })();
+  </script>
   <div class="onboard" id="transfer" hidden>
     <div class="onboard-card">
       <div class="onboard-kicker">Matchcard</div>
