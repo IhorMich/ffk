@@ -32,7 +32,8 @@ const METRIC_ICON_LINE = {
 const METRIC_ICON_SIL_KEYS = [
   'goals','shots','assists','dribbles','openings','chances','passes','buildpass',
   'tackles','interceptions','duelswon','support','duelslost','clearances','blocks',
-  'saves','claims','gkpass','conceded','losses','fouls'
+  'saves','claims','gkpass','conceded','losses','ledtogoal','badpass','badtouch',
+  'fouls','owngoal'
 ];
 
 const METRIC_ICON_SIL = Object.fromEntries(

@@ -1,4 +1,4 @@
-const CACHE = 'ffk_v89';
+const CACHE = 'ffk_v90';
 const ASSETS = [
   './',
   './index.html',
@@ -37,6 +37,10 @@ const ASSETS = [
   './icons/metrics/chances.png',
   './icons/metrics/buildpass.png',
   './icons/metrics/losses.png',
+  './icons/metrics/ledtogoal.png',
+  './icons/metrics/badpass.png',
+  './icons/metrics/badtouch.png',
+  './icons/metrics/owngoal.png',
   './fonts/plus-jakarta-sans-latin-400-normal.woff2',
   './fonts/plus-jakarta-sans-latin-600-normal.woff2',
   './fonts/plus-jakarta-sans-latin-700-normal.woff2',
