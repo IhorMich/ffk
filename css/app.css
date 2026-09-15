@@ -315,25 +315,35 @@
   .intro{
     position:fixed;inset:0;z-index:200;background:#000;
     display:flex;flex-direction:column;align-items:center;justify-content:center;
-    gap:18px;opacity:1;
+    gap:22px;opacity:1;
   }
   .intro[hidden]{display:none !important;}
-  .intro.out{animation:introFade .4s ease forwards;pointer-events:none;}
-  .intro-art{width:min(64vw,260px);height:auto;overflow:visible;}
-  .intro-cup{opacity:0;transform-origin:100px 130px;transform:scale(.86);animation:introCup .45s cubic-bezier(.2,.82,.2,1) forwards;}
-  .intro-arc{
-    stroke-dasharray:1;stroke-dashoffset:1;
-    animation:introDraw .85s cubic-bezier(.22,.61,.36,1) forwards;
+  .intro.out{animation:introFade .5s ease forwards;pointer-events:none;}
+  .intro-stage{position:relative;width:min(68vw,268px);aspect-ratio:1;}
+  .intro-layer{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block;}
+  .intro-cup{
+    clip-path:ellipse(38% 42% at 50% 61%);
+    opacity:0;transform:scale(.9);
   }
-  .intro-arc-a{animation-delay:.42s;}
-  .intro-arc-b{animation-delay:.58s;}
-  .intro-arc-c{animation-delay:.74s;}
+  .intro.play .intro-cup{animation:introCup .8s cubic-bezier(.22,.7,.2,1) forwards;}
+  .intro-gauge{
+    -webkit-mask-image:linear-gradient(90deg,#000 46%,transparent 54%);
+    mask-image:linear-gradient(90deg,#000 46%,transparent 54%);
+    -webkit-mask-size:230% 100%;mask-size:230% 100%;
+    -webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;
+    -webkit-mask-position:100% 0;mask-position:100% 0;
+  }
+  .intro.play .intro-gauge{animation:introWipe 2s cubic-bezier(.22,.61,.36,1) .85s forwards;}
   .intro-name{
-    font-size:.82rem;font-weight:800;letter-spacing:.22em;text-transform:uppercase;
-    color:#E8C15A;opacity:0;animation:introName .45s ease 1.55s forwards;
+    font-size:.84rem;font-weight:800;letter-spacing:.22em;text-transform:uppercase;
+    color:#E8C15A;opacity:0;
   }
+  .intro.play .intro-name{animation:introName .55s ease 2.85s forwards;}
   @keyframes introCup{to{opacity:1;transform:scale(1)}}
-  @keyframes introDraw{to{stroke-dashoffset:0}}
+  @keyframes introWipe{
+    from{-webkit-mask-position:100% 0;mask-position:100% 0;}
+    to{-webkit-mask-position:0 0;mask-position:0 0;}
+  }
   @keyframes introName{to{opacity:1}}
   @keyframes introFade{to{opacity:0}}
   .onboard,.preview-modal{

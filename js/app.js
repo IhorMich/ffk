@@ -3325,27 +3325,24 @@ function finishIntro(){
   const el = document.getElementById('intro');
   if(!el || el.hidden || introBusy) return;
   introBusy = true;
-  settings.introMark = 'gauge1';
-  saveSettings();
   el.classList.add('out');
   window.setTimeout(() => {
     el.hidden = true;
-    el.classList.remove('out');
+    el.classList.remove('out', 'play');
     introBusy = false;
     afterIntro();
   }, 420);
 }
 function playIntro(){
-  if(settings.introMark === 'gauge1'){
-    const el = document.getElementById('intro');
-    if(el) el.hidden = true;
-    return false;
-  }
   const el = document.getElementById('intro');
   if(!el) return false;
+  introBusy = false;
   el.hidden = false;
+  el.classList.remove('out', 'play');
+  void el.offsetWidth;
+  el.classList.add('play');
   el.addEventListener('click', finishIntro, {once:true});
-  window.setTimeout(finishIntro, 2800);
+  window.setTimeout(finishIntro, 4200);
   return true;
 }
 function finishOnboard(){
