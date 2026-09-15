@@ -352,7 +352,8 @@
   .intro.play .intro-cup{animation:introCup .85s cubic-bezier(.22,.7,.2,1) forwards;}
   .intro-gauge{
     z-index:1;opacity:0;
-    filter:drop-shadow(0 16px 18px rgba(0,0,0,.58)) drop-shadow(0 5px 4px rgba(0,0,0,.4)) drop-shadow(0 0 12px rgba(255,255,255,.16));
+    top:-12%;
+    filter:drop-shadow(0 16px 18px rgba(0,0,0,.58)) drop-shadow(0 5px 4px rgba(0,0,0,.4)) drop-shadow(0 0 12px rgba(40,120,255,.32));
     -webkit-mask-image:conic-gradient(from 223deg at 50% 45%, transparent 0deg, transparent 360deg);
     mask-image:conic-gradient(from 223deg at 50% 45%, transparent 0deg, transparent 360deg);
     -webkit-mask-size:100% 100%;mask-size:100% 100%;
