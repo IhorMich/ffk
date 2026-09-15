@@ -3390,9 +3390,24 @@ function finishIntro(){
       gauge.style.maskImage = '';
       gauge.style.opacity = '';
     }
+    const track = el.querySelector('.intro-name-track');
+    if(track) track.style.width = '';
     introBusy = false;
     afterIntro();
   }, 420);
+}
+function prepareIntroName(el){
+  const track = el.querySelector('.intro-name-track');
+  const text = el.querySelector('.intro-name-text');
+  if(!track || !text) return;
+  track.style.width = '';
+  const prev = text.style.cssText;
+  text.style.visibility = 'hidden';
+  text.style.position = 'absolute';
+  text.style.display = 'block';
+  const width = Math.ceil(text.getBoundingClientRect().width);
+  text.style.cssText = prev;
+  if(width > 0) track.style.width = width + 'px';
 }
 function playIntro(){
   const el = document.getElementById('intro');
@@ -3402,11 +3417,12 @@ function playIntro(){
   el.classList.remove('out', 'play');
   const gauge = el.querySelector('.intro-gauge');
   setGaugeWipe(gauge, 0);
+  prepareIntroName(el);
   void el.offsetWidth;
   el.classList.add('play');
   playGaugeWipe(gauge, 1400, 3200);
   el.addEventListener('click', finishIntro, {once:true});
-  window.setTimeout(finishIntro, 7200);
+  window.setTimeout(finishIntro, 7400);
   return true;
 }
 function finishOnboard(){
