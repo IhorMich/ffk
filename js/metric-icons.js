@@ -37,7 +37,7 @@ const METRIC_ICON_SIL_KEYS = [
 ];
 
 const METRIC_ICON_SIL = Object.fromEntries(
-  METRIC_ICON_SIL_KEYS.map(k => [k, `icons/metrics/${k}.png`])
+  METRIC_ICON_SIL_KEYS.map(k => [k, `icons/metrics/${k}.png?v=${typeof FFK_VERSION === 'string' ? FFK_VERSION : '1'}`])
 );
 
 const METRIC_ICON_TINT = {
