@@ -3319,8 +3319,8 @@ function onboardPages(){
 }
 let introBusy = false;
 let introWipeRaf = 0;
-const INTRO_WIPE_FROM = 224;
-const INTRO_WIPE_SWEEP = 252;
+const INTRO_WIPE_FROM = 223;
+const INTRO_WIPE_SWEEP = 275;
 const INTRO_WIPE_AT = '50% 45%';
 function setGaugeWipe(gauge, progress){
   if(!gauge) return;
@@ -3329,15 +3329,17 @@ function setGaugeWipe(gauge, progress){
     const blank = `conic-gradient(from ${INTRO_WIPE_FROM}deg at ${INTRO_WIPE_AT}, transparent 0deg, transparent 360deg)`;
     gauge.style.webkitMaskImage = blank;
     gauge.style.maskImage = blank;
+    gauge.style.opacity = '0';
     return;
   }
+  gauge.style.opacity = '1';
   if(p >= 1){
     gauge.style.webkitMaskImage = 'none';
     gauge.style.maskImage = 'none';
     return;
   }
   const deg = p * INTRO_WIPE_SWEEP;
-  const soft = 3;
+  const soft = 2;
   const mask = `conic-gradient(from ${INTRO_WIPE_FROM}deg at ${INTRO_WIPE_AT}, #000 0deg, #000 ${deg}deg, transparent ${deg + soft}deg)`;
   gauge.style.webkitMaskImage = mask;
   gauge.style.maskImage = mask;
@@ -3386,6 +3388,7 @@ function finishIntro(){
     if(gauge){
       gauge.style.webkitMaskImage = '';
       gauge.style.maskImage = '';
+      gauge.style.opacity = '';
     }
     introBusy = false;
     afterIntro();
@@ -3401,9 +3404,9 @@ function playIntro(){
   setGaugeWipe(gauge, 0);
   void el.offsetWidth;
   el.classList.add('play');
-  playGaugeWipe(gauge, 900, 3200);
+  playGaugeWipe(gauge, 1400, 3200);
   el.addEventListener('click', finishIntro, {once:true});
-  window.setTimeout(finishIntro, 5800);
+  window.setTimeout(finishIntro, 6200);
   return true;
 }
 function finishOnboard(){
