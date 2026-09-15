@@ -3418,8 +3418,8 @@ function prepareIntroName(el){
   text.style.display = 'block';
   const width = Math.ceil(text.getBoundingClientRect().width);
   const mWidth = m ? Math.ceil(m.getBoundingClientRect().width) : Math.round(width * 0.12);
-  // Left stem of bold M ≈ 18% of the glyph advance.
-  const stemWidth = Math.max(4, Math.round(mWidth * 0.18));
+  // Left start of bold M (stem + first diagonal), not a hairline.
+  const stemWidth = Math.max(8, Math.round(mWidth * 0.42));
   text.style.cssText = prev;
   if(width > 0) track.style.width = width + 'px';
   if(name){

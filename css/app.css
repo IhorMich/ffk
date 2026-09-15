@@ -342,7 +342,7 @@
     margin-top:-46px;
     min-height:1.2em;
     overflow:visible;
-    --intro-stem-w:.28em;
+    --intro-stem-w:.55em;
     --intro-m-w:1.1em;
   }
   .intro-name-track{
@@ -354,7 +354,8 @@
     animation:introNameSettle 1.45s cubic-bezier(.22,.61,.36,1) 5.85s forwards;
   }
   .intro-name-clip{
-    display:block;overflow:hidden;width:0;
+    display:block;overflow:hidden;
+    width:var(--intro-stem-w);
     transform:scaleY(0);opacity:0;
     transform-origin:center center;
   }
@@ -369,11 +370,12 @@
   .intro-name-m,.intro-name-rest{display:inline;}
   @keyframes introCup{to{opacity:1;transform:scale(1)}}
   @keyframes introNameReveal{
-    0%{width:0;transform:scaleY(0);opacity:0}
-    14%{width:var(--intro-stem-w);transform:scaleY(1);opacity:1}
-    28%{width:var(--intro-stem-w);transform:scaleY(1);opacity:1}
-    44%{width:var(--intro-m-w);transform:scaleY(1);opacity:1}
-    54%{width:var(--intro-m-w);transform:scaleY(1);opacity:1}
+    /* Full-height left start of M grows in the center — not a hairline bar */
+    0%{width:var(--intro-stem-w);transform:scaleY(0);opacity:0}
+    16%{width:var(--intro-stem-w);transform:scaleY(1);opacity:1}
+    30%{width:var(--intro-stem-w);transform:scaleY(1);opacity:1}
+    46%{width:var(--intro-m-w);transform:scaleY(1);opacity:1}
+    56%{width:var(--intro-m-w);transform:scaleY(1);opacity:1}
     100%{width:100%;transform:scaleY(1);opacity:1}
   }
   @keyframes introNameSettle{from{transform:translateX(50%)}to{transform:translateX(0)}}
