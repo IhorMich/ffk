@@ -315,7 +315,7 @@
   .intro{
     position:fixed;inset:0;z-index:200;background:#000;
     display:flex;flex-direction:column;align-items:center;justify-content:center;
-    gap:22px;opacity:1;
+    gap:6px;opacity:1;
   }
   .intro[hidden]{display:none !important;}
   .intro.out{animation:introFade .5s ease forwards;pointer-events:none;}
@@ -336,12 +336,40 @@
     -webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;
   }
   .intro-name{
-    font-size:clamp(1.9rem,7.5vw,2.45rem);font-weight:800;letter-spacing:.12em;text-transform:uppercase;
-    color:#fff;opacity:0;
+    position:relative;
+    display:grid;place-items:center;
+    width:min(94vw,24rem);
+    margin-top:-46px;
+    min-height:1.2em;
   }
-  .intro.play .intro-name{animation:introName .6s ease 4.7s forwards;}
+  .intro-name-bar{
+    position:absolute;left:50%;top:50%;
+    width:3px;height:1.05em;border-radius:1px;background:#fff;
+    transform:translate(-50%,-50%) scaleY(0);opacity:0;
+    transform-origin:center center;
+  }
+  .intro.play .intro-name-bar{
+    animation:introBar .32s cubic-bezier(.22,.7,.2,1) 4.7s forwards,
+              introBarOut .28s ease 5.2s forwards;
+  }
+  .intro-name-clip{
+    display:flex;justify-content:center;overflow:hidden;width:0;
+  }
+  .intro.play .intro-name-clip{
+    animation:introNameWiden .75s cubic-bezier(.22,.61,.36,1) 5.05s forwards;
+  }
+  .intro-name-text{
+    flex:0 0 auto;white-space:nowrap;
+    font-size:clamp(2.35rem,9.4vw,3.15rem);font-weight:800;letter-spacing:.1em;text-transform:uppercase;
+    color:#fff;line-height:1.05;
+  }
   @keyframes introCup{to{opacity:1;transform:scale(1)}}
-  @keyframes introName{to{opacity:1}}
+  @keyframes introBar{
+    from{opacity:0;transform:translate(-50%,-50%) scaleY(0)}
+    to{opacity:1;transform:translate(-50%,-50%) scaleY(1)}
+  }
+  @keyframes introBarOut{to{opacity:0}}
+  @keyframes introNameWiden{from{width:0}to{width:100%}}
   @keyframes introFade{to{opacity:0}}
   .onboard,.preview-modal{
     position:fixed;inset:0;z-index:92;background:rgba(8,14,24,.88);
