@@ -322,8 +322,8 @@
   .intro-ambience{
     position:absolute;inset:0;pointer-events:none;
     background:
-      radial-gradient(ellipse 78% 52% at 50% 44%, rgba(220,228,240,.12) 0%, rgba(120,140,170,.05) 34%, transparent 62%),
-      radial-gradient(ellipse 42% 28% at 50% 40%, rgba(255,255,255,.06) 0%, transparent 58%),
+      radial-gradient(ellipse 78% 52% at 50% 44%, rgba(245,185,66,.12) 0%, rgba(180,90,20,.05) 34%, transparent 62%),
+      radial-gradient(ellipse 42% 28% at 50% 40%, rgba(255,248,220,.06) 0%, transparent 58%),
       radial-gradient(ellipse 90% 80% at 50% 50%, transparent 42%, rgba(0,0,0,.78) 100%);
   }
   .intro-stage{
@@ -333,7 +333,7 @@
   .intro-stage::before{
     content:"";position:absolute;left:50%;top:54%;z-index:0;
     width:78%;height:62%;transform:translate(-50%,-50%);
-    background:radial-gradient(circle, rgba(255,255,255,.16) 0%, rgba(200,210,230,.06) 42%, transparent 72%);
+    background:radial-gradient(circle, rgba(245,185,66,.18) 0%, rgba(245,185,66,.05) 42%, transparent 72%);
     filter:blur(12px);opacity:0;pointer-events:none;
   }
   .intro.play .intro-stage::before{animation:introGlowIn .9s ease .05s forwards;}
@@ -350,14 +350,22 @@
     filter:drop-shadow(0 22px 18px rgba(0,0,0,.62)) drop-shadow(0 6px 4px rgba(0,0,0,.4)) drop-shadow(0 0 12px rgba(255,255,255,.16));
   }
   .intro.play .intro-cup{animation:introCup .85s cubic-bezier(.22,.7,.2,1) forwards;}
-  .intro-gauge{
-    z-index:1;opacity:0;
-    top:-12%;
-    filter:drop-shadow(0 16px 18px rgba(0,0,0,.58)) drop-shadow(0 5px 4px rgba(0,0,0,.4)) drop-shadow(0 0 12px rgba(40,120,255,.32));
-    -webkit-mask-image:conic-gradient(from 223deg at 50% 45%, transparent 0deg, transparent 360deg);
-    mask-image:conic-gradient(from 223deg at 50% 45%, transparent 0deg, transparent 360deg);
-    -webkit-mask-size:100% 100%;mask-size:100% 100%;
-    -webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;
+  .intro-stars{
+    position:absolute;inset:0;z-index:1;pointer-events:none;
+  }
+  .intro-orbit-star{
+    position:absolute;left:50%;top:50%;
+    width:calc(var(--intro-size)*var(--s));height:calc(var(--intro-size)*var(--s));
+    display:flex;align-items:center;justify-content:center;
+    transform:translate(-50%,-50%) rotate(var(--a)) translateY(calc(var(--intro-size)*var(--r)*-1)) rotate(calc(var(--a)*-1));
+    opacity:0;
+  }
+  .intro-orbit-star img{
+    width:100%;height:100%;display:block;object-fit:contain;
+    filter:drop-shadow(0 4px 5px rgba(0,0,0,.55)) drop-shadow(0 0 8px rgba(245,185,66,.5));
+  }
+  .intro.play .intro-orbit-star{
+    animation:introOrbitStar .55s cubic-bezier(.16,1.2,.28,1) calc(.95s + (var(--d)* .18s)) forwards;
   }
   .intro-name{
     position:relative;z-index:1;
@@ -380,10 +388,15 @@
     transform-origin:center bottom;
   }
   .intro.play .intro-name-ch{
-    animation:introBallBounce .85s cubic-bezier(.22,.9,.3,1.15) calc(4.75s + (var(--i) * .09s)) forwards;
+    animation:introBallBounce .85s cubic-bezier(.22,.9,.3,1.15) calc(2.7s + (var(--i) * .09s)) forwards;
   }
   @keyframes introCup{to{opacity:1;transform:scale(1) translateY(0)}}
   @keyframes introGlowIn{to{opacity:1}}
+  @keyframes introOrbitStar{
+    0%{opacity:0;scale:.18}
+    58%{opacity:1;scale:1.12}
+    100%{opacity:1;scale:1}
+  }
   @keyframes introBallBounce{
     0%{opacity:0;transform:translateY(-1.35em) scaleY(1)}
     18%{opacity:1}
