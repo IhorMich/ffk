@@ -328,24 +328,19 @@
     opacity:0;transform:scale(.9);
   }
   .intro.play .intro-cup{animation:introCup .8s cubic-bezier(.22,.7,.2,1) forwards;}
-  .intro-gauge-clip{
-    position:absolute;top:0;left:0;bottom:0;width:0;overflow:hidden;
-  }
-  .intro.play .intro-gauge-clip{animation:introWipe 2.8s linear .85s forwards;}
   .intro-gauge{
-    position:absolute;top:0;left:0;width:var(--intro-size);height:100%;
-    max-width:none;object-fit:contain;display:block;
+    opacity:1;
+    -webkit-mask-image:conic-gradient(from 222deg at 50% 44.9%, #000 0deg, transparent 0deg);
+    mask-image:conic-gradient(from 222deg at 50% 44.9%, #000 0deg, transparent 0deg);
+    -webkit-mask-size:100% 100%;mask-size:100% 100%;
+    -webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;
   }
   .intro-name{
     font-size:clamp(1.9rem,7.5vw,2.45rem);font-weight:800;letter-spacing:.12em;text-transform:uppercase;
     color:#fff;opacity:0;
   }
-  .intro.play .intro-name{animation:introName .6s ease 3.7s forwards;}
+  .intro.play .intro-name{animation:introName .6s ease 4s forwards;}
   @keyframes introCup{to{opacity:1;transform:scale(1)}}
-  @keyframes introWipe{
-    from{width:0;}
-    to{width:100%;}
-  }
   @keyframes introName{to{opacity:1}}
   @keyframes introFade{to{opacity:0}}
   .onboard,.preview-modal{

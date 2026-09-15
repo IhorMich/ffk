@@ -3318,6 +3318,43 @@ function onboardPages(){
   ];
 }
 let introBusy = false;
+let introWipeRaf = 0;
+function setGaugeWipe(gauge, progress){
+  if(!gauge) return;
+  const sweep = 252;
+  const deg = Math.max(0, Math.min(1, progress)) * sweep;
+  const soft = Math.min(6, Math.max(0.5, 252 * 0.02));
+  const mask = `conic-gradient(from 222deg at 50% 44.9%, #000 0deg, #000 ${deg}deg, transparent ${deg + soft}deg)`;
+  gauge.style.webkitMaskImage = mask;
+  gauge.style.maskImage = mask;
+}
+function stopGaugeWipe(){
+  if(introWipeRaf){
+    cancelAnimationFrame(introWipeRaf);
+    introWipeRaf = 0;
+  }
+}
+function playGaugeWipe(gauge, delayMs, durMs){
+  stopGaugeWipe();
+  setGaugeWipe(gauge, 0);
+  const t0 = performance.now();
+  const ease = p => (p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2);
+  const tick = now => {
+    const t = now - t0 - delayMs;
+    if(t < 0){
+      introWipeRaf = requestAnimationFrame(tick);
+      return;
+    }
+    const p = Math.min(1, t / durMs);
+    setGaugeWipe(gauge, ease(p));
+    if(p < 1) introWipeRaf = requestAnimationFrame(tick);
+    else{
+      setGaugeWipe(gauge, 1);
+      introWipeRaf = 0;
+    }
+  };
+  introWipeRaf = requestAnimationFrame(tick);
+}
 function afterIntro(){
   if(!maybeTransfer()) maybeOnboard();
 }
@@ -3325,10 +3362,16 @@ function finishIntro(){
   const el = document.getElementById('intro');
   if(!el || el.hidden || introBusy) return;
   introBusy = true;
+  stopGaugeWipe();
   el.classList.add('out');
   window.setTimeout(() => {
     el.hidden = true;
     el.classList.remove('out', 'play');
+    const gauge = el.querySelector('.intro-gauge');
+    if(gauge){
+      gauge.style.webkitMaskImage = '';
+      gauge.style.maskImage = '';
+    }
     introBusy = false;
     afterIntro();
   }, 420);
@@ -3339,10 +3382,13 @@ function playIntro(){
   introBusy = false;
   el.hidden = false;
   el.classList.remove('out', 'play');
+  const gauge = el.querySelector('.intro-gauge');
+  setGaugeWipe(gauge, 0);
   void el.offsetWidth;
   el.classList.add('play');
+  playGaugeWipe(gauge, 850, 3000);
   el.addEventListener('click', finishIntro, {once:true});
-  window.setTimeout(finishIntro, 5200);
+  window.setTimeout(finishIntro, 5600);
   return true;
 }
 function finishOnboard(){
