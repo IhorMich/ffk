@@ -3396,10 +3396,7 @@ function finishIntro(){
       track.style.transform = '';
     }
     const name = el.querySelector('.intro-name');
-    if(name){
-      name.style.removeProperty('--intro-m-w');
-      name.style.removeProperty('--intro-stem-w');
-    }
+    if(name) name.style.removeProperty('--intro-stem-w');
     introBusy = false;
     afterIntro();
   }, 420);
@@ -3418,14 +3415,10 @@ function prepareIntroName(el){
   text.style.display = 'block';
   const width = Math.ceil(text.getBoundingClientRect().width);
   const mWidth = m ? Math.ceil(m.getBoundingClientRect().width) : Math.round(width * 0.12);
-  // Left start of bold M (stem + first diagonal), not a hairline.
   const stemWidth = Math.max(8, Math.round(mWidth * 0.42));
   text.style.cssText = prev;
   if(width > 0) track.style.width = width + 'px';
-  if(name){
-    if(mWidth > 0) name.style.setProperty('--intro-m-w', mWidth + 'px');
-    if(stemWidth > 0) name.style.setProperty('--intro-stem-w', stemWidth + 'px');
-  }
+  if(name && stemWidth > 0) name.style.setProperty('--intro-stem-w', stemWidth + 'px');
 }
 function playIntro(){
   const el = document.getElementById('intro');

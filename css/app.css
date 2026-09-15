@@ -343,15 +343,15 @@
     min-height:1.2em;
     overflow:visible;
     --intro-stem-w:.55em;
-    --intro-m-w:1.1em;
   }
   .intro-name-track{
     position:relative;
     width:0;
     transform:translateX(50%);
   }
+  /* Settle runs with the reveal so M draws while moving left (two-sided grow from center). */
   .intro.play .intro-name-track{
-    animation:introNameSettle 1.45s cubic-bezier(.22,.61,.36,1) 5.85s forwards;
+    animation:introNameSettle 1.7s cubic-bezier(.22,.61,.36,1) 4.95s forwards;
   }
   .intro-name-clip{
     display:block;overflow:hidden;
@@ -360,7 +360,7 @@
     transform-origin:center center;
   }
   .intro.play .intro-name-clip{
-    animation:introNameReveal 2.05s cubic-bezier(.22,.61,.36,1) 4.7s forwards;
+    animation:introNameReveal 1.95s cubic-bezier(.22,.61,.36,1) 4.7s forwards;
   }
   .intro-name-text{
     display:block;white-space:nowrap;
@@ -370,12 +370,8 @@
   .intro-name-m,.intro-name-rest{display:inline;}
   @keyframes introCup{to{opacity:1;transform:scale(1)}}
   @keyframes introNameReveal{
-    /* Full-height left start of M grows in the center — not a hairline bar */
     0%{width:var(--intro-stem-w);transform:scaleY(0);opacity:0}
-    16%{width:var(--intro-stem-w);transform:scaleY(1);opacity:1}
-    30%{width:var(--intro-stem-w);transform:scaleY(1);opacity:1}
-    46%{width:var(--intro-m-w);transform:scaleY(1);opacity:1}
-    56%{width:var(--intro-m-w);transform:scaleY(1);opacity:1}
+    12%{width:var(--intro-stem-w);transform:scaleY(1);opacity:1}
     100%{width:100%;transform:scaleY(1);opacity:1}
   }
   @keyframes introNameSettle{from{transform:translateX(50%)}to{transform:translateX(0)}}
