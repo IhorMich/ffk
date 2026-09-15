@@ -3526,3 +3526,20 @@ ru:{
     Object.assign(I18N[lang], extra.en, extra[lang] || {});
   });
 })();
+
+(function mergeShortOutingI18n(){
+  const extra = {
+    uk:{ ratingForMins:'оцінка за {n} хв' },
+    pl:{ ratingForMins:'ocena za {n} min' },
+    en:{ ratingForMins:'rating for {n} min' },
+    ru:{ ratingForMins:'оценка за {n} мин' },
+    es:{ ratingForMins:'nota de {n} min' },
+    de:{ ratingForMins:'Note für {n} Min.' },
+    it:{ ratingForMins:'voto per {n} min' },
+    fr:{ ratingForMins:'note pour {n} min' },
+    pt:{ ratingForMins:'nota por {n} min' }
+  };
+  LANGS.forEach(lang => {
+    Object.assign(I18N[lang], extra.en, extra[lang] || {});
+  });
+})();

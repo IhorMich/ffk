@@ -257,7 +257,7 @@ function normalizeMatch(m){
   const matchLen = formatLength(format, m.matchLen || m.minutes);
   const minutes = Math.min(120, Math.max(1, Number(m.minutes) || matchLen));
   const date = /^\d{4}-\d{2}-\d{2}$/.test(m.date) ? m.date : todayStr();
-  const action = actionScore(counts, pos);
+  const action = actionScore(counts, pos, minutes, matchLen);
   const effort = effortScore(behaviors);
   return {
     id: Number(m.id) || Date.now(),
@@ -283,7 +283,7 @@ function normalizeMatch(m){
     kickoffClock: String(m.kickoffClock || '').slice(0, 24).replace(/[\s·]+$/, ''),
     actionRating: action,
     effortRating: effort,
-    rating: overallScore(counts, behaviors, pos)
+    rating: overallScore(counts, behaviors, pos, minutes, matchLen)
   };
 }
 function normalizeTimeline(raw){

@@ -250,7 +250,10 @@ function applyI18n(){
     document.getElementById('wrapBehaviors').innerHTML = wrapBehaviorHtml('effort') + wrapBehaviorHtml('team');
     const s = scoresNow();
     const scale = document.getElementById('wrapScale');
-    if(scale) scale.textContent = fmtNum(s.overall, 2) + '/10 · ' + t('ratingBaseHint');
+    if(scale){
+      const note = isShortOuting(s.minutes, s.matchLen) ? t('ratingForMins', {n: s.minutes}) : t('ratingBaseHint');
+      scale.textContent = fmtNum(s.overall, 2) + '/10 · ' + note;
+    }
   }
 }
 
@@ -666,13 +669,22 @@ function reportLines(m){
 function reportPlayerName(m){
   return (player.firstName || String(m.player || '').trim().split(/\s+/)[0] || '—');
 }
+function matchMinsLabel(m){
+  const n = Math.max(1, Number(m.minutes) || Number(m.matchLen) || 0);
+  return n ? t('minLbl', {n}) : '';
+}
+function outingCaption(m){
+  if(isShortOuting(m.minutes, m.matchLen)) return t('ratingForMins', {n: Math.max(1, Number(m.minutes) || 1)});
+  return t('heroOverall');
+}
 function renderReportHtml(m, compact){
-  const split = actionSplit(m.counts, m.position);
+  const split = actionSplit(m.counts, m.position, m.minutes, m.matchLen);
   const lines = reportLines(m);
-  const vs = `${escapeHtml(m.opponent || t('unnamed'))}${m.score ? ' · ' + scoreLineHtml(m) : ''}`;
+  const mins = matchMinsLabel(m);
+  const vs = `${escapeHtml(m.opponent || t('unnamed'))}${m.score ? ' · ' + scoreLineHtml(m) : ''}${mins ? ' · ' + escapeHtml(mins) : ''}`;
   const kick = m.kickoffClock ? escapeHtml(t('kickoffLine', {clock: m.kickoffClock})) : '';
   const meta = `<div class="report-sub"><span>${vs}</span>${kick ? `<span>${kick}</span>` : ''}</div>`;
-  const scale = `<p class="hero-scale">${escapeHtml(t('ratingBaseHint'))}</p>`;
+  const scale = `<p class="hero-scale">${escapeHtml(isShortOuting(m.minutes, m.matchLen) ? outingCaption(m) : t('ratingBaseHint'))}</p>`;
   const head = compact ? meta : `<div class="report-kicker">${escapeHtml(t('reportTitle'))}</div>
     <div class="report-title">${escapeHtml(reportPlayerName(m))} — <span class="n">${fmtNum(m.rating, 2)}</span></div>
     ${meta}${scale}
@@ -1658,7 +1670,7 @@ function renderPlayerFeed(){
       <div class="pf-rate">${fmtNum(avg, 2)}<small>${escapeHtml(season ? t('pfSeasonAvg') : t('pfAllAvg'))}</small></div>
       ${trendHtml}
       <div class="pf-grid">
-        <div class="pf-kpi"><div class="n">${fmtNum(last.rating, 2)}</div><div class="l">${escapeHtml(t('pfLast'))}</div></div>
+        <div class="pf-kpi"><div class="n">${fmtNum(last.rating, 2)}</div><div class="l">${escapeHtml(isShortOuting(last.minutes, last.matchLen) ? t('ratingForMins', {n: last.minutes}) : t('pfLast'))}</div></div>
         <div class="pf-kpi"><div class="n">${list.length}</div><div class="l">${escapeHtml(pfGamesLabel(list.length, season))}</div></div>
         <div class="pf-kpi"><div class="n">${goals} · ${assists}</div><div class="l">${escapeHtml(t('pfGA'))}</div></div>
       </div>
@@ -2142,17 +2154,20 @@ function bindBehaviorSlider(){
 
 function scoresNow(){
   const pos = currentPos();
-  const action = actionScore(form.counts, pos);
+  const minutes = Number(document.getElementById('f-minutes').value) || 60;
+  const matchLen = formatLength(document.getElementById('f-format').value, document.getElementById('f-matchlen').value);
+  const action = actionScore(form.counts, pos, minutes, matchLen);
   const effort = effortScore(form.behaviors);
-  return {action, effort, overall: overallScore(form.counts, form.behaviors, pos), pos};
+  return {action, effort, overall: overallScore(form.counts, form.behaviors, pos, minutes, matchLen), pos, minutes, matchLen};
 }
 function updateHero(){
   const s = scoresNow();
   document.getElementById('heroScore').innerHTML = fmtNum(s.overall, 2) + '<small>/10</small>';
   document.getElementById('heroAction').textContent = fmtNum(s.action, 2);
   document.getElementById('heroEffort').textContent = fmtNum(s.effort, 2);
-  const minutes = Number(document.getElementById('f-minutes').value) || 60;
-  document.getElementById('heroLabel').textContent = minutes < 25 ? t('heroShort') : t('heroOverall');
+  document.getElementById('heroLabel').textContent = isShortOuting(s.minutes, s.matchLen)
+    ? t('ratingForMins', {n: s.minutes})
+    : t('heroOverall');
   document.getElementById('liveScore').textContent = fmtNum(s.action, 2);
   syncLiveUndo();
 }
@@ -2234,7 +2249,10 @@ function collectMatch(){
   const pos = currentPos();
   const counts = {...form.counts};
   const behaviors = {...form.behaviors};
-  const action = actionScore(counts, pos);
+  const minutes = Math.min(120, Math.max(1, Number(document.getElementById('f-minutes').value) || formatLength(document.getElementById('f-format').value, document.getElementById('f-matchlen').value)));
+  const format = document.getElementById('f-format').value;
+  const matchLen = formatLength(format, document.getElementById('f-matchlen').value);
+  const action = actionScore(counts, pos, minutes, matchLen);
   const effort = effortScore(behaviors);
   return {
     id: editingId || Date.now(),
@@ -2248,9 +2266,9 @@ function collectMatch(){
     venue: document.getElementById('f-venue').value === 'away' ? 'away' : 'home',
     role: document.getElementById('f-role').value === 'sub' ? 'sub' : 'start',
     comment: document.getElementById('f-comment').value.trim(),
-    minutes: Math.min(120, Math.max(1, Number(document.getElementById('f-minutes').value) || formatLength(document.getElementById('f-format').value, document.getElementById('f-matchlen').value))),
-    format: document.getElementById('f-format').value,
-    matchLen: formatLength(document.getElementById('f-format').value, document.getElementById('f-matchlen').value),
+    minutes,
+    format,
+    matchLen,
     kind: document.getElementById('f-kind').value,
     season: (editingId && matches.find(x => x.id === editingId)?.season) || (seasonIsOpen() ? (player.season || seasonFromDate(document.getElementById('f-date').value)) : seasonFromDate(document.getElementById('f-date').value)),
     team: (editingId && matches.find(x => x.id === editingId)?.team) || player.team || player.club || '',
@@ -2260,7 +2278,7 @@ function collectMatch(){
     kickoffClock: matchClock.startedAt ? [localClock(matchClock.startedAt), tzShort()].filter(Boolean).join(' · ') : '',
     actionRating: action,
     effortRating: effort,
-    rating: overallScore(counts, behaviors, pos)
+    rating: overallScore(counts, behaviors, pos, minutes, matchLen)
   };
 }
 
@@ -2374,11 +2392,11 @@ function renderHistory(){
     return `<div class="match-card">
       <div class="match-card-top" onclick="toggleDetails(${m.id})">
         <div class="match-meta">
-          <span class="match-date">${escapeHtml(formatDate(m.date))}${showSeason ? ' · ' + escapeHtml(matchSeason(m)) : ''} · ${escapeHtml(matchPosDisplay(m))}</span>
+          <span class="match-date">${escapeHtml(formatDate(m.date))}${showSeason ? ' · ' + escapeHtml(matchSeason(m)) : ''} · ${escapeHtml(matchMinsLabel(m))} · ${escapeHtml(matchPosDisplay(m))}</span>
           <span class="match-opp">${escapeHtml(m.opponent || t('unnamed'))}</span>
           <span class="match-score">${scoreLineHtml(m)}</span>
         </div>
-        <div class="match-rating ${ratingClass(m.rating)}">${fmtNum(m.rating, 2)}</div>
+        <div class="match-rating ${ratingClass(m.rating)}${isShortOuting(m.minutes, m.matchLen) ? ' short' : ''}">${fmtNum(m.rating, 2)}${isShortOuting(m.minutes, m.matchLen) ? `<small>${escapeHtml(matchMinsLabel(m))}</small>` : ''}</div>
       </div>
       <div class="match-details" id="details-${m.id}">
         ${renderReportHtml(m, true)}
@@ -2782,8 +2800,7 @@ function ratingTrend(list){
   if(list.length < 2) return 0;
   if(list.length < 4) return list[list.length-1].rating - list[0].rating;
   const mid = Math.floor(list.length / 2);
-  const avg = arr => arr.reduce((a,b)=>a+b,0)/arr.length;
-  return avg(list.slice(mid).map(m=>m.rating)) - avg(list.slice(0, mid).map(m=>m.rating));
+  return (avgRating(list.slice(mid)) || 0) - (avgRating(list.slice(0, mid)) || 0);
 }
 function fmtInt(n){
   const s = String(Math.round(Number(n) || 0));
@@ -2913,7 +2930,13 @@ function renderSeasonBoard(){
 }
 function avgRating(list){
   if(!list.length) return null;
-  return list.reduce((a,m)=>a+m.rating,0)/list.length;
+  let sum = 0, w = 0;
+  list.forEach(m => {
+    const ww = Math.max(8, Number(m.minutes) || Number(m.matchLen) || 30);
+    sum += Number(m.rating) * ww;
+    w += ww;
+  });
+  return w ? sum / w : null;
 }
 function groupedAvgs(list, keyFn){
   const map = new Map();
@@ -3302,7 +3325,8 @@ function openWrapUp(){
   document.getElementById('wrap-minutes').value = document.getElementById('f-minutes').value;
   document.getElementById('wrapBehaviors').innerHTML = wrapBehaviorHtml('effort') + wrapBehaviorHtml('team');
   const s = scoresNow();
-  document.getElementById('wrapScale').textContent = fmtNum(s.overall, 2) + '/10 · ' + t('ratingBaseHint');
+  const scaleNote = isShortOuting(s.minutes, s.matchLen) ? t('ratingForMins', {n: s.minutes}) : t('ratingBaseHint');
+  document.getElementById('wrapScale').textContent = fmtNum(s.overall, 2) + '/10 · ' + scaleNote;
   el.hidden = false;
   pushAppState('layer');
 }
@@ -4282,7 +4306,7 @@ function shareHistoryCard(){
 }
 async function drawMatchCardCanvas(m, mode){
   const lines = reportLines(m);
-  const split = actionSplit(m.counts, m.position);
+  const split = actionSplit(m.counts, m.position, m.minutes, m.matchLen);
   const photo = await loadCanvasImage(currentPhoto() || player.photo);
   const ovr = Math.round(Math.min(99, Math.max(45, Number(m.rating) * 10)));
   const theme = futTheme(ovr, mode);
@@ -4339,7 +4363,7 @@ async function drawMatchCardCanvas(m, mode){
   ctx.fillStyle = theme.plate;
   fitText(ctx, reportPlayerName(m), tx, 150, tw, '900', 54, 30);
   ctx.fillStyle = theme.muted;
-  const vs = `${formatDate(m.date)}  ·  ${m.opponent || t('shareVs')}  ·  ${m.score ? scoreLine(m) : '—'}`;
+  const vs = `${formatDate(m.date)}  ·  ${m.opponent || t('shareVs')}  ·  ${m.score ? scoreLine(m) : '—'}  ·  ${matchMinsLabel(m)}`;
   fitText(ctx, vs, tx, 200, tw, '700', 26, 17);
   if(kickoff) fitText(ctx, kickoff, tx, 236, tw, '700', 24, 16);
   fitText(ctx, `${t('heroAction')} ${fmtNum(m.actionRating, 1)}    ${t('heroEffort')} ${fmtNum(m.effortRating, 1)}`, tx, metaBase, tw, '700', 24, 16);
@@ -4348,7 +4372,7 @@ async function drawMatchCardCanvas(m, mode){
   ctx.fillStyle = theme.plate;
   fitText(ctx, fmtNum(m.rating, 1), right, 178, 300, '900', 110, 60);
   ctx.fillStyle = theme.muted;
-  fitText(ctx, t('heroOverall'), right, 218, 320, '700', 24, 15);
+  fitText(ctx, outingCaption(m), right, 218, 320, '700', 24, 15);
   fitText(ctx, t('ratingBaseHint'), right, 248, 320, '600', 18, 13);
   ctx.textAlign = 'left';
 

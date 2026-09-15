@@ -118,20 +118,43 @@ function actionSum(counts, pos){
   metricsFor(pos).forEach(m => sum += stackedWeight(counts[m.key], weightOf(m, pos)));
   return sum;
 }
-function actionScore(counts, pos){
-  return clampScore(BASE_RATING + actionSum(counts, pos));
+function playedMinutes(minutes, matchLen){
+  const full = Math.max(1, Number(matchLen) || 60);
+  const played = Math.max(1, Number(minutes) || full);
+  return {played, full};
+}
+function isShortOuting(minutes, matchLen){
+  const {played, full} = playedMinutes(minutes, matchLen);
+  return played < 25 || played < full * 0.45;
+}
+// A 12-minute cameo is not a full match: keep most of the actions, but do not
+// swing the mark as hard as 60 minutes on the pitch.
+function outingFactor(minutes, matchLen){
+  if(minutes == null && matchLen == null) return 1;
+  const {played, full} = playedMinutes(minutes, matchLen);
+  const half = Math.min(25, full * 0.5);
+  if(played >= half) return 1;
+  return 0.65 + 0.35 * (played / half);
+}
+function withOuting(delta, minutes, matchLen){
+  return delta * outingFactor(minutes, matchLen);
+}
+function actionScore(counts, pos, minutes, matchLen){
+  return clampScore(BASE_RATING + withOuting(actionSum(counts, pos), minutes, matchLen));
 }
 function effortScore(behaviors){
   return clampScore(BASE_RATING + (behaviorAvg(behaviors) - 3) * 2);
 }
-function overallScore(counts, behaviors, pos){
-  return clampScore(BASE_RATING + actionSum(counts, pos) + (behaviorAvg(behaviors) - 3) * 0.5);
+function overallScore(counts, behaviors, pos, minutes, matchLen){
+  const delta = actionSum(counts, pos) + (behaviorAvg(behaviors) - 3) * 0.5;
+  return clampScore(BASE_RATING + withOuting(delta, minutes, matchLen));
 }
 
-function actionSplit(counts, pos){
+function actionSplit(counts, pos, minutes, matchLen){
+  const f = outingFactor(minutes, matchLen);
   let plus = 0, minus = 0;
   metricsFor(pos).forEach(m => {
-    const v = stackedWeight(counts[m.key], weightOf(m, pos));
+    const v = stackedWeight(counts[m.key], weightOf(m, pos)) * f;
     if(v > 0) plus += v;
     else if(v < 0) minus += v;
   });
@@ -166,7 +189,8 @@ const RATING_FIXTURES = [
   {name:'threeGoals', pos:'fwd', counts:{goals:3}, behaviors:{}, overall:7.9, action:7.9, effort:6},
   {name:'gkSaves', pos:'gk', counts:{saves:4, claims:1}, behaviors:{}, overall:7.6, action:7.6, effort:6},
   {name:'maxEffort', pos:'fwd', counts:{}, behaviors:{effort:5, team:5, coach:5, discipline:5}, overall:7, action:6, effort:10},
-  {name:'minEffort', pos:'fwd', counts:{}, behaviors:{effort:1, team:1, coach:1, discipline:1}, overall:5, action:6, effort:2}
+  {name:'minEffort', pos:'fwd', counts:{}, behaviors:{effort:1, team:1, coach:1, discipline:1}, overall:5, action:6, effort:2},
+  {name:'shortGoal', pos:'fwd', counts:{goals:1}, behaviors:{}, minutes:15, matchLen:60, overall:6.6, action:6.6, effort:6}
 ];
 function ratingFixtureFail(){
   for(let i=0;i<RATING_FIXTURES.length;i++){
@@ -174,8 +198,8 @@ function ratingFixtureFail(){
     const form = emptyForm();
     Object.keys(f.counts || {}).forEach(k => { form.counts[k] = f.counts[k]; });
     Object.keys(f.behaviors || {}).forEach(k => { form.behaviors[k] = f.behaviors[k]; });
-    const overall = clamp10(overallScore(form.counts, form.behaviors, f.pos));
-    const action = clamp10(actionScore(form.counts, f.pos));
+    const overall = clamp10(overallScore(form.counts, form.behaviors, f.pos, f.minutes, f.matchLen));
+    const action = clamp10(actionScore(form.counts, f.pos, f.minutes, f.matchLen));
     const effort = clamp10(effortScore(form.behaviors));
     if(overall !== f.overall || action !== f.action || effort !== f.effort){
       return f.name + ' got ' + overall + '/' + action + '/' + effort;
