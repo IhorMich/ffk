@@ -1948,18 +1948,39 @@ function renderMetrics(){
     </section>`;
   }).join('');
 }
+function behaviorPct(n){
+  return ((Number(n) || 3) - 1) / 4 * 100;
+}
+function syncBehaviorSlider(key, val){
+  const wrap = document.querySelector('.behavior-slider[data-behavior="'+key+'"]');
+  if(!wrap) return;
+  wrap.dataset.val = val;
+  const pct = behaviorPct(val) + '%';
+  const fill = wrap.querySelector('.behavior-fill');
+  const thumb = wrap.querySelector('.behavior-thumb');
+  if(fill) fill.style.width = pct;
+  if(thumb){
+    thumb.style.left = pct;
+    thumb.setAttribute('aria-valuenow', val);
+  }
+}
 function renderBehaviors(){
   document.getElementById('behaviorList').innerHTML = BEHAVIOR.map(b => {
     const now = form.behaviors[b.key];
-    const pips = [1,2,3,4,5].map(n =>
-      `<button type="button" class="behavior-pip${n===now?' on':''}" data-behavior="${b.key}" data-n="${n}">${n}</button>`
-    ).join('');
+    const pct = behaviorPct(now);
     return `<div class="behavior-row">
       <div class="behavior-top">
         <span>${escapeHtml(behaviorLabel(b.key))}</span>
         <span class="val" id="bval-${b.key}">${now}</span>
       </div>
-      <div class="behavior-pips" role="radiogroup">${pips}</div>
+      <div class="behavior-slider" data-behavior="${b.key}" data-val="${now}">
+        <div class="behavior-track">
+          <div class="behavior-marks" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
+          <div class="behavior-fill" style="width:${pct}%"></div>
+          <button type="button" class="behavior-thumb" style="left:${pct}%"
+            aria-valuemin="1" aria-valuemax="5" aria-valuenow="${now}"></button>
+        </div>
+      </div>
     </div>`;
   }).join('');
 }
@@ -2036,20 +2057,54 @@ window.setBehavior = function(key, val){
   form.behaviors[key] = parseInt(val, 10);
   const el = document.getElementById('bval-'+key);
   if(el) el.textContent = val;
-  document.querySelectorAll('.behavior-pip[data-behavior="'+key+'"]').forEach(b => {
-    b.classList.toggle('on', b.dataset.n === String(val));
-  });
+  syncBehaviorSlider(key, form.behaviors[key]);
   updateHero();
   persistDraft();
 };
-function bindBehaviorPips(){
-  if(window.__ffkBehaviorPips) return;
-  window.__ffkBehaviorPips = true;
-  document.addEventListener('click', e => {
-    const pip = e.target.closest('.behavior-pip');
-    if(!pip) return;
-    setBehavior(pip.dataset.behavior, pip.dataset.n);
+function bindBehaviorSlider(){
+  if(window.__ffkBehaviorSlider) return;
+  window.__ffkBehaviorSlider = true;
+  let drag = null;
+  const valueAt = (wrap, clientX) => {
+    const track = wrap.querySelector('.behavior-track');
+    if(!track) return 3;
+    const rect = track.getBoundingClientRect();
+    const t = rect.width <= 0 ? 0.5 : (clientX - rect.left) / rect.width;
+    return Math.round(Math.min(1, Math.max(0, t)) * 4) + 1;
+  };
+  document.addEventListener('pointerdown', e => {
+    const thumb = e.target.closest('.behavior-thumb');
+    if(!thumb) return;
+    const wrap = thumb.closest('.behavior-slider');
+    if(!wrap) return;
+    drag = {wrap, thumb, key: wrap.dataset.behavior, x: e.clientX, y: e.clientY, armed: false, last: Number(wrap.dataset.val) || 3};
+    try{ thumb.setPointerCapture(e.pointerId); }catch(err){}
+    e.preventDefault();
   });
+  document.addEventListener('pointermove', e => {
+    if(!drag) return;
+    const dx = Math.abs(e.clientX - drag.x);
+    const dy = Math.abs(e.clientY - drag.y);
+    if(!drag.armed){
+      if(dy > 14 && dy > dx){
+        try{ drag.thumb.releasePointerCapture(e.pointerId); }catch(err){}
+        drag = null;
+        return;
+      }
+      if(dx < 8) return;
+      drag.armed = true;
+    }
+    e.preventDefault();
+    const n = valueAt(drag.wrap, e.clientX);
+    if(n !== drag.last){
+      drag.last = n;
+      haptic('LIGHT');
+      setBehavior(drag.key, n);
+    }
+  });
+  const stop = () => { drag = null; };
+  document.addEventListener('pointerup', stop);
+  document.addEventListener('pointercancel', stop);
 }
 
 function scoresNow(){
@@ -4239,7 +4294,7 @@ async function shareCard(m){
     if(!playIntro()) if(!maybeTransfer()) maybeOnboard();
     bindAppBack();
     bindTapHaptics();
-    bindBehaviorPips();
+    bindBehaviorSlider();
     bindSheets();
     bindCameraRestore();
     syncScoreResultHint();
