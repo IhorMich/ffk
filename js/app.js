@@ -270,16 +270,6 @@ function applyI18n(){
   const tzEl = document.getElementById('tzHint');
   if(tzEl) tzEl.textContent = t('sTzHint', {tz: clockTimeZone().replace(/_/g, ' ')});
   syncSeasonChipLabels();
-  if(isElShown('wrapUp')){
-    document.getElementById('wrapBehaviors').innerHTML = wrapBehaviorHtml('effort') + wrapBehaviorHtml('team');
-    const s = scoresNow();
-    const scale = document.getElementById('wrapScale');
-    if(scale){
-      scale.textContent = isShortOuting(s.minutes, s.matchLen)
-        ? fmtNum(s.overall, 2) + '/10 · ' + t('ratingForMins', {n: s.minutes})
-        : fmtNum(s.overall, 2) + '/10';
-    }
-  }
 }
 
 let settings = {club:'', player:'', position:'fwd', format:'2x30', minutes:'60', lang:'ru', seasonCloseDeclined:'', theme:'dark', iconSet:'clear', onboarded:false, pwaTransferSeen:false, introMark:''};
@@ -2128,7 +2118,8 @@ window.stepMetric = function(key, dir){
 };
 window.setBehavior = function(key, val){
   form.behaviors[key] = parseInt(val, 10);
-  document.querySelectorAll('#bval-'+key+', #wrap-bval-'+key).forEach(el => { el.textContent = val; });
+  const el = document.getElementById('bval-'+key);
+  if(el) el.textContent = val;
   syncBehaviorSlider(key, form.behaviors[key]);
   updateHero();
   persistDraft();
@@ -3171,7 +3162,7 @@ function renderLiveClock(){
   let running = false;
   if(phase === 'done'){
     text = t('liveClockDone', {fmt});
-    btnText = t('wrapSave');
+    btnText = t('liveMatchOver');
   } else if(phase === 'break'){
     const next = halfLabel((Number(matchClock.period) || 1) + 1);
     text = t('liveClockBreak', {half: next, fmt});
@@ -3191,11 +3182,11 @@ function renderLiveClock(){
   });
   document.querySelectorAll('.js-match-clock-btn').forEach(btn => {
     btn.textContent = btnText;
-    btn.disabled = false;
-    btn.classList.toggle('go', phase === 'idle' || phase === 'break' || phase === 'done');
+    btn.disabled = phase === 'done';
+    btn.classList.toggle('go', phase === 'idle' || phase === 'break');
   });
   const startBtn = document.getElementById('liveStartBtn');
-  if(startBtn) startBtn.disabled = false;
+  if(startBtn) startBtn.disabled = phase === 'done';
 }
 let cueCtx = null;
 function audioCtx(){
@@ -3274,17 +3265,16 @@ function endCurrentPeriod(){
   const period = Number(matchClock.period) || 1;
   matchClock.phase = period < parts ? 'break' : 'done';
   matchCue(matchClock.phase === 'done' ? 'end' : 'break');
-  if(matchClock.phase === 'done') stopClockTick();
+  if(matchClock.phase === 'done'){
+    stopClockTick();
+    suggestMinutesFromClock();
+  }
   renderLiveClock();
   persistDraft();
-  if(matchClock.phase === 'done') openWrapUp();
 }
 function toggleMatchClock(){
   const phase = clockPhase();
-  if(phase === 'done'){
-    openWrapUp();
-    return;
-  }
+  if(phase === 'done') return;
   if(phase === 'idle' || phase === 'break') startMatchClock();
   else if(phase === 'run') endCurrentPeriod();
 }
@@ -3313,8 +3303,7 @@ document.querySelectorAll('.js-match-clock-btn').forEach(btn => {
 });
 document.getElementById('liveDoneBtn').addEventListener('click', () => {
   closeLive();
-  if(shouldWrapUp()) openWrapUp();
-  else syncMatchContextFold();
+  syncMatchContextFold();
 });
 function suggestMinutesFromClock(){
   if(!matchClock.startedAt) return;
@@ -3325,85 +3314,6 @@ function suggestMinutesFromClock(){
   const def = formatLength(document.getElementById('f-format').value, document.getElementById('f-matchlen').value);
   if(!cur || cur === def) el.value = String(played);
 }
-function wrapBehaviorHtml(key){
-  const now = form.behaviors[key];
-  const pct = behaviorPct(now);
-  return `<div class="behavior-row">
-      <div class="behavior-top">
-        <span>${escapeHtml(behaviorLabel(key))}</span>
-        <span class="val" id="wrap-bval-${key}">${now}</span>
-      </div>
-      <div class="behavior-slider" data-behavior="${key}" data-val="${now}">
-        <div class="behavior-track">
-          <div class="behavior-marks"><span></span><span></span><span></span><span></span><span></span></div>
-          <div class="behavior-fill" style="width:${pct}%"></div>
-          <button class="behavior-thumb" type="button" style="left:${pct}%" aria-valuenow="${now}"></button>
-        </div>
-      </div>
-    </div>`;
-}
-function shouldWrapUp(){
-  if(editingId) return false;
-  const phase = clockPhase();
-  return phase === 'done' || phase === 'break' || phase === 'run' || !!(matchClock.events && matchClock.events.length) || liveStack.length > 0;
-}
-function syncWrapToForm(){
-  const opp = document.getElementById('wrap-opponent');
-  const oppWrap = document.getElementById('wrapOppWrap');
-  if(opp && oppWrap && !oppWrap.hidden) document.getElementById('f-opponent').value = opp.value;
-  const us = document.getElementById('wrap-score-us');
-  const them = document.getElementById('wrap-score-them');
-  if(us && them){
-    document.getElementById('f-score-us').value = us.value;
-    document.getElementById('f-score-them').value = them.value;
-    scoreFallback = '';
-    syncScoreResultHint();
-  }
-  const minutes = document.getElementById('wrap-minutes');
-  if(minutes && minutes.value) document.getElementById('f-minutes').value = minutes.value;
-}
-function openWrapUp(){
-  if(editingId) return;
-  const el = document.getElementById('wrapUp');
-  if(!el) return;
-  suggestMinutesFromClock();
-  const oppVal = document.getElementById('f-opponent').value.trim();
-  document.getElementById('wrapOppWrap').hidden = !!oppVal;
-  document.getElementById('wrap-opponent').value = oppVal;
-  document.getElementById('wrap-score-us').value = document.getElementById('f-score-us').value;
-  document.getElementById('wrap-score-them').value = document.getElementById('f-score-them').value;
-  document.getElementById('wrap-minutes').value = document.getElementById('f-minutes').value;
-  document.getElementById('wrapBehaviors').innerHTML = wrapBehaviorHtml('effort') + wrapBehaviorHtml('team');
-  const s = scoresNow();
-  document.getElementById('wrapScale').textContent = isShortOuting(s.minutes, s.matchLen)
-    ? fmtNum(s.overall, 2) + '/10 · ' + t('ratingForMins', {n: s.minutes})
-    : fmtNum(s.overall, 2) + '/10';
-  el.hidden = false;
-  pushAppState('layer');
-}
-function closeWrapUp(){
-  const el = document.getElementById('wrapUp');
-  if(el) el.hidden = true;
-}
-['wrap-opponent','wrap-score-us','wrap-score-them','wrap-minutes'].forEach(id => {
-  const el = document.getElementById(id);
-  if(!el) return;
-  el.addEventListener('input', syncWrapToForm);
-  el.addEventListener('change', syncWrapToForm);
-});
-document.getElementById('wrapLaterBtn').addEventListener('click', () => {
-  syncWrapToForm();
-  closeWrapUp();
-  syncMatchContextFold();
-  persistDraft();
-});
-document.getElementById('wrapSaveBtn').addEventListener('click', () => {
-  syncWrapToForm();
-  if(saveCurrentMatch()){
-    closeWrapUp();
-    closeLive();
-  }
-});
 document.getElementById('historyBackup')?.addEventListener('click', downloadMatches);
 function isElShown(id){
   const el = document.getElementById(id);
@@ -3448,10 +3358,6 @@ function handleAppBack(){
       onboardStep -= 1;
       renderOnboard();
     }
-    return true;
-  }
-  if(isElShown('wrapUp')){
-    closeWrapUp();
     return true;
   }
   if(isElShown('cropModal')){ closeCrop(); return true; }
