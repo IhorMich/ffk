@@ -3342,7 +3342,7 @@ function playIntro(){
   void el.offsetWidth;
   el.classList.add('play');
   el.addEventListener('click', finishIntro, {once:true});
-  window.setTimeout(finishIntro, 4600);
+  window.setTimeout(finishIntro, 5200);
   return true;
 }
 function finishOnboard(){

@@ -319,25 +319,32 @@
   }
   .intro[hidden]{display:none !important;}
   .intro.out{animation:introFade .5s ease forwards;pointer-events:none;}
-  .intro-stage{position:relative;width:min(68vw,268px);aspect-ratio:1;}
+  .intro-stage{
+    --intro-size:min(68vw,268px);
+    position:relative;width:var(--intro-size);aspect-ratio:1;
+  }
   .intro-layer{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block;}
   .intro-cup{
     opacity:0;transform:scale(.9);
   }
   .intro.play .intro-cup{animation:introCup .8s cubic-bezier(.22,.7,.2,1) forwards;}
+  .intro-gauge-clip{
+    position:absolute;top:0;left:0;bottom:0;width:0;overflow:hidden;
+  }
+  .intro.play .intro-gauge-clip{animation:introWipe 2.8s linear .85s forwards;}
   .intro-gauge{
-    clip-path:inset(0 100% 0 0);
+    position:absolute;top:0;left:0;width:var(--intro-size);height:100%;
+    max-width:none;object-fit:contain;display:block;
   }
-  .intro.play .intro-gauge{animation:introWipe 2.2s cubic-bezier(.22,.61,.36,1) .9s forwards;}
   .intro-name{
-    font-size:.84rem;font-weight:800;letter-spacing:.22em;text-transform:uppercase;
-    color:#E8C15A;opacity:0;
+    font-size:clamp(1.9rem,7.5vw,2.45rem);font-weight:800;letter-spacing:.12em;text-transform:uppercase;
+    color:#fff;opacity:0;
   }
-  .intro.play .intro-name{animation:introName .55s ease 3.15s forwards;}
+  .intro.play .intro-name{animation:introName .6s ease 3.7s forwards;}
   @keyframes introCup{to{opacity:1;transform:scale(1)}}
   @keyframes introWipe{
-    from{clip-path:inset(0 100% 0 0);}
-    to{clip-path:inset(0 0 0 0);}
+    from{width:0;}
+    to{width:100%;}
   }
   @keyframes introName{to{opacity:1}}
   @keyframes introFade{to{opacity:0}}
