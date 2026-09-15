@@ -39,7 +39,7 @@ const METRIC_ICON_FALLBACK = {
 
 /* Silhouette pack cut from the action sheet (white glyph → CSS mask). */
 const METRIC_ICON_SIL_KEYS = [
-  'goals','shots','assists','dribbles','buildpass',
+  'goals','shots','assists','dribbles','buildpass','passes',
   'openings','chances','tackles','interceptions','duelswon',
   'support','clearances','losses','ledtogoal','badpass',
   'badtouch','duelslost','fouls','blocks','owngoal'
@@ -48,8 +48,6 @@ const METRIC_ICON_SIL_KEYS = [
 const METRIC_ICON_SIL = Object.fromEntries(
   METRIC_ICON_SIL_KEYS.map(k => [k, `icons/metrics/${k}.png`])
 );
-/* Sharp pass is not on the sheet — reuse buildpass silhouette. */
-METRIC_ICON_SIL.passes = 'icons/metrics/buildpass.png';
 
 const METRIC_ICON_TINT = {
   goals:'var(--gold)', shots:'var(--gold)', assists:'var(--accent)', dribbles:'var(--accent)',

@@ -1,4 +1,4 @@
-const CACHE = 'ffk_v81';
+const CACHE = 'ffk_v82';
 const ASSETS = [
   './',
   './index.html',
@@ -33,6 +33,7 @@ const ASSETS = [
   './icons/metrics/losses.png',
   './icons/metrics/openings.png',
   './icons/metrics/owngoal.png',
+  './icons/metrics/passes.png',
   './icons/metrics/shots.png',
   './icons/metrics/support.png',
   './icons/metrics/tackles.png',
