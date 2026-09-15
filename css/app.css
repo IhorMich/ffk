@@ -343,66 +343,44 @@
     min-height:1.35em;
     overflow:visible;
   }
-  .intro-name-star{
-    position:absolute;left:50%;top:50%;z-index:3;
-    width:1.05em;height:1.05em;
-    margin:0;padding:0;border:0;
-    transform:translate(-50%,-50%) scale(0) rotate(-18deg);
-    opacity:0;
-    filter:drop-shadow(0 0 10px rgba(240,195,26,.55));
-    pointer-events:none;
-  }
-  .intro-name-star path{fill:#F0C31A;}
-  .intro.play .intro-name-star{
-    animation:introStar 1.55s cubic-bezier(.22,.7,.2,1) 4.7s forwards;
-  }
-  .intro-name-flare{
+  .intro-name-kick{
     position:absolute;left:50%;top:50%;z-index:1;
-    width:0;height:2px;
-    border-radius:2px;
-    background:linear-gradient(90deg, transparent 0%, rgba(255,255,255,.15) 18%, #fff 50%, rgba(255,255,255,.15) 82%, transparent 100%);
-    box-shadow:0 0 14px rgba(240,195,26,.45);
-    transform:translate(-50%,-50%);
+    width:14px;height:14px;border-radius:50%;
+    background:#fff;
+    box-shadow:0 0 0 0 rgba(255,255,255,.5);
+    transform:translate(-50%,-50%) scale(0);
     opacity:0;
     pointer-events:none;
   }
-  .intro.play .intro-name-flare{
-    animation:introFlare 1.15s cubic-bezier(.22,.61,.36,1) 4.95s forwards;
+  .intro.play .intro-name-kick{
+    animation:introKick .7s cubic-bezier(.22,.7,.2,1) 4.7s forwards;
   }
-  .intro-name-word{
+  .intro-name-line{
     position:relative;z-index:2;
-    display:block;
-    clip-path:inset(0 50% 0 50%);
-    opacity:0;
-    filter:brightness(1.35);
-  }
-  .intro.play .intro-name-word{
-    animation:introWordCut 1.2s cubic-bezier(.22,.61,.36,1) 5.05s forwards;
-  }
-  .intro-name-text{
-    display:block;white-space:nowrap;
+    display:flex;justify-content:center;align-items:baseline;
+    white-space:nowrap;
     font-size:clamp(1.55rem,5.8vw,2.35rem);font-weight:800;letter-spacing:.04em;text-transform:uppercase;
     color:#fff;line-height:1.05;
   }
+  .intro-name-ch{
+    display:inline-block;
+    opacity:0;
+    transform:translateY(-.7em) scale(.55);
+    transform-origin:center bottom;
+  }
+  .intro.play .intro-name-ch{
+    animation:introLetterIn .72s cubic-bezier(.22,1.55,.36,1) calc(4.92s + (var(--d) * 70ms)) forwards;
+  }
   @keyframes introCup{to{opacity:1;transform:scale(1)}}
-  @keyframes introStar{
-    0%{opacity:0;transform:translate(-50%,-50%) scale(0) rotate(-18deg)}
-    18%{opacity:1;transform:translate(-50%,-50%) scale(1.2) rotate(0deg)}
-    34%{opacity:1;transform:translate(-50%,-50%) scale(.92) rotate(0deg)}
-    52%{opacity:1;transform:translate(-50%,-50%) scale(1) rotate(0deg)}
-    78%{opacity:1;transform:translate(-50%,-50%) scale(1) rotate(0deg)}
-    100%{opacity:0;transform:translate(-50%,-50%) scale(.35) rotate(12deg)}
+  @keyframes introKick{
+    0%{opacity:0;transform:translate(-50%,-50%) scale(0);box-shadow:0 0 0 0 rgba(255,255,255,.55)}
+    28%{opacity:1;transform:translate(-50%,-50%) scale(1.15);box-shadow:0 0 0 10px rgba(255,255,255,.18)}
+    100%{opacity:0;transform:translate(-50%,-50%) scale(2.4);box-shadow:0 0 0 28px rgba(255,255,255,0)}
   }
-  @keyframes introFlare{
-    0%{width:0;opacity:0}
-    18%{width:18%;opacity:1}
-    100%{width:100%;opacity:.35}
-  }
-  @keyframes introWordCut{
-    0%{clip-path:inset(0 50% 0 50%);opacity:0;filter:brightness(1.6)}
-    12%{opacity:1;filter:brightness(1.45)}
-    70%{clip-path:inset(0 0 0 0);opacity:1;filter:brightness(1.08)}
-    100%{clip-path:inset(0 0 0 0);opacity:1;filter:brightness(1)}
+  @keyframes introLetterIn{
+    0%{opacity:0;transform:translateY(-.7em) scale(.55)}
+    62%{opacity:1;transform:translateY(.08em) scale(1.06)}
+    100%{opacity:1;transform:translateY(0) scale(1)}
   }
   @keyframes introFade{to{opacity:0}}
   .onboard,.preview-modal{
