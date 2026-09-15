@@ -72,6 +72,7 @@ async function nativeShareBlob(blob, filename, title){
 function applyNativeChrome(){
   const Bar = capPlugin('StatusBar');
   if(!isNativeApp() || !Bar) return;
+  if(document.documentElement.classList.contains('intro-on')) return;
   const theme = themeName();
   const color = theme === 'day' ? '#FFF8D6' : (theme === 'light' ? '#F3F5FA' : '#0B1220');
   const style = theme === 'dark' ? 'LIGHT' : 'DARK';
@@ -3355,7 +3356,9 @@ function finishIntro(){
   window.setTimeout(() => {
     el.hidden = true;
     el.classList.remove('out', 'play');
+    document.documentElement.classList.remove('intro-on');
     introBusy = false;
+    applyNativeChrome();
     afterIntro();
   }, 420);
 }
@@ -3367,15 +3370,18 @@ function hideNativeSplash(){
 function playIntro(){
   const el = document.getElementById('intro');
   if(!el){
+    document.documentElement.classList.remove('intro-on');
     hideNativeSplash();
+    applyNativeChrome();
     return false;
   }
   introBusy = false;
+  document.documentElement.classList.add('intro-on');
   el.hidden = false;
   el.classList.remove('out', 'play');
   void el.offsetWidth;
-  hideNativeSplash();
-  requestAnimationFrame(() => el.classList.add('play'));
+  el.classList.add('play');
+  requestAnimationFrame(() => requestAnimationFrame(hideNativeSplash));
   el.addEventListener('click', finishIntro, {once:true});
   window.setTimeout(finishIntro, 6500);
   return true;
