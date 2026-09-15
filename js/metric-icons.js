@@ -42,7 +42,8 @@ const METRIC_ICON_SIL_KEYS = [
   'goals','shots','assists','dribbles','buildpass','passes',
   'openings','chances','tackles','interceptions','duelswon',
   'support','clearances','losses','ledtogoal','badpass',
-  'badtouch','duelslost','fouls','blocks','owngoal'
+  'badtouch','duelslost','fouls','blocks','owngoal',
+  'saves','claims','gkpass','conceded'
 ];
 
 const METRIC_ICON_SIL = Object.fromEntries(
