@@ -3406,7 +3406,7 @@ function playIntro(){
   el.classList.add('play');
   playGaugeWipe(gauge, 1400, 3200);
   el.addEventListener('click', finishIntro, {once:true});
-  window.setTimeout(finishIntro, 7800);
+  window.setTimeout(finishIntro, 8000);
   return true;
 }
 function finishOnboard(){

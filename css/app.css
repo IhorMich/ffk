@@ -343,20 +343,7 @@
     min-height:1.35em;
     overflow:visible;
   }
-  .intro-name-kick{
-    position:absolute;left:50%;top:50%;z-index:1;
-    width:14px;height:14px;border-radius:50%;
-    background:#fff;
-    box-shadow:0 0 0 0 rgba(255,255,255,.5);
-    transform:translate(-50%,-50%) scale(0);
-    opacity:0;
-    pointer-events:none;
-  }
-  .intro.play .intro-name-kick{
-    animation:introKick .7s cubic-bezier(.22,.7,.2,1) 4.7s forwards;
-  }
   .intro-name-line{
-    position:relative;z-index:2;
     display:flex;justify-content:center;align-items:baseline;
     white-space:nowrap;
     font-size:clamp(1.55rem,5.8vw,2.35rem);font-weight:800;letter-spacing:.04em;text-transform:uppercase;
@@ -365,22 +352,21 @@
   .intro-name-ch{
     display:inline-block;
     opacity:0;
-    transform:translateY(-.7em) scale(.55);
+    transform:translateY(-1.35em);
     transform-origin:center bottom;
   }
   .intro.play .intro-name-ch{
-    animation:introLetterIn .72s cubic-bezier(.22,1.55,.36,1) calc(4.92s + (var(--d) * 70ms)) forwards;
+    animation:introBallBounce .85s cubic-bezier(.22,.9,.3,1.15) calc(4.7s + (var(--i) * .09s)) forwards;
   }
   @keyframes introCup{to{opacity:1;transform:scale(1)}}
-  @keyframes introKick{
-    0%{opacity:0;transform:translate(-50%,-50%) scale(0);box-shadow:0 0 0 0 rgba(255,255,255,.55)}
-    28%{opacity:1;transform:translate(-50%,-50%) scale(1.15);box-shadow:0 0 0 10px rgba(255,255,255,.18)}
-    100%{opacity:0;transform:translate(-50%,-50%) scale(2.4);box-shadow:0 0 0 28px rgba(255,255,255,0)}
-  }
-  @keyframes introLetterIn{
-    0%{opacity:0;transform:translateY(-.7em) scale(.55)}
-    62%{opacity:1;transform:translateY(.08em) scale(1.06)}
-    100%{opacity:1;transform:translateY(0) scale(1)}
+  @keyframes introBallBounce{
+    0%{opacity:0;transform:translateY(-1.35em) scaleY(1)}
+    18%{opacity:1}
+    48%{transform:translateY(0) scaleY(1)}
+    58%{transform:translateY(0) scaleY(.78) scaleX(1.12)}
+    70%{transform:translateY(-.28em) scaleY(1.05) scaleX(.96)}
+    82%{transform:translateY(0) scaleY(.92) scaleX(1.04)}
+    100%{opacity:1;transform:translateY(0) scaleY(1) scaleX(1)}
   }
   @keyframes introFade{to{opacity:0}}
   .onboard,.preview-modal{
