@@ -343,20 +343,20 @@
     min-height:1.2em;
   }
   .intro-name-bar{
-    position:absolute;left:50%;top:50%;
+    position:absolute;left:50%;top:50%;z-index:2;
     width:3px;height:1.05em;border-radius:1px;background:#fff;
     transform:translate(-50%,-50%) scaleY(0);opacity:0;
     transform-origin:center center;
+    pointer-events:none;
   }
   .intro.play .intro-name-bar{
-    animation:introBar .32s cubic-bezier(.22,.7,.2,1) 4.7s forwards,
-              introBarOut .28s ease 5.2s forwards;
+    animation:introBarMerge 1.7s cubic-bezier(.22,.61,.36,1) 4.7s forwards;
   }
   .intro-name-clip{
     display:flex;justify-content:center;overflow:hidden;width:0;
   }
   .intro.play .intro-name-clip{
-    animation:introNameWiden .75s cubic-bezier(.22,.61,.36,1) 5.05s forwards;
+    animation:introNameWiden 1.25s cubic-bezier(.22,.61,.36,1) 5.2s forwards;
   }
   .intro-name-text{
     flex:0 0 auto;white-space:nowrap;
@@ -364,11 +364,13 @@
     color:#fff;line-height:1.05;
   }
   @keyframes introCup{to{opacity:1;transform:scale(1)}}
-  @keyframes introBar{
-    from{opacity:0;transform:translate(-50%,-50%) scaleY(0)}
-    to{opacity:1;transform:translate(-50%,-50%) scaleY(1)}
+  @keyframes introBarMerge{
+    0%{opacity:0;transform:translate(-50%,-50%) scaleY(0)}
+    14%{opacity:1;transform:translate(-50%,-50%) scaleY(1)}
+    28%{opacity:1;transform:translate(-50%,-50%) scaleY(1)}
+    82%{opacity:1;transform:translate(calc(-50% - min(40vw,10.2rem)),-50%) scaleY(1)}
+    100%{opacity:0;transform:translate(calc(-50% - min(40vw,10.2rem)),-50%) scaleY(.96)}
   }
-  @keyframes introBarOut{to{opacity:0}}
   @keyframes introNameWiden{from{width:0}to{width:100%}}
   @keyframes introFade{to{opacity:0}}
   .onboard,.preview-modal{
