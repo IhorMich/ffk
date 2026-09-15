@@ -315,25 +315,27 @@
   .intro{
     position:fixed;inset:0;z-index:200;background:#000;
     display:flex;flex-direction:column;align-items:center;justify-content:center;
-    gap:22px;opacity:1;
+    gap:18px;opacity:1;
   }
   .intro[hidden]{display:none !important;}
-  .intro.out{animation:introFade .42s ease forwards;pointer-events:none;}
-  .intro-mark{
-    width:min(44vw,188px);height:auto;border-radius:22%;
-    opacity:0;transform:scale(.84);
-    animation:introMark 1.05s cubic-bezier(.2,.82,.2,1) forwards;
+  .intro.out{animation:introFade .4s ease forwards;pointer-events:none;}
+  .intro-art{width:min(64vw,260px);height:auto;overflow:visible;}
+  .intro-cup{opacity:0;transform-origin:100px 130px;transform:scale(.86);animation:introCup .45s cubic-bezier(.2,.82,.2,1) forwards;}
+  .intro-arc{
+    stroke-dasharray:1;stroke-dashoffset:1;
+    animation:introDraw .85s cubic-bezier(.22,.61,.36,1) forwards;
   }
+  .intro-arc-a{animation-delay:.42s;}
+  .intro-arc-b{animation-delay:.58s;}
+  .intro-arc-c{animation-delay:.74s;}
   .intro-name{
-    font-size:.78rem;font-weight:800;letter-spacing:.2em;text-transform:uppercase;
-    color:#E8C15A;opacity:0;animation:introName .55s ease .5s forwards;
+    font-size:.82rem;font-weight:800;letter-spacing:.22em;text-transform:uppercase;
+    color:#E8C15A;opacity:0;animation:introName .45s ease 1.55s forwards;
   }
-  @keyframes introMark{to{opacity:1;transform:scale(1)}}
+  @keyframes introCup{to{opacity:1;transform:scale(1)}}
+  @keyframes introDraw{to{stroke-dashoffset:0}}
   @keyframes introName{to{opacity:1}}
   @keyframes introFade{to{opacity:0}}
-  @media (prefers-reduced-motion:reduce){
-    .intro-mark,.intro-name,.intro.out{animation:none;opacity:1;transform:none;}
-  }
   .onboard,.preview-modal{
     position:fixed;inset:0;z-index:92;background:rgba(8,14,24,.88);
     display:flex;align-items:center;justify-content:center;

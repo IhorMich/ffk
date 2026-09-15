@@ -416,13 +416,44 @@ window.ffkIsNative = function () {
   </div>
 
   <div class="intro" id="intro">
-    <img class="intro-mark" src="icons/icon-512.png" alt="">
+    <svg class="intro-art" viewBox="0 0 200 210" aria-hidden="true">
+      <defs>
+        <linearGradient id="introOuter" x1="28" y1="150" x2="172" y2="150" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stop-color="#1A73E8"/>
+          <stop offset=".38" stop-color="#4AA3FF"/>
+          <stop offset=".55" stop-color="#D5D8DC"/>
+          <stop offset=".78" stop-color="#F0C31A"/>
+          <stop offset="1" stop-color="#7A7A7A"/>
+        </linearGradient>
+        <linearGradient id="introMid" x1="42" y1="150" x2="158" y2="150" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stop-color="#0E8F7A"/>
+          <stop offset=".45" stop-color="#22C55E"/>
+          <stop offset="1" stop-color="#8BD13A"/>
+        </linearGradient>
+        <linearGradient id="introInner" x1="54" y1="150" x2="146" y2="150" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stop-color="#0F766E"/>
+          <stop offset="1" stop-color="#84CC16"/>
+        </linearGradient>
+      </defs>
+      <path class="intro-arc intro-arc-a" pathLength="1" fill="none" stroke="url(#introOuter)" stroke-width="12" stroke-linecap="round" d="M32 148 A 78 78 0 1 1 168 148"/>
+      <path class="intro-arc intro-arc-b" pathLength="1" fill="none" stroke="url(#introMid)" stroke-width="11" stroke-linecap="round" d="M46 146 A 64 64 0 1 1 154 146"/>
+      <path class="intro-arc intro-arc-c" pathLength="1" fill="none" stroke="url(#introInner)" stroke-width="10" stroke-linecap="round" d="M60 144 A 50 50 0 1 1 140 144"/>
+      <g class="intro-cup">
+        <path d="M69 96c-16 1-20 24-4 30" fill="none" stroke="#E8B63A" stroke-width="8" stroke-linecap="round"/>
+        <path d="M131 96c16 1 20 24 4 30" fill="none" stroke="#E8B63A" stroke-width="8" stroke-linecap="round"/>
+        <path d="M72 90c1 38 8 48 28 48s27-10 28-48" fill="#E2A82E"/>
+        <path d="M80 90c2 30 6 38 20 38s18-8 20-38" fill="#F4CC5A"/>
+        <ellipse cx="100" cy="88" rx="30" ry="8" fill="#F8D56A"/>
+        <rect x="94" y="136" width="12" height="18" rx="3" fill="#C49214"/>
+        <path d="M78 168h44l-5-12H83z" fill="#B8860B"/>
+      </g>
+    </svg>
     <div class="intro-name">Matchcard</div>
   </div>
   <script>
   (function(){
     try{
-      if(JSON.parse(localStorage.getItem('ffk_settings') || '{}').introSeen)
+      if(JSON.parse(localStorage.getItem('ffk_settings') || '{}').introMark === 'gauge1')
         document.getElementById('intro').hidden = true;
     }catch(e){}
   })();
