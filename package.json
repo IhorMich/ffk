@@ -6,6 +6,7 @@
     "www": "node scripts/sync-www.js",
     "cap:sync": "npm run www && npx cap sync",
     "android": "npm run cap:sync && npx cap open android",
+    "android:release": "bash scripts/android-release.sh",
     "ios": "npm run cap:sync && npx cap open ios"
   },
   "dependencies": {

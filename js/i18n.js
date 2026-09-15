@@ -3365,3 +3365,20 @@ ru:{
     Object.assign(I18N[lang], extra.en, extra[lang] || {});
   });
 })();
+
+(function mergeReleaseI18n(){
+  const extra = {
+    uk:{ sVersion:'Версія {v}', sPrivacy:'Конфіденційність' },
+    pl:{ sVersion:'Wersja {v}', sPrivacy:'Prywatność' },
+    en:{ sVersion:'Version {v}', sPrivacy:'Privacy' },
+    ru:{ sVersion:'Версия {v}', sPrivacy:'Конфиденциальность' },
+    es:{ sVersion:'Versión {v}', sPrivacy:'Privacidad' },
+    de:{ sVersion:'Version {v}', sPrivacy:'Datenschutz' },
+    it:{ sVersion:'Versione {v}', sPrivacy:'Privacy' },
+    fr:{ sVersion:'Version {v}', sPrivacy:'Confidentialité' },
+    pt:{ sVersion:'Versão {v}', sPrivacy:'Privacidade' }
+  };
+  LANGS.forEach(lang => {
+    Object.assign(I18N[lang], extra.en, extra[lang] || {});
+  });
+})();

@@ -45,6 +45,9 @@ function capPlugin(name){
 }
 function camLog(){
   if(!isNativeApp()) return;
+  try{
+    if(!localStorage.getItem('ffk_debug_cam')) return;
+  }catch(e){ return; }
   try{ console.error('[ffk-cam]', Array.prototype.map.call(arguments, v => typeof v === 'string' ? v : JSON.stringify(v)).join(' ')); }catch(e){}
 }
 function blobToBase64(blob){
@@ -191,6 +194,8 @@ function applyI18n(){
   document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
   document.querySelectorAll('[data-i18n-placeholder]').forEach(el => { el.placeholder = t(el.dataset.i18nPlaceholder); });
   document.querySelectorAll('[data-i18n-aria]').forEach(el => { el.setAttribute('aria-label', t(el.dataset.i18nAria)); });
+  const ver = document.getElementById('appVersionHint');
+  if(ver) ver.textContent = t('sVersion', {v: window.FFK_VERSION || '—'});
   document.querySelectorAll('.tabbtn').forEach(b => {
     const lab = b.querySelector('.tab-lab');
     if(lab) b.setAttribute('aria-label', lab.textContent);

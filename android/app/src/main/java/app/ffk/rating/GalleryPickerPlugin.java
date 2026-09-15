@@ -68,7 +68,7 @@ public class GalleryPickerPlugin extends Plugin {
       values.put(MediaStore.Images.Media.DISPLAY_NAME, name);
       values.put(MediaStore.Images.Media.MIME_TYPE, "image/png");
       if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-        values.put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES + "/FFK");
+        values.put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES + "/Matchcard");
       }
       ContentResolver resolver = getContext().getContentResolver();
       dropOldCopy(resolver, name);

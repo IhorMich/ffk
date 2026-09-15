@@ -4,3 +4,8 @@
 *.log
 node_modules/
 www/
+android/keystore.properties
+android/*.jks
+android/*.keystore
+*.jks
+*.keystore

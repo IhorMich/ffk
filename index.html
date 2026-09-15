@@ -371,6 +371,8 @@ window.ffkIsNative = function () {
         <input type="file" id="importFile" accept="application/json" hidden>
       </div>
       <button class="save-btn" id="saveSettingsBtn" type="button" data-i18n="sSave">Сохранить настройки</button>
+      <p class="hint" id="appVersionHint"></p>
+      <p class="hint"><a href="privacy.html" id="privacyLink" target="_blank" rel="noopener" data-i18n="sPrivacy">Конфиденциальность</a></p>
     </div>
   </div>
 
@@ -500,6 +502,7 @@ window.ffkIsNative = function () {
   </div>
 </div>
 
+<script src="js/version.js"></script>
 <script src="js/i18n.js"></script>
 <script src="js/rating.js"></script>
 <script src="js/storage.js"></script>
