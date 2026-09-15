@@ -246,6 +246,7 @@ window.ffkIsNative = function () {
         <div>
           <div class="hero-score" id="heroScore">6.0<small>/10</small></div>
           <div class="hero-caption" id="heroLabel" data-i18n="heroOverall">общая оценка</div>
+          <div class="hero-scale" id="heroScale" data-i18n="ratingBaseHint">6,0 — обычный матч, не школьная оценка</div>
         </div>
         <div class="hero-split">
           <div class="hero-mini"><span class="l" data-i18n="heroAction">вклад</span><span class="n" id="heroAction">6.0</span></div>
@@ -276,6 +277,7 @@ window.ffkIsNative = function () {
 
     <div class="view" id="view-history">
       <div id="historyToolbar">
+      <p class="hint banner" id="historyBackup" hidden></p>
       <div class="hist-filters">
       <div class="field">
         <label data-i18n="seasonFilter">Сезон</label>
@@ -369,11 +371,11 @@ window.ffkIsNative = function () {
       <p class="hint" data-i18n="sIconsHint">Сравни на вкладке «Матч» — список игровых действий.</p>
       <p class="hint" id="tzHint"></p>
       <h3 class="period-head" data-i18n="sBackup">Данные на телефоне</h3>
-      <p class="hint" id="backupBanner" hidden data-i18n="backupBanner">Данные только на этом телефоне. Сделайте экспорт, чтобы не потерять сезон.</p>
+      <p class="hint" id="backupBanner" hidden data-i18n="backupBanner">Данные только на этом телефоне. Сохраните копию в Файлы или отправьте себе — так сезон не пропадёт.</p>
       <div class="backup-row">
-        <button class="backup-btn" id="exportBtn" type="button" data-i18n="export">Экспорт</button>
-        <button class="backup-btn" id="importBtn" type="button" data-i18n="import">Импорт</button>
-        <button class="backup-btn" id="copyBtn" type="button" data-i18n="copy">Копировать</button>
+        <button class="backup-btn" id="exportBtn" type="button" data-i18n="saveCopy">Сохранить копию</button>
+        <button class="backup-btn" id="importBtn" type="button" data-i18n="restoreCopy">Восстановить</button>
+        <button class="backup-btn" id="copyBtn" type="button" data-i18n="copyJson">Копировать JSON</button>
         <input type="file" id="importFile" accept="application/json" hidden>
       </div>
       <button class="save-btn" id="saveSettingsBtn" type="button" data-i18n="sSave">Сохранить настройки</button>
@@ -495,6 +497,35 @@ window.ffkIsNative = function () {
       <button class="save-btn" id="previewShare" type="button" data-i18n="previewShare">Поделиться</button>
       <button class="ghost-btn" id="previewSave" type="button" data-i18n="previewSave">Скачать</button>
       <button class="ghost-btn" id="previewCancel" type="button" data-i18n="previewCancel">Отмена</button>
+    </div>
+  </div>
+  <div class="onboard" id="wrapUp" hidden>
+    <div class="onboard-card wrap-card">
+      <div class="onboard-kicker">Matchcard</div>
+      <h2 data-i18n="wrapTitle">Матч сыгран</h2>
+      <p data-i18n="wrapHint">Счёт, минуты и две шкалы — и можно сохранить. Остальное допишете дома.</p>
+      <div class="hero-scale" id="wrapScale"></div>
+      <div class="field" id="wrapOppWrap">
+        <label data-i18n="labelOpp">Соперник</label>
+        <input type="text" id="wrap-opponent" maxlength="48" data-i18n-placeholder="phOpp" placeholder="Команда" autocomplete="off">
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label data-i18n="labelScore">Счёт</label>
+          <div class="score-pair">
+            <input type="number" id="wrap-score-us" min="0" max="99" inputmode="numeric" data-i18n-aria="scoreUsAria">
+            <span class="score-colon" aria-hidden="true">:</span>
+            <input type="number" id="wrap-score-them" min="0" max="99" inputmode="numeric" data-i18n-aria="scoreThemAria">
+          </div>
+        </div>
+        <div class="field">
+          <label data-i18n="labelMin">Минуты на поле</label>
+          <input type="number" id="wrap-minutes" min="1" max="120" value="60">
+        </div>
+      </div>
+      <div id="wrapBehaviors"></div>
+      <button class="save-btn" id="wrapSaveBtn" type="button" data-i18n="wrapSave">Сохранить матч</button>
+      <button class="ghost-btn" id="wrapLaterBtn" type="button" data-i18n="wrapLater">Дописать дома</button>
     </div>
   </div>
   <div class="live" id="livePad">

@@ -3401,3 +3401,128 @@ ru:{
     Object.assign(I18N[lang], extra.en, extra[lang] || {});
   });
 })();
+
+(function mergeCopyAndWrapI18n(){
+  const extra = {
+    uk:{
+      saveCopy:'Зберегти копію', restoreCopy:'Відновити', copyJson:'Копіювати JSON',
+      backupBanner:'Дані лише на цьому телефоні. Збережіть копію у Файли або надішліть собі — так сезон не зникне.',
+      backupRemind:'{n} матчів лише на цьому телефоні. Натисніть, щоб зберегти копію.',
+      toastCopySaved:'Копію збережено. Покладіть файл у надійне місце.',
+      wrapTitle:'Матч зіграно',
+      wrapHint:'Рахунок, хвилини і дві шкали — і можна зберегти. Решту допишете вдома.',
+      wrapSave:'Зберегти матч', wrapLater:'Дописати вдома',
+      ratingBaseHint:'6,0 — звичайний матч, не шкільна оцінка',
+      onboard2Body:'Старт з 6,0 — це нормальний матч, не трійка. Корисні дії піднімають, помилки опускають. Старання дає менший внесок. Підсумок від 0 до 10.',
+      onboard3Body:'Дані лише на телефоні. У налаштуваннях збережіть копію — цей файл і є ваш бекап.',
+      toastSeasonClosed:'Сезон {s} закрито. Далі — картка року.'
+    },
+    pl:{
+      saveCopy:'Zapisz kopię', restoreCopy:'Przywróć', copyJson:'Kopiuj JSON',
+      backupBanner:'Dane są tylko na tym telefonie. Zapisz kopię w Plikach albo wyślij ją sobie — wtedy sezon nie zginie.',
+      backupRemind:'{n} meczów tylko na tym telefonie. Dotknij, żeby zapisać kopię.',
+      toastCopySaved:'Kopia zapisana. Trzymaj plik w bezpiecznym miejscu.',
+      wrapTitle:'Mecz rozegrany',
+      wrapHint:'Wynik, minuty i dwie skale — i można zapisać. Resztę dopiszesz w domu.',
+      wrapSave:'Zapisz mecz', wrapLater:'Dokończ w domu',
+      ratingBaseHint:'6,0 to zwykły mecz, nie szkolna ocena',
+      onboard2Body:'Start od 6,0 — to normalny mecz, nie trójka. Udane akcje podnoszą, błędy obniżają. Wysiłek liczy się słabiej. Wynik od 0 do 10.',
+      onboard3Body:'Dane są tylko na telefonie. W ustawieniach zapisz kopię — ten plik to kopia zapasowa.',
+      toastSeasonClosed:'Sezon {s} zamknięty. Teraz karta sezonu.'
+    },
+    en:{
+      saveCopy:'Save a copy', restoreCopy:'Restore', copyJson:'Copy JSON',
+      backupBanner:'Data stays on this phone. Save a copy to Files or send it to yourself so the season is not lost.',
+      backupRemind:'{n} matches live only on this phone. Tap to save a copy.',
+      toastCopySaved:'Copy saved. Keep the file somewhere safe.',
+      wrapTitle:'Match done',
+      wrapHint:'Score, minutes and two scales — then save. The rest can wait until you are home.',
+      wrapSave:'Save match', wrapLater:'Finish at home',
+      ratingBaseHint:'6.0 is a normal match, not a school grade',
+      onboard2Body:'Start at 6.0 — that is a normal match, not a fail. Useful actions lift it, mistakes drop it. Effort counts less. The total is 0 to 10.',
+      onboard3Body:'Data lives only on this phone. In Settings, save a copy — that file is your backup.',
+      toastSeasonClosed:'Season {s} closed. Here is the year card.'
+    },
+    ru:{
+      saveCopy:'Сохранить копию', restoreCopy:'Восстановить', copyJson:'Копировать JSON',
+      backupBanner:'Данные только на этом телефоне. Сохраните копию в Файлы или отправьте себе — так сезон не пропадёт.',
+      backupRemind:'{n} матчей только на этом телефоне. Нажмите, чтобы сохранить копию.',
+      toastCopySaved:'Копия сохранена. Положите файл в надёжное место.',
+      wrapTitle:'Матч сыгран',
+      wrapHint:'Счёт, минуты и две шкалы — и можно сохранить. Остальное допишете дома.',
+      wrapSave:'Сохранить матч', wrapLater:'Дописать дома',
+      ratingBaseHint:'6,0 — обычный матч, не школьная оценка',
+      onboard2Body:'Старт с 6,0 — это обычный матч, не тройка. Полезные действия поднимают, ошибки опускают. Старание даёт меньший вклад. Итог от 0 до 10.',
+      onboard3Body:'Данные только на телефоне. В настройках сохраните копию — этот файл и есть ваш бэкап.',
+      toastSeasonClosed:'Сезон {s} закрыт. Дальше — карточка года.'
+    },
+    es:{
+      saveCopy:'Guardar copia', restoreCopy:'Restaurar', copyJson:'Copiar JSON',
+      backupBanner:'Los datos se quedan en este teléfono. Guarda una copia en Archivos o envíatela para no perder la temporada.',
+      backupRemind:'{n} partidos solo en este teléfono. Toca para guardar una copia.',
+      toastCopySaved:'Copia guardada. Guarda el archivo en un sitio seguro.',
+      wrapTitle:'Partido jugado',
+      wrapHint:'Marcador, minutos y dos escalas — y ya puedes guardar. Lo demás se puede completar en casa.',
+      wrapSave:'Guardar partido', wrapLater:'Terminar en casa',
+      ratingBaseHint:'6,0 es un partido normal, no un suspenso',
+      onboard2Body:'Empieza en 6,0: un partido normal, no un 3. Las acciones útiles suben, los errores bajan. El esfuerzo cuenta menos. Total de 0 a 10.',
+      onboard3Body:'Los datos están solo en el teléfono. En Ajustes guarda una copia: ese archivo es tu copia de seguridad.',
+      toastSeasonClosed:'Temporada {s} cerrada. Aquí está la carta del año.'
+    },
+    de:{
+      saveCopy:'Kopie speichern', restoreCopy:'Wiederherstellen', copyJson:'JSON kopieren',
+      backupBanner:'Die Daten bleiben auf diesem Telefon. Speichere eine Kopie in Dateien oder schicke sie dir, damit die Saison nicht verloren geht.',
+      backupRemind:'{n} Spiele nur auf diesem Telefon. Tippen, um eine Kopie zu speichern.',
+      toastCopySaved:'Kopie gespeichert. Lege die Datei an einen sicheren Ort.',
+      wrapTitle:'Spiel vorbei',
+      wrapHint:'Ergebnis, Minuten und zwei Skalen — dann speichern. Den Rest kannst du zu Hause ergänzen.',
+      wrapSave:'Spiel speichern', wrapLater:'Zu Hause fertig',
+      ratingBaseHint:'6,0 ist ein normales Spiel, keine Schulnote',
+      onboard2Body:'Start bei 6,0 — das ist ein normales Spiel, keine 3. Gute Aktionen heben, Fehler senken. Einsatz zählt weniger. Gesamt 0 bis 10.',
+      onboard3Body:'Daten liegen nur auf dem Telefon. Unter Einstellungen eine Kopie speichern — das ist das Backup.',
+      toastSeasonClosed:'Saison {s} geschlossen. Als Nächstes die Jahreskarte.'
+    },
+    it:{
+      saveCopy:'Salva una copia', restoreCopy:'Ripristina', copyJson:'Copia JSON',
+      backupBanner:'I dati restano su questo telefono. Salva una copia in File o inviatela: così la stagione non si perde.',
+      backupRemind:'{n} partite solo su questo telefono. Tocca per salvare una copia.',
+      toastCopySaved:'Copia salvata. Tieni il file in un posto sicuro.',
+      wrapTitle:'Partita giocata',
+      wrapHint:'Punteggio, minuti e due scale — poi puoi salvare. Il resto lo completi a casa.',
+      wrapSave:'Salva partita', wrapLater:'Finisci a casa',
+      ratingBaseHint:'6,0 è una partita normale, non un voto scolastico',
+      onboard2Body:'Si parte da 6,0: partita normale, non un 3. Le azioni utili alzano, gli errori abbassano. L’impegno conta meno. Totale da 0 a 10.',
+      onboard3Body:'I dati stanno solo sul telefono. Nelle Impostazioni salva una copia: quello è il backup.',
+      toastSeasonClosed:'Stagione {s} chiusa. Ecco la carta dell’anno.'
+    },
+    fr:{
+      saveCopy:'Enregistrer une copie', restoreCopy:'Restaurer', copyJson:'Copier le JSON',
+      backupBanner:'Les données restent sur ce téléphone. Enregistrez une copie dans Fichiers ou envoyez-la-vous pour ne pas perdre la saison.',
+      backupRemind:'{n} matchs seulement sur ce téléphone. Touchez pour enregistrer une copie.',
+      toastCopySaved:'Copie enregistrée. Gardez le fichier en lieu sûr.',
+      wrapTitle:'Match terminé',
+      wrapHint:'Score, minutes et deux échelles — puis enregistrez. Le reste peut attendre la maison.',
+      wrapSave:'Enregistrer le match', wrapLater:'Finir à la maison',
+      ratingBaseHint:'6,0 est un match normal, pas une note d’école',
+      onboard2Body:'Départ à 6,0 — un match normal, pas un 3. Les actions utiles montent, les erreurs baissent. L’effort compte moins. Total de 0 à 10.',
+      onboard3Body:'Les données sont seulement sur le téléphone. Dans Réglages, enregistrez une copie — c’est la sauvegarde.',
+      toastSeasonClosed:'Saison {s} close. Voici la carte de l’année.'
+    },
+    pt:{
+      saveCopy:'Guardar cópia', restoreCopy:'Restaurar', copyJson:'Copiar JSON',
+      backupBanner:'Os dados ficam neste telemóvel. Guarda uma cópia em Ficheiros ou envia-a para ti para não perderes a época.',
+      backupRemind:'{n} jogos só neste telemóvel. Toca para guardar uma cópia.',
+      toastCopySaved:'Cópia guardada. Guarda o ficheiro num sítio seguro.',
+      wrapTitle:'Jogo feito',
+      wrapHint:'Resultado, minutos e duas escalas — e podes guardar. O resto completa em casa.',
+      wrapSave:'Guardar jogo', wrapLater:'Acabar em casa',
+      ratingBaseHint:'6,0 é um jogo normal, não uma nota da escola',
+      onboard2Body:'Começa em 6,0 — jogo normal, não um 3. Ações úteis sobem, erros descem. O esforço conta menos. Total de 0 a 10.',
+      onboard3Body:'Os dados ficam só no telefone. Nas Definições guarda uma cópia — esse ficheiro é o backup.',
+      toastSeasonClosed:'Época {s} fechada. Segue-se o cartão do ano.'
+    }
+  };
+  LANGS.forEach(lang => {
+    Object.assign(I18N[lang], extra.en, extra[lang] || {});
+  });
+})();

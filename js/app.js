@@ -246,6 +246,12 @@ function applyI18n(){
   const tzEl = document.getElementById('tzHint');
   if(tzEl) tzEl.textContent = t('sTzHint', {tz: clockTimeZone().replace(/_/g, ' ')});
   syncSeasonChipLabels();
+  if(isElShown('wrapUp')){
+    document.getElementById('wrapBehaviors').innerHTML = wrapBehaviorHtml('effort') + wrapBehaviorHtml('team');
+    const s = scoresNow();
+    const scale = document.getElementById('wrapScale');
+    if(scale) scale.textContent = fmtNum(s.overall, 2) + '/10 · ' + t('ratingBaseHint');
+  }
 }
 
 let settings = {club:'', player:'', position:'fwd', format:'2x30', minutes:'60', lang:'ru', seasonCloseDeclined:'', theme:'dark', iconSet:'clear', onboarded:false, pwaTransferSeen:false, introMark:''};
@@ -413,6 +419,24 @@ function fmtSigned(n, digits){
   if(n > 0) return '+'+abs;
   if(n < 0) return '−'+abs;
   return (settings.lang === 'en' ? '+' : '+') + fmtNum(0, digits);
+}
+function fmtWeight(w){
+  const n = Math.round(Number(w) * 100) / 100;
+  if(!n) return fmtNum(0, 2);
+  return (n > 0 ? '+' : '−') + fmtNum(Math.abs(n), 2);
+}
+function nextWeightLabel(key, pos){
+  const met = METRICS.find(x => x.key === key);
+  if(!met) return fmtNum(0, 2);
+  return fmtWeight(nextStackedWeight(form.counts[key] || 0, weightOf(met, pos)));
+}
+function paintWeight(key){
+  const pos = currentPos();
+  const shown = nextWeightLabel(key, pos);
+  const a = document.getElementById('wgt-'+key);
+  if(a) a.textContent = shown;
+  const b = document.getElementById('live-wgt-'+key);
+  if(b) b.textContent = shown;
 }
 function slavicForm(n){
   const n10 = n % 10, n100 = n % 100;
@@ -648,9 +672,10 @@ function renderReportHtml(m, compact){
   const vs = `${escapeHtml(m.opponent || t('unnamed'))}${m.score ? ' · ' + scoreLineHtml(m) : ''}`;
   const kick = m.kickoffClock ? escapeHtml(t('kickoffLine', {clock: m.kickoffClock})) : '';
   const meta = `<div class="report-sub"><span>${vs}</span>${kick ? `<span>${kick}</span>` : ''}</div>`;
+  const scale = `<p class="hero-scale">${escapeHtml(t('ratingBaseHint'))}</p>`;
   const head = compact ? meta : `<div class="report-kicker">${escapeHtml(t('reportTitle'))}</div>
     <div class="report-title">${escapeHtml(reportPlayerName(m))} — <span class="n">${fmtNum(m.rating, 2)}</span></div>
-    ${meta}
+    ${meta}${scale}
     <div class="report-sub"><span>${escapeHtml(t('heroAction'))} ${fmtNum(m.actionRating, 2)}</span><span>${escapeHtml(t('heroEffort'))} ${fmtNum(m.effortRating, 2)}</span></div>`;
   const body = lines.length
     ? lines.map(x => `<div class="report-line"><span class="ic">${metricIconSvg(x.key)}</span><span>${escapeHtml(x.text)}</span></div>`).join('')
@@ -1439,6 +1464,10 @@ function closeSeason(fromPrompt){
   }
   syncSeasonUi();
   showToast(t('toastSeasonClosed', {s}));
+  const list = matches.filter(m => sameSeason(matchSeason(m), s)).sort((a,b)=> a.date.localeCompare(b.date) || a.id - b.id);
+  if(list.length){
+    window.setTimeout(() => { shareFutCard(list, s, 'season'); }, 280);
+  }
   return true;
 }
 function maybePromptSeasonClose(){
@@ -1924,13 +1953,12 @@ function metricGroupTitle(id){
   return t(id === 'attack' ? 'grpAttack' : (id === 'defense' ? 'grpDefense' : 'grpDiscipline'));
 }
 function metricTileHtml(m, pos){
-  const w = weightOf(m, pos);
-  const shown = (w > 0 ? '+' : '') + (settings.lang === 'en' ? String(w) : String(w).replace('.', ','));
+  const shown = nextWeightLabel(m.key, pos);
   const keyRow = (m.live || []).includes(pos);
   return `<div class="metric-tile${keyRow ? ' key' : ''}">
       <div class="metric-icon">${metricIconSvg(m.key)}</div>
       <div class="metric-name">
-        <div>${escapeHtml(metricLabel(m.key))}<span class="metric-weight">${shown}</span></div>
+        <div>${escapeHtml(metricLabel(m.key))}<span class="metric-weight" id="wgt-${m.key}">${shown}</span></div>
       </div>
       <div class="stepper">
         <button type="button" onclick="stepMetric('${m.key}',-1)">−</button>
@@ -1957,17 +1985,17 @@ function behaviorPct(n){
   return ((Number(n) || 3) - 1) / 4 * 100;
 }
 function syncBehaviorSlider(key, val){
-  const wrap = document.querySelector('.behavior-slider[data-behavior="'+key+'"]');
-  if(!wrap) return;
-  wrap.dataset.val = val;
-  const pct = behaviorPct(val) + '%';
-  const fill = wrap.querySelector('.behavior-fill');
-  const thumb = wrap.querySelector('.behavior-thumb');
-  if(fill) fill.style.width = pct;
-  if(thumb){
-    thumb.style.left = pct;
-    thumb.setAttribute('aria-valuenow', val);
-  }
+  document.querySelectorAll('.behavior-slider[data-behavior="'+key+'"]').forEach(wrap => {
+    wrap.dataset.val = val;
+    const pct = behaviorPct(val) + '%';
+    const fill = wrap.querySelector('.behavior-fill');
+    const thumb = wrap.querySelector('.behavior-thumb');
+    if(fill) fill.style.width = pct;
+    if(thumb){
+      thumb.style.left = pct;
+      thumb.setAttribute('aria-valuenow', val);
+    }
+  });
 }
 function renderBehaviors(){
   document.getElementById('behaviorList').innerHTML = BEHAVIOR.map(b => {
@@ -2057,11 +2085,11 @@ window.stepMetric = function(key, dir){
   }
   updateHero();
   persistDraft();
+  paintWeight(key);
 };
 window.setBehavior = function(key, val){
   form.behaviors[key] = parseInt(val, 10);
-  const el = document.getElementById('bval-'+key);
-  if(el) el.textContent = val;
+  document.querySelectorAll('#bval-'+key+', #wrap-bval-'+key).forEach(el => { el.textContent = val; });
   syncBehaviorSlider(key, form.behaviors[key]);
   updateHero();
   persistDraft();
@@ -2236,14 +2264,14 @@ function collectMatch(){
   };
 }
 
-document.getElementById('saveBtn').addEventListener('click', () => {
+function saveCurrentMatch(){
   const row = collectMatch();
-  if(!row.opponent && !confirm(t('confirmNoOpp'))) return;
+  if(!row.opponent && !confirm(t('confirmNoOpp'))) return false;
   const dup = matches.some(m => m.id !== row.id && m.date === row.date && m.opponent === row.opponent && row.opponent);
-  if(dup && !editingId && !confirm(t('confirmDup'))) return;
+  if(dup && !editingId && !confirm(t('confirmDup'))) return false;
   if(!editingId && !seasonIsOpen()){
     const s = row.season || seasonFromDate(row.date);
-    if(!confirm(t('confirmOpenForMatch', {s}))) return;
+    if(!confirm(t('confirmOpenForMatch', {s}))) return false;
     openSeason(s, true);
     row.season = s;
   }
@@ -2260,7 +2288,9 @@ document.getElementById('saveBtn').addEventListener('click', () => {
   renderStats();
   renderOppList();
   showView('report');
-});
+  return true;
+}
+document.getElementById('saveBtn').addEventListener('click', saveCurrentMatch);
 
 document.getElementById('cancelEditBtn').addEventListener('click', resetForm);
 
@@ -2298,8 +2328,14 @@ function showToast(msg){
 }
 
 function refreshBackupBanner(){
-  const el = document.getElementById('backupBanner');
-  if(el) el.hidden = !(matches.length > 0 && !localStorage.getItem(EXPORT_KEY));
+  const stale = matches.length > 0 && !localStorage.getItem(EXPORT_KEY);
+  const settingsEl = document.getElementById('backupBanner');
+  if(settingsEl) settingsEl.hidden = !stale;
+  const hist = document.getElementById('historyBackup');
+  if(hist){
+    hist.hidden = !stale;
+    if(stale) hist.textContent = t('backupRemind', {n: matches.length});
+  }
 }
 function renderHistory(){
   refreshBackupBanner();
@@ -2490,32 +2526,36 @@ function applyImportBundle(imported){
 function downloadMatches(){
   if(!matches.length && !player.firstName){ showToast(t('toastNothingExport')); return; }
   const blob = new Blob([JSON.stringify(exportPayload(), null, 2)], {type:'application/json'});
-  const filename = `ffk_${todayStr()}.json`;
+  const filename = `matchcard_${todayStr()}.json`;
   nativeShareBlob(blob, filename, 'Matchcard').then(ok => {
     if(ok){
-      localStorage.setItem(EXPORT_KEY, todayStr());
-      renderHistory();
+      markExportDone();
+      showToast(t('toastCopySaved'));
       return;
     }
     const file = new File([blob], filename, {type:'application/json'});
     if(navigator.canShare && navigator.canShare({files:[file]})){
       navigator.share({files:[file], title:'Matchcard'}).then(() => {
-        localStorage.setItem(EXPORT_KEY, todayStr());
-        renderHistory();
+        markExportDone();
+        showToast(t('toastCopySaved'));
       }).catch(() => triggerDownload(blob, filename));
       return;
     }
     triggerDownload(blob, filename);
   }).catch(() => triggerDownload(blob, filename));
 }
+function markExportDone(){
+  localStorage.setItem(EXPORT_KEY, todayStr());
+  refreshBackupBanner();
+  renderHistory();
+}
 function triggerDownload(blob, filename){
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove();
   URL.revokeObjectURL(url);
-  localStorage.setItem(EXPORT_KEY, todayStr());
-  renderHistory();
-  showToast(t('toastFileSaved'));
+  markExportDone();
+  showToast(t('toastCopySaved'));
 }
 
 document.getElementById('exportBtn').addEventListener('click', downloadMatches);
@@ -2523,8 +2563,7 @@ document.getElementById('importBtn').addEventListener('click', () => document.ge
 document.getElementById('copyBtn').addEventListener('click', async () => {
   try{
     await navigator.clipboard.writeText(JSON.stringify(exportPayload(), null, 2));
-    localStorage.setItem(EXPORT_KEY, todayStr());
-    renderHistory();
+    markExportDone();
     showToast(t('toastCopied'));
   }catch(e){ showToast(t('toastCopyFail')); }
 });
@@ -3037,7 +3076,7 @@ function renderLiveGrid(){
         const neg = weightOf(m, pos) < 0;
         return `<div class="live-cell ${neg?'neg':''}">
           <button class="live-plus" type="button" onclick="stepMetric('${m.key}',1)">
-            ${escapeHtml(metricLabel(m.key))}<span class="n" id="live-cnt-${m.key}">${form.counts[m.key]||0}</span>
+            ${escapeHtml(metricLabel(m.key))}<span class="live-w" id="live-wgt-${m.key}">${nextWeightLabel(m.key, pos)}</span><span class="n" id="live-cnt-${m.key}">${form.counts[m.key]||0}</span>
           </button>
           <button class="live-minus" type="button" onclick="stepMetric('${m.key}',-1)">−</button>
         </div>`;
@@ -3201,7 +3240,93 @@ document.getElementById('liveUndoBtn').addEventListener('click', () => undoLastL
 document.querySelectorAll('.js-match-clock-btn').forEach(btn => {
   btn.addEventListener('click', toggleMatchClock);
 });
-document.getElementById('liveDoneBtn').addEventListener('click', closeLive);
+document.getElementById('liveDoneBtn').addEventListener('click', () => {
+  closeLive();
+  if(shouldWrapUp()) openWrapUp();
+});
+function suggestMinutesFromClock(){
+  if(!matchClock.startedAt) return;
+  const played = Math.max(1, Math.min(120, Math.round(playingMs() / 60000) || 1));
+  const el = document.getElementById('f-minutes');
+  if(!el) return;
+  const cur = Number(el.value);
+  const def = formatLength(document.getElementById('f-format').value, document.getElementById('f-matchlen').value);
+  if(!cur || cur === def) el.value = String(played);
+}
+function wrapBehaviorHtml(key){
+  const now = form.behaviors[key];
+  const pct = behaviorPct(now);
+  return `<div class="behavior-row">
+      <div class="behavior-top">
+        <span>${escapeHtml(behaviorLabel(key))}</span>
+        <span class="val" id="wrap-bval-${key}">${now}</span>
+      </div>
+      <div class="behavior-slider" data-behavior="${key}" data-val="${now}">
+        <div class="behavior-track">
+          <div class="behavior-marks"><span></span><span></span><span></span><span></span><span></span></div>
+          <div class="behavior-fill" style="width:${pct}%"></div>
+          <button class="behavior-thumb" type="button" style="left:${pct}%" aria-valuenow="${now}"></button>
+        </div>
+      </div>
+    </div>`;
+}
+function shouldWrapUp(){
+  if(editingId) return false;
+  const phase = clockPhase();
+  return phase === 'done' || phase === 'break' || phase === 'run' || !!(matchClock.events && matchClock.events.length) || liveStack.length > 0;
+}
+function syncWrapToForm(){
+  const opp = document.getElementById('wrap-opponent');
+  const oppWrap = document.getElementById('wrapOppWrap');
+  if(opp && oppWrap && !oppWrap.hidden) document.getElementById('f-opponent').value = opp.value;
+  const us = document.getElementById('wrap-score-us');
+  const them = document.getElementById('wrap-score-them');
+  if(us && them){
+    document.getElementById('f-score-us').value = us.value;
+    document.getElementById('f-score-them').value = them.value;
+    scoreFallback = '';
+    syncScoreResultHint();
+  }
+  const minutes = document.getElementById('wrap-minutes');
+  if(minutes && minutes.value) document.getElementById('f-minutes').value = minutes.value;
+}
+function openWrapUp(){
+  suggestMinutesFromClock();
+  const el = document.getElementById('wrapUp');
+  if(!el) return;
+  const oppVal = document.getElementById('f-opponent').value.trim();
+  document.getElementById('wrapOppWrap').hidden = !!oppVal;
+  document.getElementById('wrap-opponent').value = oppVal;
+  document.getElementById('wrap-score-us').value = document.getElementById('f-score-us').value;
+  document.getElementById('wrap-score-them').value = document.getElementById('f-score-them').value;
+  document.getElementById('wrap-minutes').value = document.getElementById('f-minutes').value;
+  document.getElementById('wrapBehaviors').innerHTML = wrapBehaviorHtml('effort') + wrapBehaviorHtml('team');
+  const s = scoresNow();
+  document.getElementById('wrapScale').textContent = fmtNum(s.overall, 2) + '/10 · ' + t('ratingBaseHint');
+  el.hidden = false;
+  pushAppState('layer');
+}
+function closeWrapUp(){
+  const el = document.getElementById('wrapUp');
+  if(el) el.hidden = true;
+}
+['wrap-opponent','wrap-score-us','wrap-score-them','wrap-minutes'].forEach(id => {
+  const el = document.getElementById(id);
+  if(!el) return;
+  el.addEventListener('input', syncWrapToForm);
+  el.addEventListener('change', syncWrapToForm);
+});
+document.getElementById('wrapLaterBtn').addEventListener('click', () => {
+  syncWrapToForm();
+  closeWrapUp();
+  syncMatchContextFold();
+  persistDraft();
+});
+document.getElementById('wrapSaveBtn').addEventListener('click', () => {
+  syncWrapToForm();
+  if(saveCurrentMatch()) closeWrapUp();
+});
+document.getElementById('historyBackup')?.addEventListener('click', downloadMatches);
 function isElShown(id){
   const el = document.getElementById(id);
   if(!el || el.hidden) return false;
@@ -3245,6 +3370,10 @@ function handleAppBack(){
       onboardStep -= 1;
       renderOnboard();
     }
+    return true;
+  }
+  if(isElShown('wrapUp')){
+    closeWrapUp();
     return true;
   }
   if(isElShown('cropModal')){ closeCrop(); return true; }
@@ -4220,6 +4349,7 @@ async function drawMatchCardCanvas(m, mode){
   fitText(ctx, fmtNum(m.rating, 1), right, 178, 300, '900', 110, 60);
   ctx.fillStyle = theme.muted;
   fitText(ctx, t('heroOverall'), right, 218, 320, '700', 24, 15);
+  fitText(ctx, t('ratingBaseHint'), right, 248, 320, '600', 18, 13);
   ctx.textAlign = 'left';
 
   ctx.strokeStyle = theme.foil2;

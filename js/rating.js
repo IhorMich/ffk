@@ -100,12 +100,17 @@ function behaviorAvg(behaviors){
   const rated = BEHAVIOR.filter(b => b.inRating).map(b => Number(behaviors[b.key]) || 3);
   return rated.reduce((a,b)=>a+b,0) / rated.length;
 }
+function stackedDecay(w){ return w < 0 ? 0.75 : 0.88; }
+function nextStackedWeight(n, w){
+  n = Math.max(0, Math.floor(Number(n)||0));
+  if(!w) return 0;
+  return w * Math.pow(stackedDecay(w), n);
+}
 function stackedWeight(n, w){
   n = Math.max(0, Math.floor(Number(n)||0));
   if(!n || !w) return 0;
-  const decay = w < 0 ? 0.75 : 0.88;
   let sum = 0;
-  for(let i=0;i<n;i++) sum += w * Math.pow(decay, i);
+  for(let i=0;i<n;i++) sum += nextStackedWeight(i, w);
   return sum;
 }
 function actionSum(counts, pos){
@@ -176,5 +181,8 @@ function ratingFixtureFail(){
       return f.name + ' got ' + overall + '/' + action + '/' + effort;
     }
   }
+  const n0 = Math.round(nextStackedWeight(0, 0.2) * 100) / 100;
+  const n1 = Math.round(nextStackedWeight(1, 0.2) * 100) / 100;
+  if(n0 !== 0.2 || n1 !== 0.18) return 'nextDecay ' + n0 + '/' + n1;
   return '';
 }

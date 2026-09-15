@@ -1,4 +1,4 @@
-const CACHE = 'ffk_v128';
+const CACHE = 'ffk_v129';
 const ASSETS = [
   './',
   './index.html',
@@ -48,7 +48,15 @@ const ASSETS = [
   './fonts/plus-jakarta-sans-latin-ext-400-normal.woff2',
   './fonts/plus-jakarta-sans-latin-ext-600-normal.woff2',
   './fonts/plus-jakarta-sans-latin-ext-700-normal.woff2',
-  './fonts/plus-jakarta-sans-latin-ext-800-normal.woff2'
+  './fonts/plus-jakarta-sans-latin-ext-800-normal.woff2',
+  './fonts/onest-cyrillic-400-normal.woff2',
+  './fonts/onest-cyrillic-600-normal.woff2',
+  './fonts/onest-cyrillic-700-normal.woff2',
+  './fonts/onest-cyrillic-800-normal.woff2',
+  './fonts/onest-cyrillic-ext-400-normal.woff2',
+  './fonts/onest-cyrillic-ext-600-normal.woff2',
+  './fonts/onest-cyrillic-ext-700-normal.woff2',
+  './fonts/onest-cyrillic-ext-800-normal.woff2'
 ];
 
 self.addEventListener('install', event => {
