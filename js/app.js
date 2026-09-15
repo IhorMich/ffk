@@ -3359,14 +3359,23 @@ function finishIntro(){
     afterIntro();
   }, 420);
 }
+function hideNativeSplash(){
+  try{
+    if(window.FfkSplash && typeof window.FfkSplash.ready === 'function') window.FfkSplash.ready();
+  }catch(e){}
+}
 function playIntro(){
   const el = document.getElementById('intro');
-  if(!el) return false;
+  if(!el){
+    hideNativeSplash();
+    return false;
+  }
   introBusy = false;
   el.hidden = false;
   el.classList.remove('out', 'play');
   void el.offsetWidth;
-  el.classList.add('play');
+  hideNativeSplash();
+  requestAnimationFrame(() => el.classList.add('play'));
   el.addEventListener('click', finishIntro, {once:true});
   window.setTimeout(finishIntro, 6500);
   return true;
