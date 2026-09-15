@@ -88,7 +88,7 @@ function loadSettings(){
       lang: (s.langManual === true && LANGS.includes(s.lang)) ? s.lang : detectLang(),
       langManual: s.langManual === true,
       seasonCloseDeclined: String(s.seasonCloseDeclined || ''),
-      theme: (s.theme === 'light' || s.theme === 'day') ? s.theme : 'dark',
+      theme: (s.theme === 'day' || s.theme === 'light') ? 'day' : 'dark',
       iconSet: (typeof ICON_SET_ORDER !== 'undefined' && ICON_SET_ORDER.includes(s.iconSet)) ? s.iconSet : 'clear',
       onboarded: s.onboarded === true,
       pwaTransferSeen: s.pwaTransferSeen === true,

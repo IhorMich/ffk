@@ -74,26 +74,31 @@ function applyNativeChrome(){
   if(!isNativeApp() || !Bar) return;
   if(document.documentElement.classList.contains('intro-on')) return;
   const theme = themeName();
-  const color = theme === 'day' ? '#FFF8D6' : (theme === 'light' ? '#F3F5FA' : '#05060c');
+  const color = theme === 'day' ? '#FFF8D6' : '#05060c';
   const style = theme === 'dark' ? 'LIGHT' : 'DARK';
   Promise.resolve(Bar.setOverlaysWebView({overlay: true})).catch(() => {});
   Promise.resolve(Bar.setBackgroundColor({color})).catch(() => {});
   Promise.resolve(Bar.setStyle({style})).catch(() => {});
 }
-const THEME_ORDER = ['dark','light','day'];
+const THEME_ORDER = ['dark','day'];
 function themeName(){
+  if(settings.theme === 'light') return 'day';
   return THEME_ORDER.includes(settings.theme) ? settings.theme : 'dark';
 }
 function isLightTheme(){ return themeName() !== 'dark'; }
 function applyTheme(){
+  if(settings.theme === 'light'){
+    settings.theme = 'day';
+    saveSettings();
+  }
   const theme = themeName();
   document.documentElement.dataset.theme = theme;
   const meta = document.querySelector('meta[name="theme-color"]');
-  if(meta) meta.content = theme === 'day' ? '#FFF8D6' : (theme === 'light' ? '#F3F5FA' : '#05060c');
+  if(meta) meta.content = theme === 'day' ? '#FFF8D6' : '#05060c';
   const apple = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
   if(apple) apple.content = theme === 'dark' ? 'black-translucent' : 'default';
   document.querySelectorAll('.theme-toggle').forEach(btn => {
-    btn.textContent = theme === 'dark' ? '☀' : (theme === 'light' ? '▣' : '☾');
+    btn.textContent = theme === 'dark' ? '☀' : '☾';
     btn.setAttribute('aria-label', t('themeAria') + ' · ' + t('theme_' + theme));
   });
   document.querySelectorAll('#themeChips .chip').forEach(c => {
@@ -2459,7 +2464,10 @@ function applyImportBundle(imported){
       }
       if(bundle.settings.format) settings.format = bundle.settings.format;
       if(bundle.settings.minutes) settings.minutes = String(bundle.settings.minutes);
-      if(THEME_ORDER.includes(bundle.settings.theme)) settings.theme = bundle.settings.theme;
+      if(bundle.settings.theme){
+        const th = bundle.settings.theme === 'light' ? 'day' : bundle.settings.theme;
+        if(THEME_ORDER.includes(th)) settings.theme = th;
+      }
     }
     saveSettings();
     playerTouched = true;
@@ -3996,7 +4004,7 @@ async function drawFutCardCanvas(list, period, mode){
   const photo = await loadCanvasImage(currentPhoto() || player.photo);
   const cover = await loadCanvasImage(currentCover() || player.cover);
   const {canvas, ctx, w, h} = makeHiCanvas(780, 1120);
-  ctx.fillStyle = mode === 'light' ? '#F3F5FA' : '#070B14';
+  ctx.fillStyle = mode === 'light' ? '#FFF8D6' : '#070B14';
   ctx.fillRect(0, 0, w, h);
   const paper = ctx.createLinearGradient(0, 0, w, h);
   paper.addColorStop(0, theme.paper[0]);
@@ -4162,7 +4170,7 @@ async function drawMatchCardCanvas(m, mode){
   const h = Math.round(sumY + 104);
   const {canvas, ctx} = makeHiCanvas(w, h);
 
-  ctx.fillStyle = mode === 'light' ? '#F3F5FA' : '#070B14';
+  ctx.fillStyle = mode === 'light' ? '#FFF8D6' : '#070B14';
   ctx.fillRect(0, 0, w, h);
   const bg = ctx.createLinearGradient(0, 0, w, h);
   bg.addColorStop(0, theme.paper[0]);
