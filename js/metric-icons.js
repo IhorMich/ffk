@@ -28,21 +28,10 @@ const METRIC_ICON_LINE = {
   owngoal: '<circle cx="12" cy="12" r="7"/><path d="M12 8.2v5.2"/><circle cx="12" cy="16.2" r="1.1"/>'
 };
 
-/* Stroke fallbacks for keys missing from the silhouette sheet (GK + sharp pass). */
-const METRIC_ICON_FALLBACK = {
-  passes: '<circle cx="5.8" cy="7.8" r="1.6"/><path d="M5.8 9.7v3.8l-2 3.4M5.8 13.5l2 3.4"/><circle cx="18.2" cy="7.8" r="1.6"/><path d="M18.2 9.7v3.8l-2 3.4M18.2 13.5l2 3.4"/><path d="M8.2 12h5.6"/><path d="M12 9.8 14.6 12 12 14.2"/>',
-  saves: '<path d="M5.8 10.5c0-2.2 1.6-3.8 4-3.8h1.2c.6 0 1.2.2 1.6.6L14 9l1.4-1.7c.4-.4 1-.6 1.6-.6h.2c2.2 0 3.8 1.6 3.8 3.8V16c0 1.3-1 2.4-2.3 2.4h-2.2c-.7 0-1.3-.3-1.7-.8L14 15.4l-1.2 1.4c-.4.5-1 .8-1.7.8H8.1C6.8 17.6 5.8 16.5 5.8 15.2z"/><circle cx="12" cy="12.6" r="1.7"/>',
-  claims: '<circle cx="12" cy="6.4" r="2"/><path d="M8.2 11.2c1.1-1.4 2.4-2.2 3.8-2.2s2.7.8 3.8 2.2"/><path d="M7.4 14.5c1.4 3 7.8 3 9.2 0"/><path d="M12 9.2v3.4"/>',
-  gkpass: '<path d="M5.2 9.5h5v8.2h-5z"/><circle cx="7.7" cy="12" r="1.4"/><circle cx="16.8" cy="8.2" r="2"/><path d="M10.4 12.4 14.6 9.2"/>',
-  conceded: '<path d="M4.6 7.5h14.8v2.2"/><path d="M4.6 9.7 12 18.2 19.4 9.7"/><path d="M7.2 9.7 12 15.2 16.8 9.7"/><circle cx="12" cy="11.6" r="1.5"/>'
-};
-
-/* Silhouette pack cut from the action sheet (white glyph → CSS mask). */
+/* Real cutouts only. Missing poses use the line pack — never invented figures. */
 const METRIC_ICON_SIL_KEYS = [
-  'goals','shots','assists','dribbles','buildpass','passes',
-  'openings','chances','tackles','interceptions','duelswon',
-  'support','clearances','losses','ledtogoal','badpass',
-  'badtouch','duelslost','fouls','blocks','owngoal',
+  'goals','shots','assists','dribbles','openings','passes',
+  'tackles','duelswon','duelslost','clearances','blocks',
   'saves','claims','gkpass','conceded'
 ];
 
@@ -63,8 +52,8 @@ const METRIC_ICON_TINT = {
 const ICON_SET_ORDER = ['clear', 'bright', 'line'];
 
 const METRIC_ICON_PACKS = {
-  clear: {kind: 'mask', images: METRIC_ICON_SIL, fallback: METRIC_ICON_FALLBACK, width: '1.85', tint: false},
-  bright: {kind: 'mask', images: METRIC_ICON_SIL, fallback: METRIC_ICON_FALLBACK, width: '1.85', tint: true},
+  clear: {kind: 'mask', images: METRIC_ICON_SIL, fallback: METRIC_ICON_LINE, width: '1.85', tint: false},
+  bright: {kind: 'mask', images: METRIC_ICON_SIL, fallback: METRIC_ICON_LINE, width: '1.85', tint: true},
   line: {kind: 'stroke', paths: METRIC_ICON_LINE, width: '1.75', tint: false}
 };
 
@@ -106,7 +95,7 @@ function metricIconSvg(key, cls){
       /* clear pack: plain img — full silhouette, no mask clipping */
       return `<img class="metric-glyph-img${klass}" src="${src}" alt="" decoding="async" aria-hidden="true">`;
     }
-    const body = (pack.fallback && pack.fallback[key]) || METRIC_ICON_LINE.losses;
+    const body = (pack.fallback && pack.fallback[key]) || METRIC_ICON_LINE[key] || METRIC_ICON_LINE.losses;
     return metricIconStroke(body, pack.width, tint, cls);
   }
 
