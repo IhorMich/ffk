@@ -1749,10 +1749,17 @@
     border-color:color-mix(in srgb, #c0392b 35%, var(--card-line));
   }
   .coach-match-create select,
-  .coach-match-create input[type="time"]{
+  .coach-kickoff-row select{
     width:100%;box-sizing:border-box;min-height:42px;padding:8px 10px;border-radius:12px;
     border:1px solid var(--card-line);background:var(--surface);color:var(--text);font:inherit;
   }
+  .coach-kickoff-row{
+    display:grid;grid-template-columns:1fr auto 1fr;gap:6px;align-items:center;
+  }
+  .coach-kickoff-colon{
+    font-size:1.1rem;font-weight:800;color:var(--card-muted);text-align:center;
+  }
+  .js-cm-played-back{width:100%;margin:10px 0 0;}
   .coach-score-row{
     display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center;
     margin:0 0 12px;padding:8px;border-radius:12px;border:1px solid var(--card-line);

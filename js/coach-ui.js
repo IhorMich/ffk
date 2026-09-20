@@ -515,15 +515,24 @@
     return '';
   }
   function selectedSquadFrom(scope){
+    // Prefer an explicit squad picker node.
     if(scope && scope.classList && (scope.classList.contains('js-cm-squad') || scope.classList.contains('js-cm-squad-edit'))){
       return [...scope.querySelectorAll('input[type="checkbox"]:checked')]
         .map(el => el.value)
         .filter(Boolean);
     }
-    const root = scope && scope.querySelector
-      ? (scope.querySelector('.js-cm-squad-edit') || scope.querySelector('.js-cm-squad') || scope)
-      : document;
-    return [...root.querySelectorAll('input[type="checkbox"]:checked')]
+    // When scanning a page section, never pick a hidden edit picker over the create form.
+    const root = scope && scope.querySelector ? scope : document;
+    const createPicker = root.querySelector && root.querySelector('#coachMatchCreate .js-cm-squad');
+    const createOpen = createPicker && !document.getElementById('coachMatchCreate')?.hidden;
+    const editPicker = root.querySelector && root.querySelector('#coachMatchSquadEdit .js-cm-squad-edit');
+    const editOpen = editPicker && !document.getElementById('coachMatchSquadEdit')?.hidden;
+    const picker = (editOpen && editPicker)
+      || (createOpen && createPicker)
+      || createPicker
+      || (root.querySelector && root.querySelector('.js-cm-squad'))
+      || root;
+    return [...picker.querySelectorAll('input[type="checkbox"]:checked')]
       .map(el => el.value)
       .filter(Boolean);
   }
@@ -661,7 +670,51 @@
     if(on){
       syncCoachCompetitionField();
       fillCoachTourDatalist();
+      ensureCoachKickoffSelects();
     }
+  }
+  function ensureCoachKickoffSelects(){
+    const hSel = document.getElementById('coachKickoffH');
+    const mSel = document.getElementById('coachKickoffM');
+    if(!hSel || !mSel) return;
+    if(!hSel.options.length){
+      hSel.innerHTML = `<option value="">—</option>` + Array.from({length: 24}, (_, h) => {
+        const v = String(h).padStart(2, '0');
+        return `<option value="${v}">${v}</option>`;
+      }).join('');
+    }
+    if(!mSel.options.length){
+      // 5-minute steps, European 24h (no AM/PM)
+      mSel.innerHTML = `<option value="">—</option>` + [0,5,10,15,20,25,30,35,40,45,50,55].map(m => {
+        const v = String(m).padStart(2, '0');
+        return `<option value="${v}">${v}</option>`;
+      }).join('');
+    }
+    syncCoachKickoffHidden();
+  }
+  function syncCoachKickoffHidden(){
+    const h = document.getElementById('coachKickoffH')?.value || '';
+    const m = document.getElementById('coachKickoffM')?.value || '';
+    const hidden = document.getElementById('coachKickoffValue');
+    if(hidden) hidden.value = (h !== '' && m !== '') ? `${h}:${m}` : '';
+  }
+  function readCoachKickoff(root){
+    const scope = root || document;
+    const hidden = scope.querySelector?.('.js-cm-kickoff') || document.getElementById('coachKickoffValue');
+    if(hidden && hidden.value) return String(hidden.value);
+    const h = scope.querySelector?.('.js-cm-kickoff-h')?.value
+      || document.getElementById('coachKickoffH')?.value || '';
+    const m = scope.querySelector?.('.js-cm-kickoff-m')?.value
+      || document.getElementById('coachKickoffM')?.value || '';
+    return (h !== '' && m !== '') ? `${h}:${m}` : '';
+  }
+  function clearCoachKickoff(){
+    const h = document.getElementById('coachKickoffH');
+    const m = document.getElementById('coachKickoffM');
+    const hidden = document.getElementById('coachKickoffValue');
+    if(h) h.value = '';
+    if(m) m.value = '';
+    if(hidden) hidden.value = '';
   }
   function syncCoachCompetitionField(){
     const kind = document.getElementById('coachMatchKindSelect')?.value
@@ -739,30 +792,15 @@
     });
 
     const matchListHtml = (() => {
-      const sorted = sortMatchesForList(matches);
-      const upcoming = sorted.filter(m => !matchIsPlayed(m));
-      const openPlayed = sorted.filter(m => {
-        if(!matchIsPlayed(m)) return false;
-        const squadN = store.matchSquadIds(session, m).length;
-        const rated = store.listRatings(session, m.id).length;
-        const noScore = !String(m.score || '').trim();
-        return noScore || (squadN > 0 && rated < squadN);
-      });
-      if(!upcoming.length && !openPlayed.length){
+      // Games tab = upcoming only. Played matches live in History.
+      const upcoming = sortMatchesForList(matches).filter(m => !matchIsPlayed(m));
+      if(!upcoming.length){
         return `<div class="inbox-empty coach-tab-empty">
           <div>${esc(tt('coachMatchEmptyUpcoming', 'No upcoming matches'))}</div>
           <p class="hint">${esc(tt('coachMatchEmptyHint', 'Create a match here. Finished games live in History.'))}</p>
         </div>`;
       }
-      const parts = [];
-      if(upcoming.length){
-        parts.push(renderGroupedMatchList(upcoming, activeMatchId, {showAddress: true}));
-      }
-      if(openPlayed.length){
-        parts.push(`<div class="pro-kicker coach-match-open-kicker">${esc(tt('coachMatchNeedsAttention', 'Needs rating / score'))}</div>`);
-        parts.push(renderGroupedMatchList(openPlayed, activeMatchId, {}));
-      }
-      return parts.join('');
+      return renderGroupedMatchList(upcoming, activeMatchId, {showAddress: true});
     })();
     document.querySelectorAll('.js-cm-matches').forEach(el => { el.innerHTML = matchListHtml; });
     renderMatchGroupSuggestions(session, team.id, !!activeMatch);
@@ -1806,12 +1844,13 @@
     const venue = root.querySelector('.js-cm-venue')?.value === 'away' ? 'away' : 'home';
     const kindRaw = root.querySelector('.js-cm-kind')?.value || 'league';
     const kind = ['league','friendly','cup','tournament'].includes(kindRaw) ? kindRaw : 'league';
-    const kickoff = root.querySelector('.js-cm-kickoff')?.value || '';
+    const kickoff = readCoachKickoff(root);
     const tournament = kind === 'friendly'
       ? ''
       : String(root.querySelector('.js-cm-tournament')?.value || '').trim();
-    let squad = selectedSquadFrom(root);
-    const picker = root.querySelector('.js-cm-squad');
+    const picker = root.querySelector('#coachMatchCreate .js-cm-squad')
+      || document.querySelector('#coachMatchCreate .js-cm-squad');
+    let squad = selectedSquadFrom(picker || root);
     if(!squad.length && picker?.dataset.dirty !== '1'){
       const players = global.CoachStore.listPlayers(session, teamId);
       squad = players.map(p => p.id);
@@ -1835,9 +1874,9 @@
       });
       root.querySelectorAll('.js-cm-opponent').forEach(el => { el.value = ''; });
       root.querySelectorAll('.js-cm-address').forEach(el => { el.value = ''; });
-      root.querySelectorAll('.js-cm-kickoff').forEach(el => { el.value = ''; });
+      clearCoachKickoff();
       root.querySelectorAll('.js-cm-tournament').forEach(el => { el.value = ''; });
-      document.querySelectorAll('.js-cm-squad').forEach(el => { el.dataset.dirty = ''; });
+      document.querySelectorAll('#coachMatchCreate .js-cm-squad').forEach(el => { el.dataset.dirty = ''; });
       setCoachMatchCreateOpen(false);
       const notify = await notifyMatchParents(match.id, {silent: true});
       const delivered = notify.delivered || 0;
@@ -2568,6 +2607,8 @@
     document.getElementById('coachMatchKindSelect')?.addEventListener('change', () => {
       syncCoachCompetitionField();
     });
+    document.getElementById('coachKickoffH')?.addEventListener('change', () => syncCoachKickoffHidden());
+    document.getElementById('coachKickoffM')?.addEventListener('change', () => syncCoachKickoffHidden());
     document.getElementById('coachMatchBackBtn')?.addEventListener('click', () => {
       closeCoachMatchDetail();
     });
@@ -2652,6 +2693,11 @@
         onCancelMatch();
         return;
       }
+      const playedBackBtn = e.target.closest('.js-cm-played-back');
+      if(playedBackBtn){
+        closeCoachMatchDetail();
+        return;
+      }
       const editSquadBtn = e.target.closest('.js-cm-edit-squad');
       if(editSquadBtn){
         squadEditOpen = true;
@@ -2694,24 +2740,28 @@
       }
       const allBtn = e.target.closest('.js-cm-squad-all');
       if(allBtn){
-        const root = allBtn.closest('#coachMatchSquadEdit')
-          || allBtn.closest('.coach-hero')
-          || allBtn.closest('#coachMatchTab')
-          || document;
-        const picker = root.querySelector('.js-cm-squad-edit') || root.querySelector('.js-cm-squad');
-        root.querySelectorAll('.js-cm-squad-edit input[type="checkbox"], .js-cm-squad input[type="checkbox"]').forEach(el => { el.checked = true; });
-        markSquadDirty(picker);
+        const editRoot = allBtn.closest('#coachMatchSquadEdit');
+        const createRoot = allBtn.closest('#coachMatchCreate');
+        const picker = editRoot?.querySelector('.js-cm-squad-edit')
+          || createRoot?.querySelector('.js-cm-squad')
+          || allBtn.closest('.coach-hero')?.querySelector('#coachMatchCreate .js-cm-squad');
+        if(picker){
+          picker.querySelectorAll('input[type="checkbox"]').forEach(el => { el.checked = true; });
+          markSquadDirty(picker);
+        }
         return;
       }
       const noneBtn = e.target.closest('.js-cm-squad-none');
       if(noneBtn){
-        const root = noneBtn.closest('#coachMatchSquadEdit')
-          || noneBtn.closest('.coach-hero')
-          || noneBtn.closest('#coachMatchTab')
-          || document;
-        const picker = root.querySelector('.js-cm-squad-edit') || root.querySelector('.js-cm-squad');
-        root.querySelectorAll('.js-cm-squad-edit input[type="checkbox"], .js-cm-squad input[type="checkbox"]').forEach(el => { el.checked = false; });
-        markSquadDirty(picker);
+        const editRoot = noneBtn.closest('#coachMatchSquadEdit');
+        const createRoot = noneBtn.closest('#coachMatchCreate');
+        const picker = editRoot?.querySelector('.js-cm-squad-edit')
+          || createRoot?.querySelector('.js-cm-squad')
+          || noneBtn.closest('.coach-hero')?.querySelector('#coachMatchCreate .js-cm-squad');
+        if(picker){
+          picker.querySelectorAll('input[type="checkbox"]').forEach(el => { el.checked = false; });
+          markSquadDirty(picker);
+        }
         return;
       }
       const matchBtn = e.target.closest('.js-cm-matches [data-match]');
@@ -2748,10 +2798,9 @@
       }
     });
     document.addEventListener('change', e => {
-      const box = e.target.closest('.js-cm-squad input[type="checkbox"]');
+      const box = e.target.closest('.js-cm-squad input[type="checkbox"], .js-cm-squad-edit input[type="checkbox"]');
       if(!box) return;
-      // Manual ticks only — no auto-save / no forced re-check.
-      markSquadDirty(box.closest('.js-cm-squad'));
+      markSquadDirty(box.closest('.js-cm-squad-edit') || box.closest('.js-cm-squad'));
     });
     const pickTeam = (root, closeAfter) => {
       root?.addEventListener('click', e => {

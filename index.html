@@ -348,7 +348,12 @@ window.ffkIsNative = function () {
               </div>
               <div class="field">
                 <label data-i18n="coachMatchKickoff">Время начала</label>
-                <input class="js-cm-kickoff" type="time" step="300">
+                <div class="coach-kickoff-row">
+                  <select class="js-cm-kickoff-h" id="coachKickoffH" aria-label="hour"></select>
+                  <span class="coach-kickoff-colon" aria-hidden="true">:</span>
+                  <select class="js-cm-kickoff-m" id="coachKickoffM" aria-label="minute"></select>
+                </div>
+                <input type="hidden" class="js-cm-kickoff" id="coachKickoffValue" value="">
               </div>
               <div class="field">
                 <label data-i18n="labelVenue">Где играете</label>
@@ -439,6 +444,7 @@ window.ffkIsNative = function () {
               <div class="js-cm-rates coach-player-list coach-rates-compact"></div>
               <button class="save-btn js-cm-send-results" type="button" data-i18n="coachSendResultsBtn">Отправить карточки родителям</button>
               <p class="hint js-cm-results-status" id="coachResultsStatus"></p>
+              <button class="ghost-btn js-cm-played-back" type="button" data-i18n="coachMatchBackList">К списку</button>
             </div>
           </div>
         </div>
