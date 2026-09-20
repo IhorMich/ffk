@@ -131,14 +131,9 @@
     syncInboxBellUi();
   }
 
-  function openParentMessage(id){
-    const msg = global.InboxStore && global.InboxStore.get(id);
-    if(!msg) return;
-    const sheet = document.getElementById('parentMsgSheet');
-    const back = document.getElementById('parentMsgBack');
+  function fillParentMessageBody(msg){
     const body = document.getElementById('parentMsgBody');
-    if(!sheet || !body) return;
-
+    if(!body || !msg) return;
     const venue = msg.venue === 'away'
       ? tt('venueAway', 'Away')
       : tt('venueHome', 'Home');
@@ -215,14 +210,28 @@
       ${rsvpBlock}
       <button type="button" class="ghost-btn" id="parentMsgCloseBtn">${esc(tt('previewCancel', 'Close'))}</button>
     `;
+  }
 
-    const card = document.getElementById('parentMsgCard');
-    if(typeof presentSheetCard === 'function') presentSheetCard(card, back);
-    else{
-      sheet.hidden = false;
-      if(back) back.hidden = false;
+  function openParentMessage(id){
+    const msg = global.InboxStore && global.InboxStore.get(id);
+    if(!msg) return;
+    const sheet = document.getElementById('parentMsgSheet');
+    const back = document.getElementById('parentMsgBack');
+    const body = document.getElementById('parentMsgBody');
+    if(!sheet || !body) return;
+
+    const alreadyOpen = !sheet.hidden;
+    fillParentMessageBody(msg);
+
+    if(!alreadyOpen){
+      const card = document.getElementById('parentMsgCard');
+      if(typeof presentSheetCard === 'function') presentSheetCard(card, back);
+      else{
+        sheet.hidden = false;
+        if(back) back.hidden = false;
+      }
+      if(typeof pushAppState === 'function') pushAppState('layer');
     }
-    if(typeof pushAppState === 'function') pushAppState('layer');
 
     // Mark read only after the sheet is actually shown (above the inbox page).
     if(global.InboxStore) global.InboxStore.markRead(id);
@@ -235,24 +244,34 @@
     }catch(e){}
 
     renderParentInbox();
-    if(typeof renderCoachUi === 'function') renderCoachUi();
     syncInboxBellUi();
   }
 
   function onParentRsvp(btn){
+    const body = document.getElementById('parentMsgBody');
+    if(body && body.dataset.rsvpBusy === '1') return;
     const wrap = btn.closest('.parent-rsvp');
     const msgId = wrap && wrap.dataset.msgId;
     const response = btn.dataset.rsvp;
     if(!msgId || !response || !global.InboxStore) return;
+    if(body) body.dataset.rsvpBusy = '1';
     try{
       const row = global.InboxStore.setMatchInviteRsvp(msgId, response);
       toast(response === 'accepted'
         ? tt('parentRsvpYesDone', 'Confirmed — will play.')
         : tt('parentRsvpNoDone', 'Declined — cannot play.'));
-      openParentMessage(row.id);
-      if(typeof renderCoachUi === 'function') renderCoachUi();
+      // Update the open card in place — do not re-open / re-animate the sheet.
+      fillParentMessageBody(row);
+      renderParentInbox();
+      syncInboxBellUi();
     }catch(e){
       toast(tt('coachErrGeneric', 'Something went wrong.'));
+    }finally{
+      // Keep a short lock so the same tap cannot re-fire on the rebuilt buttons.
+      setTimeout(() => {
+        const el = document.getElementById('parentMsgBody');
+        if(el) el.dataset.rsvpBusy = '';
+      }, 400);
     }
   }
   function closeParentMsgSheet(){
@@ -541,11 +560,15 @@
     });
     document.getElementById('parentMsgBody')?.addEventListener('click', e => {
       if(e.target.closest('#parentMsgCloseBtn')){
+        e.preventDefault();
+        e.stopPropagation();
         closeParentMsgSheet();
         return;
       }
       const rsvpBtn = e.target.closest('[data-rsvp]');
       if(rsvpBtn){
+        e.preventDefault();
+        e.stopPropagation();
         onParentRsvp(rsvpBtn);
       }
     });

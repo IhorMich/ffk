@@ -1483,13 +1483,11 @@
     min-height:64px;font-size:1.8rem;font-weight:900;cursor:pointer;
     background:var(--card-paper);color:var(--card-muted);
   }
-  .parent-rsvp-btn.yes.on,
-  .parent-rsvp-btn.yes:active{
+  .parent-rsvp-btn.yes.on{
     color:#1faa5a;border-color:#1faa5a;
     background:color-mix(in srgb, #1faa5a 16%, var(--card-paper));
   }
-  .parent-rsvp-btn.no.on,
-  .parent-rsvp-btn.no:active{
+  .parent-rsvp-btn.no.on{
     color:#e25555;border-color:#e25555;
     background:color-mix(in srgb, #e25555 16%, var(--card-paper));
   }
