@@ -2525,6 +2525,7 @@ function scrollMainToTop(){
   if(main) main.scrollTop = 0;
   window.scrollTo({top:0, behavior:'instant'});
 }
+function showView(name){
   const views = ['player','new','history','stats','settings','report'];
   if(!views.includes(name)) name = 'new';
   if(name !== 'player') closePlayerEdit();
