@@ -3438,11 +3438,9 @@
       shareCoachTeamMatchCard(coachHistoryMatchId);
     });
     document.getElementById('coachMatchNewBtn')?.addEventListener('click', () => {
-      setCoachMatchCreateOpen(true);
       document.querySelectorAll('#coachMatchCreate .js-cm-squad').forEach(el => { el.dataset.dirty = ''; });
-      renderCoachUi();
       setCoachMatchCreateOpen(true);
-      document.querySelector('#coachMatchCreate .js-cm-opponent')?.focus();
+      renderCoachUi();
     });
     document.getElementById('coachMatchCreateCancel')?.addEventListener('click', () => {
       setCoachMatchCreateOpen(false);
