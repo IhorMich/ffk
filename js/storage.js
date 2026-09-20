@@ -92,8 +92,7 @@ function loadSettings(){
       iconSet: (typeof ICON_SET_ORDER !== 'undefined' && ICON_SET_ORDER.includes(s.iconSet)) ? s.iconSet : 'clear',
       onboarded: s.onboarded === true,
       pwaTransferSeen: s.pwaTransferSeen === true,
-      introMark: String(s.introMark || ''),
-      cardSkin: ['ink','mint','wine','ice','noir','royal','sand'].includes(s.cardSkin) ? s.cardSkin : 'ink'
+      introMark: String(s.introMark || '')
     };
     if(s.langManual !== true) saveSettings();
   }catch(e){}

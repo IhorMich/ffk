@@ -800,66 +800,6 @@
     --card-track:rgba(237,241,247,.12);
     --card-wash:rgba(237,241,247,.06);
   }
-  html[data-card="mint"] .hero,
-  html[data-card="mint"] .hero-pin-inner{
-    --card-ink:#E8F5F0;
-    --card-muted:#8FB8AC;
-    --card-accent:#3DDC97;
-    --card-line:rgba(61,220,151,.28);
-    --card-paper:linear-gradient(180deg, #163832 0%, #0B1C1A 100%);
-    --card-track:rgba(232,245,240,.16);
-    --card-wash:rgba(232,245,240,.08);
-  }
-  html[data-card="wine"] .hero,
-  html[data-card="wine"] .hero-pin-inner{
-    --card-ink:#F8E4D4;
-    --card-muted:#C4A090;
-    --card-accent:#E8A87C;
-    --card-line:rgba(232,168,124,.3);
-    --card-paper:linear-gradient(180deg, #3A1C22 0%, #160A0E 100%);
-    --card-track:rgba(248,228,212,.16);
-    --card-wash:rgba(248,228,212,.08);
-  }
-  html[data-card="ice"] .hero,
-  html[data-card="ice"] .hero-pin-inner{
-    --card-ink:#F3F7FB;
-    --card-muted:#9AADC2;
-    --card-accent:#8EC4E8;
-    --card-line:rgba(142,196,232,.32);
-    --card-paper:linear-gradient(180deg, #1A2C44 0%, #0B1220 100%);
-    --card-track:rgba(142,196,232,.16);
-    --card-wash:rgba(243,247,251,.08);
-  }
-  html[data-card="noir"] .hero,
-  html[data-card="noir"] .hero-pin-inner{
-    --card-ink:#F6EFE3;
-    --card-muted:#B7AB9A;
-    --card-accent:#EDE4D4;
-    --card-line:rgba(237,228,212,.28);
-    --card-paper:linear-gradient(180deg, #1A1816 0%, #080706 100%);
-    --card-track:rgba(237,228,212,.14);
-    --card-wash:rgba(246,239,227,.08);
-  }
-  html[data-card="royal"] .hero,
-  html[data-card="royal"] .hero-pin-inner{
-    --card-ink:#F3ECFB;
-    --card-muted:#B5A3C9;
-    --card-accent:#C4A6E8;
-    --card-line:rgba(196,166,232,.32);
-    --card-paper:linear-gradient(180deg, #2A1838 0%, #120818 100%);
-    --card-track:rgba(196,166,232,.16);
-    --card-wash:rgba(243,236,251,.08);
-  }
-  html[data-card="sand"] .hero,
-  html[data-card="sand"] .hero-pin-inner{
-    --card-ink:#F4E9D8;
-    --card-muted:#C2B09A;
-    --card-accent:#E6D3B8;
-    --card-line:rgba(230,211,184,.3);
-    --card-paper:linear-gradient(180deg, #2A1E16 0%, #120E0A 100%);
-    --card-track:rgba(230,211,184,.16);
-    --card-wash:rgba(244,233,216,.08);
-  }
   .hero{
     margin:0 0 16px;position:relative;overflow:hidden;
     background:var(--card-paper);color:var(--card-ink);
@@ -870,10 +810,6 @@
   .hero::before{
     content:"";position:absolute;left:10px;top:14px;bottom:14px;width:3px;
     border-radius:2px;background:var(--card-accent);pointer-events:none;
-  }
-  .hero-brand{
-    border:0;background:none;padding:0;margin:0;font:inherit;letter-spacing:inherit;
-    color:inherit;cursor:pointer;
   }
   .hero-top{
     display:flex;justify-content:space-between;align-items:center;
@@ -1214,21 +1150,6 @@
     font-size:.82rem;font-weight:700;color:var(--text-soft);cursor:pointer;white-space:nowrap;
   }
   .chip.active{background:linear-gradient(135deg, var(--cta), var(--cta-2));border-color:transparent;color:#08121C;}
-  .card-skin-chips{flex-wrap:wrap;overflow:visible;}
-  #cardSkinChips .chip{
-    display:inline-flex;align-items:center;gap:8px;
-  }
-  #cardSkinChips .chip::before{
-    content:"";width:11px;height:11px;border-radius:50%;flex-shrink:0;
-    box-shadow:inset 0 0 0 1px rgba(255,255,255,.28);
-  }
-  #cardSkinChips .chip[data-card="ink"]::before{background:#1b1e2a;box-shadow:inset 0 0 0 1px #EDF1F7;}
-  #cardSkinChips .chip[data-card="mint"]::before{background:#3DDC97;}
-  #cardSkinChips .chip[data-card="wine"]::before{background:#E8A87C;}
-  #cardSkinChips .chip[data-card="ice"]::before{background:#8EC4E8;}
-  #cardSkinChips .chip[data-card="noir"]::before{background:#EDE4D4;box-shadow:inset 0 0 0 1px rgba(0,0,0,.28);}
-  #cardSkinChips .chip[data-card="royal"]::before{background:#C4A6E8;}
-  #cardSkinChips .chip[data-card="sand"]::before{background:#E6D3B8;}
   .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px;}
   .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:13px 15px;}
   .stat-card .num{font-size:1.5rem;font-weight:800;font-variant-numeric:tabular-nums;}

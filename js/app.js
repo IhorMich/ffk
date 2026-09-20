@@ -117,7 +117,7 @@ function applyTheme(){
   }
   const theme = themeName();
   document.documentElement.dataset.theme = theme;
-  applyCardSkin();
+  document.documentElement.removeAttribute('data-card');
   const meta = document.querySelector('meta[name="theme-color"]');
   if(meta) meta.content = theme === 'day' ? '#FFF8D6' : '#05060c';
   const apple = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
@@ -130,34 +130,6 @@ function applyTheme(){
   });
   syncIconSetChips();
   applyNativeChrome();
-}
-const CARD_SKINS = ['ink','mint','wine','ice','noir','royal','sand'];
-function cardSkinName(){
-  return CARD_SKINS.includes(settings.cardSkin) ? settings.cardSkin : 'ink';
-}
-function applyCardSkin(){
-  document.documentElement.dataset.card = cardSkinName();
-  document.querySelectorAll('#cardSkinChips .chip').forEach(c => {
-    c.classList.toggle('active', c.dataset.card === cardSkinName());
-  });
-}
-function setCardSkin(skin){
-  if(!CARD_SKINS.includes(skin)) return;
-  settings.cardSkin = skin;
-  saveSettings();
-  applyCardSkin();
-}
-function cycleCardSkin(){
-  const i = CARD_SKINS.indexOf(cardSkinName());
-  setCardSkin(CARD_SKINS[(i + 1) % CARD_SKINS.length]);
-  haptic('LIGHT');
-}
-function bindCardSkin(){
-  if(window.__ffkCardSkin) return;
-  window.__ffkCardSkin = true;
-  document.querySelectorAll('.js-card-skin').forEach(btn => {
-    btn.addEventListener('click', cycleCardSkin);
-  });
 }
 function syncIconSetChips(){
   const set = iconSetName();
@@ -300,7 +272,7 @@ function applyI18n(){
   syncSeasonChipLabels();
 }
 
-let settings = {club:'', player:'', position:'fwd', format:'2x30', minutes:'60', lang:'ru', seasonCloseDeclined:'', theme:'dark', iconSet:'clear', onboarded:false, pwaTransferSeen:false, introMark:'', cardSkin:'ink'};
+let settings = {club:'', player:'', position:'fwd', format:'2x30', minutes:'60', lang:'ru', seasonCloseDeclined:'', theme:'dark', iconSet:'clear', onboarded:false, pwaTransferSeen:false, introMark:''};
 let roster = {currentId:'', ids:[]};
 let player = defaultPlayer();
 let extraSelected = [];
@@ -3606,12 +3578,6 @@ document.getElementById('iconSetChips').addEventListener('click', e => {
   saveSettings();
   applyIconSet();
 });
-document.getElementById('cardSkinChips').addEventListener('click', e => {
-  const chip = e.target.closest('.chip');
-  if(!chip || !CARD_SKINS.includes(chip.dataset.card)) return;
-  setCardSkin(chip.dataset.card);
-  haptic('LIGHT');
-});
 document.getElementById('previewPeriod').addEventListener('click', e => {
   const chip = e.target.closest('.chip');
   if(!chip || !previewState || previewState.kind !== 'period') return;
@@ -4536,7 +4502,6 @@ async function shareCard(m){
     bindBehaviorSlider();
     bindSheets();
     bindHeroPin();
-    bindCardSkin();
     bindCameraRestore();
     syncScoreResultHint();
     hydrateAllMedia().then(() => {
