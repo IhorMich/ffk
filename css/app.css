@@ -1742,7 +1742,14 @@
   }
   .coach-settings-head .pro-kicker{margin:0;}
   .coach-settings-close{width:auto;margin:0;padding:8px 12px;}
-  .coach-settings-card{max-height:min(92vh,820px);}
+  .coach-settings-card{
+    max-height:min(92vh,820px);
+    transition:max-height .26s ease, border-radius .26s ease;
+    will-change:transform;
+  }
+  .coach-settings-card.sheet-full{
+    max-height:100dvh;border-radius:0;
+  }
   .coach-settings-block{
     margin:18px 0 0;padding-top:14px;border-top:1px solid var(--card-line);
   }
@@ -1804,6 +1811,12 @@
   .coach-rate-back{
     position:fixed;inset:0;z-index:140;border:0;padding:0;margin:0;
     background:rgba(4,8,16,.55);backdrop-filter:blur(2px);
+    transition:background-color .28s ease, backdrop-filter .28s ease;
+  }
+  .coach-rate-back.sheet-hiding{
+    background-color:transparent !important;
+    backdrop-filter:none !important;
+    pointer-events:none;
   }
   .coach-rate-sheet{
     position:fixed;left:0;right:0;bottom:0;z-index:141;padding:0 0 env(safe-area-inset-bottom,0);

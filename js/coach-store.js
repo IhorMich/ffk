@@ -604,10 +604,11 @@
       const team = this.getTeam(session, match.team_id);
       const academy = this.myAcademy(session);
       const profile = this.getProfile(session);
-      const players = this.listMatchPlayers(session, match);
       const tp = this.getPlayer(session, teamPlayerId);
       if(!tp) return null;
       const coachName = [profile.first_name, profile.last_name].filter(Boolean).join(' ') || profile.email || 'Coach';
+      // Privacy: parent-facing payloads never include other children's names/ratings.
+      // Team-wide share cards stay coach-only (manual share), not inbox delivery.
       return {
         match_id: match.id,
         team_id: match.team_id,
@@ -621,11 +622,7 @@
         opponent: match.opponent,
         address: match.address || '',
         venue: match.venue,
-        kind: match.kind,
-        squad_names: players.map(p => {
-          const n = [p.first_name, p.last_name].filter(Boolean).join(' ');
-          return p.number ? `#${p.number} ${n}` : n;
-        })
+        kind: match.kind
       };
     },
     deliverMatchInvites(session, matchId, opts){
@@ -664,8 +661,7 @@
               opponent: payload.opponent,
               address: payload.address || '',
               venue: payload.venue,
-              kind: payload.kind,
-              squad_names: payload.squad_names
+              kind: payload.kind
             });
             pinv.payload = {...pinv.payload, mi: mi.slice(0, 8)};
             pinv.updated_at = now;
@@ -713,18 +709,13 @@
       const team = this.getTeam(session, match.team_id);
       const profile = this.getProfile(session);
       const coachName = [profile.first_name, profile.last_name].filter(Boolean).join(' ') || profile.email || 'Coach';
-      const players = this.listMatchPlayers(session, match);
-      const names = players.map(p => {
-        const n = [p.first_name, p.last_name].filter(Boolean).join(' ');
-        return p.number ? `#${p.number} ${n}` : n;
-      }).join(', ');
+      // Do not list the full squad here — parents/group chats must not get other kids' names by default.
       const code = team ? team.invite_code : '';
       return [
         `Matchcard Coach`,
         `${team ? team.name : 'Team'} vs ${match.opponent}`,
         match.date,
         match.address ? `Address: ${match.address}` : '',
-        names ? `Squad: ${names}` : '',
         code ? `Team code: ${code}` : '',
         `Coach: ${coachName}`,
         `Please confirm you can play.`

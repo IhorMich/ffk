@@ -78,9 +78,8 @@
         address: String(payload.address || '').slice(0, 120),
         venue: payload.venue === 'away' ? 'away' : 'home',
         kind: String(payload.kind || 'league').slice(0, 16),
-        squad_names: Array.isArray(payload.squad_names)
-          ? payload.squad_names.map(s => String(s).slice(0, 60)).slice(0, 40)
-          : [],
+        // Never persist other children's names on parent messages.
+        squad_names: [],
         status: existing && existing.status === 'read' && !payload.forceUnread
           ? 'read'
           : 'delivered',

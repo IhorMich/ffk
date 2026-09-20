@@ -395,20 +395,45 @@
   function openCoachSettings(){
     const sheet = document.getElementById('coachSettingsSheet');
     const back = document.getElementById('coachSettingsBack');
+    const card = document.getElementById('coachSettingsCard');
     if(!sheet) return;
     const store = global.CoachStore;
     const session = store && store.getSession();
     if(session) renderWorkspace(session);
     if(typeof refreshCoachMediaUi === 'function') refreshCoachMediaUi();
     sheet.hidden = false;
-    if(back) back.hidden = false;
+    sheet.classList.remove('sheet-hiding');
+    if(back){
+      back.hidden = false;
+      back.classList.remove('sheet-hiding');
+    }
+    if(card){
+      card.__sheetOverlay = back || sheet;
+      if(typeof openSheet === 'function') openSheet(card);
+      else{
+        card.classList.remove('sheet-full', 'sheet-dragging');
+        card.style.transform = '';
+      }
+    }
     if(typeof pushAppState === 'function') pushAppState('layer');
   }
-  function closeCoachSettings(){
+  function closeCoachSettings(fromDrag){
     const sheet = document.getElementById('coachSettingsSheet');
     const back = document.getElementById('coachSettingsBack');
-    if(sheet) sheet.hidden = true;
-    if(back) back.hidden = true;
+    const card = document.getElementById('coachSettingsCard');
+    if(card && typeof resetSheet === 'function') resetSheet(card);
+    else if(card){
+      card.classList.remove('sheet-full', 'sheet-dragging');
+      card.style.transform = '';
+    }
+    if(sheet){
+      sheet.hidden = true;
+      sheet.classList.remove('sheet-hiding');
+    }
+    if(back){
+      back.hidden = true;
+      back.classList.remove('sheet-hiding');
+    }
   }
 
   function renderCoachTabsEmpty(){
@@ -1017,6 +1042,7 @@
       filename: `team_match_${String(match.opponent || 'match').replace(/\s+/g,'_').slice(0,18)}_${match.date || ''}.png`,
       build
     });
+    toast(tt('coachTeamCardPrivacy', 'Team card is for you/staff. Parents only get their own child’s card.'));
   }
 
   function renderCoachHistoryDetail(session, team){

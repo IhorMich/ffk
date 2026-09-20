@@ -25,14 +25,20 @@
 
   function inboxMessages(){
     const store = global.ParentStore;
+    // Always scope to linked children — never dump the whole on-device inbox.
     if(store && typeof store.listInbox === 'function') return store.listInbox();
-    return global.InboxStore ? global.InboxStore.listAll() : [];
+    if(store && typeof store.linkedPlayerIds === 'function' && global.InboxStore){
+      return global.InboxStore.listForPlayers(store.linkedPlayerIds());
+    }
+    return [];
   }
   function inboxUnread(){
     const store = global.ParentStore;
     if(store && typeof store.unreadInboxCount === 'function') return store.unreadInboxCount();
-    if(!global.InboxStore) return 0;
-    return global.InboxStore.listAll().filter(m => m.status !== 'read').length;
+    if(store && typeof store.linkedPlayerIds === 'function' && global.InboxStore){
+      return global.InboxStore.unreadCountForPlayers(store.linkedPlayerIds());
+    }
+    return 0;
   }
   function inboxRowsHtml(msgs){
     if(!msgs.length){
@@ -156,9 +162,6 @@
       ? tt('venueAway', 'Away')
       : tt('venueHome', 'Home');
     const isResult = msg.type === 'match_result';
-    const squad = (!isResult && (msg.squad_names || []).length)
-      ? `<div class="parent-msg-squad"><b>${esc(tt('parentInboxSquad', 'Squad'))}</b><p class="hint">${esc(msg.squad_names.join(', '))}</p></div>`
-      : '';
     const resultBlock = isResult
       ? `<div class="parent-msg-result">
           <div class="coach-analytics-sum">
@@ -181,7 +184,6 @@
       ${!isResult ? `<div class="coach-parent-code">${esc(msg.team_code || '—')}</div>
       <p class="hint">${esc(tt('parentInboxCodeHint', 'Team invite code from the academy'))}</p>` : ''}
       ${resultBlock}
-      ${squad}
       <button type="button" class="ghost-btn" id="parentMsgCloseBtn">${esc(tt('previewCancel', 'Close'))}</button>
     `;
     sheet.hidden = false;

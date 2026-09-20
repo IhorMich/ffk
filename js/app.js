@@ -4132,7 +4132,8 @@ function settleSheet(card, from, toClose, onClose){
     if(anim) try{ anim.cancel(); }catch(e){}
   };
   card.style.transform = '';
-  if(toClose && card.parentElement) card.parentElement.classList.add('sheet-hiding');
+  const overlay = card.__sheetOverlay || card.parentElement;
+  if(toClose && overlay) overlay.classList.add('sheet-hiding');
   let anim = null;
   try{
     anim = card.animate(
@@ -4187,6 +4188,9 @@ function bindSheetDrag(cardId, grabId, onClose){
 function bindSheets(){
   bindSheetDrag('playerEditCard', 'playerEditGrab', () => closePlayerEdit(true));
   bindSheetDrag('previewCard', 'previewGrab', () => closeCardPreview());
+  bindSheetDrag('coachSettingsCard', 'coachSettingsGrab', () => {
+    if(typeof window.closeCoachSettings === 'function') window.closeCoachSettings(true);
+  });
 }
 // Android back (key and edge gesture) is routed through MainActivity, which calls
 // window.ffkBack and minimizes the app when nothing was left to close.
