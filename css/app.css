@@ -1566,9 +1566,18 @@
     border:1px solid var(--card-line);
     box-shadow:var(--card-shadow), inset 3px 0 0 var(--card-accent);
   }
+  .parent-coach-stats.is-flash{
+    animation:parentCoachFlash 1.2s ease;
+  }
+  @keyframes parentCoachFlash{
+    0%{box-shadow:var(--card-shadow), inset 3px 0 0 var(--card-accent), 0 0 0 0 color-mix(in srgb, var(--card-accent) 45%, transparent);}
+    35%{box-shadow:var(--card-shadow), inset 3px 0 0 var(--card-accent), 0 0 0 4px color-mix(in srgb, var(--card-accent) 35%, transparent);}
+    100%{box-shadow:var(--card-shadow), inset 3px 0 0 var(--card-accent), 0 0 0 0 transparent;}
+  }
   .parent-coach-block{margin:0 0 16px;}
   .parent-coach-block:last-child{margin-bottom:0;}
-  #parentUnlinkBtn{width:100%;margin-top:10px;}
+  #parentOpenCoachStatsBtn,#parentLinkOpenStatsBtn,#parentUnlinkBtn{width:100%;margin-top:10px;}
+  #parentOpenCoachStatsBtn{margin:4px 0 10px;}
   .coach-rate-btn{
     margin:0;padding:8px 12px;width:auto;font-size:.78rem;border-radius:999px;
   }

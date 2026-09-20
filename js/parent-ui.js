@@ -294,17 +294,72 @@
     syncInboxBellUi();
   }
 
+  function syncLinkedCoachStatsFromDevice(){
+    const parent = global.ParentStore;
+    const coach = global.CoachStore;
+    if(!parent || !coach || typeof coach.getSession !== 'function') return;
+    const session = coach.getSession();
+    if(!session || typeof parent.listLinks !== 'function') return;
+    if(typeof parent.syncCoachRatings !== 'function') return;
+    if(typeof coach.playerDetail !== 'function') return;
+    parent.listLinks().forEach(link => {
+      const pid = link && link.player && link.player.id;
+      if(!pid) return;
+      try{
+        const detail = coach.playerDetail(session, pid);
+        if(!detail) return;
+        parent.syncCoachRatings(pid, {
+          ratings: (detail.ratings || []).slice(0, 40).map(r => ({
+            date: r.date,
+            opponent: r.opponent,
+            score: r.score || '',
+            rating: Number(r.rating) || 0,
+            comment: String(r.comment || '').slice(0, 200),
+            pitchPos: r.pitchPos || ''
+          })),
+          avg: detail.avg,
+          games: detail.games
+        });
+      }catch(e){}
+    });
+  }
+
+  function openParentCoachStats(){
+    if(typeof isCoachPlan === 'function' && isCoachPlan()) return;
+    syncLinkedCoachStatsFromDevice();
+    const store = global.ParentStore;
+    const links = store && store.listLinks ? store.listLinks() : [];
+    if(!links.length){
+      toast(tt('parentLinksEmpty', 'No academy link yet. Ask the coach for a QR or invite link.'));
+      return;
+    }
+    renderParentCoachStats();
+    if(typeof showView === 'function') showView('stats');
+    requestAnimationFrame(() => {
+      const panel = document.getElementById('parentCoachStatsPanel');
+      if(!panel) return;
+      try{
+        panel.scrollIntoView({behavior: 'smooth', block: 'start'});
+      }catch(e){}
+      panel.classList.add('is-flash');
+      setTimeout(() => panel.classList.remove('is-flash'), 1400);
+    });
+  }
+
   function renderParentLinks(){
     const store = global.ParentStore;
     const box = document.getElementById('parentLinksList');
     const root = document.getElementById('parentLinksCard');
+    const statsBtn = document.getElementById('parentOpenCoachStatsBtn');
     if(!box || !root || !store) return;
     if(typeof isCoachPlan === 'function' && isCoachPlan()){
       root.hidden = true;
+      if(statsBtn) statsBtn.hidden = true;
       return;
     }
     root.hidden = false;
     const links = store.listLinks();
+    if(statsBtn) statsBtn.hidden = !links.length;
     if(!links.length){
       box.innerHTML = `<p class="hint">${esc(tt('parentLinksEmpty', 'No academy link yet. Ask the coach for a QR or invite link.'))}</p>`;
       return;
@@ -458,6 +513,7 @@
 
   function openParentLinkDetail(id){
     const store = global.ParentStore;
+    syncLinkedCoachStatsFromDevice();
     const link = store && store.getLink(id);
     if(!link) return;
     const sheet = document.getElementById('parentLinkSheet');
@@ -466,6 +522,19 @@
     const card = document.getElementById('parentLinkCard');
     if(!sheet || !body) return;
     const name = playerName(link.player);
+    const ratings = Array.isArray(link.ratings) ? link.ratings : [];
+    const rateRows = ratings.length
+      ? `<div class="coach-player-list">${ratings.map(r => {
+          const head = [r.date, r.opponent, r.score].filter(Boolean).join(' · ');
+          return `<div class="coach-player-row">
+            <div class="coach-player-main">
+              <b>${esc(head || '—')}</b>
+              ${r.comment ? `<span>${esc(r.comment)}</span>` : ''}
+            </div>
+            <b class="parent-rate-num">${esc(Number(r.rating).toFixed(1))}</b>
+          </div>`;
+        }).join('')}</div>`
+      : `<p class="hint">${esc(tt('parentNoCoachRatings', 'Coach has not shared ratings in this invite yet.'))}</p>`;
     body.innerHTML = `
       <div class="parent-confirm-badge">${esc(tt('parentConfirmed', 'Confirmed by academy'))}</div>
       <h3 class="coach-rate-name">${esc(name)}</h3>
@@ -478,10 +547,13 @@
       ].filter(Boolean).join(' · '))}</p>
       <p class="hint"><b>${esc(tt('parentCoachLabel', 'Coach'))}:</b> ${esc(link.coach && link.coach.name ? link.coach.name : '—')}</p>
       <div class="coach-analytics-sum">
-        <div><b>${esc(link.games || 0)}</b><span>${esc(tt('coachGames', 'games'))}</span></div>
+        <div><b>${esc(link.games || ratings.length || 0)}</b><span>${esc(tt('coachGames', 'games'))}</span></div>
         <div><b>${esc(link.avg != null ? Number(link.avg).toFixed(1) : '—')}</b><span>${esc(tt('parentCoachAvg', 'Coach avg'))}</span></div>
       </div>
+      <div class="pro-kicker">${esc(tt('parentCoachStatsKicker', 'Stats from coach'))}</div>
+      ${rateRows}
       <p class="hint">${esc(tt('parentPersonalNote', 'Your sideline Matchcard ratings stay in History / Stats as before.'))}</p>
+      <button type="button" class="save-btn" id="parentLinkOpenStatsBtn">${esc(tt('parentCoachStatsBtn', 'Coach stats'))}</button>
       <button type="button" class="ghost-btn" id="parentUnlinkBtn" data-unlink="${esc(link.id)}">${esc(tt('parentUnlink', 'Remove academy link'))}</button>
     `;
     if(typeof presentSheetCard === 'function') presentSheetCard(card, back);
@@ -542,6 +614,7 @@
   }
 
   function renderParentUi(){
+    syncLinkedCoachStatsFromDevice();
     renderParentInbox();
     renderParentLinks();
     renderParentCoachStats();
@@ -552,6 +625,7 @@
     if(global.__ffkParentBound) return;
     global.__ffkParentBound = true;
     document.getElementById('parentAddLinkBtn')?.addEventListener('click', () => openParentClaimSheet(''));
+    document.getElementById('parentOpenCoachStatsBtn')?.addEventListener('click', () => openParentCoachStats());
     document.getElementById('parentClaimBack')?.addEventListener('click', () => closeParentClaimSheet());
     document.getElementById('parentClaimCancelBtn')?.addEventListener('click', () => closeParentClaimSheet());
     document.getElementById('parentClaimPreviewBtn')?.addEventListener('click', () => previewClaim());
@@ -586,7 +660,13 @@
       openParentLinkDetail(btn.dataset.parentLink);
     });
     document.getElementById('parentLinkBody')?.addEventListener('click', e => {
-      const btn = e.target.closest('[data-unlink]');
+      if(e.target.closest('#parentLinkOpenStatsBtn')){
+        e.preventDefault();
+        closeParentLinkSheet();
+        openParentCoachStats();
+        return;
+      }
+      const btn = e.target.closest('#parentUnlinkBtn') || e.target.closest('[data-unlink]');
       if(!btn) return;
       global.ParentStore.removeLink(btn.dataset.unlink);
       closeParentLinkSheet();
