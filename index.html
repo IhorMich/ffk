@@ -429,16 +429,17 @@ window.ffkIsNative = function () {
     <div class="intro-ambience" aria-hidden="true"></div>
     <div class="intro-stage">
       <span class="intro-floor-shadow" aria-hidden="true"></span>
-      <span class="intro-stars" aria-hidden="true">
-        <span class="intro-orbit-star" style="--a:-120deg;--r:.52;--s:.095;--d:0"><img src="icons/intro-star.png" alt=""></span>
-        <span class="intro-orbit-star" style="--a:-80deg;--r:.49;--s:.10;--d:1"><img src="icons/intro-star.png" alt=""></span>
-        <span class="intro-orbit-star" style="--a:-40deg;--r:.47;--s:.11;--d:2"><img src="icons/intro-star.png" alt=""></span>
-        <span class="intro-orbit-star" style="--a:0deg;--r:.46;--s:.125;--d:3"><img src="icons/intro-star.png" alt=""></span>
-        <span class="intro-orbit-star" style="--a:40deg;--r:.47;--s:.11;--d:4"><img src="icons/intro-star.png" alt=""></span>
-        <span class="intro-orbit-star" style="--a:80deg;--r:.49;--s:.10;--d:5"><img src="icons/intro-star.png" alt=""></span>
-        <span class="intro-orbit-star" style="--a:120deg;--r:.52;--s:.095;--d:6"><img src="icons/intro-star.png" alt=""></span>
-      </span>
-      <img class="intro-layer intro-cup" src="icons/intro-cup.png" alt="">
+      <svg class="intro-gauge" viewBox="0 0 200 200" aria-hidden="true">
+        <defs>
+          <linearGradient id="introGold" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#F8D27A"/>
+            <stop offset="1" stop-color="#D4921A"/>
+          </linearGradient>
+        </defs>
+        <circle class="intro-gauge-track" cx="100" cy="100" r="74" transform="rotate(135 100 100)"/>
+        <circle class="intro-gauge-arc" id="introGaugeArc" cx="100" cy="100" r="74" transform="rotate(135 100 100)" stroke-dasharray="348.7 465" stroke-dashoffset="348.7"/>
+      </svg>
+      <div class="intro-gauge-score" id="introScore">6.0</div>
     </div>
     <div class="intro-name" aria-label="Matchcard">
       <span class="intro-name-line">

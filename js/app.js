@@ -3557,6 +3557,49 @@ function onboardPages(){
   ];
 }
 let introBusy = false;
+let introGaugeTimer = 0;
+const INTRO_GAUGE_R = 74;
+const INTRO_GAUGE_LEN = 2 * Math.PI * INTRO_GAUGE_R * 0.75;
+function paintIntroGauge(score){
+  const el = document.getElementById('introScore');
+  const arc = document.getElementById('introGaugeArc');
+  const v = Math.max(6, Math.min(10, Number(score) || 6));
+  if(el) el.textContent = fmtNum(Math.round(v * 10) / 10, 1);
+  if(arc){
+    const circ = 2 * Math.PI * INTRO_GAUGE_R;
+    const filled = INTRO_GAUGE_LEN * ((v - 6) / 4);
+    arc.setAttribute('stroke-dasharray', INTRO_GAUGE_LEN + ' ' + circ);
+    arc.setAttribute('stroke-dashoffset', String(INTRO_GAUGE_LEN - filled));
+  }
+}
+function stopIntroGauge(){
+  if(introGaugeTimer){
+    cancelAnimationFrame(introGaugeTimer);
+    introGaugeTimer = 0;
+  }
+}
+function startIntroGauge(){
+  stopIntroGauge();
+  paintIntroGauge(6);
+  const delay = 520;
+  const dur = 2200;
+  const t0 = performance.now();
+  const tick = now => {
+    const t = now - t0 - delay;
+    if(t < 0){
+      introGaugeTimer = requestAnimationFrame(tick);
+      return;
+    }
+    const p = Math.min(1, t / dur);
+    paintIntroGauge(6 + 4 * p);
+    if(p < 1) introGaugeTimer = requestAnimationFrame(tick);
+    else{
+      paintIntroGauge(10);
+      introGaugeTimer = 0;
+    }
+  };
+  introGaugeTimer = requestAnimationFrame(tick);
+}
 function afterIntro(){
   if(!maybeTransfer()) maybeOnboard();
 }
@@ -3564,6 +3607,7 @@ function finishIntro(){
   const el = document.getElementById('intro');
   if(!el || el.hidden || introBusy) return;
   introBusy = true;
+  stopIntroGauge();
   el.classList.add('out');
   window.setTimeout(() => {
     el.hidden = true;
@@ -3591,8 +3635,10 @@ function playIntro(){
   document.documentElement.classList.add('intro-on');
   el.hidden = false;
   el.classList.remove('out', 'play');
+  paintIntroGauge(6);
   void el.offsetWidth;
   el.classList.add('play');
+  startIntroGauge();
   requestAnimationFrame(() => requestAnimationFrame(hideNativeSplash));
   el.addEventListener('click', finishIntro, {once:true});
   window.setTimeout(finishIntro, 6500);
