@@ -357,6 +357,99 @@
       writeDb(db);
       return match;
     },
+    updateMatch(session, matchId, fields){
+      const match = this.getMatch(session, matchId);
+      if(!match) throw new Error('forbidden');
+      const db = readDb();
+      const next = {...match};
+      if(fields && Object.prototype.hasOwnProperty.call(fields, 'score')){
+        next.score = String(fields.score || '').trim().slice(0, 16);
+      }
+      if(fields && Object.prototype.hasOwnProperty.call(fields, 'address')){
+        next.address = String(fields.address || '').trim().slice(0, 120);
+      }
+      if(fields && fields.status === 'played') next.status = 'played';
+      if(fields && fields.status === 'upcoming') next.status = 'upcoming';
+      if(next.score && next.status !== 'upcoming') next.status = 'played';
+      db.team_matches = db.team_matches.map(m => m.id === matchId ? next : m);
+      writeDb(db);
+      return this.getMatch(session, matchId);
+    },
+    finishMatch(session, matchId, score){
+      return this.updateMatch(session, matchId, {
+        score: score == null ? '' : score,
+        status: 'played'
+      });
+    },
+    buildMatchResultPayload(session, matchId, teamPlayerId){
+      const base = this.buildMatchInvitePayload(session, matchId, teamPlayerId);
+      if(!base) return null;
+      const match = this.getMatch(session, matchId);
+      const rating = this.getRatingForPlayer(session, matchId, teamPlayerId);
+      if(!rating) return null;
+      return {
+        ...base,
+        type: 'match_result',
+        score: match ? (match.score || '') : '',
+        rating: Number(rating.rating) || 0,
+        comment: String(rating.comment || '').slice(0, 400),
+        pitchPos: String(rating.pitchPos || '').slice(0, 8)
+      };
+    },
+    deliverMatchResults(session, matchId, opts){
+      const match = this.getMatch(session, matchId);
+      if(!match) throw new Error('forbidden');
+      if(match.status !== 'played' && !match.score){
+        throw new Error('not_finished');
+      }
+      const forceUnread = !(opts && opts.forceUnread === false);
+      const onlyIds = opts && Array.isArray(opts.playerIds) ? new Set(opts.playerIds.map(String)) : null;
+      const squad = this.listMatchPlayers(session, match);
+      let delivered = 0;
+      let waiting = 0;
+      let skipped = 0;
+      const now = new Date().toISOString();
+      squad.forEach(p => {
+        if(onlyIds && !onlyIds.has(String(p.id))) return;
+        const payload = this.buildMatchResultPayload(session, matchId, p.id);
+        if(!payload){
+          skipped += 1;
+          return;
+        }
+        const linked = this.parentLinkedForPlayer(p.id);
+        if(global.InboxStore && typeof global.InboxStore.upsertMatchResult === 'function'){
+          global.InboxStore.upsertMatchResult({...payload, forceUnread});
+        }
+        // Refresh parent invite snapshot + local parent link ratings
+        try{
+          this.createParentInvite(session, p.id);
+        }catch(e){}
+        try{
+          if(global.ParentStore && typeof global.ParentStore.syncCoachRatings === 'function'){
+            const detail = this.playerDetail(session, p.id);
+            if(detail){
+              global.ParentStore.syncCoachRatings(p.id, {
+                ratings: detail.ratings.slice(0, 40).map(r => ({
+                  date: r.date,
+                  opponent: r.opponent,
+                  score: r.score || '',
+                  rating: Number(r.rating) || 0,
+                  comment: String(r.comment || '').slice(0, 200),
+                  pitchPos: r.pitchPos || ''
+                })),
+                avg: detail.avg,
+                games: detail.games
+              });
+            }
+          }
+        }catch(e){}
+        if(linked) delivered += 1;
+        else waiting += 1;
+      });
+      // Keep status played
+      this.updateMatch(session, matchId, {status: 'played', score: match.score || ''});
+      return {delivered, waiting, skipped, at: now};
+    },
     listInvites(session, matchId){
       const match = this.getMatch(session, matchId);
       if(!match) return [];
@@ -608,9 +701,15 @@
       }else{
         db.ratings.push(row);
       }
-      // keep match score in sync if provided from form
+      // keep match score / played status in sync if provided from form
       if(payload.score){
-        db.team_matches = db.team_matches.map(m => m.id === match.id ? {...m, score: String(payload.score).slice(0, 16)} : m);
+        db.team_matches = db.team_matches.map(m => m.id === match.id
+          ? {...m, score: String(payload.score).slice(0, 16), status: 'played'}
+          : m);
+      }else if(match.status !== 'played'){
+        db.team_matches = db.team_matches.map(m => m.id === match.id
+          ? {...m, status: 'played'}
+          : m);
       }
       writeDb(db);
       return row;
@@ -701,6 +800,9 @@
         .map(i => this.buildMatchInvitePayload(session, i.match_id, playerId))
         .filter(Boolean)
         .slice(0, 6);
+      const mr = this.packMatchResultsForPlayer
+        ? this.packMatchResultsForPlayer(session, playerId)
+        : [];
       return {
         v: 1,
         t: opts && opts.token ? opts.token : uid('ptk').slice(0, 24),
@@ -722,10 +824,23 @@
         },
         r: ratings,
         mi,
+        mr,
         avg: detail.avg,
         g: detail.games,
         iat: new Date().toISOString()
       };
+    },
+    // Keep packed match results on parent invite for cross-device claim
+    // (same-device path uses InboxStore + ParentStore.syncCoachRatings).
+    packMatchResultsForPlayer(session, playerId){
+      const db = readDb();
+      return db.ratings
+        .filter(r => r.team_player_id === playerId)
+        .slice()
+        .sort((a, b) => String(b.date).localeCompare(String(a.date)) || String(b.updated_at||'').localeCompare(String(a.updated_at||'')))
+        .slice(0, 8)
+        .map(r => this.buildMatchResultPayload(session, r.match_id, playerId))
+        .filter(Boolean);
     },
     createParentInvite(session, playerId){
       const player = this.getPlayer(session, playerId);

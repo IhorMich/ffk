@@ -181,6 +181,16 @@
         if(global.InboxStore && Array.isArray(rawMi) && rawMi.length){
           global.InboxStore.importMessages(rawMi.map(m => ({
             ...m,
+            type: 'match_invite',
+            team_player_id: m.team_player_id || norm.player.id,
+            player_name: m.player_name || [norm.player.first_name, norm.player.last_name].filter(Boolean).join(' ')
+          })));
+        }
+        const rawMr = (payload && (payload.mr || payload.match_results)) || [];
+        if(global.InboxStore && Array.isArray(rawMr) && rawMr.length){
+          global.InboxStore.importMessages(rawMr.map(m => ({
+            ...m,
+            type: 'match_result',
             team_player_id: m.team_player_id || norm.player.id,
             player_name: m.player_name || [norm.player.first_name, norm.player.last_name].filter(Boolean).join(' ')
           })));
@@ -206,6 +216,25 @@
     unreadInboxCount(){
       if(!global.InboxStore) return 0;
       return global.InboxStore.unreadCountForPlayers(this.linkedPlayerIds());
+    },
+    syncCoachRatings(playerId, data){
+      const pid = String(playerId || '');
+      if(!pid || !data) return null;
+      const db = readDb();
+      let hit = null;
+      db.links = db.links.map(l => {
+        if(!l.player || String(l.player.id) !== pid) return l;
+        hit = {
+          ...l,
+          ratings: Array.isArray(data.ratings) ? data.ratings.slice(0, 40) : (l.ratings || []),
+          avg: data.avg != null ? data.avg : l.avg,
+          games: data.games != null ? data.games : l.games,
+          updatedAt: new Date().toISOString()
+        };
+        return hit;
+      });
+      if(hit) writeDb(db);
+      return hit;
     },
     removeLink(id){
       const db = readDb();

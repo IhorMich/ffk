@@ -1449,6 +1449,38 @@
   .coach-home-nav .ghost-btn{
     margin:0;width:100%;padding:10px 8px;font-size:.78rem;border-radius:12px;
   }
+  .coach-match-top{
+    display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin:0 0 8px;
+  }
+  .coach-match-top .coach-team-heading{margin:4px 0 0;}
+  .coach-match-new{margin:0;width:auto;padding:10px 14px;flex-shrink:0;}
+  .coach-match-create{
+    margin:0 0 14px;padding:14px 12px;border-radius:14px;
+    border:1px solid var(--card-line);
+    background:color-mix(in srgb, var(--card-paper) 92%, var(--card-accent));
+  }
+  .coach-match-create .save-btn,.coach-match-create .ghost-btn{margin-top:8px;}
+  .coach-match-list{margin:12px 0;}
+  .coach-match-detail{
+    margin-top:8px;padding-top:12px;border-top:1px solid var(--card-line);
+  }
+  .coach-match-summary{
+    display:grid;gap:4px;margin:0 0 14px;
+  }
+  .coach-match-summary b{font-size:1.05rem;font-weight:800;}
+  .coach-score-split{
+    display:flex;align-items:center;gap:10px;margin-top:6px;
+  }
+  .coach-score-split input{
+    flex:1;min-width:0;width:auto;text-align:center;font-size:1.2rem;font-weight:800;
+    padding:12px 10px;border-radius:12px;border:1px solid var(--card-line);
+    background:var(--card-paper);color:var(--card-ink);
+  }
+  #coachMatchPlayedBox .save-btn,#coachMatchPlayedBox .ghost-btn,
+  #coachMatchUpcomingBox .save-btn,#coachMatchUpcomingBox .ghost-btn{margin-top:8px;}
+  .parent-msg-row.result{box-shadow:inset 3px 0 0 color-mix(in srgb, var(--card-accent) 55%, #2f9e44);}
+  .parent-msg-result{margin:12px 0;}
+  .parent-msg-result .coach-analytics-sum{grid-template-columns:repeat(2,1fr);}
   .coach-settings-head{
     display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 8px;
   }

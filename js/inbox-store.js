@@ -46,6 +46,13 @@
         m.team_player_id === teamPlayerId
       ) || null;
     },
+    findMatchResult(matchId, teamPlayerId){
+      return readDb().messages.find(m =>
+        m.type === 'match_result' &&
+        m.match_id === matchId &&
+        m.team_player_id === teamPlayerId
+      ) || null;
+    },
     upsertMatchInvite(payload){
       const db = readDb();
       const matchId = String(payload.match_id || '');
@@ -92,11 +99,62 @@
       writeDb(db);
       return row;
     },
+    upsertMatchResult(payload){
+      const db = readDb();
+      const matchId = String(payload.match_id || '');
+      const playerId = String(payload.team_player_id || '');
+      if(!matchId || !playerId) throw new Error('bad_message');
+      const existing = db.messages.find(m =>
+        m.type === 'match_result' && m.match_id === matchId && m.team_player_id === playerId
+      );
+      const now = new Date().toISOString();
+      const row = {
+        id: existing ? existing.id : uid('msg'),
+        type: 'match_result',
+        match_id: matchId,
+        team_id: String(payload.team_id || ''),
+        team_player_id: playerId,
+        player_name: String(payload.player_name || '').slice(0, 80),
+        academy_name: String(payload.academy_name || '').slice(0, 80),
+        team_name: String(payload.team_name || '').slice(0, 60),
+        team_code: String(payload.team_code || '').slice(0, 12),
+        coach_name: String(payload.coach_name || '').slice(0, 80),
+        date: String(payload.date || '').slice(0, 10),
+        opponent: String(payload.opponent || '').slice(0, 48),
+        address: String(payload.address || '').slice(0, 120),
+        venue: payload.venue === 'away' ? 'away' : 'home',
+        kind: String(payload.kind || 'league').slice(0, 16),
+        score: String(payload.score || '').slice(0, 16),
+        rating: Number(payload.rating) || 0,
+        comment: String(payload.comment || '').slice(0, 400),
+        pitchPos: String(payload.pitchPos || '').slice(0, 8),
+        status: existing && existing.status === 'read' && !payload.forceUnread
+          ? 'read'
+          : 'delivered',
+        created_at: existing ? existing.created_at : now,
+        updated_at: now,
+        read_at: existing && existing.status === 'read' && !payload.forceUnread
+          ? (existing.read_at || '')
+          : '',
+        sent_count: (existing ? (Number(existing.sent_count) || 1) : 0) + 1
+      };
+      if(existing){
+        db.messages = db.messages.map(m => m.id === existing.id ? row : m);
+      }else{
+        db.messages.push(row);
+      }
+      writeDb(db);
+      return row;
+    },
     importMessages(list){
       const out = [];
       (list || []).forEach(raw => {
         if(!raw || !raw.match_id || !raw.team_player_id) return;
-        out.push(this.upsertMatchInvite({...raw, forceUnread: false}));
+        if(raw.type === 'match_result'){
+          out.push(this.upsertMatchResult({...raw, forceUnread: false}));
+        }else{
+          out.push(this.upsertMatchInvite({...raw, forceUnread: false}));
+        }
       });
       return out;
     },

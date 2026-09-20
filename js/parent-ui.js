@@ -52,16 +52,20 @@
     }
     list.innerHTML = msgs.map(m => {
       const unreadCls = m.status === 'read' ? '' : ' unread';
+      const isResult = m.type === 'match_result';
       const head = [m.date, m.opponent].filter(Boolean).join(' · ');
       const meta = [
         m.player_name,
-        m.address || '',
-        m.team_name,
-        m.team_code ? `${tt('parentTeamCode', 'Code')}: ${m.team_code}` : ''
+        isResult && m.score ? m.score : (m.address || ''),
+        isResult && m.rating ? `★ ${Number(m.rating).toFixed(1)}` : '',
+        m.team_name
       ].filter(Boolean).join(' · ');
-      return `<button type="button" class="parent-msg-row${unreadCls}" data-parent-msg="${esc(m.id)}">
+      const title = isResult
+        ? (head || tt('parentInboxResult', 'Match card'))
+        : (head || tt('parentInboxMatch', 'Match invite'));
+      return `<button type="button" class="parent-msg-row${unreadCls}${isResult ? ' result' : ''}" data-parent-msg="${esc(m.id)}">
         <span class="parent-link-main">
-          <b>${esc(head || tt('parentInboxMatch', 'Match invite'))}</b>
+          <b>${esc(title)}</b>
           <span>${esc(meta)}</span>
         </span>
         <span class="parent-msg-dot" aria-hidden="true"></span>
@@ -88,19 +92,32 @@
     const venue = msg.venue === 'away'
       ? tt('venueAway', 'Away')
       : tt('venueHome', 'Home');
-    const squad = (msg.squad_names || []).length
+    const isResult = msg.type === 'match_result';
+    const squad = (!isResult && (msg.squad_names || []).length)
       ? `<div class="parent-msg-squad"><b>${esc(tt('parentInboxSquad', 'Squad'))}</b><p class="hint">${esc(msg.squad_names.join(', '))}</p></div>`
       : '';
+    const resultBlock = isResult
+      ? `<div class="parent-msg-result">
+          <div class="coach-analytics-sum">
+            <div><b>${esc(msg.score || '—')}</b><span>${esc(tt('labelScore', 'Score'))}</span></div>
+            <div><b>${esc(msg.rating ? Number(msg.rating).toFixed(1) : '—')}</b><span>${esc(tt('coachQuickScore', 'Rating'))}</span></div>
+          </div>
+          ${msg.comment ? `<p class="hint"><b>${esc(tt('coachQuickComment', 'Comment'))}:</b> ${esc(msg.comment)}</p>` : ''}
+        </div>`
+      : '';
     body.innerHTML = `
-      <div class="parent-confirm-badge">${esc(tt('parentInboxFromCoach', 'From coach'))}</div>
+      <div class="parent-confirm-badge">${esc(isResult
+        ? tt('parentInboxResultFromCoach', 'Match card from coach')
+        : tt('parentInboxFromCoach', 'From coach'))}</div>
       <h3 class="coach-rate-name">${esc(msg.opponent || '—')}</h3>
       <p class="hint">${esc([msg.date, venue, msg.kind].filter(Boolean).join(' · '))}</p>
-      ${msg.address ? `<p class="hint"><b>${esc(tt('coachMatchAddress', 'Match address'))}:</b> ${esc(msg.address)}</p>` : ''}
+      ${msg.address && !isResult ? `<p class="hint"><b>${esc(tt('coachMatchAddress', 'Match address'))}:</b> ${esc(msg.address)}</p>` : ''}
       <p class="hint"><b>${esc(tt('parentInboxChild', 'Child'))}:</b> ${esc(msg.player_name || '—')}</p>
       <p class="hint"><b>${esc(tt('parentCoachLabel', 'Coach'))}:</b> ${esc(msg.coach_name || '—')}</p>
       <p class="hint"><b>${esc(tt('parentInboxTeam', 'Team'))}:</b> ${esc([msg.academy_name, msg.team_name].filter(Boolean).join(' · ') || '—')}</p>
-      <div class="coach-parent-code">${esc(msg.team_code || '—')}</div>
-      <p class="hint">${esc(tt('parentInboxCodeHint', 'Team invite code from the academy'))}</p>
+      ${!isResult ? `<div class="coach-parent-code">${esc(msg.team_code || '—')}</div>
+      <p class="hint">${esc(tt('parentInboxCodeHint', 'Team invite code from the academy'))}</p>` : ''}
+      ${resultBlock}
       ${squad}
       <button type="button" class="ghost-btn" id="parentMsgCloseBtn">${esc(tt('previewCancel', 'Close'))}</button>
     `;
