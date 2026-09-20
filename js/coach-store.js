@@ -24,6 +24,7 @@
       team_matches: [],
       ratings: [],
       match_invites: [],
+      parent_invites: [],
       activeTeamId: '',
       activeMatchId: ''
     };
@@ -44,6 +45,7 @@
         team_matches: Array.isArray(db.team_matches) ? db.team_matches : [],
         ratings: Array.isArray(db.ratings) ? db.ratings : [],
         match_invites: Array.isArray(db.match_invites) ? db.match_invites : [],
+        parent_invites: Array.isArray(db.parent_invites) ? db.parent_invites : [],
         activeTeamId: String(db.activeTeamId || ''),
         activeMatchId: String(db.activeMatchId || '')
       };
@@ -272,6 +274,7 @@
       db.memberships = db.memberships.filter(m => m.team_player_id !== playerId);
       db.ratings = db.ratings.filter(r => r.team_player_id !== playerId);
       db.match_invites = db.match_invites.filter(i => i.team_player_id !== playerId);
+      db.parent_invites = db.parent_invites.filter(i => i.team_player_id !== playerId);
       writeDb(db);
     },
     getActiveMatchId(){
@@ -503,6 +506,138 @@
         avg,
         players
       };
+    },
+    getPlayer(session, playerId){
+      const db = readDb();
+      const player = db.team_players.find(p => p.id === playerId);
+      if(!player || !this.getTeam(session, player.team_id)) return null;
+      return player;
+    },
+    listRatingsForPlayer(session, playerId){
+      const player = this.getPlayer(session, playerId);
+      if(!player) return [];
+      return readDb().ratings
+        .filter(r => r.team_player_id === playerId)
+        .slice()
+        .sort((a, b) => String(b.date).localeCompare(String(a.date)) || String(b.updated_at).localeCompare(String(a.updated_at)));
+    },
+    playerDetail(session, playerId){
+      const player = this.getPlayer(session, playerId);
+      if(!player) return null;
+      const team = this.getTeam(session, player.team_id);
+      const academy = this.myAcademy(session);
+      const profile = this.getProfile(session);
+      const ratings = this.listRatingsForPlayer(session, playerId);
+      const scores = ratings.map(r => Number(r.rating) || 0);
+      const avg = scores.length
+        ? Math.round((scores.reduce((a, b) => a + b, 0) / scores.length) * 10) / 10
+        : null;
+      return {
+        player,
+        team,
+        academy,
+        coach: {
+          name: [profile.first_name, profile.last_name].filter(Boolean).join(' ') || profile.email || 'Coach',
+          email: profile.email || ''
+        },
+        ratings,
+        avg,
+        games: ratings.length
+      };
+    },
+    buildParentInvitePayload(session, playerId, opts){
+      const detail = this.playerDetail(session, playerId);
+      if(!detail) throw new Error('forbidden');
+      const maxR = (opts && opts.maxRatings) || 12;
+      const ratings = detail.ratings.slice(0, maxR).map(r => ({
+        d: r.date,
+        o: r.opponent,
+        s: r.score || '',
+        r: Number(r.rating) || 0,
+        c: String(r.comment || '').slice(0, 120),
+        p: r.pitchPos || ''
+      }));
+      return {
+        v: 1,
+        t: opts && opts.token ? opts.token : uid('ptk').slice(0, 24),
+        code: opts && opts.code ? opts.code : inviteCode(),
+        a: {id: detail.academy ? detail.academy.id : '', name: detail.academy ? detail.academy.name : ''},
+        tm: {
+          id: detail.team ? detail.team.id : '',
+          name: detail.team ? detail.team.name : '',
+          age_group: detail.team ? detail.team.age_group : '',
+          invite_code: detail.team ? detail.team.invite_code : ''
+        },
+        c: {name: detail.coach.name, email: detail.coach.email},
+        player: {
+          id: detail.player.id,
+          fn: detail.player.first_name,
+          ln: detail.player.last_name,
+          n: detail.player.number,
+          pos: detail.player.position
+        },
+        r: ratings,
+        avg: detail.avg,
+        g: detail.games,
+        iat: new Date().toISOString()
+      };
+    },
+    createParentInvite(session, playerId){
+      const player = this.getPlayer(session, playerId);
+      if(!player) throw new Error('forbidden');
+      const db = readDb();
+      let invite = db.parent_invites.find(i => i.team_player_id === playerId && i.status !== 'revoked');
+      const token = invite ? invite.token : uid('ptk').slice(0, 24);
+      const code = invite ? invite.code : inviteCode();
+      const payload = this.buildParentInvitePayload(session, playerId, {token, code, maxRatings: 12});
+      const row = {
+        id: invite ? invite.id : uid('pinv'),
+        token,
+        code,
+        team_id: player.team_id,
+        team_player_id: playerId,
+        payload,
+        status: 'open',
+        created_at: invite ? invite.created_at : new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+      if(invite){
+        db.parent_invites = db.parent_invites.map(i => i.id === invite.id ? row : i);
+      }else{
+        db.parent_invites.push(row);
+      }
+      writeDb(db);
+      return row;
+    },
+    findParentInviteByCode(code){
+      code = String(code || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+      if(!code) return null;
+      return readDb().parent_invites.find(i => i.code === code && i.status !== 'revoked') || null;
+    },
+    findParentInviteByToken(token){
+      token = String(token || '');
+      if(!token) return null;
+      return readDb().parent_invites.find(i => i.token === token && i.status !== 'revoked') || null;
+    },
+    parentInviteMessage(session, invite){
+      if(!invite || !invite.payload) return '';
+      const p = invite.payload;
+      const child = [p.player.fn, p.player.ln].filter(Boolean).join(' ');
+      const num = p.player.n ? `#${p.player.n} ` : '';
+      const deep = global.ParentStore ? global.ParentStore.buildLink(p) : `ffk://parent?d=`;
+      const web = global.ParentStore ? global.ParentStore.buildWebLink(p) : '';
+      return [
+        'Matchcard — parent invite',
+        `Child: ${num}${child}`,
+        `Academy: ${p.a && p.a.name ? p.a.name : ''}`,
+        `Team: ${p.tm && p.tm.name ? p.tm.name : ''}${p.tm && p.tm.age_group ? ` · ${p.tm.age_group}` : ''}`,
+        `Coach: ${p.c && p.c.name ? p.c.name : ''}`,
+        `Code: MC-${invite.code}`,
+        '',
+        'Open Matchcard → Player → Add via link, or open:',
+        deep,
+        web && web !== deep ? web : ''
+      ].filter(Boolean).join('\n');
     },
     isCloudConfigured(){
       const c = global.FFK_COACH_CONFIG || {};

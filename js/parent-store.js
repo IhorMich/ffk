@@ -1,0 +1,187 @@
+/* Matchcard Parent links — academy-confirmed child + coach stats.
+   Never writes into Free/Pro personal matches. */
+(function(global){
+  const KEY = 'ffk_parent_v1';
+
+  function uid(prefix){
+    return `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+  }
+  function emptyDb(){
+    return {version: 1, links: [], pendingPayload: null};
+  }
+  function readDb(){
+    try{
+      const raw = localStorage.getItem(KEY);
+      if(!raw) return emptyDb();
+      const db = JSON.parse(raw);
+      if(!db || typeof db !== 'object') return emptyDb();
+      return {
+        version: 1,
+        links: Array.isArray(db.links) ? db.links : [],
+        pendingPayload: db.pendingPayload || null
+      };
+    }catch(e){
+      return emptyDb();
+    }
+  }
+  function writeDb(db){
+    localStorage.setItem(KEY, JSON.stringify(db));
+  }
+
+  function normalizePayload(raw){
+    if(!raw || typeof raw !== 'object') throw new Error('bad_payload');
+    if(Number(raw.v) !== 1) throw new Error('bad_version');
+    const player = raw.player || {};
+    const fn = String(player.fn || player.first_name || '').trim();
+    if(!fn) throw new Error('bad_player');
+    const ratings = Array.isArray(raw.r || raw.ratings) ? (raw.r || raw.ratings) : [];
+    return {
+      v: 1,
+      token: String(raw.t || raw.token || '').slice(0, 48),
+      code: String(raw.code || '').toUpperCase().slice(0, 12),
+      academy: {
+        id: String((raw.a && raw.a.id) || raw.aid || ''),
+        name: String((raw.a && raw.a.name) || raw.an || raw.academy || '').slice(0, 80)
+      },
+      team: {
+        id: String((raw.tm && raw.tm.id) || raw.tid || ''),
+        name: String((raw.tm && raw.tm.name) || raw.tn || raw.team || '').slice(0, 60),
+        age_group: String((raw.tm && raw.tm.age_group) || raw.ag || '').slice(0, 24),
+        invite_code: String((raw.tm && raw.tm.invite_code) || raw.tc || '').slice(0, 12)
+      },
+      coach: {
+        name: String((raw.c && raw.c.name) || raw.cn || raw.coach || '').slice(0, 80),
+        email: String((raw.c && raw.c.email) || raw.ce || '').slice(0, 80)
+      },
+      player: {
+        id: String(player.id || '').slice(0, 48),
+        first_name: fn.slice(0, 40),
+        last_name: String(player.ln || player.last_name || '').trim().slice(0, 40),
+        number: String(player.n || player.number || '').slice(0, 4),
+        position: String(player.pos || player.position || '').slice(0, 8)
+      },
+      ratings: ratings.slice(0, 40).map(r => ({
+        date: String(r.d || r.date || '').slice(0, 10),
+        opponent: String(r.o || r.opponent || '').slice(0, 48),
+        score: String(r.s || r.score || '').slice(0, 16),
+        rating: Number(r.r != null ? r.r : r.rating) || 0,
+        comment: String(r.c || r.comment || '').slice(0, 200),
+        pitchPos: String(r.p || r.pitchPos || '').slice(0, 8)
+      })),
+      avg: raw.avg != null ? Number(raw.avg) : null,
+      games: Number(raw.g != null ? raw.g : raw.games) || 0,
+      issued_at: String(raw.iat || raw.issued_at || new Date().toISOString())
+    };
+  }
+
+  const ParentStore = {
+    listLinks(){
+      return readDb().links.slice().sort((a, b) => String(b.claimedAt).localeCompare(String(a.claimedAt)));
+    },
+    getLink(id){
+      return readDb().links.find(l => l.id === id) || null;
+    },
+    setPending(payload){
+      const db = readDb();
+      db.pendingPayload = payload;
+      writeDb(db);
+      return payload;
+    },
+    getPending(){
+      return readDb().pendingPayload || null;
+    },
+    clearPending(){
+      const db = readDb();
+      db.pendingPayload = null;
+      writeDb(db);
+    },
+    parseInviteInput(text){
+      text = String(text || '').trim();
+      if(!text) throw new Error('empty');
+      // Full deep link / URL with d= or ffk_parent=
+      let m = text.match(/[?&#](?:d|ffk_parent)=([A-Za-z0-9\-_=]+)/);
+      if(m) return this.decodePayload(m[1]);
+      // Bare base64 payload
+      if(/^[A-Za-z0-9\-_=]{40,}$/.test(text) && !/^MC-/i.test(text)){
+        try{ return this.decodePayload(text); }catch(e){}
+      }
+      // Prefixed
+      m = text.match(/FFKP1:([A-Za-z0-9\-_=]+)/i);
+      if(m) return this.decodePayload(m[1]);
+      // Short code — resolve from coach store on same device if present
+      const code = text.replace(/^MC-/i, '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8);
+      if(code.length >= 4 && global.CoachStore && typeof global.CoachStore.findParentInviteByCode === 'function'){
+        const hit = global.CoachStore.findParentInviteByCode(code);
+        if(hit && hit.payload) return normalizePayload(hit.payload);
+      }
+      throw new Error('bad_invite');
+    },
+    encodePayload(payload){
+      const json = JSON.stringify(payload);
+      const b64 = btoa(unescape(encodeURIComponent(json)))
+        .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/,'');
+      return b64;
+    },
+    decodePayload(b64){
+      let s = String(b64 || '').trim().replace(/-/g, '+').replace(/_/g, '/');
+      while(s.length % 4) s += '=';
+      const json = decodeURIComponent(escape(atob(s)));
+      return normalizePayload(JSON.parse(json));
+    },
+    buildLink(payload){
+      const data = this.encodePayload(payload);
+      return `ffk://parent?d=${data}`;
+    },
+    buildWebLink(payload){
+      const data = this.encodePayload(payload);
+      try{
+        const base = (location.origin && location.origin !== 'null')
+          ? (location.href.split('#')[0].split('?')[0])
+          : 'https://matchcard.app/';
+        const sep = base.indexOf('?') >= 0 ? '&' : '?';
+        return `${base}${sep}ffk_parent=${data}`;
+      }catch(e){
+        return `https://matchcard.app/?ffk_parent=${data}`;
+      }
+    },
+    claim(payload){
+      const norm = normalizePayload(payload);
+      if(!norm.academy.name || !norm.team.name) throw new Error('bad_payload');
+      const db = readDb();
+      const existing = db.links.find(l =>
+        (norm.token && l.token === norm.token) ||
+        (norm.player.id && l.player && l.player.id === norm.player.id && l.academy && l.academy.name === norm.academy.name)
+      );
+      const row = {
+        id: existing ? existing.id : uid('plink'),
+        token: norm.token,
+        code: norm.code,
+        academy: norm.academy,
+        team: norm.team,
+        coach: norm.coach,
+        player: norm.player,
+        ratings: norm.ratings,
+        avg: norm.avg,
+        games: norm.games || norm.ratings.length,
+        issued_at: norm.issued_at,
+        claimedAt: existing ? existing.claimedAt : new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      if(existing){
+        db.links = db.links.map(l => l.id === existing.id ? row : l);
+      }else{
+        db.links.push(row);
+      }
+      db.pendingPayload = null;
+      writeDb(db);
+      return row;
+    },
+    removeLink(id){
+      const db = readDb();
+      db.links = db.links.filter(l => l.id !== id);
+      writeDb(db);
+    }
+  };
+
+  global.ParentStore = ParentStore;
+})(window);

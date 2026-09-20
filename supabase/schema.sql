@@ -224,3 +224,28 @@ create policy ratings_update on public.ratings
   for update using (public.is_team_coach(team_id));
 create policy ratings_delete on public.ratings
   for delete using (public.is_team_coach(team_id));
+
+-- Parent invites (QR / deep link). Local Phase 3 mirrors this shape.
+create table if not exists public.parent_invites (
+  id uuid primary key default gen_random_uuid(),
+  token text not null unique,
+  code text not null,
+  team_id uuid not null references public.teams(id) on delete cascade,
+  team_player_id uuid not null references public.team_players(id) on delete cascade,
+  payload jsonb not null default '{}'::jsonb,
+  status text not null default 'open' check (status in ('open','claimed','revoked')),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+create index if not exists parent_invites_player_idx on public.parent_invites(team_player_id);
+create index if not exists parent_invites_code_idx on public.parent_invites(code);
+
+alter table public.parent_invites enable row level security;
+create policy parent_invites_select on public.parent_invites
+  for select using (public.is_team_coach(team_id));
+create policy parent_invites_insert on public.parent_invites
+  for insert with check (public.is_team_coach(team_id));
+create policy parent_invites_update on public.parent_invites
+  for update using (public.is_team_coach(team_id));
+create policy parent_invites_delete on public.parent_invites
+  for delete using (public.is_team_coach(team_id));

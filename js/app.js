@@ -321,6 +321,7 @@ function syncCoachModeViews(){
     if(p) p.hidden = on;
     if(c) c.hidden = !on;
   });
+  if(typeof renderParentUi === 'function') renderParentUi();
 }
 window.syncCoachModeViews = syncCoachModeViews;
 window.setCoachPlan = setCoachPlan;
@@ -1927,6 +1928,7 @@ function applyHeader(){
   if(fbName) fbName.textContent = displayName();
   if(fbMeta) fbMeta.textContent = [no ? ((langLatin() ? '#' : '№') + no) : '', posLine(), clubBits].filter(Boolean).join(' · ');
   renderPlayerFeed();
+  if(typeof renderParentUi === 'function') renderParentUi();
 }
 function applyCoachHeader(){
   const store = window.CoachStore;
@@ -2840,7 +2842,11 @@ function showView(name){
     document.getElementById('reportStory').innerHTML = matchStoryHtml(lastReportMatch);
   }
   if(name === 'history') renderHistory();
-  if(name === 'stats') renderStats();
+  if(name === 'stats'){
+    renderStats();
+    if(typeof renderParentUi === 'function') renderParentUi();
+  }
+  if(name === 'player' && typeof renderParentUi === 'function') renderParentUi();
   if(name === 'coach' && typeof renderCoachUi === 'function') renderCoachUi();
   if(isCoachPlan() && (name === 'new' || name === 'history' || name === 'stats') && typeof renderCoachUi === 'function'){
     renderCoachUi();
@@ -2988,6 +2994,7 @@ document.getElementById('proLockBtn')?.addEventListener('click', () => setPro(fa
 document.getElementById('openCoachBtn')?.addEventListener('click', () => showView('coach'));
 document.getElementById('coachBackBtn')?.addEventListener('click', () => showView('settings'));
 if(typeof bindCoachUi === 'function') bindCoachUi();
+if(typeof bindParentUi === 'function') bindParentUi();
 document.addEventListener('click', e => {
   const btn = e.target.closest('.pro-lock-btn');
   if(!btn) return;
@@ -3752,6 +3759,26 @@ function handleAppBack(){
   if(isElShown('photoSheet')){ closePhotoSheet(); return true; }
   if(isElShown('coachRateSheet')){
     if(typeof closeCoachQuickRate === 'function') closeCoachQuickRate();
+    return true;
+  }
+  if(isElShown('coachParentInviteSheet')){
+    if(typeof closeCoachParentInviteSheet === 'function') closeCoachParentInviteSheet();
+    return true;
+  }
+  if(isElShown('coachPlayerSheet')){
+    if(typeof closeCoachPlayerSheet === 'function') closeCoachPlayerSheet();
+    return true;
+  }
+  if(isElShown('parentClaimSheet')){
+    document.getElementById('parentClaimSheet').hidden = true;
+    const b = document.getElementById('parentClaimBack');
+    if(b) b.hidden = true;
+    return true;
+  }
+  if(isElShown('parentLinkSheet')){
+    document.getElementById('parentLinkSheet').hidden = true;
+    const b = document.getElementById('parentLinkBack');
+    if(b) b.hidden = true;
     return true;
   }
   if(isElShown('previewModal')){ closeCardPreview(); return true; }

@@ -1270,6 +1270,59 @@
   .coach-player-main{display:flex;flex-direction:column;gap:2px;min-width:0;}
   .coach-player-main b{font-size:.92rem;}
   .coach-player-main span{font-size:.75rem;font-weight:700;color:var(--card-muted);}
+  button.coach-player-open{
+    appearance:none;-webkit-appearance:none;border:0;background:transparent;padding:0;margin:0;
+    text-align:left;color:inherit;font:inherit;cursor:pointer;flex:1;min-width:0;
+  }
+  .parent-rate-num{font-size:1.05rem;font-weight:800;color:var(--card-accent);white-space:nowrap;}
+  .coach-parent-qr{
+    display:flex;align-items:center;justify-content:center;
+    margin:12px auto 10px;padding:14px;border-radius:18px;
+    background:#fff;border:1px solid var(--card-line);max-width:260px;
+  }
+  .coach-parent-qr-canvas{display:block;width:220px;height:220px;}
+  .coach-parent-code{
+    text-align:center;font-size:1.35rem;font-weight:800;letter-spacing:.14em;
+    color:var(--card-accent);margin:0 0 12px;
+  }
+  #coachParentInviteLink,#parentClaimInput{
+    width:100%;box-sizing:border-box;min-height:72px;resize:vertical;
+    padding:12px;border-radius:14px;border:1px solid var(--card-line);
+    background:var(--surface);color:var(--text);font:inherit;font-weight:600;font-size:.82rem;
+  }
+  #coachAddParentBtn,#coachParentInviteShareBtn,#parentClaimConfirmBtn{width:100%;margin:8px 0;}
+  #coachPlayerCloseBtn,#coachParentInviteCopyBtn,#coachParentInviteCloseBtn,
+  #parentClaimPreviewBtn,#parentClaimCancelBtn{width:100%;margin:0 0 8px;}
+  .parent-link-row{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;
+    padding:12px 14px;margin:0 0 8px;border-radius:14px;border:1px solid var(--card-line);
+    background:color-mix(in srgb, var(--card-paper) 90%, var(--card-accent));
+    color:var(--card-ink);font:inherit;cursor:pointer;text-align:left;
+  }
+  .parent-link-main{display:flex;flex-direction:column;gap:2px;min-width:0;}
+  .parent-link-main b{font-size:.95rem;font-weight:800;}
+  .parent-link-main span{font-size:.75rem;font-weight:700;color:var(--card-muted);}
+  .parent-link-avg{font-size:1.15rem;font-weight:800;color:var(--card-accent);}
+  .parent-confirm-badge{
+    display:inline-block;margin:0 0 8px;padding:4px 10px;border-radius:999px;
+    font-size:.68rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;
+    background:color-mix(in srgb, var(--card-accent) 18%, transparent);color:var(--card-accent);
+  }
+  .parent-confirm-card{
+    margin:10px 0 12px;padding:12px 14px;border-radius:14px;border:1px solid var(--card-line);
+    background:color-mix(in srgb, var(--card-paper) 88%, var(--card-accent));
+  }
+  .parent-confirm-card b{display:block;font-size:1.05rem;margin:0 0 4px;}
+  .parent-confirm-card > span{display:block;font-size:.78rem;font-weight:700;color:var(--card-muted);}
+  .parent-coach-stats{
+    margin:18px 0 8px;padding:16px 14px 14px;border-radius:18px;
+    background:var(--card-paper);color:var(--card-ink);
+    border:1px solid var(--card-line);
+    box-shadow:var(--card-shadow), inset 3px 0 0 var(--card-accent);
+  }
+  .parent-coach-block{margin:0 0 16px;}
+  .parent-coach-block:last-child{margin-bottom:0;}
+  #parentUnlinkBtn{width:100%;margin-top:10px;}
   .coach-rate-btn{
     margin:0;padding:8px 12px;width:auto;font-size:.78rem;border-radius:999px;
   }

@@ -200,10 +200,10 @@
         p.contact ? p.contact : ''
       ].filter(Boolean).join(' · ');
       return `<div class="coach-player-row">
-        <div class="coach-player-main">
+        <button type="button" class="coach-player-main coach-player-open" data-open-player="${esc(p.id)}">
           <b>${esc(label)}</b>
           ${meta ? `<span>${esc(meta)}</span>` : ''}
-        </div>
+        </button>
         <button type="button" class="roster-x" data-del-player="${esc(p.id)}" aria-label="remove">×</button>
       </div>`;
     }).join('');
@@ -785,6 +785,190 @@
     if(sheet) sheet.hidden = true;
     if(back) back.hidden = true;
   }
+
+  let detailPlayerId = '';
+  let parentInviteRow = null;
+
+  function closeCoachPlayerSheet(){
+    detailPlayerId = '';
+    const sheet = document.getElementById('coachPlayerSheet');
+    const back = document.getElementById('coachPlayerBack');
+    if(sheet) sheet.hidden = true;
+    if(back) back.hidden = true;
+  }
+  function openCoachPlayerSheet(playerId){
+    const store = global.CoachStore;
+    const session = store && store.getSession();
+    const detail = session && store.playerDetail(session, playerId);
+    if(!detail){
+      toast(tt('coachErrGeneric', 'Something went wrong.'));
+      return;
+    }
+    detailPlayerId = playerId;
+    const sheet = document.getElementById('coachPlayerSheet');
+    const back = document.getElementById('coachPlayerBack');
+    const body = document.getElementById('coachPlayerBody');
+    if(!sheet || !body) return;
+    const p = detail.player;
+    const label = [p.first_name, p.last_name].filter(Boolean).join(' ');
+    const pos = p.position && typeof pitchPosLabelShort === 'function'
+      ? pitchPosLabelShort(p.position)
+      : (p.position || '');
+    const ratingsHtml = detail.ratings.length
+      ? detail.ratings.slice(0, 12).map(r => {
+          const head = [r.date, r.opponent, r.score].filter(Boolean).join(' · ');
+          return `<div class="coach-player-row">
+            <div class="coach-player-main">
+              <b>${esc(head)}</b>
+              ${r.comment ? `<span>${esc(r.comment)}</span>` : ''}
+            </div>
+            <b class="parent-rate-num">${esc(Number(r.rating).toFixed(1))}</b>
+          </div>`;
+        }).join('')
+      : `<p class="hint">${esc(tt('coachPlayerNoRatings', 'No ratings for this player yet.'))}</p>`;
+    body.innerHTML = `
+      <div class="pro-kicker">${esc(tt('coachPlayerDetailKicker', 'Player'))}</div>
+      <h3 class="coach-rate-name">${esc(label)}</h3>
+      <p class="hint">${esc([
+        p.number ? `#${p.number}` : '',
+        pos,
+        detail.team && detail.team.name,
+        detail.academy && detail.academy.name
+      ].filter(Boolean).join(' · '))}</p>
+      ${p.contact ? `<p class="hint"><b>${esc(tt('coachContactLabel', 'Contact'))}:</b> ${esc(p.contact)}</p>` : ''}
+      <div class="coach-analytics-sum">
+        <div><b>${esc(detail.games)}</b><span>${esc(tt('coachGames', 'games'))}</span></div>
+        <div><b>${esc(detail.avg != null ? detail.avg.toFixed(1) : '—')}</b><span>${esc(tt('coachStatAvg', 'Team avg'))}</span></div>
+      </div>
+      <div class="pro-kicker">${esc(tt('coachPlayerRatingsKicker', 'Recent ratings'))}</div>
+      <div class="coach-player-list">${ratingsHtml}</div>
+      <button type="button" class="save-btn" id="coachAddParentBtn">${esc(tt('coachAddParentBtn', 'Add parent / guardian'))}</button>
+      <button type="button" class="ghost-btn" id="coachPlayerCloseBtn">${esc(tt('previewCancel', 'Cancel'))}</button>
+    `;
+    sheet.hidden = false;
+    if(back) back.hidden = false;
+    if(typeof pushAppState === 'function') pushAppState('layer');
+  }
+
+  function drawInviteQr(text){
+    const box = document.getElementById('coachParentQr');
+    if(!box) return;
+    box.innerHTML = '';
+    try{
+      const make = typeof qrcode === 'function' ? qrcode : (global.qrcode);
+      if(typeof make !== 'function'){
+        box.innerHTML = `<p class="hint">${esc(tt('coachQrFallback', 'QR unavailable — use the link below.'))}</p>`;
+        return;
+      }
+      const qr = make(0, 'L');
+      qr.addData(String(text || ''), 'Byte');
+      qr.make();
+      const count = qr.getModuleCount();
+      const size = 220;
+      const cell = size / count;
+      const canvas = document.createElement('canvas');
+      canvas.width = size;
+      canvas.height = size;
+      canvas.className = 'coach-parent-qr-canvas';
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, size, size);
+      ctx.fillStyle = '#0b1220';
+      for(let r = 0; r < count; r++){
+        for(let c = 0; c < count; c++){
+          if(qr.isDark(r, c)) ctx.fillRect(c * cell, r * cell, cell + 0.5, cell + 0.5);
+        }
+      }
+      box.appendChild(canvas);
+    }catch(e){
+      box.innerHTML = `<p class="hint">${esc(tt('coachQrFallback', 'QR unavailable — use the link below.'))}</p>`;
+    }
+  }
+
+  function closeCoachParentInviteSheet(){
+    parentInviteRow = null;
+    const sheet = document.getElementById('coachParentInviteSheet');
+    const back = document.getElementById('coachParentInviteBack');
+    if(sheet) sheet.hidden = true;
+    if(back) back.hidden = true;
+  }
+  function openCoachParentInviteSheet(playerId){
+    const store = global.CoachStore;
+    const session = store.getSession();
+    if(!session) return;
+    let invite;
+    try{
+      invite = store.createParentInvite(session, playerId);
+    }catch(e){
+      toast(tt('coachErrGeneric', 'Something went wrong.'));
+      return;
+    }
+    parentInviteRow = invite;
+    const sheet = document.getElementById('coachParentInviteSheet');
+    const back = document.getElementById('coachParentInviteBack');
+    const nameEl = document.getElementById('coachParentInviteName');
+    const metaEl = document.getElementById('coachParentInviteMeta');
+    const linkEl = document.getElementById('coachParentInviteLink');
+    const codeEl = document.getElementById('coachParentInviteCode');
+    const p = invite.payload;
+    const child = [p.player.fn, p.player.ln].filter(Boolean).join(' ');
+    if(nameEl) nameEl.textContent = child;
+    if(metaEl){
+      metaEl.textContent = [
+        p.a && p.a.name,
+        p.tm && p.tm.name,
+        p.tm && p.tm.age_group
+      ].filter(Boolean).join(' · ');
+    }
+    const deep = global.ParentStore ? global.ParentStore.buildLink(p) : '';
+    if(linkEl) linkEl.value = deep;
+    if(codeEl) codeEl.textContent = `MC-${invite.code}`;
+    // Smaller payload for QR capacity; full snapshot stays in the shareable link.
+    let qrPayload = p;
+    try{
+      qrPayload = store.buildParentInvitePayload(session, playerId, {
+        token: invite.token,
+        code: invite.code,
+        maxRatings: 6
+      });
+    }catch(e){}
+    const qrLink = global.ParentStore ? global.ParentStore.buildLink(qrPayload) : deep;
+    drawInviteQr(qrLink.length < 1800 ? qrLink : `FFKP1:${global.ParentStore.encodePayload(qrPayload)}`);
+    if(sheet) sheet.hidden = false;
+    if(back) back.hidden = false;
+    if(typeof pushAppState === 'function') pushAppState('layer');
+  }
+
+  async function shareParentInvite(){
+    if(!parentInviteRow) return;
+    const store = global.CoachStore;
+    const session = store.getSession();
+    const text = store.parentInviteMessage(session, parentInviteRow);
+    const title = tt('coachParentShareTitle', 'Parent invite');
+    try{
+      const C = global.Capacitor;
+      const Share = C && C.Plugins && C.Plugins.Share;
+      if(Share && typeof Share.share === 'function'){
+        await Share.share({title, text, dialogTitle: title});
+        toast(tt('coachParentShared', 'Invite shared.'));
+        return;
+      }
+    }catch(e){}
+    try{
+      if(navigator.share){
+        await navigator.share({title, text});
+        toast(tt('coachParentShared', 'Invite shared.'));
+        return;
+      }
+    }catch(e){}
+    try{
+      await navigator.clipboard.writeText(text);
+      toast(tt('coachParentCopied', 'Invite copied.'));
+    }catch(e){
+      toast(tt('coachErrGeneric', 'Something went wrong.'));
+    }
+  }
+
   function saveCoachQuickRate(){
     if(!quickRate) return;
     const store = global.CoachStore;
@@ -898,12 +1082,42 @@
       renderCoachUi();
     });
     document.getElementById('coachPlayerList')?.addEventListener('click', e => {
-      const btn = e.target.closest('[data-del-player]');
-      if(!btn) return;
+      const del = e.target.closest('[data-del-player]');
+      if(del){
+        try{
+          global.CoachStore.removePlayer(global.CoachStore.getSession(), del.dataset.delPlayer);
+          renderCoachUi();
+        }catch(err){}
+        return;
+      }
+      const open = e.target.closest('[data-open-player]');
+      if(open){
+        openCoachPlayerSheet(open.dataset.openPlayer);
+      }
+    });
+    document.getElementById('coachPlayerBack')?.addEventListener('click', () => closeCoachPlayerSheet());
+    document.getElementById('coachPlayerBody')?.addEventListener('click', e => {
+      if(e.target.closest('#coachPlayerCloseBtn')){
+        closeCoachPlayerSheet();
+        return;
+      }
+      if(e.target.closest('#coachAddParentBtn') && detailPlayerId){
+        openCoachParentInviteSheet(detailPlayerId);
+      }
+    });
+    document.getElementById('coachParentInviteBack')?.addEventListener('click', () => closeCoachParentInviteSheet());
+    document.getElementById('coachParentInviteCloseBtn')?.addEventListener('click', () => closeCoachParentInviteSheet());
+    document.getElementById('coachParentInviteShareBtn')?.addEventListener('click', () => { shareParentInvite(); });
+    document.getElementById('coachParentInviteCopyBtn')?.addEventListener('click', async () => {
+      const linkEl = document.getElementById('coachParentInviteLink');
+      const val = linkEl && linkEl.value;
+      if(!val) return;
       try{
-        global.CoachStore.removePlayer(global.CoachStore.getSession(), btn.dataset.delPlayer);
-        renderCoachUi();
-      }catch(err){}
+        await navigator.clipboard.writeText(val);
+        toast(tt('coachParentCopied', 'Invite copied.'));
+      }catch(e){
+        toast(tt('coachErrGeneric', 'Something went wrong.'));
+      }
     });
     document.getElementById('coachRateMinus')?.addEventListener('click', () => {
       if(!quickRate) return;
@@ -934,4 +1148,6 @@
   global.bindCoachUi = bindCoachUi;
   global.openCoachQuickRate = openCoachQuickRate;
   global.closeCoachQuickRate = closeCoachQuickRate;
+  global.closeCoachPlayerSheet = closeCoachPlayerSheet;
+  global.closeCoachParentInviteSheet = closeCoachParentInviteSheet;
 })(window);

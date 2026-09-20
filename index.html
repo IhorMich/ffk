@@ -109,6 +109,12 @@ window.ffkIsNative = function () {
         <div class="fb-meta" id="fbMeta"></div>
       </div>
       <div id="playerFeed"></div>
+      <div class="pf-card" id="parentLinksCard">
+        <h3 data-i18n="parentLinksTitle">От академии</h3>
+        <p class="hint" data-i18n="parentLinksLead">Подтверждённый ребёнок из академии тренера. Личная статистика у бровки — как раньше, отдельно.</p>
+        <div id="parentLinksList"></div>
+        <button class="ghost-btn" id="parentAddLinkBtn" type="button" data-i18n="parentAddLinkBtn">Добавить по QR / ссылке</button>
+      </div>
       <div class="pf-card">
         <h3 data-i18n="myPlayers">Мои игроки</h3>
         <div id="rosterList"></div>
@@ -436,6 +442,11 @@ window.ffkIsNative = function () {
       <button class="save-btn js-pro-btn" id="statsCardBtn" type="button" data-i18n="cardPeriodBtn">Карточка периода</button>
       </div>
       </div>
+      <div id="parentCoachStatsPanel" class="parent-coach-stats" hidden>
+        <div class="pro-kicker" data-i18n="parentCoachStatsKicker">Статистика от тренера</div>
+        <p class="hint" data-i18n="parentCoachStatsLead">Отдельно от вашей оценки у бровки. Подтверждено академией.</p>
+        <div id="parentCoachStatsBoard"></div>
+      </div>
       </div>
       <div id="coachStatsTab" class="coach-tab-panel" hidden>
         <div class="coach-hero">
@@ -733,6 +744,54 @@ window.ffkIsNative = function () {
       <button class="ghost-btn" id="coachRateCancelBtn" type="button" data-i18n="previewCancel">Отмена</button>
     </div>
   </div>
+
+  <button class="coach-rate-back" id="coachPlayerBack" type="button" hidden></button>
+  <div class="coach-rate-sheet" id="coachPlayerSheet" hidden>
+    <div class="coach-rate-card" id="coachPlayerBody"></div>
+  </div>
+
+  <button class="coach-rate-back" id="coachParentInviteBack" type="button" hidden></button>
+  <div class="coach-rate-sheet" id="coachParentInviteSheet" hidden>
+    <div class="coach-rate-card">
+      <div class="sheet-grab" aria-hidden="true"><span></span></div>
+      <div class="pro-kicker" data-i18n="coachParentInviteKicker">Приглашение родителя</div>
+      <h3 class="coach-rate-name" id="coachParentInviteName">—</h3>
+      <p class="hint" id="coachParentInviteMeta"></p>
+      <p class="hint" data-i18n="coachParentInviteLead">QR и ссылка добавляют родителя/опекуна. В приложении будет подтверждение академии, команда, тренер и статистика от вас — отдельно от личной оценки у бровки.</p>
+      <div id="coachParentQr" class="coach-parent-qr"></div>
+      <div class="coach-parent-code" id="coachParentInviteCode">MC-————</div>
+      <div class="field">
+        <label data-i18n="coachParentLinkLabel">Ссылка-приглашение</label>
+        <textarea id="coachParentInviteLink" rows="3" readonly></textarea>
+      </div>
+      <button class="save-btn" id="coachParentInviteShareBtn" type="button" data-i18n="coachParentShareBtn">Поделиться</button>
+      <button class="ghost-btn" id="coachParentInviteCopyBtn" type="button" data-i18n="coachParentCopyBtn">Копировать ссылку</button>
+      <button class="ghost-btn" id="coachParentInviteCloseBtn" type="button" data-i18n="previewCancel">Отмена</button>
+    </div>
+  </div>
+
+  <button class="coach-rate-back" id="parentClaimBack" type="button" hidden></button>
+  <div class="coach-rate-sheet" id="parentClaimSheet" hidden>
+    <div class="coach-rate-card">
+      <div class="sheet-grab" aria-hidden="true"><span></span></div>
+      <div class="pro-kicker" data-i18n="parentClaimKicker">Добавить ребёнка</div>
+      <p class="hint" data-i18n="parentClaimLead">Вставьте ссылку из QR или код MC-XXXXXX от тренера.</p>
+      <div class="field">
+        <label data-i18n="parentClaimInputLabel">Ссылка или код</label>
+        <textarea id="parentClaimInput" rows="4" data-i18n-placeholder="parentClaimInputPh" placeholder="ffk://parent?d=... или MC-AB12CD"></textarea>
+      </div>
+      <div id="parentClaimPreview"></div>
+      <button class="ghost-btn" id="parentClaimPreviewBtn" type="button" data-i18n="parentClaimPreviewBtn">Проверить</button>
+      <button class="save-btn" id="parentClaimConfirmBtn" type="button" data-i18n="parentClaimConfirmBtn">Подтвердить и добавить</button>
+      <button class="ghost-btn" id="parentClaimCancelBtn" type="button" data-i18n="previewCancel">Отмена</button>
+    </div>
+  </div>
+
+  <button class="coach-rate-back" id="parentLinkBack" type="button" hidden></button>
+  <div class="coach-rate-sheet" id="parentLinkSheet" hidden>
+    <div class="coach-rate-card" id="parentLinkBody"></div>
+  </div>
+
   <button class="photo-sheet-back" id="photoSheetBack" type="button" hidden></button>
   <div class="photo-sheet" id="photoSheet" hidden>
     <button type="button" id="photoSheetCamera" data-i18n="pTakePhoto">Снять фото</button>
@@ -986,9 +1045,12 @@ window.ffkIsNative = function () {
 <script src="js/rating.js"></script>
 <script src="js/metric-icons.js"></script>
 <script src="js/storage.js"></script>
+<script src="js/qrcode-lite.js"></script>
 <script src="js/coach-config.js"></script>
 <script src="js/coach-store.js"></script>
+<script src="js/parent-store.js"></script>
 <script src="js/coach-ui.js"></script>
+<script src="js/parent-ui.js"></script>
 <script src="js/app.js"></script>
 <script>
 if (typeof emptyForm !== 'function' || typeof loadSettings !== 'function') {
