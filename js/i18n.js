@@ -3737,7 +3737,7 @@ ru:{
       coachPriceMonthHint:'щомісяця',
       coachPriceYear:'$79.99 / year',
       coachPriceYearHint:'сезон вигідніше',
-      coachLimits:'Ліміт на старті: 1 академія · 2 команди · 30 гравців · 2 асистенти',
+      coachLimits:'Ліміт на старті: 1 академія · 10 команд · 30 гравців · 2 асистенти',
       coachStart:'Start with Coach',
       coachSoon:'Скоро: акаунт, хмара і invite батьків. Personal Free/Pro лишаються як є.',
       coachSoonToast:'Matchcard Coach скоро. Personal Free/Pro уже працюють.'
@@ -3763,7 +3763,7 @@ ru:{
       coachPriceMonthHint:'miesięcznie',
       coachPriceYear:'$79.99 / year',
       coachPriceYearHint:'sezon taniej',
-      coachLimits:'Limit na start: 1 akademia · 2 zespoły · 30 zawodników · 2 asystentów',
+      coachLimits:'Limit na start: 1 akademia · 10 zespołów · 30 zawodników · 2 asystentów',
       coachStart:'Start with Coach',
       coachSoon:'Wkrótce: konto, chmura i invite rodziców. Personal Free/Pro zostaje.',
       coachSoonToast:'Matchcard Coach wkrótce. Personal Free/Pro już działa.'
@@ -3789,7 +3789,7 @@ ru:{
       coachPriceMonthHint:'monthly',
       coachPriceYear:'$79.99 / year',
       coachPriceYearHint:'better for a season',
-      coachLimits:'Launch limits: 1 academy · 2 teams · 30 players · 2 assistants',
+      coachLimits:'Launch limits: 1 academy · 10 teams · 30 players · 2 assistants',
       coachStart:'Start with Coach',
       coachSoon:'Coming soon: account, cloud and parent invites. Personal Free/Pro stay as they are.',
       coachSoonToast:'Matchcard Coach is coming. Personal Free/Pro already work.'
@@ -3815,7 +3815,7 @@ ru:{
       coachPriceMonthHint:'помесячно',
       coachPriceYear:'$79.99 / year',
       coachPriceYearHint:'сезон выгоднее',
-      coachLimits:'Лимит на старте: 1 академия · 2 команды · 30 игроков · 2 ассистента',
+      coachLimits:'Лимит на старте: 1 академия · 10 команд · 30 игроков · 2 ассистента',
       coachStart:'Start with Coach',
       coachSoon:'Скоро: аккаунт, облако и invite родителей. Personal Free/Pro остаются как есть.',
       coachSoonToast:'Matchcard Coach скоро. Personal Free/Pro уже работают.'
@@ -3841,7 +3841,7 @@ ru:{
       coachPriceMonthHint:'al mes',
       coachPriceYear:'$79.99 / year',
       coachPriceYearHint:'mejor por temporada',
-      coachLimits:'Límite inicial: 1 academia · 2 equipos · 30 jugadores · 2 asistentes',
+      coachLimits:'Límite inicial: 1 academia · 10 equipos · 30 jugadores · 2 asistentes',
       coachStart:'Start with Coach',
       coachSoon:'Pronto: cuenta, nube e invites de padres. Free/Pro personal siguen igual.',
       coachSoonToast:'Matchcard Coach llega pronto. Free/Pro personal ya funcionan.'
@@ -3867,7 +3867,7 @@ ru:{
       coachPriceMonthHint:'monatlich',
       coachPriceYear:'$79.99 / year',
       coachPriceYearHint:'besser für die Saison',
-      coachLimits:'Start-Limit: 1 Akademie · 2 Teams · 30 Spieler · 2 Assistenten',
+      coachLimits:'Start-Limit: 1 Akademie · 10 Teams · 30 Spieler · 2 Assistenten',
       coachStart:'Start with Coach',
       coachSoon:'Bald: Konto, Cloud und Eltern-Invites. Personal Free/Pro bleiben.',
       coachSoonToast:'Matchcard Coach kommt bald. Personal Free/Pro laufen schon.'
@@ -3893,7 +3893,7 @@ ru:{
       coachPriceMonthHint:'al mese',
       coachPriceYear:'$79.99 / year',
       coachPriceYearHint:'meglio per la stagione',
-      coachLimits:'Limite di avvio: 1 accademia · 2 squadre · 30 giocatori · 2 assistenti',
+      coachLimits:'Limite di avvio: 1 accademia · 10 squadre · 30 giocatori · 2 assistenti',
       coachStart:'Start with Coach',
       coachSoon:'Presto: account, cloud e invite genitori. Free/Pro personale restano.',
       coachSoonToast:'Matchcard Coach arriva presto. Free/Pro personale già funzionano.'
@@ -3919,7 +3919,7 @@ ru:{
       coachPriceMonthHint:'par mois',
       coachPriceYear:'$79.99 / year',
       coachPriceYearHint:'mieux pour la saison',
-      coachLimits:'Limite de lancement : 1 académie · 2 équipes · 30 joueurs · 2 assistants',
+      coachLimits:'Limite de lancement : 1 académie · 10 équipes · 30 joueurs · 2 assistants',
       coachStart:'Start with Coach',
       coachSoon:'Bientôt : compte, cloud et invites parents. Free/Pro perso restent.',
       coachSoonToast:'Matchcard Coach arrive bientôt. Free/Pro perso marchent déjà.'
@@ -3945,7 +3945,7 @@ ru:{
       coachPriceMonthHint:'por mês',
       coachPriceYear:'$79.99 / year',
       coachPriceYearHint:'melhor para a época',
-      coachLimits:'Limite no lançamento: 1 academia · 2 equipas · 30 jogadores · 2 assistentes',
+      coachLimits:'Limite no lançamento: 1 academia · 10 equipas · 30 jogadores · 2 assistentes',
       coachStart:'Start with Coach',
       coachSoon:'Em breve: conta, nuvem e invites dos pais. Free/Pro pessoal ficam.',
       coachSoonToast:'Matchcard Coach chega em breve. Free/Pro pessoal já funcionam.'
