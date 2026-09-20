@@ -1251,6 +1251,7 @@
     width:100%;box-sizing:border-box;padding:11px 12px;border-radius:12px;
     border:1px solid var(--card-line);background:var(--surface);color:var(--text);font:inherit;font-weight:600;
   }
+  .coach-player-form > .js-cm-date:only-child{grid-column:1 / -1;}
   .coach-player-form select.coach-pos-select{grid-column:1 / -1;}
   .coach-player-form #coachPlayerContact{grid-column:1 / -1;}
   .coach-player-edit #coachEditContact{grid-column:1 / -1;}
