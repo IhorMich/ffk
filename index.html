@@ -322,14 +322,14 @@ window.ffkIsNative = function () {
         <div class="coach-hero">
           <div class="pro-kicker" data-i18n="coachMatchKicker">Team matches</div>
           <h3 class="coach-team-heading" id="coachMatchTabTeam">—</h3>
-          <p class="hint" data-i18n="coachMatchHint">Создай матч, отметь кто играет, затем быстро оцени участников.</p>
+          <p class="hint" data-i18n="coachMatchHint">Создай предстоящий матч, отметь кто играет — приложение отправит им приглашение.</p>
           <div class="field">
             <label data-i18n="coachMatchOpponent">Opponent</label>
             <input class="js-cm-opponent" type="text" maxlength="48" placeholder="Rival FC">
           </div>
           <div class="coach-player-form">
             <input class="js-cm-date" type="date">
-            <input class="js-cm-score" type="text" maxlength="16" placeholder="2:1">
+            <input class="js-cm-score" type="text" maxlength="16" data-i18n-placeholder="coachScoreOptionalPh" placeholder="Счёт (позже)">
           </div>
           <div class="field">
             <div class="coach-squad-head">
@@ -342,8 +342,10 @@ window.ffkIsNative = function () {
             <p class="hint" data-i18n="coachSquadHint">Отметь или сними галочки вручную — кто выходит на матч.</p>
             <div class="js-cm-squad coach-squad-picker"></div>
           </div>
-          <button class="save-btn js-cm-create" type="button" data-i18n="coachCreateMatchBtn">Create match</button>
+          <button class="save-btn js-cm-create" type="button" data-i18n="coachCreateMatchInviteBtn">Создать матч и пригласить</button>
           <button class="ghost-btn js-cm-squad-save" type="button" data-i18n="coachSquadSave" hidden>Сохранить заявку</button>
+          <button class="ghost-btn js-cm-invite-again" type="button" data-i18n="coachInviteAgain" hidden>Отправить приглашения ещё раз</button>
+          <div class="js-cm-invite-box coach-invite-box" hidden></div>
           <div class="js-cm-matches coach-team-list"></div>
           <div class="js-cm-rates coach-player-list"></div>
         </div>
@@ -598,8 +600,18 @@ window.ffkIsNative = function () {
           <div class="coach-hero coach-profile-hero" id="coachProfileHero">
             <p class="hint" data-i18n="coachPhotoHint" style="text-align:center;margin:0 0 12px;">Нажмите на фото или фон, чтобы сменить.</p>
             <div class="pro-kicker" data-i18n="coachProfileKicker">Coach profile</div>
-            <h2 class="coach-title" id="coachProfileName">—</h2>
+            <div class="row2">
+              <div class="field">
+                <label data-i18n="coachFirstName">Имя</label>
+                <input id="coachFirstName" type="text" maxlength="40" autocomplete="given-name">
+              </div>
+              <div class="field">
+                <label data-i18n="coachLastName">Фамилия</label>
+                <input id="coachLastName" type="text" maxlength="40" autocomplete="family-name">
+              </div>
+            </div>
             <p class="hint" id="coachProfileEmail"></p>
+            <button class="save-btn" id="coachSaveProfileBtn" type="button" data-i18n="coachSaveProfile">Сохранить профиль</button>
             <div class="coach-analytics-sum" id="coachProfileStats"></div>
           </div>
 
@@ -627,6 +639,7 @@ window.ffkIsNative = function () {
               <input id="coachPlayerFirst" type="text" maxlength="40" data-i18n-placeholder="coachFirstPh" placeholder="First name">
               <input id="coachPlayerLast" type="text" maxlength="40" data-i18n-placeholder="coachLastPh" placeholder="Last name">
               <input id="coachPlayerNumber" type="text" maxlength="4" inputmode="numeric" placeholder="#">
+              <input id="coachPlayerContact" type="text" maxlength="80" data-i18n-placeholder="coachContactPh" placeholder="Телефон или email родителя">
               <select id="coachPlayerPos" class="coach-pos-select" aria-label="position"></select>
             </div>
             <button class="save-btn" id="coachAddPlayerBtn" type="button" data-i18n="coachAddPlayerBtn">Add player</button>
@@ -635,14 +648,14 @@ window.ffkIsNative = function () {
 
           <div id="coachMatchPane" class="coach-hero" hidden>
             <div class="pro-kicker" data-i18n="coachMatchKicker">Team matches</div>
-            <p class="hint" data-i18n="coachMatchHint">Создай матч, отметь кто играет, затем быстро оцени участников.</p>
+            <p class="hint" data-i18n="coachMatchHint">Создай предстоящий матч, отметь кто играет — приложение отправит им приглашение.</p>
             <div class="field">
               <label data-i18n="coachMatchOpponent">Opponent</label>
               <input id="coachMatchOpponent" class="js-cm-opponent" type="text" maxlength="48" placeholder="Rival FC">
             </div>
             <div class="coach-player-form">
               <input id="coachMatchDate" class="js-cm-date" type="date">
-              <input id="coachMatchScore" class="js-cm-score" type="text" maxlength="16" placeholder="2:1">
+              <input id="coachMatchScore" class="js-cm-score" type="text" maxlength="16" data-i18n-placeholder="coachScoreOptionalPh" placeholder="Счёт (позже)">
             </div>
             <div class="field">
               <div class="coach-squad-head">
@@ -655,8 +668,10 @@ window.ffkIsNative = function () {
               <p class="hint" data-i18n="coachSquadHint">Отметь или сними галочки вручную — кто выходит на матч.</p>
               <div id="coachSquadPicker" class="js-cm-squad coach-squad-picker"></div>
             </div>
-            <button class="save-btn js-cm-create" id="coachCreateMatchBtn" type="button" data-i18n="coachCreateMatchBtn">Create match</button>
+            <button class="save-btn js-cm-create" id="coachCreateMatchBtn" type="button" data-i18n="coachCreateMatchInviteBtn">Создать матч и пригласить</button>
             <button class="ghost-btn js-cm-squad-save" type="button" data-i18n="coachSquadSave" hidden>Сохранить заявку</button>
+            <button class="ghost-btn js-cm-invite-again" type="button" data-i18n="coachInviteAgain" hidden>Отправить приглашения ещё раз</button>
+            <div class="js-cm-invite-box coach-invite-box" hidden></div>
             <div id="coachMatchList" class="js-cm-matches coach-team-list"></div>
             <div id="coachRateList" class="js-cm-rates coach-player-list"></div>
           </div>

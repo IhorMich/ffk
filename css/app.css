@@ -1252,6 +1252,16 @@
     border:1px solid var(--card-line);background:var(--surface);color:var(--text);font:inherit;font-weight:600;
   }
   .coach-player-form select.coach-pos-select{grid-column:1 / -1;}
+  .coach-player-form #coachPlayerContact{grid-column:1 / -1;}
+  .coach-invite-box{margin:0 0 12px;}
+  .coach-invite-card{
+    padding:12px 14px;border-radius:14px;border:1px solid var(--card-line);
+    background:color-mix(in srgb, var(--card-paper) 90%, var(--card-accent));
+  }
+  .coach-invite-card b{display:block;margin:0 0 6px;font-size:.95rem;}
+  .coach-invite-card .hint{margin:0 0 4px;}
+  .js-cm-invite-again{width:100%;margin:0 0 10px;}
+  #coachSaveProfileBtn{width:100%;margin:8px 0 12px;}
   .coach-player-list{display:grid;gap:8px;margin:12px 0 8px;}
   .coach-player-row{
     display:flex;align-items:center;justify-content:space-between;gap:10px;

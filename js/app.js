@@ -1128,7 +1128,7 @@ function refreshCoachMediaUi(){
   }
   const box = document.getElementById('cPhotoBox');
   if(box){
-    const letter = ((media.email || 'C').trim().slice(0, 1) || 'C').toUpperCase();
+    const letter = ((media.first_name || media.email || 'C').trim().slice(0, 1) || 'C').toUpperCase();
     setBadge(box, media.photo || '', letter);
   }
 }
@@ -1932,20 +1932,23 @@ function applyCoachHeader(){
   const store = window.CoachStore;
   const session = store && store.getSession();
   const academy = session && store.myAcademy(session);
-  const profile = session && store.getProfile ? store.getProfile(session) : {photo:'', cover:'', email:''};
+  const profile = session && store.getProfile ? store.getProfile(session) : {photo:'', cover:'', email:'', first_name:'', last_name:''};
   const nameEl = document.getElementById('playerNameDisplay');
   const metaEl = document.getElementById('playerMetaLine');
   const clubEl = document.getElementById('playerClubLine');
   const avgEl = document.getElementById('playerSeasonAvg');
   if(avgEl) avgEl.hidden = true;
-  const title = academy && academy.name
-    ? academy.name
-    : (t('tabCoach') || 'Coach');
+  const coachName = [profile.first_name, profile.last_name].filter(Boolean).join(' ');
+  const title = coachName
+    || (academy && academy.name)
+    || (t('tabCoach') || 'Coach');
   if(nameEl) nameEl.textContent = title;
   if(metaEl){
-    metaEl.textContent = (profile.email || (session && session.email))
-      ? (profile.email || session.email)
-      : (t('coachProfileKicker') || 'Coach');
+    const bits = [
+      academy && academy.name && coachName ? academy.name : '',
+      profile.email || (session && session.email) || ''
+    ].filter(Boolean);
+    metaEl.textContent = bits.join(' · ') || (t('coachProfileKicker') || 'Coach');
   }
   if(clubEl){
     if(academy && session){
@@ -1961,7 +1964,7 @@ function applyCoachHeader(){
       clubEl.textContent = t('coachLead') || '';
     }
   }
-  const initials = (academy && academy.name ? academy.name : (profile.email || 'C'))
+  const initials = (coachName || (academy && academy.name) || (profile.email || 'C'))
     .trim().slice(0, 1).toUpperCase() || 'C';
   setBadge(document.getElementById('clubBadge'), profile.photo || '', initials);
   refreshCoachMediaUi();

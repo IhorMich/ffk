@@ -23,6 +23,7 @@
       memberships: [],
       team_matches: [],
       ratings: [],
+      match_invites: [],
       activeTeamId: '',
       activeMatchId: ''
     };
@@ -42,6 +43,7 @@
         memberships: Array.isArray(db.memberships) ? db.memberships : [],
         team_matches: Array.isArray(db.team_matches) ? db.team_matches : [],
         ratings: Array.isArray(db.ratings) ? db.ratings : [],
+        match_invites: Array.isArray(db.match_invites) ? db.match_invites : [],
         activeTeamId: String(db.activeTeamId || ''),
         activeMatchId: String(db.activeMatchId || '')
       };
@@ -86,6 +88,8 @@
         id,
         email,
         passHash: await hashPass(password),
+        first_name: '',
+        last_name: '',
         photo: '',
         cover: '',
         createdAt: new Date().toISOString()
@@ -116,16 +120,24 @@
       const acc = this.getAccount(session);
       return {
         email: (acc && acc.email) || (session && session.email) || '',
+        first_name: acc && acc.first_name ? String(acc.first_name) : '',
+        last_name: acc && acc.last_name ? String(acc.last_name) : '',
         photo: acc && acc.photo ? String(acc.photo) : '',
         cover: acc && acc.cover ? String(acc.cover) : ''
       };
     },
-    updateProfileMedia(session, patch){
+    updateProfile(session, patch){
       if(!session) throw new Error('auth');
       const db = readDb();
       const email = Object.keys(db.accounts || {}).find(k => db.accounts[k] && db.accounts[k].id === session.userId);
       if(!email) throw new Error('auth');
       const acc = db.accounts[email];
+      if(Object.prototype.hasOwnProperty.call(patch, 'first_name')){
+        acc.first_name = String(patch.first_name || '').trim().slice(0, 40);
+      }
+      if(Object.prototype.hasOwnProperty.call(patch, 'last_name')){
+        acc.last_name = String(patch.last_name || '').trim().slice(0, 40);
+      }
       if(Object.prototype.hasOwnProperty.call(patch, 'photo')){
         acc.photo = patch.photo ? String(patch.photo) : '';
       }
@@ -134,6 +146,9 @@
       }
       writeDb(db);
       return this.getProfile(session);
+    },
+    updateProfileMedia(session, patch){
+      return this.updateProfile(session, patch);
     },
     myAcademy(session){
       const db = readDb();
@@ -231,9 +246,20 @@
         number: String(fields.number || '').replace(/\D/g, '').slice(0, 4),
         position: String(fields.position || '').trim().toUpperCase().slice(0, 8),
         birth_date: String(fields.birth_date || '').trim().slice(0, 10),
+        contact: String(fields.contact || '').trim().slice(0, 80),
         created_at: new Date().toISOString()
       };
       db.team_players.push(player);
+      writeDb(db);
+      return player;
+    },
+    updatePlayer(session, playerId, fields){
+      const db = readDb();
+      const player = db.team_players.find(p => p.id === playerId);
+      if(!player || !this.getTeam(session, player.team_id)) throw new Error('forbidden');
+      if(Object.prototype.hasOwnProperty.call(fields, 'contact')){
+        player.contact = String(fields.contact || '').trim().slice(0, 80);
+      }
       writeDb(db);
       return player;
     },
@@ -245,6 +271,7 @@
       db.team_players = db.team_players.filter(p => p.id !== playerId);
       db.memberships = db.memberships.filter(m => m.team_player_id !== playerId);
       db.ratings = db.ratings.filter(r => r.team_player_id !== playerId);
+      db.match_invites = db.match_invites.filter(i => i.team_player_id !== playerId);
       writeDb(db);
     },
     getActiveMatchId(){
@@ -286,13 +313,69 @@
         score: String(fields.score || '').trim().slice(0, 16),
         venue: fields.venue === 'away' ? 'away' : 'home',
         kind: ['league','friendly','cup','tournament'].includes(fields.kind) ? fields.kind : 'league',
+        status: fields.status === 'played' ? 'played' : 'upcoming',
         squad,
         created_at: new Date().toISOString()
       };
       db.team_matches.push(match);
+      // Create pending invites for every squad player
+      squad.forEach(pid => {
+        const exists = db.match_invites.some(i => i.match_id === match.id && i.team_player_id === pid);
+        if(exists) return;
+        db.match_invites.push({
+          id: uid('inv'),
+          match_id: match.id,
+          team_id: teamId,
+          team_player_id: pid,
+          status: 'pending',
+          sent_at: '',
+          created_at: new Date().toISOString()
+        });
+      });
       db.activeMatchId = match.id;
       writeDb(db);
       return match;
+    },
+    listInvites(session, matchId){
+      const match = this.getMatch(session, matchId);
+      if(!match) return [];
+      return readDb().match_invites.filter(i => i.match_id === matchId);
+    },
+    markInvitesSent(session, matchId, playerIds){
+      const match = this.getMatch(session, matchId);
+      if(!match) throw new Error('forbidden');
+      const want = new Set((playerIds || []).map(String));
+      const db = readDb();
+      const now = new Date().toISOString();
+      db.match_invites = db.match_invites.map(i => {
+        if(i.match_id !== matchId) return i;
+        if(want.size && !want.has(i.team_player_id)) return i;
+        return {...i, status: 'sent', sent_at: now};
+      });
+      writeDb(db);
+      return this.listInvites(session, matchId);
+    },
+    inviteMessage(session, matchId){
+      const match = this.getMatch(session, matchId);
+      if(!match) return '';
+      const team = this.getTeam(session, match.team_id);
+      const profile = this.getProfile(session);
+      const coachName = [profile.first_name, profile.last_name].filter(Boolean).join(' ') || profile.email || 'Coach';
+      const players = this.listMatchPlayers(session, match);
+      const names = players.map(p => {
+        const n = [p.first_name, p.last_name].filter(Boolean).join(' ');
+        return p.number ? `#${p.number} ${n}` : n;
+      }).join(', ');
+      const code = team ? team.invite_code : '';
+      return [
+        `Matchcard Coach`,
+        `${team ? team.name : 'Team'} vs ${match.opponent}`,
+        match.date,
+        names ? `Squad: ${names}` : '',
+        code ? `Team code: ${code}` : '',
+        `Coach: ${coachName}`,
+        `Please confirm you can play.`
+      ].filter(Boolean).join('\n');
     },
     setMatchSquad(session, matchId, squadIds){
       const match = this.getMatch(session, matchId);
@@ -302,6 +385,22 @@
       if(!squad.length) throw new Error('squad');
       const db = readDb();
       db.team_matches = db.team_matches.map(m => m.id === matchId ? {...m, squad} : m);
+      // Sync invites with squad
+      const existing = db.match_invites.filter(i => i.match_id === matchId);
+      const have = new Set(existing.map(i => i.team_player_id));
+      squad.forEach(pid => {
+        if(have.has(pid)) return;
+        db.match_invites.push({
+          id: uid('inv'),
+          match_id: matchId,
+          team_id: match.team_id,
+          team_player_id: pid,
+          status: 'pending',
+          sent_at: '',
+          created_at: new Date().toISOString()
+        });
+      });
+      db.match_invites = db.match_invites.filter(i => i.match_id !== matchId || squad.includes(i.team_player_id));
       writeDb(db);
       return this.getMatch(session, matchId);
     },
