@@ -876,6 +876,41 @@
   }
   .inbox-badge[hidden]{display:none !important;}
   .inbox-sheet-list{display:grid;gap:8px;margin-top:10px;max-height:min(60vh,480px);overflow:auto;}
+  .inbox-page{
+    position:fixed;inset:0;z-index:150;display:flex;flex-direction:column;
+    background:#0b0c14;color:var(--card-ink);
+    padding:env(safe-area-inset-top,0) 0 env(safe-area-inset-bottom,0);
+  }
+  html[data-theme="day"] .inbox-page{background:#f4f6fb;}
+  .inbox-page[hidden]{display:none !important;}
+  .inbox-page-head{
+    flex-shrink:0;display:flex;align-items:center;gap:4px;
+    min-height:52px;padding:6px 10px;border-bottom:1px solid var(--card-line);
+    background:color-mix(in srgb, var(--card-paper) 88%, transparent);
+  }
+  .inbox-page-back-btn{
+    width:40px;height:40px;border:0;border-radius:12px;padding:0;margin:0;
+    display:grid;place-items:center;background:transparent;color:var(--card-ink);cursor:pointer;
+  }
+  .inbox-page-back-btn:active{background:var(--card-wash);}
+  .inbox-page-title{
+    margin:0;font-size:1.15rem;font-weight:800;letter-spacing:-.01em;color:var(--card-ink);
+  }
+  .inbox-page-list{
+    flex:1;min-height:0;overflow:auto;-webkit-overflow-scrolling:touch;
+    display:flex;flex-direction:column;
+  }
+  .inbox-empty{
+    flex:1;display:grid;place-items:center;padding:48px 24px;
+    font-size:1rem;font-weight:700;color:var(--card-muted);text-align:center;
+  }
+  .inbox-page-list .parent-msg-row{
+    border-radius:0;border:0;border-bottom:1px solid var(--card-line);
+    background:transparent;padding:14px 16px;margin:0;
+  }
+  .inbox-page-list .parent-msg-row:active{background:var(--card-wash);}
+  .inbox-page-list .parent-msg-row.unread{background:color-mix(in srgb, var(--card-accent) 6%, transparent);}
+
   .theme-toggle .ico-moon{display:none;fill:currentColor;stroke:none;}
   html[data-theme="day"] .theme-toggle .ico-sun{display:none;}
   html[data-theme="day"] .theme-toggle .ico-moon{display:block;}

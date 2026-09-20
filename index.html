@@ -115,7 +115,6 @@ window.ffkIsNative = function () {
       <div id="playerFeed"></div>
       <div class="pf-card" id="parentInboxCard" hidden>
         <h3 data-i18n="parentInboxTitle">Сообщения</h3>
-        <p class="hint" data-i18n="parentInboxLead">Приглашения на матч от тренера — внутри Matchcard.</p>
         <div id="parentInboxList"></div>
       </div>
       <div class="pf-card" id="parentLinksCard">
@@ -931,17 +930,15 @@ window.ffkIsNative = function () {
     <div class="coach-rate-card" id="parentMsgBody"></div>
   </div>
 
-  <button class="coach-rate-back" id="inboxSheetBack" type="button" hidden></button>
-  <div class="coach-rate-sheet" id="inboxSheet" hidden>
-    <div class="coach-rate-card coach-inbox-sheet-card">
-      <div class="sheet-grab" aria-hidden="true"><span></span></div>
-      <div class="coach-settings-head">
-        <div class="pro-kicker" data-i18n="parentInboxTitle">Сообщения</div>
-        <button type="button" class="ghost-btn coach-settings-close" id="inboxSheetCloseBtn" data-i18n="previewCancel">Закрыть</button>
-      </div>
-      <p class="hint" data-i18n="parentInboxLead">Приглашения на матч от тренера — внутри Matchcard.</p>
-      <div id="inboxSheetList" class="inbox-sheet-list"></div>
-    </div>
+  <button class="coach-rate-back" id="inboxSheetBack" type="button" hidden aria-hidden="true"></button>
+  <div class="inbox-page" id="inboxSheet" hidden>
+    <header class="inbox-page-head">
+      <button type="button" class="inbox-page-back-btn" id="inboxSheetCloseBtn" aria-label="Back">
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M15.41 7.41 14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+      </button>
+      <h2 class="inbox-page-title" data-i18n="parentInboxTitle">Сообщения</h2>
+    </header>
+    <div id="inboxSheetList" class="inbox-page-list"></div>
   </div>
 
   <button class="photo-sheet-back" id="photoSheetBack" type="button" hidden></button>

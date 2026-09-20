@@ -36,7 +36,7 @@
   }
   function inboxRowsHtml(msgs){
     if(!msgs.length){
-      return `<p class="hint">${esc(tt('parentInboxEmpty', 'No match invites yet. When the coach picks the squad, the invite appears here.'))}</p>`;
+      return `<div class="inbox-empty">${esc(tt('parentInboxEmpty', 'No messages'))}</div>`;
     }
     return msgs.map(m => {
       const unreadCls = m.status === 'read' ? '' : ' unread';
@@ -54,7 +54,7 @@
       return `<button type="button" class="parent-msg-row${unreadCls}${isResult ? ' result' : ''}" data-parent-msg="${esc(m.id)}">
         <span class="parent-link-main">
           <b>${esc(title)}</b>
-          <span>${esc(meta)}</span>
+          <span>${esc(meta || '—')}</span>
         </span>
         <span class="parent-msg-dot" aria-hidden="true"></span>
       </button>`;
@@ -89,7 +89,8 @@
     const list = document.getElementById('inboxSheetList');
     if(list) list.innerHTML = inboxRowsHtml(inboxMessages());
     if(sheet) sheet.hidden = false;
-    if(back) back.hidden = false;
+    // Full-screen inbox — no dimmed bottom-sheet backdrop.
+    if(back) back.hidden = true;
     if(typeof pushAppState === 'function') pushAppState('layer');
     syncInboxBellUi();
   }
