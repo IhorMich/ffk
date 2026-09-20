@@ -681,9 +681,27 @@ window.ffkIsNative = function () {
           <div id="coachHomeStats" class="coach-analytics-sum coach-home-stats" hidden></div>
 
           <div class="coach-hero coach-home-teams">
-            <div class="pro-kicker" data-i18n="coachTeamsKicker">Teams</div>
+            <div class="coach-match-top">
+              <div class="pro-kicker" data-i18n="coachTeamsKicker">Команды</div>
+              <button type="button" class="save-btn coach-match-new" id="coachAddTeamBtn" data-i18n="coachCreateTeamBtn">Добавить команду</button>
+            </div>
+            <div id="coachHomeCreateTeam" class="coach-match-create" hidden>
+              <div class="coach-match-create-grid">
+                <div class="field">
+                  <label data-i18n="coachTeamLabel">Новая команда</label>
+                  <input id="coachHomeTeamInput" type="text" maxlength="60" placeholder="U13 Blue">
+                </div>
+                <div class="field">
+                  <label data-i18n="coachAgeLabel">Возраст</label>
+                  <input id="coachHomeTeamAgeInput" type="text" maxlength="24" placeholder="U13">
+                </div>
+              </div>
+              <div class="coach-match-create-actions">
+                <button class="save-btn" id="coachHomeCreateTeamBtn" type="button" data-i18n="coachCreateTeamBtn">Добавить команду</button>
+                <button class="ghost-btn" type="button" id="coachHomeCreateTeamCancel" data-i18n="previewCancel">Отмена</button>
+              </div>
+            </div>
             <div id="coachTeamList" class="coach-team-list"></div>
-            <p class="hint" data-i18n="coachTeamsSettingsHint">Академия, профиль и новые команды — в настройках.</p>
           </div>
 
           <div id="coachHomeNav" class="coach-home-nav" hidden>

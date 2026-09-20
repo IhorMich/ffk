@@ -238,12 +238,13 @@
     isAcademyOwner(session){
       const academy = this.myAcademy(session);
       if(!academy || !session) return false;
+      if(academy.owner_user_id && academy.owner_user_id === session.userId) return true;
       const db = readDb();
       return db.memberships.some(m =>
         m.user_id === session.userId &&
         m.academy_id === academy.id &&
         m.role === 'owner' &&
-        (m.status || 'active') === 'active'
+        (m.status || 'active') !== 'revoked'
       );
     },
     createAcademy(session, name){

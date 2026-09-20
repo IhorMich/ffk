@@ -356,6 +356,21 @@
     const settingsList = document.getElementById('coachSettingsTeamList');
     if(settingsList) settingsList.innerHTML = teamListHtml;
 
+    const canAddTeam = !!(store.isAcademyOwner && store.isAcademyOwner(session));
+    const addBtn = document.getElementById('coachAddTeamBtn');
+    if(addBtn){
+      addBtn.hidden = !canAddTeam;
+      const maxTeams = typeof COACH_MAX_TEAMS === 'number' ? COACH_MAX_TEAMS : 10;
+      addBtn.disabled = teams.length >= maxTeams;
+    }
+    if(!canAddTeam) setHomeCreateTeamOpen(false);
+    const settingsCreateBtn = document.getElementById('coachCreateTeamBtn');
+    if(settingsCreateBtn){
+      settingsCreateBtn.hidden = !canAddTeam;
+      const maxTeams = typeof COACH_MAX_TEAMS === 'number' ? COACH_MAX_TEAMS : 10;
+      settingsCreateBtn.disabled = teams.length >= maxTeams;
+    }
+
     if(teamPane) teamPane.hidden = !active;
     if(homeNav) homeNav.hidden = !active;
     if(active){
@@ -955,25 +970,44 @@
       toast(map[e.message] || tt('coachErrGeneric', 'Could not create academy.'));
     }
   }
-  function onCreateTeam(){
+  function setHomeCreateTeamOpen(on){
+    const box = document.getElementById('coachHomeCreateTeam');
+    if(box) box.hidden = !on;
+    if(on){
+      const input = document.getElementById('coachHomeTeamInput');
+      if(input){
+        try{ input.focus(); }catch(e){}
+      }
+    }
+  }
+  function onCreateTeam(fromHome){
     const session = global.CoachStore.getSession();
     const academy = global.CoachStore.myAcademy(session);
     if(!academy) return;
-    const name = document.getElementById('coachTeamInput')?.value || '';
-    const age = document.getElementById('coachTeamAgeInput')?.value || '';
+    const nameEl = document.getElementById(fromHome ? 'coachHomeTeamInput' : 'coachTeamInput');
+    const ageEl = document.getElementById(fromHome ? 'coachHomeTeamAgeInput' : 'coachTeamAgeInput');
+    const name = nameEl?.value || '';
+    const age = ageEl?.value || '';
     try{
       const team = global.CoachStore.createTeam(session, academy.id, name, age);
       global.CoachStore.setActiveTeamId(team.id);
-      const nameInput = document.getElementById('coachTeamInput');
-      const ageInput = document.getElementById('coachTeamAgeInput');
-      if(nameInput) nameInput.value = '';
-      if(ageInput) ageInput.value = '';
+      if(nameEl) nameEl.value = '';
+      if(ageEl) ageEl.value = '';
+      // Keep settings form in sync when creating from home.
+      const otherName = document.getElementById(fromHome ? 'coachTeamInput' : 'coachHomeTeamInput');
+      const otherAge = document.getElementById(fromHome ? 'coachTeamAgeInput' : 'coachHomeTeamAgeInput');
+      if(otherName) otherName.value = '';
+      if(otherAge) otherAge.value = '';
+      setHomeCreateTeamOpen(false);
       toast(tt('coachTeamCreated', 'Team created.'));
       renderCoachUi();
     }catch(e){
       const map = {
         name: tt('coachErrTeamName', 'Enter team name.'),
-        team_limit: tt('coachErrTeamLimit', 'Team limit reached for this academy.')
+        team_limit: tt('coachErrTeamLimit', 'Team limit reached for this academy.'),
+        owner_only: tt('coachErrOwnerOnlyTeam', 'Only the academy owner can add teams.'),
+        forbidden: tt('coachErrGeneric', 'Could not create team.'),
+        auth: tt('coachErrGeneric', 'Could not create team.')
       };
       toast(map[e.message] || tt('coachErrGeneric', 'Could not create team.'));
     }
@@ -1726,7 +1760,13 @@
     document.getElementById('enterParentModeBtn')?.addEventListener('click', () => { enterParentMode(); });
     document.getElementById('enterCoachModeBtn')?.addEventListener('click', () => { enterCoachMode(); });
     document.getElementById('coachCreateAcademyBtn')?.addEventListener('click', () => { onCreateAcademy(); });
-    document.getElementById('coachCreateTeamBtn')?.addEventListener('click', () => { onCreateTeam(); });
+    document.getElementById('coachCreateTeamBtn')?.addEventListener('click', () => { onCreateTeam(false); });
+    document.getElementById('coachAddTeamBtn')?.addEventListener('click', () => {
+      const box = document.getElementById('coachHomeCreateTeam');
+      setHomeCreateTeamOpen(!!(box && box.hidden));
+    });
+    document.getElementById('coachHomeCreateTeamBtn')?.addEventListener('click', () => { onCreateTeam(true); });
+    document.getElementById('coachHomeCreateTeamCancel')?.addEventListener('click', () => { setHomeCreateTeamOpen(false); });
     document.getElementById('coachAddPlayerBtn')?.addEventListener('click', () => { onAddPlayer(); });
     document.getElementById('coachRosterToggle')?.addEventListener('click', () => {
       setRosterFolded(!rosterFolded());
