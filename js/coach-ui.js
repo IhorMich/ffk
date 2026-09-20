@@ -1682,6 +1682,11 @@
       metaEl.textContent = `${quickRate.date} · ${quickRate.opponent}${quickRate.score ? ` · ${quickRate.score}` : ''} · ${posLab}`;
     }
     if(commentEl) commentEl.value = quickRate.comment;
+    const saveBtn = document.getElementById('coachRateSaveBtn');
+    if(saveBtn){
+      saveBtn.setAttribute('data-i18n', 'coachQuickSaveSend');
+      saveBtn.textContent = tt('coachQuickSaveSend', 'Save and send to parent');
+    }
     syncQuickScoreUi();
     renderQuickMoments();
     if(typeof presentSheetCard === 'function') presentSheetCard(card, back);
