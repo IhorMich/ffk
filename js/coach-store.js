@@ -1448,8 +1448,10 @@
         o: r.opponent,
         s: r.score || '',
         r: Number(r.rating) || 0,
-        c: String(r.comment || '').slice(0, 120),
-        p: r.pitchPos || ''
+        p: r.pitchPos || '',
+        m: Number(r.minutes) || 0,
+        role: r.role || ''
+        // No personal coach comments in parent invite payload.
       }));
       const db = readDb();
       const mi = db.match_invites
@@ -1484,6 +1486,13 @@
         mr,
         avg: detail.avg,
         g: detail.games,
+        last: detail.last,
+        best: detail.best,
+        worst: detail.worst,
+        form: detail.form,
+        trend: detail.trend,
+        minutes: detail.minutes,
+        topMoments: detail.topMoments,
         iat: new Date().toISOString()
       };
     },

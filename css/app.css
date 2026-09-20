@@ -1562,11 +1562,8 @@
   .parent-link-main b{font-size:.95rem;font-weight:800;}
   .parent-link-main span{font-size:.75rem;font-weight:700;color:var(--card-muted);}
   .parent-link-avg{font-size:1.15rem;font-weight:800;color:var(--card-accent);}
-  .parent-confirm-badge{
-    display:inline-block;margin:0 0 8px;padding:4px 10px;border-radius:999px;
-    font-size:.68rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;
-    background:color-mix(in srgb, var(--card-accent) 18%, transparent);color:var(--card-accent);
-  }
+  .parent-team-line{margin:2px 0 4px;font-weight:800;color:var(--card-ink);}
+  .parent-coach-block .coach-stat-section{margin-top:10px;}
   .name-with-verified{
     display:inline-flex;align-items:center;gap:.32em;max-width:100%;
     vertical-align:middle;

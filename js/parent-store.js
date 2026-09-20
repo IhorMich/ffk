@@ -65,11 +65,24 @@
         opponent: String(r.o || r.opponent || '').slice(0, 48),
         score: String(r.s || r.score || '').slice(0, 16),
         rating: Number(r.r != null ? r.r : r.rating) || 0,
-        comment: String(r.c || r.comment || '').slice(0, 200),
-        pitchPos: String(r.p || r.pitchPos || '').slice(0, 8)
+        pitchPos: String(r.p || r.pitchPos || '').slice(0, 8),
+        minutes: Number(r.m != null ? r.m : r.minutes) || 0,
+        role: String(r.role || '').slice(0, 8)
       })),
       avg: raw.avg != null ? Number(raw.avg) : null,
       games: Number(raw.g != null ? raw.g : raw.games) || 0,
+      last: raw.last != null ? Number(raw.last) : null,
+      best: raw.best != null ? Number(raw.best) : null,
+      worst: raw.worst != null ? Number(raw.worst) : null,
+      form: Array.isArray(raw.form) ? raw.form.map(n => Number(n) || 0).slice(-5) : [],
+      trend: raw.trend != null ? Number(raw.trend) : null,
+      minutes: raw.minutes != null ? Number(raw.minutes) : 0,
+      topMoments: Array.isArray(raw.topMoments)
+        ? raw.topMoments.slice(0, 6).map(m => ({
+            key: String(m.key || m.k || '').slice(0, 24),
+            n: Number(m.n) || 0
+          })).filter(m => m.key && m.n)
+        : [],
       issued_at: String(raw.iat || raw.issued_at || new Date().toISOString()),
       mi: Array.isArray(raw.mi || raw.match_invites) ? (raw.mi || raw.match_invites) : []
     };
@@ -164,6 +177,13 @@
         ratings: norm.ratings,
         avg: norm.avg,
         games: norm.games || norm.ratings.length,
+        last: norm.last,
+        best: norm.best,
+        worst: norm.worst,
+        form: Array.isArray(norm.form) ? norm.form : [],
+        trend: norm.trend,
+        minutes: norm.minutes || 0,
+        topMoments: Array.isArray(norm.topMoments) ? norm.topMoments : [],
         issued_at: norm.issued_at,
         claimedAt: existing ? existing.claimedAt : new Date().toISOString(),
         updatedAt: new Date().toISOString()
@@ -224,11 +244,33 @@
       let hit = null;
       db.links = db.links.map(l => {
         if(!l.player || String(l.player.id) !== pid) return l;
+        const nextPlayer = {...(l.player || {})};
+        if(data.player && typeof data.player === 'object'){
+          if(data.player.number != null) nextPlayer.number = String(data.player.number || '').slice(0, 4);
+          if(data.player.position != null) nextPlayer.position = String(data.player.position || '').slice(0, 8);
+          if(data.player.first_name) nextPlayer.first_name = String(data.player.first_name).slice(0, 40);
+          if(data.player.last_name != null) nextPlayer.last_name = String(data.player.last_name || '').slice(0, 40);
+        }
+        const nextTeam = {...(l.team || {})};
+        if(data.team && typeof data.team === 'object'){
+          if(data.team.id) nextTeam.id = String(data.team.id).slice(0, 40);
+          if(data.team.name) nextTeam.name = String(data.team.name).slice(0, 60);
+          if(data.team.age_group != null) nextTeam.age_group = String(data.team.age_group || '').slice(0, 24);
+        }
         hit = {
           ...l,
+          player: nextPlayer,
+          team: nextTeam,
           ratings: Array.isArray(data.ratings) ? data.ratings.slice(0, 40) : (l.ratings || []),
           avg: data.avg != null ? data.avg : l.avg,
           games: data.games != null ? data.games : l.games,
+          last: data.last != null ? data.last : l.last,
+          best: data.best != null ? data.best : l.best,
+          worst: data.worst != null ? data.worst : l.worst,
+          form: Array.isArray(data.form) ? data.form.slice(-5) : (l.form || []),
+          trend: data.trend != null ? data.trend : l.trend,
+          minutes: data.minutes != null ? data.minutes : l.minutes,
+          topMoments: Array.isArray(data.topMoments) ? data.topMoments.slice(0, 6) : (l.topMoments || []),
           updatedAt: new Date().toISOString()
         };
         return hit;

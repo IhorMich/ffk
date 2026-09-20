@@ -431,20 +431,136 @@
       try{
         const detail = coach.playerDetail(session, pid);
         if(!detail) return;
+        // Full coach stats for parents — numbers only, no private notes / personal comments.
         parent.syncCoachRatings(pid, {
+          player: detail.player ? {
+            first_name: detail.player.first_name,
+            last_name: detail.player.last_name,
+            number: detail.player.number,
+            position: detail.player.position
+          } : null,
+          team: detail.team ? {
+            id: detail.team.id,
+            name: detail.team.name,
+            age_group: detail.team.age_group
+          } : null,
           ratings: (detail.ratings || []).slice(0, 40).map(r => ({
             date: r.date,
             opponent: r.opponent,
             score: r.score || '',
             rating: Number(r.rating) || 0,
-            comment: String(r.comment || '').slice(0, 200),
-            pitchPos: r.pitchPos || ''
+            pitchPos: r.pitchPos || '',
+            minutes: Number(r.minutes) || 0,
+            role: r.role || ''
           })),
           avg: detail.avg,
-          games: detail.games
+          games: detail.games,
+          last: detail.last,
+          best: detail.best,
+          worst: detail.worst,
+          form: detail.form,
+          trend: detail.trend,
+          minutes: detail.minutes,
+          topMoments: detail.topMoments
         });
       }catch(e){}
     });
+  }
+
+  function fmtParentScore(n){
+    if(n == null || !Number.isFinite(Number(n))) return '—';
+    return Number(n).toFixed(1);
+  }
+  function parentFormSpark(form){
+    const arr = Array.isArray(form) ? form : [];
+    if(!arr.length) return '';
+    return arr.map(n => Number(n).toFixed(1)).join(' → ');
+  }
+  function parentTrendLabel(trend){
+    if(trend == null || !Number.isFinite(Number(trend))) return '';
+    const n = Number(trend);
+    if(Math.abs(n) < 0.05) return tt('coachTrendFlat', 'stable');
+    return `${n > 0 ? '+' : ''}${n.toFixed(1)}`;
+  }
+  function parentTrendClass(trend){
+    if(trend == null || !Number.isFinite(Number(trend))) return '';
+    const n = Number(trend);
+    if(n >= 0.05) return 'up';
+    if(n <= -0.05) return 'down';
+    return '';
+  }
+  function parentMetricLab(key){
+    try{
+      if(typeof metricLabel === 'function') return metricLabel(key);
+    }catch(e){}
+    return key;
+  }
+  function parentPosLab(code){
+    try{
+      if(code && typeof pitchPosLabelShort === 'function') return pitchPosLabelShort(code) || code;
+    }catch(e){}
+    return code || '';
+  }
+  function parentTeamLine(l){
+    const teamName = l && l.team && l.team.name ? String(l.team.name) : '';
+    const age = l && l.team && l.team.age_group ? String(l.team.age_group) : '';
+    if(!teamName && !age) return '';
+    const teamBit = teamName
+      ? `${tt('parentInboxTeam', 'Team')}: ${teamName}`
+      : '';
+    return [teamBit, age].filter(Boolean).join(' · ');
+  }
+  function parentPlayerMetaLine(l){
+    const p = l && l.player;
+    return [
+      p && p.number ? `#${p.number}` : '',
+      parentPosLab(p && p.position)
+    ].filter(Boolean).join(' · ');
+  }
+  function parentCoachStatsBlockHtml(l){
+    const ratings = Array.isArray(l.ratings) ? l.ratings : [];
+    const games = l.games != null ? l.games : ratings.length;
+    const form = parentFormSpark(l.form);
+    const trend = parentTrendLabel(l.trend);
+    const tc = parentTrendClass(l.trend);
+    const moments = Array.isArray(l.topMoments) ? l.topMoments : [];
+    const momentsHtml = moments.length
+      ? `<div class="coach-stat-section"><div class="pro-kicker">${esc(tt('coachPlayerMomentsKicker', 'Key moments'))}</div>
+          <div class="coach-moment-chips">${moments.map(m =>
+            `<span class="coach-moment-chip"><b>${esc(parentMetricLab(m.key))}</b> ${esc(String(m.n))}</span>`
+          ).join('')}</div></div>`
+      : '';
+    const sum = `<div class="coach-analytics-sum coach-analytics-sum-4">
+      <div><b>${esc(games)}</b><span>${esc(tt('coachGames', 'games'))}</span></div>
+      <div><b>${esc(fmtParentScore(l.avg))}</b><span>${esc(tt('coachStatAvgShort', 'avg'))}</span></div>
+      <div><b>${esc(fmtParentScore(l.last))}</b><span>${esc(tt('coachStatLast', 'last'))}</span></div>
+      <div><b class="${tc}">${esc(trend || '—')}</b><span>${esc(tt('coachStatTrend', 'trend'))}</span></div>
+    </div>
+    <div class="coach-analytics-sum">
+      <div><b>${esc(fmtParentScore(l.best))}</b><span>${esc(tt('coachStatBest', 'Best'))}</span></div>
+      <div><b>${esc(fmtParentScore(l.worst))}</b><span>${esc(tt('coachStatWorst', 'Worst'))}</span></div>
+      <div><b>${esc(l.minutes != null ? l.minutes : 0)}</b><span>${esc(tt('coachStatMinutes', 'Minutes'))}</span></div>
+    </div>
+    ${form ? `<p class="hint coach-form-line"><b>${esc(tt('coachStatForm', 'Form'))}:</b> ${esc(form)}</p>` : ''}`;
+    const rows = ratings.length
+      ? `<div class="coach-player-list">${ratings.map(r => {
+          const pos = parentPosLab(r.pitchPos);
+          const mins = Number(r.minutes) > 0 ? `${Number(r.minutes)}′` : '';
+          const role = r.role === 'sub'
+            ? tt('roleSub', 'Off the bench')
+            : (r.role === 'start' ? tt('roleStart', 'Started') : '');
+          const head = [r.date, r.opponent, r.score].filter(Boolean).join(' · ');
+          const meta = [pos, role, mins].filter(Boolean).join(' · ');
+          return `<div class="coach-player-row">
+            <div class="coach-player-main">
+              <b>${esc(head || '—')}</b>
+              ${meta ? `<span>${esc(meta)}</span>` : ''}
+            </div>
+            <b class="parent-rate-num">${esc(fmtParentScore(r.rating))}</b>
+          </div>`;
+        }).join('')}</div>`
+      : `<p class="hint">${esc(tt('parentNoCoachRatings', 'Coach has not shared ratings yet.'))}</p>`;
+    return `${sum}${momentsHtml}<div class="pro-kicker">${esc(tt('coachPlayerRatingsKicker', 'Recent ratings'))}</div>${rows}`;
   }
 
   function openParentCoachStats(){
@@ -490,15 +606,14 @@
     box.innerHTML = links.map(l => {
       const name = playerName(l.player);
       const meta = [
-        l.player && l.player.number ? `#${l.player.number}` : '',
-        l.team && l.team.name ? l.team.name : '',
-        l.team && l.team.age_group ? l.team.age_group : ''
+        parentTeamLine(l),
+        parentPlayerMetaLine(l)
       ].filter(Boolean).join(' · ');
       const avg = l.avg != null ? Number(l.avg).toFixed(1) : '—';
       return `<button type="button" class="parent-link-row" data-parent-link="${esc(l.id)}">
         <span class="parent-link-main">
           <b>${nameWithVerified(name, true)}</b>
-          <span>${esc(meta)}</span>
+          <span>${esc(meta || tt('parentTeamMissing', 'Team not set'))}</span>
         </span>
         <span class="parent-link-avg">${esc(avg)}</span>
       </button>`;
@@ -523,39 +638,24 @@
     panel.hidden = false;
     board.innerHTML = links.map(l => {
       const name = playerName(l.player);
+      const teamLine = parentTeamLine(l);
+      const playerMeta = parentPlayerMetaLine(l);
       const confirmBits = [
-        `<div class="parent-confirm-badge">${esc(tt('parentConfirmed', 'Confirmed by coach'))}</div>`,
+        `<div class="parent-confirm-badge">${esc(tt('parentConfirmed', 'Player confirmed by coach'))}</div>`,
         `<h3 class="coach-team-heading">${nameWithVerified(name, true)}</h3>`,
+        teamLine ? `<p class="hint parent-team-line"><b>${esc(teamLine)}</b></p>` : `<p class="hint">${esc(tt('parentTeamMissing', 'Team not set'))}</p>`,
         `<p class="hint">${esc([
-          l.team && l.team.name,
-          l.team && l.team.age_group,
+          playerMeta,
           l.coach && l.coach.name ? `${tt('parentCoachLabel', 'Coach')}: ${l.coach.name}` : ''
         ].filter(Boolean).join(' · '))}</p>`
       ].join('');
-      const sum = `<div class="coach-analytics-sum">
-        <div><b>${esc(l.games || (l.ratings || []).length || 0)}</b><span>${esc(tt('coachStatRatings', 'Ratings'))}</span></div>
-        <div><b>${esc(l.avg != null ? Number(l.avg).toFixed(1) : '—')}</b><span>${esc(tt('parentCoachAvg', 'Coach avg'))}</span></div>
-        <div><b>${esc((l.ratings || []).length)}</b><span>${esc(tt('parentInInvite', 'In invite'))}</span></div>
-      </div>`;
-      const rows = (l.ratings || []).length
-        ? `<div class="coach-player-list">${(l.ratings || []).map(r => {
-            const head = [r.date, r.opponent, r.score].filter(Boolean).join(' · ');
-            return `<div class="coach-player-row">
-              <div class="coach-player-main">
-                <b>${esc(head || '—')}</b>
-                ${r.comment ? `<span>${esc(r.comment)}</span>` : ''}
-              </div>
-              <b class="parent-rate-num">${esc(Number(r.rating).toFixed(1))}</b>
-            </div>`;
-          }).join('')}</div>`
-        : `<p class="hint">${esc(tt('parentNoCoachRatings', 'Coach has not shared ratings in this invite yet.'))}</p>`;
-      return `<div class="parent-coach-block">${confirmBits}${sum}${rows}</div>`;
+      return `<div class="parent-coach-block">${confirmBits}${parentCoachStatsBlockHtml(l)}</div>`;
     }).join('');
   }
 
   function openParentClaimSheet(prefill){
     if(typeof isCoachPlan === 'function' && isCoachPlan()){
-      toast(tt('parentNotInCoach', 'Switch off Coach plan to add a child as a parent.'));
+      toast(tt('parentNotInCoach', 'Switch off Coach plan to add a player as a parent / guardian.'));
       return;
     }
     const back = document.getElementById('parentClaimBack');
@@ -593,17 +693,23 @@
       store.setPending(payload);
       const name = playerName(payload.player);
       preview.innerHTML = `<div class="parent-confirm-card">
-        <div class="parent-confirm-badge">${esc(tt('parentConfirmed', 'Confirmed by coach'))}</div>
+        <div class="parent-confirm-badge">${esc(tt('parentConfirmed', 'Player confirmed by coach'))}</div>
         <b>${nameWithVerified(name, true)}</b>
         <span>${esc([
           payload.player.number ? `#${payload.player.number}` : '',
-          payload.player.position || ''
+          parentPosLab(payload.player.position)
         ].filter(Boolean).join(' · '))}</span>
-        <p class="hint">${esc([
-          payload.team.name,
-          payload.team.age_group,
-          payload.coach.name ? `${tt('parentCoachLabel', 'Coach')}: ${payload.coach.name}` : ''
-        ].filter(Boolean).join(' · '))}</p>
+        <p class="hint"><b>${esc([
+          payload.team && payload.team.name
+            ? `${tt('parentInboxTeam', 'Team')}: ${payload.team.name}`
+            : '',
+          payload.team && payload.team.age_group
+        ].filter(Boolean).join(' · ') || tt('parentTeamMissing', 'Team not set'))}</b></p>
+        <p class="hint">${esc(
+          payload.coach && payload.coach.name
+            ? `${tt('parentCoachLabel', 'Coach')}: ${payload.coach.name}`
+            : ''
+        )}</p>
         <p class="hint">${esc(tt('parentClaimHint', 'Personal Matchcard stats stay yours. Coach ratings appear separately.'))}</p>
       </div>`;
       return payload;
@@ -652,38 +758,23 @@
     const card = document.getElementById('parentLinkCard');
     if(!sheet || !body) return;
     const name = playerName(link.player);
-    const ratings = Array.isArray(link.ratings) ? link.ratings : [];
-    const rateRows = ratings.length
-      ? `<div class="coach-player-list">${ratings.map(r => {
-          const head = [r.date, r.opponent, r.score].filter(Boolean).join(' · ');
-          return `<div class="coach-player-row">
-            <div class="coach-player-main">
-              <b>${esc(head || '—')}</b>
-              ${r.comment ? `<span>${esc(r.comment)}</span>` : ''}
-            </div>
-            <b class="parent-rate-num">${esc(Number(r.rating).toFixed(1))}</b>
-          </div>`;
-        }).join('')}</div>`
-      : `<p class="hint">${esc(tt('parentNoCoachRatings', 'Coach has not shared ratings in this invite yet.'))}</p>`;
+    const teamLine = parentTeamLine(link);
+    const playerMeta = parentPlayerMetaLine(link);
     body.innerHTML = `
-      <div class="parent-confirm-badge">${esc(tt('parentConfirmed', 'Confirmed by coach'))}</div>
+      <div class="parent-confirm-badge">${esc(tt('parentConfirmed', 'Player confirmed by coach'))}</div>
       <h3 class="coach-rate-name">${nameWithVerified(name, true)}</h3>
+      ${teamLine
+        ? `<p class="hint parent-team-line"><b>${esc(teamLine)}</b></p>`
+        : `<p class="hint">${esc(tt('parentTeamMissing', 'Team not set'))}</p>`}
       <p class="hint">${esc([
-        link.player.number ? `#${link.player.number}` : '',
-        link.player.position || '',
-        link.team && link.team.name,
-        link.team && link.team.age_group
+        playerMeta,
+        link.coach && link.coach.name ? `${tt('parentCoachLabel', 'Coach')}: ${link.coach.name}` : ''
       ].filter(Boolean).join(' · '))}</p>
-      <p class="hint"><b>${esc(tt('parentCoachLabel', 'Coach'))}:</b> ${esc(link.coach && link.coach.name ? link.coach.name : '—')}</p>
-      <div class="coach-analytics-sum">
-        <div><b>${esc(link.games || ratings.length || 0)}</b><span>${esc(tt('coachGames', 'games'))}</span></div>
-        <div><b>${esc(link.avg != null ? Number(link.avg).toFixed(1) : '—')}</b><span>${esc(tt('parentCoachAvg', 'Coach avg'))}</span></div>
-      </div>
       <div class="pro-kicker">${esc(tt('parentCoachStatsKicker', 'Stats from coach'))}</div>
-      ${rateRows}
+      ${parentCoachStatsBlockHtml(link)}
       <p class="hint">${esc(tt('parentPersonalNote', 'Your sideline Matchcard ratings stay in History / Stats as before.'))}</p>
       <button type="button" class="save-btn" id="parentLinkOpenStatsBtn">${esc(tt('parentCoachStatsBtn', 'Coach stats'))}</button>
-      <button type="button" class="ghost-btn" id="parentUnlinkBtn" data-unlink="${esc(link.id)}">${esc(tt('parentUnlink', 'Remove academy link'))}</button>
+      <button type="button" class="ghost-btn" id="parentUnlinkBtn" data-unlink="${esc(link.id)}">${esc(tt('parentUnlink', 'Remove coach link'))}</button>
     `;
     if(typeof presentSheetCard === 'function') presentSheetCard(card, back);
     else{
