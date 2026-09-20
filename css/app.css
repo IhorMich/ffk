@@ -1695,8 +1695,14 @@
   .coach-match-actions-row{
     display:grid;grid-template-columns:auto 1fr;gap:8px;margin-top:8px;
   }
+  .coach-match-actions-row-1{grid-template-columns:1fr;}
   .coach-match-actions-row .ghost-btn,
   .coach-match-actions-row .save-btn{margin:0;width:100%;padding:10px 12px;font-size:.82rem;}
+  .coach-match-open-kicker{margin:14px 0 6px;}
+  .coach-match-create select{
+    width:100%;box-sizing:border-box;min-height:42px;padding:8px 10px;border-radius:12px;
+    border:1px solid var(--card-line);background:var(--surface);color:var(--text);font:inherit;
+  }
   .coach-score-row{
     display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center;
     margin:0 0 12px;padding:8px;border-radius:12px;border:1px solid var(--card-line);

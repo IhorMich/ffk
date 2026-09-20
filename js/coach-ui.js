@@ -675,11 +675,30 @@
     });
 
     const matchListHtml = (() => {
-      const upcoming = sortMatchesForList(matches).filter(m => !matchIsPlayed(m));
-      if(!upcoming.length){
-        return `<div class="inbox-empty coach-tab-empty">${esc(tt('coachMatchEmptyUpcoming', 'No upcoming matches'))}</div>`;
+      const sorted = sortMatchesForList(matches);
+      const upcoming = sorted.filter(m => !matchIsPlayed(m));
+      const openPlayed = sorted.filter(m => {
+        if(!matchIsPlayed(m)) return false;
+        const squadN = store.matchSquadIds(session, m).length;
+        const rated = store.listRatings(session, m.id).length;
+        const noScore = !String(m.score || '').trim();
+        return noScore || (squadN > 0 && rated < squadN);
+      });
+      if(!upcoming.length && !openPlayed.length){
+        return `<div class="inbox-empty coach-tab-empty">
+          <div>${esc(tt('coachMatchEmptyUpcoming', 'No upcoming matches'))}</div>
+          <p class="hint">${esc(tt('coachMatchEmptyHint', 'Create a match here. Finished games live in History.'))}</p>
+        </div>`;
       }
-      return upcoming.map(m => matchListRowHtml(m, {activeId: activeMatchId})).join('');
+      const parts = [];
+      if(upcoming.length){
+        parts.push(upcoming.map(m => matchListRowHtml(m, {activeId: activeMatchId, showAddress: true})).join(''));
+      }
+      if(openPlayed.length){
+        parts.push(`<div class="pro-kicker coach-match-open-kicker">${esc(tt('coachMatchNeedsAttention', 'Needs rating / score'))}</div>`);
+        parts.push(openPlayed.map(m => matchListRowHtml(m, {activeId: activeMatchId})).join(''));
+      }
+      return parts.join('');
     })();
     document.querySelectorAll('.js-cm-matches').forEach(el => { el.innerHTML = matchListHtml; });
 
@@ -712,8 +731,19 @@
     if(summary){
       const outcome = matchOutcome(activeMatch);
       const outcomeLab = matchOutcomeLabel(outcome);
+      const venueLab = activeMatch.venue === 'away'
+        ? tt('venueAway', 'Away')
+        : tt('venueHome', 'Home');
+      const kindLab = ({
+        league: tt('kindLeague', 'League'),
+        friendly: tt('kindFriendly', 'Friendly'),
+        cup: tt('kindCup', 'Cup'),
+        tournament: tt('kindTournament', 'Tournament')
+      })[activeMatch.kind] || '';
       const bits = [
         activeMatch.date,
+        venueLab,
+        kindLab,
         activeMatch.address || '',
         played
           ? (activeMatch.score
@@ -1447,9 +1477,13 @@
     }
     try{
       store.updateMatch(session, matchId, {score, status: 'played'});
-      store.setActiveMatchId('');
-      toast(tt('coachMatchScoreSaved', 'Score saved.'));
+      // Keep the match open so coach can rate and send cards right away.
+      store.setActiveMatchId(matchId);
+      toast(tt('coachMatchScoreSaved', 'Score saved. Rate players below.'));
       renderCoachUi();
+      try{
+        document.querySelector('#coachMatchPlayedBox .js-cm-rates')?.scrollIntoView({behavior:'smooth', block:'nearest'});
+      }catch(e){}
     }catch(e){
       toast(tt('coachErrGeneric', 'Something went wrong.'));
     }
@@ -1547,6 +1581,9 @@
       || document.getElementById('coachMatchAddress')?.value
       || '').trim();
     const date = root.querySelector('.js-cm-date')?.value || today();
+    const venue = root.querySelector('.js-cm-venue')?.value === 'away' ? 'away' : 'home';
+    const kindRaw = root.querySelector('.js-cm-kind')?.value || 'league';
+    const kind = ['league','friendly','cup','tournament'].includes(kindRaw) ? kindRaw : 'league';
     let squad = selectedSquadFrom(root);
     const picker = root.querySelector('.js-cm-squad');
     if(!squad.length && picker?.dataset.dirty !== '1'){
@@ -1562,6 +1599,8 @@
         opponent,
         address,
         date,
+        venue,
+        kind,
         score: '',
         squad,
         status: 'upcoming'

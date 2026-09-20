@@ -346,6 +346,22 @@ window.ffkIsNative = function () {
                 <label data-i18n="labelDate">Дата</label>
                 <input class="js-cm-date" type="date">
               </div>
+              <div class="field">
+                <label data-i18n="labelVenue">Где играете</label>
+                <select class="js-cm-venue">
+                  <option value="home" data-i18n="venueHome">Дома</option>
+                  <option value="away" data-i18n="venueAway">На выезде</option>
+                </select>
+              </div>
+              <div class="field">
+                <label data-i18n="coachMatchKind">Тип матча</label>
+                <select class="js-cm-kind">
+                  <option value="league" data-i18n="kindLeague">Чемпионат</option>
+                  <option value="friendly" data-i18n="kindFriendly">Товарищеский</option>
+                  <option value="cup" data-i18n="kindCup">Кубок</option>
+                  <option value="tournament" data-i18n="kindTournament">Турнир</option>
+                </select>
+              </div>
               <div class="field coach-match-create-wide">
                 <label data-i18n="coachMatchAddress">Адрес матча</label>
                 <input class="js-cm-address" type="text" maxlength="120" data-i18n-placeholder="coachMatchAddressPh" placeholder="Стадион / улица, город">
@@ -377,7 +393,7 @@ window.ffkIsNative = function () {
 
             <div id="coachMatchUpcomingBox" hidden>
               <div class="js-cm-squad-view coach-squad-view" hidden></div>
-              <div class="coach-match-actions-row">
+              <div class="coach-match-actions-row coach-match-actions-row-1">
                 <button class="save-btn js-cm-finish" type="button" data-i18n="coachMatchFinishBtn">Сыгран → счёт</button>
               </div>
             </div>
