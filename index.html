@@ -492,28 +492,47 @@ window.ffkIsNative = function () {
             <h3 class="coach-team-heading" id="coachHistoryTeam">—</h3>
             <div class="period-chips coach-hist-filters" id="coachHistoryFilter">
               <button type="button" class="chip active" data-coach-hist="all" data-i18n="histKindAll">Все</button>
+              <button type="button" class="chip" data-coach-hist="todo" data-i18n="coachHistTodo">Доделать</button>
               <button type="button" class="chip" data-coach-hist="win" data-i18n="coachMatchWin">Победа</button>
               <button type="button" class="chip" data-coach-hist="draw" data-i18n="coachMatchDraw">Ничья</button>
               <button type="button" class="chip" data-coach-hist="loss" data-i18n="coachMatchLoss">Поражение</button>
             </div>
+            <p class="hint" id="coachHistoryHint" data-i18n="coachHistoryHint">Сыгранные матчи — открой, чтобы править счёт и оценки.</p>
             <div id="coachHistoryList" class="coach-team-list"></div>
           </div>
 
-          <div id="coachHistoryDetail" class="coach-history-detail" hidden>
+          <div id="coachHistoryDetail" class="coach-history-detail coach-match-detail" hidden>
             <div class="coach-match-detail-bar">
               <button type="button" class="ghost-btn coach-match-back" id="coachHistoryBackBtn" data-i18n="coachMatchBack">← К списку</button>
             </div>
             <div class="coach-match-summary" id="coachHistorySummary"></div>
+
+            <div class="coach-score-row" id="coachHistoryScoreRow">
+              <label data-i18n="labelScore">Счёт</label>
+              <div class="score-split coach-score-split">
+                <input id="coachHistoryScoreUs" class="js-cm-score-us" type="number" min="0" max="99" inputmode="numeric" data-i18n-aria="scoreUsAria" aria-label="Our goals">
+                <span class="score-colon" aria-hidden="true">:</span>
+                <input id="coachHistoryScoreThem" class="js-cm-score-them" type="number" min="0" max="99" inputmode="numeric" data-i18n-aria="scoreThemAria" aria-label="Opponent goals">
+              </div>
+              <button class="save-btn" id="coachHistorySaveScore" type="button" data-i18n="coachMatchSaveScore">Сохранить</button>
+            </div>
+
             <div class="field">
               <label data-i18n="coachMatchComment">Комментарий к матчу</label>
-              <textarea id="coachHistoryComment" rows="3" maxlength="400" data-i18n-placeholder="coachMatchCommentPh" placeholder="Как прошла игра…"></textarea>
+              <p class="hint coach-rate-comment-hint" data-i18n="coachMatchCommentHint">Для себя и штаба — на карточке матча команды</p>
+              <textarea id="coachHistoryComment" rows="2" maxlength="400" data-i18n-placeholder="coachMatchCommentPh" placeholder="Как прошла игра…"></textarea>
             </div>
             <button type="button" class="ghost-btn" id="coachHistoryCommentSave" data-i18n="coachMatchCommentSave">Сохранить комментарий</button>
+
             <div class="coach-history-card-actions">
               <button type="button" class="save-btn" id="coachHistoryShareMatchBtn" data-i18n="coachShareMatchCard">Карточка матча</button>
             </div>
+
             <div class="pro-kicker" data-i18n="coachMatchRatePhase">Оценки игроков</div>
             <div id="coachHistoryRates" class="coach-player-list coach-rates-compact"></div>
+            <button class="save-btn" id="coachHistorySendResults" type="button" data-i18n="coachSendResultsBtn">Отправить карточки родителям</button>
+            <p class="hint" id="coachHistoryResultsStatus"></p>
+            <button class="ghost-btn" id="coachHistoryBackBottom" type="button" data-i18n="coachMatchBackList">К списку</button>
           </div>
         </div>
       </div>

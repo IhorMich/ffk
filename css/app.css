@@ -909,9 +909,15 @@
     background:transparent;
   }
   .coach-history-detail{margin-top:4px;}
+  .coach-history-detail .coach-score-row{margin:0 0 12px;}
+  .coach-history-detail #coachHistoryCommentSave{width:100%;margin:0 0 8px;}
+  .coach-history-detail #coachHistorySendResults{width:100%;margin:8px 0 0;}
+  .coach-history-detail #coachHistoryResultsStatus{margin:6px 0 0;}
+  .coach-history-detail #coachHistoryBackBottom{width:100%;margin:12px 0 0;}
   .coach-history-card-actions{display:grid;gap:8px;margin:10px 0 14px;}
   .coach-history-rate-actions{display:flex;flex-direction:column;gap:6px;align-items:stretch;}
   .coach-history-rate-actions .coach-rate-btn{width:auto;min-width:96px;padding:8px 10px;}
+  #coachHistoryHint{margin:0 0 10px;}
   #coachHistoryComment{min-height:72px;resize:vertical;}
   #coachHistoryCommentSave{width:auto;margin:0 0 8px;}
   .inbox-page-list .parent-msg-row{

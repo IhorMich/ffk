@@ -960,11 +960,19 @@
           <b>${esc(title)}</b>
           <span>${esc(dates)} · ${items.length} ${esc(tt('coachGames', 'games'))}</span>
         </div>
-        ${items.map(m => matchListRowHtml(m, {activeId: activeMatchId, showAddress: opts.showAddress})).join('')}
+        ${items.map(m => matchListRowHtml(m, {
+          activeId: activeMatchId,
+          showAddress: opts.showAddress,
+          openAttr: opts.openAttr
+        })).join('')}
       </div>`);
     });
     singles.forEach(m => {
-      parts.push(matchListRowHtml(m, {activeId: activeMatchId, showAddress: opts.showAddress}));
+      parts.push(matchListRowHtml(m, {
+        activeId: activeMatchId,
+        showAddress: opts.showAddress,
+        openAttr: opts.openAttr
+      }));
     });
     return parts.join('');
   }
@@ -1236,6 +1244,15 @@
     toast(tt('coachTeamCardPrivacy', 'Team card is for you/staff. Parents only get their own child’s card.'));
   }
 
+  function matchNeedsAttention(session, m){
+    if(!m || !matchIsPlayed(m)) return false;
+    const store = global.CoachStore;
+    const squadN = store.matchSquadIds(session, m).length;
+    const rated = store.listRatings(session, m.id).length;
+    const noScore = !String(m.score || '').trim();
+    return noScore || (squadN > 0 && rated < squadN);
+  }
+
   function renderCoachHistoryDetail(session, team){
     syncCoachHistoryDetailUi();
     if(!coachHistoryMatchId) return;
@@ -1255,12 +1272,30 @@
     const badgeTxt = outcomeLab
       ? `${outcomeLab}${match.score ? ` · ${match.score}` : ''}`
       : (match.score || tt('coachMatchPlayed', 'played'));
+    const venueLab = match.venue === 'away'
+      ? tt('venueAway', 'Away')
+      : tt('venueHome', 'Home');
+    const kindLab = ({
+      league: tt('kindLeague', 'League'),
+      friendly: tt('kindFriendly', 'Friendly'),
+      cup: tt('kindCup', 'Cup'),
+      tournament: tt('kindTournament', 'Tournament')
+    })[match.kind] || '';
     if(summary){
+      const bits = [
+        match.date,
+        match.kickoff || '',
+        venueLab,
+        kindLab,
+        match.tournament || '',
+        match.address || ''
+      ].filter(Boolean);
       summary.innerHTML = `<div class="coach-match-row-top">
         <b>${esc(match.opponent)}</b>
         <span class="coach-match-badge ${badgeCls}">${esc(badgeTxt)}</span>
-      </div><span class="hint">${esc([match.date, match.address].filter(Boolean).join(' · '))}</span>`;
+      </div><span class="hint">${esc(bits.join(' · '))}</span>`;
     }
+    fillCoachScoreFields(document.getElementById('coachHistoryScoreRow'), match.score || '');
     if(commentEl && document.activeElement !== commentEl){
       commentEl.value = match.comment || '';
     }
@@ -1294,6 +1329,26 @@
         }).join('');
       }
     }
+    const sentInfo = resultsSentForMatch(session, match);
+    const statusEl = document.getElementById('coachHistoryResultsStatus');
+    const sendBtn = document.getElementById('coachHistorySendResults');
+    if(statusEl){
+      if(!sentInfo.total){
+        statusEl.textContent = tt('coachResultsNoneYet', 'Rate players, then send cards to parents.');
+      }else if(sentInfo.sent >= sentInfo.total){
+        statusEl.textContent = tt('coachResultsAllSent', 'Cards sent for all rated players.')
+          .replace('{n}', String(sentInfo.sent));
+      }else{
+        statusEl.textContent = tt('coachResultsPartialSent', '{s}/{t} cards sent — you can send again.')
+          .replace('{s}', String(sentInfo.sent))
+          .replace('{t}', String(sentInfo.total));
+      }
+    }
+    if(sendBtn){
+      sendBtn.textContent = sentInfo.sent
+        ? tt('coachSendResultsAgainBtn', 'Send / update cards to parents')
+        : tt('coachSendResultsBtn', 'Send cards to parents');
+    }
   }
 
   function resultsSentForMatch(session, match){
@@ -1318,22 +1373,27 @@
     const el = document.getElementById('coachHistoryList');
     if(!el) return;
     const store = global.CoachStore;
-    // History = played matches only (upcoming live on Match tab).
+    // History = played matches only (upcoming live on Match/Games tab).
     let matches = store.listMatches(session, team.id).filter(m => matchIsPlayed(m));
     document.querySelectorAll('#coachHistoryFilter [data-coach-hist]').forEach(btn => {
       btn.classList.toggle('active', btn.dataset.coachHist === coachHistFilter);
     });
     if(coachHistFilter === 'win' || coachHistFilter === 'draw' || coachHistFilter === 'loss'){
       matches = matches.filter(m => matchOutcome(m) === coachHistFilter);
+    }else if(coachHistFilter === 'todo'){
+      matches = matches.filter(m => matchNeedsAttention(session, m));
     }
     if(!matches.length){
-      el.innerHTML = `<div class="inbox-empty coach-tab-empty">${esc(tt('coachHistoryEmpty', 'No played matches yet'))}</div>`;
+      const emptyKey = coachHistFilter === 'todo'
+        ? tt('coachHistoryTodoEmpty', 'Nothing left to finish — all played matches are rated.')
+        : tt('coachHistoryEmpty', 'No played matches yet');
+      el.innerHTML = `<div class="inbox-empty coach-tab-empty">${esc(emptyKey)}</div>`;
     }else{
       const sorted = sortMatchesForList(matches);
-      el.innerHTML = sorted.map(m => matchListRowHtml(m, {
+      el.innerHTML = renderGroupedMatchList(sorted, coachHistoryMatchId, {
         openAttr: 'data-open-match',
         showAddress: true
-      })).join('');
+      });
     }
     renderCoachHistoryDetail(session, team);
   }
@@ -1708,11 +1768,28 @@
     if(!session || !matchId) return;
     try{
       store.finishMatch(session, matchId, '');
+      store.setActiveMatchId('');
       toast(tt('coachMatchFinished', 'Match marked as played. Set the score and rate players.'));
+      // Played matches live in Results — open there right away.
+      openCoachHistoryMatch(matchId);
+    }catch(e){
+      toast(tt('coachErrGeneric', 'Something went wrong.'));
+    }
+  }
+  function onSaveHistoryScore(){
+    const store = global.CoachStore;
+    const session = store.getSession();
+    if(!session || !coachHistoryMatchId) return;
+    const root = document.getElementById('coachHistoryScoreRow') || document;
+    const score = scoreFromCoachFields(root);
+    if(!score){
+      toast(tt('coachErrScore', 'Enter the match score.'));
+      return;
+    }
+    try{
+      store.updateMatch(session, coachHistoryMatchId, {score, status: 'played'});
+      toast(tt('coachMatchScoreSaved', 'Score saved. Rate players below.'));
       renderCoachUi();
-      try{
-        document.getElementById('coachMatchPlayedBox')?.scrollIntoView({behavior:'smooth', block:'start'});
-      }catch(e){}
     }catch(e){
       toast(tt('coachErrGeneric', 'Something went wrong.'));
     }
@@ -2576,6 +2653,16 @@
     document.getElementById('coachHistoryBackBtn')?.addEventListener('click', () => {
       closeCoachHistoryMatch();
       renderCoachUi();
+    });
+    document.getElementById('coachHistoryBackBottom')?.addEventListener('click', () => {
+      closeCoachHistoryMatch();
+      renderCoachUi();
+    });
+    document.getElementById('coachHistorySaveScore')?.addEventListener('click', () => {
+      onSaveHistoryScore();
+    });
+    document.getElementById('coachHistorySendResults')?.addEventListener('click', () => {
+      shareMatchResults(coachHistoryMatchId);
     });
     document.getElementById('coachHistoryCommentSave')?.addEventListener('click', () => {
       const store = global.CoachStore;
