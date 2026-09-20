@@ -575,14 +575,52 @@
     if(af && bf && af === bf && (!al || !bl || al === bl)) return true;
     return false;
   }
-  function personalPhotoByName(first, last){
+  function personalPlayersWithMedia(){
     try{
-      const list = typeof listPersonalPlayersWithMedia === 'function'
+      return typeof listPersonalPlayersWithMedia === 'function'
         ? listPersonalPlayersWithMedia()
         : [];
-      for(const p of list){
-        if(!p || !p.photo) continue;
-        if(namesSoftMatch(first, last, p.firstName, p.lastName)) return String(p.photo);
+    }catch(e){
+      return [];
+    }
+  }
+  function personalPhotoById(id){
+    const sid = String(id || '');
+    if(!sid) return '';
+    const player = personalPlayersWithMedia().find(p => p && String(p.id) === sid);
+    return player && player.photo ? String(player.photo) : '';
+  }
+  function personalPhotoByName(first, last){
+    const list = personalPlayersWithMedia();
+    for(const p of list){
+      if(!p || !p.photo) continue;
+      if(namesSoftMatch(first, last, p.firstName, p.lastName)) return String(p.photo);
+    }
+    return '';
+  }
+  /** Resolve the personal profile explicitly attached when the coach invite was claimed. */
+  function linkedPersonalPhoto(tp){
+    if(!tp || !tp.id) return '';
+    try{
+      const links = global.ParentStore && typeof global.ParentStore.listLinks === 'function'
+        ? global.ParentStore.listLinks()
+        : [];
+      const link = links.find(l => l && l.player && String(l.player.id) === String(tp.id));
+      if(!link) return '';
+      const byId = personalPhotoById(link.personal_player_id);
+      if(byId) return byId;
+      const byLinkedName = personalPhotoByName(link.player.first_name, link.player.last_name);
+      if(byLinkedName) return byLinkedName;
+      // Links created before personal_player_id existed: with one coach link,
+      // the active personal profile is the profile that the old UI marked verified.
+      if(links.length === 1){
+        try{
+          const roster = JSON.parse(localStorage.getItem('ffk_roster_v1') || 'null');
+          const active = roster && roster.currentId ? personalPhotoById(roster.currentId) : '';
+          if(active) return active;
+        }catch(e){}
+        const withPhoto = personalPlayersWithMedia().filter(p => p && p.photo);
+        if(withPhoto.length === 1) return String(withPhoto[0].photo);
       }
     }catch(e){}
     return '';
@@ -604,19 +642,10 @@
         if(cached) return cached;
       }
     }catch(e){}
+    const fromLink = linkedPersonalPhoto(tp);
+    if(fromLink) return fromLink;
     const fromPersonal = personalPhotoByName(tp.first_name, tp.last_name);
     if(fromPersonal) return fromPersonal;
-    // Same-device parent link: Free profile may use a slightly different name spelling.
-    try{
-      const links = global.ParentStore && typeof global.ParentStore.listLinks === 'function'
-        ? global.ParentStore.listLinks()
-        : [];
-      const link = links.find(l => l && l.player && String(l.player.id) === String(tp.id));
-      if(link && link.player){
-        const viaLink = personalPhotoByName(link.player.first_name, link.player.last_name);
-        if(viaLink) return viaLink;
-      }
-    }catch(e){}
     return '';
   }
   function coachPlayerAvatarHtml(tp){
@@ -656,18 +685,8 @@
         if(!team) return;
         store.listPlayers(session, team.id).forEach(tp => {
           if(!tp || !tp.id) return;
-          let photo = personalPhotoByName(tp.first_name, tp.last_name);
-          if(!photo){
-            try{
-              const links = global.ParentStore && typeof global.ParentStore.listLinks === 'function'
-                ? global.ParentStore.listLinks()
-                : [];
-              const link = links.find(l => l && l.player && String(l.player.id) === String(tp.id));
-              if(link && link.player){
-                photo = personalPhotoByName(link.player.first_name, link.player.last_name);
-              }
-            }catch(e){}
-          }
+          let photo = linkedPersonalPhoto(tp);
+          if(!photo) photo = personalPhotoByName(tp.first_name, tp.last_name);
           if(!photo && usablePhoto(tp.photo)) photo = String(tp.photo);
           if(!photo){
             try{

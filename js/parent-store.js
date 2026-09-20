@@ -28,6 +28,18 @@
     localStorage.setItem(KEY, JSON.stringify(db));
   }
 
+  function currentPersonalPlayerId(){
+    try{
+      const roster = JSON.parse(localStorage.getItem('ffk_roster_v1') || 'null');
+      if(roster && roster.currentId) return String(roster.currentId).slice(0, 32);
+    }catch(e){}
+    try{
+      const player = JSON.parse(localStorage.getItem('ffk_player_v1') || 'null');
+      if(player && player.id) return String(player.id).slice(0, 32);
+    }catch(e){}
+    return '';
+  }
+
   function normalizePayload(raw){
     if(!raw || typeof raw !== 'object') throw new Error('bad_payload');
     if(Number(raw.v) !== 1) throw new Error('bad_version');
@@ -166,10 +178,12 @@
         (norm.token && l.token === norm.token) ||
         (norm.player.id && l.player && l.player.id === norm.player.id && l.academy && l.academy.name === norm.academy.name)
       );
+      const personalPlayerId = (existing && existing.personal_player_id) || currentPersonalPlayerId();
       const row = {
         id: existing ? existing.id : uid('plink'),
         token: norm.token,
         code: norm.code,
+        personal_player_id: personalPlayerId,
         academy: norm.academy,
         team: norm.team,
         coach: norm.coach,
