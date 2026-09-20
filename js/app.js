@@ -2033,6 +2033,12 @@ function syncCoachChildPlayerUi(){
   }
   const initials = (name || 'C').trim().slice(0, 1).toUpperCase() || 'C';
   setBadge(document.getElementById('clubBadge'), '', initials);
+  const backBtn = document.getElementById('coachChildBackBtn');
+  if(backBtn){
+    const backKey = ctx.returnTo === 'stats' ? 'coachChildBackStats' : 'coachChildBack';
+    backBtn.setAttribute('data-i18n', backKey);
+    backBtn.textContent = t(backKey);
+  }
   renderCoachChildFeed(ctx);
 }
 function renderCoachChildFeed(ctx){
@@ -2085,10 +2091,13 @@ function renderCoachChildFeed(ctx){
     </div>`;
 }
 function exitCoachChildView(){
+  const returnTo = (window.coachChildView && window.coachChildView.returnTo === 'stats')
+    ? 'stats'
+    : 'coach';
   clearCoachChildView();
   if(typeof closeAllCoachOverlays === 'function') closeAllCoachOverlays();
   document.getElementById('app')?.classList.remove('coach-child-on');
-  if(typeof showView === 'function') showView('coach');
+  if(typeof showView === 'function') showView(returnTo);
   if(typeof renderCoachUi === 'function') renderCoachUi();
 }
 window.exitCoachChildView = exitCoachChildView;

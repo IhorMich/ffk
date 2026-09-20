@@ -2833,7 +2833,7 @@
     opts = opts || {};
     // From Stats — go straight to the ratings page (no edit form).
     if(opts.viewRatings){
-      openCoachChildPlayerPage(playerId);
+      openCoachChildPlayerPage(playerId, {returnTo: opts.returnTo || 'stats'});
       return;
     }
     detailPlayerId = playerId;
@@ -3006,7 +3006,7 @@
     }
   }
 
-  function openCoachChildPlayerPage(playerId){
+  function openCoachChildPlayerPage(playerId, opts){
     const store = global.CoachStore;
     const session = store && store.getSession();
     const detail = session && store.playerDetail(session, playerId);
@@ -3014,6 +3014,8 @@
       toast(tt('coachErrGeneric', 'Something went wrong.'));
       return;
     }
+    opts = opts || {};
+    const returnTo = opts.returnTo === 'stats' ? 'stats' : 'coach';
     const parentStats = global.ParentStatsStore
       ? global.ParentStatsStore.listForPlayer(playerId)
       : [];
@@ -3029,7 +3031,8 @@
       coachAvg: detail.avg,
       coachGames: detail.games,
       parentStats,
-      parentAvg
+      parentAvg,
+      returnTo
     };
     closeAllCoachOverlays();
     if(typeof showView === 'function') showView('coach-child');
@@ -3589,7 +3592,7 @@
       }
       const statsPlayer = e.target.closest('#coachStatsBoard [data-open-player]');
       if(statsPlayer){
-        openCoachPlayerSheet(statsPlayer.dataset.openPlayer, {viewRatings: true});
+        openCoachPlayerSheet(statsPlayer.dataset.openPlayer, {viewRatings: true, returnTo: 'stats'});
         return;
       }
       const rateBtn = e.target.closest('[data-rate-player]');

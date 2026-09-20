@@ -4753,6 +4753,7 @@ ru:{
       coachPlayerRemoved:'Player removed.',
       coachChildViewKicker:'Player view',
       coachChildBack:'← Roster',
+      coachChildBackStats:'← Stats',
       coachChildFromParents:'From parents',
       coachChildFromCoach:'From coach',
       coachChildNoParentStats:'No sideline stats from parents yet. They appear when a linked parent saves a match on this phone (cloud sync later).'
@@ -4998,6 +4999,7 @@ ru:{
       coachPlayerRemoved:'Игрок убран.',
       coachChildViewKicker:'Просмотр игрока',
       coachChildBack:'← К составу',
+      coachChildBackStats:'← К статистике',
       coachChildFromParents:'От родителей',
       coachChildFromCoach:'От тренера',
       coachChildNoParentStats:'Пока нет статистики от родителей у бровки. Она появится, когда привязанный родитель сохранит матч на этом телефоне (облако — позже).'
@@ -5243,6 +5245,7 @@ ru:{
       coachPlayerRemoved:'Гравця прибрано.',
       coachChildViewKicker:'Перегляд гравця',
       coachChildBack:'← До складу',
+      coachChildBackStats:'← До статистики',
       coachChildFromParents:'Від батьків',
       coachChildFromCoach:'Від тренера',
       coachChildNoParentStats:'Поки немає статистики від батьків біля бровки. Вона з’явиться, коли прив’язаний батько збереже матч на цьому телефоні (хмара — пізніше).'
