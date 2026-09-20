@@ -3516,3 +3516,92 @@ ru:{
     Object.assign(I18N[lang], extra.en, extra[lang] || {});
   });
 })();
+
+(function mergeOnboardVisualI18n(){
+  const extra = {
+    uk:{
+      onboard1Title:'Оцінка матчу дитини',
+      onboard1Body:'Один гравець. Дії, оцінка, картка. Без акаунта.',
+      onboard2Title:'Старт з 6.0',
+      onboard2Body:'Корисні дії піднімають. Помилки опускають. Старання — слабше.',
+      onboard3Title:'Сезон на цьому телефоні',
+      onboard3Body:'Копія — в налаштуваннях. На телефон або в хмару.',
+      onboardCopyTag:'копія'
+    },
+    pl:{
+      onboard1Title:'Ocena meczu dziecka',
+      onboard1Body:'Jeden zawodnik. Akcje, ocena i karta. Bez konta.',
+      onboard2Title:'Start od 6.0',
+      onboard2Body:'Udane akcje podnoszą. Błędy obniżają. Wysiłek liczy się słabiej.',
+      onboard3Title:'Sezon na tym telefonie',
+      onboard3Body:'Kopia jest w ustawieniach. Na telefon albo do chmury.',
+      onboardCopyTag:'kopia'
+    },
+    en:{
+      onboard1Title:'Rate a child’s match',
+      onboard1Body:'One player. Actions, a rating, and a card. No account.',
+      onboard2Title:'Starts at 6.0',
+      onboard2Body:'Good actions lift it. Mistakes drop it. Effort counts less.',
+      onboard3Title:'The season stays here',
+      onboard3Body:'A copy lives in Settings. On this phone or in the cloud.',
+      onboardCopyTag:'copy'
+    },
+    ru:{
+      onboard1Title:'Оценка матча ребёнка',
+      onboard1Body:'Один игрок. Действия, оценка, карточка. Без аккаунта.',
+      onboard2Title:'Старт с 6.0',
+      onboard2Body:'Полезные действия поднимают. Ошибки опускают. Старание слабее.',
+      onboard3Title:'Сезон на этом телефоне',
+      onboard3Body:'Копия — в настройках. На телефон или в облако.',
+      onboardCopyTag:'копия'
+    },
+    es:{
+      onboard1Title:'Nota del partido de un niño',
+      onboard1Body:'Un jugador. Acciones, nota y carta. Sin cuenta.',
+      onboard2Title:'Empieza en 6.0',
+      onboard2Body:'Las acciones útiles suben. Los errores bajan. El esfuerzo cuenta menos.',
+      onboard3Title:'La temporada se queda aquí',
+      onboard3Body:'La copia está en Ajustes. En el teléfono o en la nube.',
+      onboardCopyTag:'copia'
+    },
+    de:{
+      onboard1Title:'Note für ein Kinderspiel',
+      onboard1Body:'Ein Spieler. Aktionen, Note und Karte. Kein Konto.',
+      onboard2Title:'Start bei 6.0',
+      onboard2Body:'Gute Aktionen heben. Fehler senken. Einsatz zählt weniger.',
+      onboard3Title:'Die Saison bleibt hier',
+      onboard3Body:'Die Kopie liegt unter Einstellungen. Aufs Telefon oder in die Cloud.',
+      onboardCopyTag:'Kopie'
+    },
+    it:{
+      onboard1Title:'Voto della partita di un bambino',
+      onboard1Body:'Un giocatore. Azioni, voto e carta. Senza account.',
+      onboard2Title:'Si parte da 6.0',
+      onboard2Body:'Le azioni utili alzano. Gli errori abbassano. L’impegno conta meno.',
+      onboard3Title:'La stagione resta qui',
+      onboard3Body:'La copia è nelle Impostazioni. Sul telefono o nel cloud.',
+      onboardCopyTag:'copia'
+    },
+    fr:{
+      onboard1Title:'Note du match d’un enfant',
+      onboard1Body:'Un joueur. Actions, note et carte. Sans compte.',
+      onboard2Title:'Départ à 6.0',
+      onboard2Body:'Les actions utiles montent. Les erreurs baissent. L’effort compte moins.',
+      onboard3Title:'La saison reste ici',
+      onboard3Body:'La copie est dans Réglages. Sur le téléphone ou dans le cloud.',
+      onboardCopyTag:'copie'
+    },
+    pt:{
+      onboard1Title:'Nota do jogo de uma criança',
+      onboard1Body:'Um jogador. Ações, nota e carta. Sem conta.',
+      onboard2Title:'Começa em 6.0',
+      onboard2Body:'Ações úteis sobem. Erros descem. O esforço conta menos.',
+      onboard3Title:'A época fica neste telemóvel',
+      onboard3Body:'A cópia está nas Definições. No telemóvel ou na nuvem.',
+      onboardCopyTag:'cópia'
+    }
+  };
+  LANGS.forEach(lang => {
+    Object.assign(I18N[lang], extra.en, extra[lang] || {});
+  });
+})();

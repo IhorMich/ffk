@@ -91,6 +91,7 @@ function loadSettings(){
       theme: (s.theme === 'day' || s.theme === 'light') ? 'day' : 'dark',
       iconSet: (typeof ICON_SET_ORDER !== 'undefined' && ICON_SET_ORDER.includes(s.iconSet)) ? s.iconSet : 'clear',
       onboarded: s.onboarded === true,
+      onboardSkin: String(s.onboardSkin || ''),
       pwaTransferSeen: s.pwaTransferSeen === true,
       introMark: String(s.introMark || '')
     };

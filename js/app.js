@@ -270,9 +270,10 @@ function applyI18n(){
   const tzEl = document.getElementById('tzHint');
   if(tzEl) tzEl.textContent = t('sTzHint', {tz: clockTimeZone().replace(/_/g, ' ')});
   syncSeasonChipLabels();
+  if(isElShown('onboard')) renderOnboard();
 }
 
-let settings = {club:'', player:'', position:'fwd', format:'2x30', minutes:'60', lang:'ru', seasonCloseDeclined:'', theme:'dark', iconSet:'clear', onboarded:false, pwaTransferSeen:false, introMark:''};
+let settings = {club:'', player:'', position:'fwd', format:'2x30', minutes:'60', lang:'ru', seasonCloseDeclined:'', theme:'dark', iconSet:'clear', onboarded:false, onboardSkin:'', pwaTransferSeen:false, introMark:''};
 let roster = {currentId:'', ids:[]};
 let player = defaultPlayer();
 let extraSelected = [];
@@ -3692,25 +3693,25 @@ function playIntro(){
 }
 function finishOnboard(){
   settings.onboarded = true;
+  settings.onboardSkin = 'cards';
   saveSettings();
   document.getElementById('onboard').hidden = true;
 }
 function renderOnboard(){
   const pages = onboardPages();
   const step = Math.min(pages.length - 1, Math.max(0, onboardStep));
+  const card = document.getElementById('onboardCard');
+  if(card) card.dataset.step = String(step);
   document.getElementById('onboardTitle').textContent = pages[step].title;
   document.getElementById('onboardBody').textContent = pages[step].body;
   document.getElementById('onboardNext').textContent = step === pages.length - 1 ? t('onboardDone') : t('onboardNext');
   document.getElementById('onboardSkip').textContent = t('onboardSkip');
+  const copyTag = document.getElementById('onboardCopyTag');
+  if(copyTag) copyTag.textContent = t('onboardCopyTag');
   document.querySelectorAll('#onboardDots span').forEach((el, i) => el.classList.toggle('on', i === step));
 }
 function maybeOnboard(){
-  if(settings.onboarded) return;
-  if(matches.length || (player && (player.firstName || player.lastName))){
-    settings.onboarded = true;
-    saveSettings();
-    return;
-  }
+  if(settings.onboardSkin === 'cards') return;
   onboardStep = 0;
   document.getElementById('onboard').hidden = false;
   renderOnboard();

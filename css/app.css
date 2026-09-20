@@ -651,8 +651,67 @@
     border-radius:2px;background:#F5B942;pointer-events:none;
   }
   .onboard-kicker{font-size:.72rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#F5B942;}
-  .onboard-card h2{margin:10px 0 10px;font-size:1.35rem;line-height:1.25;color:#FFF6E0;}
-  .onboard-card p{margin:0 0 18px;font-size:.95rem;font-weight:600;color:#C4B48A;line-height:1.45;}
+  .onboard-card h2{margin:8px 0 8px;font-size:1.28rem;line-height:1.25;color:#FFF6E0;}
+  .onboard-card p{margin:0 0 16px;font-size:.92rem;font-weight:600;color:#C4B48A;line-height:1.4;}
+  .onboard-stage{
+    height:168px;margin:0 0 6px;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .onboard-fig{display:none;width:100%;}
+  .onboard-card[data-step="0"] .onboard-fig[data-fig="0"],
+  .onboard-card[data-step="1"] .onboard-fig[data-fig="1"],
+  .onboard-card[data-step="2"] .onboard-fig[data-fig="2"]{display:block;}
+  .onboard-mini{
+    width:min(260px,100%);margin:0 auto;position:relative;overflow:hidden;
+    background:linear-gradient(180deg, #1b1e2a 0%, #0b0c14 100%);
+    color:#EDF1F7;border:1px solid rgba(237,241,247,.16);border-radius:18px;
+    padding:12px 14px 12px 18px;
+    box-shadow:0 12px 28px rgba(0,0,0,.28), inset 3px 0 0 #EDF1F7;
+  }
+  .onboard-mini-top{
+    display:flex;justify-content:space-between;align-items:center;
+    font-size:.62rem;font-weight:800;letter-spacing:.12em;color:#8D9AB5;
+  }
+  .onboard-mini-top span:last-child{
+    padding:2px 7px 1px;border-radius:999px;border:1px solid rgba(237,241,247,.35);
+    color:#EDF1F7;letter-spacing:.08em;
+  }
+  .onboard-mini-score{
+    margin-top:8px;font-size:2.4rem;font-weight:800;letter-spacing:-.06em;line-height:.9;
+    font-variant-numeric:tabular-nums;
+  }
+  .onboard-mini-score small{font-size:.85rem;color:#8D9AB5;font-weight:700;letter-spacing:0;}
+  .onboard-mini-bars{margin-top:12px;display:flex;flex-direction:column;gap:7px;}
+  .onboard-mini-bars i{
+    display:block;height:5px;border-radius:99px;overflow:hidden;
+    background:rgba(237,241,247,.12);
+  }
+  .onboard-mini-bars i::after{
+    content:"";display:block;height:100%;width:calc(var(--p)*100%);
+    background:#EDF1F7;border-radius:inherit;
+  }
+  .onboard-rate{
+    display:flex;align-items:center;justify-content:center;gap:14px;
+  }
+  .onboard-rate-score{
+    font-size:3.1rem;font-weight:800;letter-spacing:-.06em;color:#EDF1F7;
+    font-variant-numeric:tabular-nums;line-height:1;
+  }
+  .onboard-chip{
+    font-size:.78rem;font-weight:800;padding:8px 10px;border-radius:999px;
+    font-variant-numeric:tabular-nums;
+  }
+  .onboard-chip.up{background:rgba(61,220,151,.16);color:#3DDC97;border:1px solid rgba(61,220,151,.35);}
+  .onboard-chip.down{background:rgba(232,124,124,.14);color:#E87C7C;border:1px solid rgba(232,124,124,.32);}
+  .onboard-keep{position:relative;width:148px;height:118px;margin:0 auto;}
+  .onboard-keep .brand-fan{width:132px;height:98px;margin:0 auto;}
+  .onboard-keep-tag{
+    position:absolute;left:50%;bottom:4px;transform:translateX(-50%);
+    padding:4px 10px;border-radius:999px;
+    background:#F5B942;color:#08121C;
+    font-size:.68rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
+    white-space:nowrap;
+  }
   .onboard-dots{display:flex;gap:8px;justify-content:center;margin:0 0 16px;}
   .onboard-dots span{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.16);}
   .onboard-dots span.on{width:18px;border-radius:99px;background:#F5B942;}
@@ -690,8 +749,8 @@
     content:"";position:absolute;left:6px;top:8px;bottom:8px;width:2px;
     border-radius:2px;background:#F5B942;
   }
-  .onboard-card .brand-fan{width:132px;height:98px;margin-bottom:18px;}
-  .onboard-card .brand-fan i{width:56px;height:80px;margin-left:-28px;}
+  .onboard-card > .brand-fan{width:132px;height:98px;margin-bottom:18px;}
+  .onboard-card > .brand-fan i{width:56px;height:80px;margin-left:-28px;}
   #historyBackup{margin:0 0 12px;cursor:pointer;}
   #transfer .save-btn{width:100%;}
   .preview-modal{align-items:flex-end;padding:0;}

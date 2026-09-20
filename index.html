@@ -584,8 +584,32 @@ window.ffkIsNative = function () {
   </div>
 
   <div class="onboard" id="onboard" hidden>
-    <div class="onboard-card">
-      <div class="brand-fan" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+    <div class="onboard-card" id="onboardCard" data-step="0">
+      <div class="onboard-stage" aria-hidden="true">
+        <div class="onboard-fig" data-fig="0">
+          <div class="onboard-mini">
+            <div class="onboard-mini-top"><span>MATCHCARD</span><span>ST</span></div>
+            <div class="onboard-mini-score">6.0<small>/10</small></div>
+            <div class="onboard-mini-bars">
+              <i style="--p:.62"></i>
+              <i style="--p:.48"></i>
+            </div>
+          </div>
+        </div>
+        <div class="onboard-fig" data-fig="1">
+          <div class="onboard-rate">
+            <span class="onboard-chip up">+ 0.3</span>
+            <div class="onboard-rate-score">6.0</div>
+            <span class="onboard-chip down">− 0.2</span>
+          </div>
+        </div>
+        <div class="onboard-fig" data-fig="2">
+          <div class="onboard-keep">
+            <div class="brand-fan"><i></i><i></i><i></i><i></i></div>
+            <span class="onboard-keep-tag" id="onboardCopyTag"></span>
+          </div>
+        </div>
+      </div>
       <div class="onboard-kicker">Matchcard</div>
       <h2 id="onboardTitle"></h2>
       <p id="onboardBody"></p>
