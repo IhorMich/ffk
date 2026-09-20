@@ -122,7 +122,6 @@ function applyTheme(){
   const apple = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
   if(apple) apple.content = theme === 'dark' ? 'black-translucent' : 'default';
   document.querySelectorAll('.theme-toggle').forEach(btn => {
-    btn.textContent = theme === 'dark' ? '☀' : '☾';
     btn.setAttribute('aria-label', t('themeAria') + ' · ' + t('theme_' + theme));
   });
   document.querySelectorAll('#themeChips .chip').forEach(c => {
@@ -753,9 +752,12 @@ function fillScoreFields(s){
   scoreFallback = String(s || '');
   syncScoreResultHint();
 }
-function emptyCtaHtml(msg){
-  const cup = 'icons/intro-cup.png' + (window.FFK_VERSION ? '?v=' + window.FFK_VERSION : '');
-  return `<div class="empty-card empty-card-cup"><img class="empty-cup" src="${cup}" alt=""><p>${escapeHtml(msg)}</p><button type="button" class="save-btn" data-go-view="new">${escapeHtml(t('emptyGoMatch'))}</button></div>`;
+function brandFanHtml(){
+  return '<div class="brand-fan" aria-hidden="true"><i></i><i></i><i></i><i></i></div>';
+}
+function emptyCtaHtml(msg, withCta){
+  const btn = withCta === false ? '' : `<button type="button" class="save-btn" data-go-view="new">${escapeHtml(t('emptyGoMatch'))}</button>`;
+  return `<div class="empty-card empty-brand">${brandFanHtml()}<p>${escapeHtml(msg)}</p>${btn}</div>`;
 }
 function matchResult(m){
   const p = scoreSides(m && m.score);
@@ -2395,7 +2397,7 @@ function renderHistory(){
   if(!list.length){
     const filtered = !!(historyQuery.trim() || (historyKind && historyKind !== 'all'));
     el.innerHTML = filtered
-      ? `<div class="empty-card empty-card-cup"><img class="empty-cup" src="icons/intro-cup.png${window.FFK_VERSION ? '?v=' + window.FFK_VERSION : ''}" alt=""><p>${escapeHtml(t('histEmpty'))}</p></div>`
+      ? emptyCtaHtml(t('histEmpty'), false)
       : emptyCtaHtml(t('noPeriod'));
     hidePager();
     return;
@@ -3557,6 +3559,19 @@ function onboardPages(){
   ];
 }
 let introBusy = false;
+function introVersionMark(){
+  return String(window.FFK_VERSION || '1');
+}
+function skipIntroNow(){
+  const el = document.getElementById('intro');
+  if(el){
+    el.hidden = true;
+    el.classList.remove('out', 'play');
+  }
+  document.documentElement.classList.remove('intro-on');
+  hideNativeSplash();
+  applyNativeChrome();
+}
 function afterIntro(){
   if(!maybeTransfer()) maybeOnboard();
 }
@@ -3564,6 +3579,8 @@ function finishIntro(){
   const el = document.getElementById('intro');
   if(!el || el.hidden || introBusy) return;
   introBusy = true;
+  settings.introMark = introVersionMark();
+  saveSettings();
   el.classList.add('out');
   window.setTimeout(() => {
     el.hidden = true;
@@ -3581,10 +3598,8 @@ function hideNativeSplash(){
 }
 function playIntro(){
   const el = document.getElementById('intro');
-  if(!el){
-    document.documentElement.classList.remove('intro-on');
-    hideNativeSplash();
-    applyNativeChrome();
+  if(!el || settings.introMark === introVersionMark()){
+    skipIntroNow();
     return false;
   }
   introBusy = false;
