@@ -675,6 +675,25 @@
     if(outcome === 'loss') return tt('coachMatchLoss', 'Loss');
     return '';
   }
+  function matchScoreWithResultHtml(score){
+    const scoreTxt = String(score || '').trim();
+    if(!scoreTxt) return '';
+    try{
+      if(typeof scoreLineHtml === 'function') return scoreLineHtml({score: scoreTxt});
+    }catch(e){}
+    const outcome = matchOutcome({score: scoreTxt, status: 'played'});
+    const lab = matchOutcomeLabel(outcome);
+    if(!lab || !outcome) return esc(scoreTxt);
+    return `${esc(scoreTxt)} · <span class="match-result ${outcome}">${esc(lab)}</span>`;
+  }
+  function ratingRowHeadHtml(r){
+    const bits = [];
+    if(r && r.date) bits.push(esc(r.date));
+    if(r && r.opponent) bits.push(esc(r.opponent));
+    const scoreHtml = matchScoreWithResultHtml(r && r.score);
+    if(scoreHtml) bits.push(scoreHtml);
+    return bits.join(' · ') || '—';
+  }
   function matchListRowHtml(m, opts){
     opts = opts || {};
     const store = global.CoachStore;
@@ -3280,7 +3299,7 @@
     ].filter(Boolean).join(' · ');
     const ratingsHtml = detail.ratings.length
       ? detail.ratings.slice(0, 12).map(r => {
-          const head = [r.date, r.opponent, r.score].filter(Boolean).join(' · ');
+          const head = ratingRowHeadHtml(r);
           const c = r.counts && typeof r.counts === 'object' ? r.counts : {};
           const mom = Object.keys(c)
             .filter(k => Number(c[k]) > 0)
@@ -3290,7 +3309,7 @@
             .join(' · ');
           return `<div class="coach-player-row">
             <div class="coach-player-main">
-              <b>${esc(head)}</b>
+              <b>${head}</b>
               ${r.comment ? `<span>${esc(r.comment)}</span>` : ''}
               ${mom ? `<span class="coach-stat-mom">${esc(mom)}</span>` : ''}
             </div>

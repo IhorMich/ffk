@@ -2070,14 +2070,22 @@ function renderCoachChildFeed(ctx){
   if(!el || !ctx) return;
   const esc = (s) => String(s == null ? '' : s)
     .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  const headHtml = (r) => {
+    const bits = [];
+    if(r && r.date) bits.push(esc(r.date));
+    if(r && r.opponent) bits.push(esc(r.opponent));
+    if(r && r.score){
+      bits.push(typeof scoreLineHtml === 'function' ? scoreLineHtml({score: r.score}) : esc(r.score));
+    }
+    return bits.join(' · ') || '—';
+  };
   const parentStats = Array.isArray(ctx.parentStats) ? ctx.parentStats : [];
   const coachRatings = Array.isArray(ctx.coachRatings) ? ctx.coachRatings : [];
   const parentRows = parentStats.length
     ? parentStats.map(r => {
-        const head = [r.date, r.opponent, r.score].filter(Boolean).join(' · ');
         return `<div class="coach-player-row">
           <div class="coach-player-main">
-            <b>${esc(head || '—')}</b>
+            <b>${headHtml(r)}</b>
             ${r.comment ? `<span>${esc(r.comment)}</span>` : ''}
           </div>
           <b class="parent-rate-num">${esc(Number(r.rating).toFixed(1))}</b>
@@ -2086,10 +2094,9 @@ function renderCoachChildFeed(ctx){
     : `<p class="hint">${esc(t('coachChildNoParentStats') || 'No sideline stats from parents yet. They appear when a linked parent saves a match.')}</p>`;
   const coachRows = coachRatings.length
     ? coachRatings.slice(0, 20).map(r => {
-        const head = [r.date, r.opponent, r.score].filter(Boolean).join(' · ');
         return `<div class="coach-player-row">
           <div class="coach-player-main">
-            <b>${esc(head || '—')}</b>
+            <b>${headHtml(r)}</b>
             ${r.comment ? `<span>${esc(r.comment)}</span>` : ''}
           </div>
           <b class="parent-rate-num">${esc(Number(r.rating).toFixed(1))}</b>

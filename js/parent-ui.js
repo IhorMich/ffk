@@ -517,6 +517,22 @@
       parentPosLab(p && p.position)
     ].filter(Boolean).join(' · ');
   }
+  function parentScoreWithResultHtml(score){
+    const raw = String(score || '').trim();
+    if(!raw) return '';
+    try{
+      if(typeof scoreLineHtml === 'function') return scoreLineHtml({score: raw});
+    }catch(e){}
+    return esc(raw);
+  }
+  function parentRatingHeadHtml(r){
+    const bits = [];
+    if(r && r.date) bits.push(esc(r.date));
+    if(r && r.opponent) bits.push(esc(r.opponent));
+    const scoreHtml = parentScoreWithResultHtml(r && r.score);
+    if(scoreHtml) bits.push(scoreHtml);
+    return bits.join(' · ') || '—';
+  }
   function parentCoachStatsBlockHtml(l){
     const ratings = Array.isArray(l.ratings) ? l.ratings : [];
     const games = l.games != null ? l.games : ratings.length;
@@ -549,11 +565,10 @@
           const role = r.role === 'sub'
             ? tt('roleSub', 'Off the bench')
             : (r.role === 'start' ? tt('roleStart', 'Started') : '');
-          const head = [r.date, r.opponent, r.score].filter(Boolean).join(' · ');
           const meta = [pos, role, mins].filter(Boolean).join(' · ');
           return `<div class="coach-player-row">
             <div class="coach-player-main">
-              <b>${esc(head || '—')}</b>
+              <b>${parentRatingHeadHtml(r)}</b>
               ${meta ? `<span>${esc(meta)}</span>` : ''}
             </div>
             <b class="parent-rate-num">${esc(fmtParentScore(r.rating))}</b>
