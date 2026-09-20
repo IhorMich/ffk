@@ -8,6 +8,8 @@ const FILTER_KEY = 'ffk_filters_v1';
 const PLAYER_KEY = 'ffk_player_v1';
 const ROSTER_KEY = 'ffk_roster_v1';
 const MAX_PLAYERS = 32;
+const FREE_MAX_PLAYERS = 1;
+const PRO_MAX_PLAYERS = 8;
 const IDB_NAME = 'ffk';
 const IDB_STORE = 'media';
 const mediaCache = {};
@@ -92,6 +94,7 @@ function loadSettings(){
       iconSet: (typeof ICON_SET_ORDER !== 'undefined' && ICON_SET_ORDER.includes(s.iconSet)) ? s.iconSet : 'clear',
       onboarded: s.onboarded === true,
       onboardSkin: String(s.onboardSkin || ''),
+      isPro: s.isPro === true,
       pwaTransferSeen: s.pwaTransferSeen === true,
       introMark: String(s.introMark || '')
     };

@@ -271,9 +271,69 @@ function applyI18n(){
   if(tzEl) tzEl.textContent = t('sTzHint', {tz: clockTimeZone().replace(/_/g, ' ')});
   syncSeasonChipLabels();
   if(isElShown('onboard')) renderOnboard();
+  syncProUi();
 }
 
-let settings = {club:'', player:'', position:'fwd', format:'2x30', minutes:'60', lang:'ru', seasonCloseDeclined:'', theme:'dark', iconSet:'clear', onboarded:false, onboardSkin:'', pwaTransferSeen:false, introMark:''};
+function isPro(){
+  return settings.isPro === true;
+}
+function playerCap(){
+  return isPro() ? PRO_MAX_PLAYERS : FREE_MAX_PLAYERS;
+}
+function offerPro(feature){
+  showToast(t('proNeed'));
+  const card = document.getElementById('proCard');
+  if(card){
+    showView('settings');
+    window.setTimeout(() => {
+      try{ card.scrollIntoView({behavior:'smooth', block:'center'}); }catch(e){}
+    }, 80);
+  }
+  return false;
+}
+function requirePro(feature){
+  if(isPro()) return true;
+  return offerPro(feature);
+}
+function setPro(on){
+  settings.isPro = !!on;
+  saveSettings();
+  syncProUi();
+  applyI18n();
+  showToast(on ? t('proOn') : t('proOff'));
+}
+function proTeaserHtml(titleKey){
+  return `<div class="pro-lock">
+    <div class="pro-lock-kicker">Matchcard Pro</div>
+    <p>${escapeHtml(t(titleKey))}</p>
+    <button class="save-btn pro-lock-btn" type="button">${escapeHtml(t('proUnlock'))}</button>
+  </div>`;
+}
+function syncProUi(){
+  document.documentElement.classList.toggle('is-pro', isPro());
+  document.documentElement.classList.toggle('is-free', !isPro());
+  const body = document.getElementById('proBody');
+  if(body) body.textContent = isPro() ? t('proBodyOn') : t('proBodyOff');
+  const unlock = document.getElementById('proUnlockBtn');
+  const lock = document.getElementById('proLockBtn');
+  if(unlock) unlock.hidden = isPro();
+  if(lock) lock.hidden = !isPro();
+  const add = document.getElementById('addPlayerBtn');
+  if(add){
+    if(roster.ids.length >= MAX_PLAYERS) add.hidden = true;
+    else {
+      add.hidden = false;
+      add.textContent = (!isPro() && roster.ids.length >= FREE_MAX_PLAYERS)
+        ? t('proAddPlayer')
+        : t('addPlayer');
+    }
+  }
+  document.querySelectorAll('.js-pro-btn').forEach(btn => {
+    btn.classList.toggle('pro-gated', !isPro());
+  });
+}
+
+let settings = {club:'', player:'', position:'fwd', format:'2x30', minutes:'60', lang:'ru', seasonCloseDeclined:'', theme:'dark', iconSet:'clear', onboarded:false, onboardSkin:'', isPro:false, pwaTransferSeen:false, introMark:''};
 let roster = {currentId:'', ids:[]};
 let player = defaultPlayer();
 let extraSelected = [];
@@ -629,6 +689,10 @@ let timingRange = '10d';
 function renderTimingBoard(){
   const el = document.getElementById('timingBoard');
   if(!el) return;
+  if(!isPro()){
+    el.innerHTML = proTeaserHtml('proFeatureTiming');
+    return;
+  }
   const chips = [
     ['10d', t('period10d')],
     ['month', t('periodMonth')],
@@ -1464,6 +1528,10 @@ function syncSeasonUi(){
 }
 function openSeason(s, silent){
   const name = String(s || '').trim() || currentSeason();
+  if(!isPro() && !seasonIsOpen()){
+    if(!silent) offerPro('seasons');
+    return false;
+  }
   if(!silent && !confirm(t('confirmOpenSeason', {s: name}))) return false;
   player.season = name;
   player.seasonOpen = true;
@@ -1498,7 +1566,7 @@ function closeSeason(fromPrompt){
   syncSeasonUi();
   showToast(t('toastSeasonClosed', {s}));
   const list = matches.filter(m => sameSeason(matchSeason(m), s)).sort((a,b)=> a.date.localeCompare(b.date) || a.id - b.id);
-  if(list.length){
+  if(list.length && isPro()){
     window.setTimeout(() => { shareFutCard(list, s, 'season'); }, 280);
   }
   return true;
@@ -1742,6 +1810,7 @@ function renderRoster(){
   }).join('');
   const add = document.getElementById('addPlayerBtn');
   if(add) add.hidden = roster.ids.length >= MAX_PLAYERS;
+  syncProUi();
 }
 function persistActivePlayer(){
   if(document.getElementById('view-player').classList.contains('active')){
@@ -1785,6 +1854,11 @@ function switchPlayer(id, silent){
   if(!silent) showToast(t('toastSwitched', {n: displayName()}));
 }
 function addPlayer(){
+  if(roster.ids.length >= playerCap()){
+    if(!isPro()){ offerPro('players'); return; }
+    showToast(t('toastTooManyPlayers', {n: playerCap()}));
+    return;
+  }
   if(roster.ids.length >= MAX_PLAYERS){
     showToast(t('toastTooManyPlayers', {n: MAX_PLAYERS}));
     return;
@@ -2692,11 +2766,24 @@ document.getElementById('exportBtn').addEventListener('click', downloadMatches);
 document.getElementById('sendBtn')?.addEventListener('click', sendCopy);
 document.getElementById('importBtn').addEventListener('click', () => document.getElementById('importFile').click());
 document.getElementById('copyBtn').addEventListener('click', async () => {
+  if(!requirePro('export')) return;
   try{
     await navigator.clipboard.writeText(JSON.stringify(exportPayload(), null, 2));
     markExportDone();
     showToast(t('toastCopied'));
   }catch(e){ showToast(t('toastCopyFail')); }
+});
+document.getElementById('cloudSyncBtn')?.addEventListener('click', () => {
+  if(!requirePro('cloud')) return;
+  showToast(t('proCloudSoon'));
+});
+document.getElementById('proUnlockBtn')?.addEventListener('click', () => setPro(true));
+document.getElementById('proLockBtn')?.addEventListener('click', () => setPro(false));
+document.addEventListener('click', e => {
+  const btn = e.target.closest('.pro-lock-btn');
+  if(!btn) return;
+  e.preventDefault();
+  offerPro('lock');
 });
 document.getElementById('importFile').addEventListener('change', async (e) => {
   const file = e.target.files[0];
@@ -3080,6 +3167,10 @@ function cmpSection(title, rows){
 }
 function renderCompare(){
   const el = document.getElementById('compareBoard');
+  if(!isPro()){
+    el.innerHTML = matches.length ? proTeaserHtml('proFeatureCompare') : '';
+    return;
+  }
   const all = [...matches].sort((a,b)=> a.date.localeCompare(b.date) || a.id - b.id);
   if(!all.length){
     el.innerHTML = '';
@@ -3154,6 +3245,11 @@ function renderStats(){
 }
 function drawChart(list){
   const svg = document.getElementById('chartSvg');
+  if(!isPro()){
+    svg.innerHTML = `<text x="160" y="88" text-anchor="middle" font-size="13" font-weight="800" fill="${cssVar('--card-ink','#EDF1F7')}">Matchcard Pro</text>
+      <text x="160" y="112" text-anchor="middle" font-size="11" fill="${cssVar('--card-muted','#8D9AB5')}">${escapeHtml(t('proFeatureChart'))}</text>`;
+    return;
+  }
   if(list.length < 2){
     const msg = matches.length ? t('chartNeed', {n: 2}) : t('chartEmpty');
     svg.innerHTML = `<text x="160" y="100" text-anchor="middle" font-size="12" fill="${cssVar('--text-soft','#8D9AB5')}">${escapeHtml(msg)}</text>`;
@@ -3603,6 +3699,7 @@ document.getElementById('previewPeriod').addEventListener('click', e => {
 document.getElementById('previewTheme').addEventListener('click', e => {
   const chip = e.target.closest('.chip');
   if(!chip || !previewState) return;
+  if(chip.dataset.card === 'light' && !requirePro('cardTheme')) return;
   previewState.mode = chip.dataset.card === 'light' ? 'light' : 'dark';
   refreshCardPreview().catch(() => {});
 });
@@ -3787,6 +3884,7 @@ document.getElementById('reportShareBtn').addEventListener('click', () => {
   if(lastReportMatch) shareCard(lastReportMatch);
 });
 document.getElementById('reportStoryBtn').addEventListener('click', () => {
+  if(!requirePro('story')) return;
   const el = document.getElementById('reportStory');
   el.hidden = !el.hidden;
 });
@@ -3797,8 +3895,14 @@ document.getElementById('pOpenSeasonBtn').addEventListener('click', () => {
 document.getElementById('pCloseSeasonBtn').addEventListener('click', () => closeSeason(false));
 document.getElementById('playerHeadBtn').addEventListener('click', () => showView('player'));
 document.getElementById('addPlayerBtn').addEventListener('click', addPlayer);
-document.getElementById('statsCardBtn').addEventListener('click', shareStatsCard);
-document.getElementById('historyCardBtn').addEventListener('click', shareHistoryCard);
+document.getElementById('statsCardBtn').addEventListener('click', () => {
+  if(!requirePro('periodCard')) return;
+  shareStatsCard();
+});
+document.getElementById('historyCardBtn').addEventListener('click', () => {
+  if(!requirePro('seasonCard')) return;
+  shareHistoryCard();
+});
 document.getElementById('rosterList').addEventListener('click', e => {
   const del = e.target.closest('[data-del]');
   if(del){ e.preventDefault(); e.stopPropagation(); removePlayer(del.dataset.del); return; }
@@ -4124,6 +4228,7 @@ async function savePngFile(canvas, filename){
 let shareBusy = false;
 let previewState = null;
 function defaultCardMode(){
+  if(!isPro()) return 'dark';
   return themeName() === 'dark' ? 'dark' : 'light';
 }
 function syncPreviewPeriodChips(range){
