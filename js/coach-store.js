@@ -541,6 +541,11 @@
         db.leave_requests.push(row);
       }
       writeDb(db);
+      try{
+        if(global.InboxStore && typeof global.InboxStore.upsertCoachLeaveRequest === 'function'){
+          global.InboxStore.upsertCoachLeaveRequest(row);
+        }
+      }catch(e){}
       return row;
     },
     /** Coach confirms leave (✓) or cancels request (✕). */
@@ -563,6 +568,11 @@
             global.ParentStore.setLeaveStatus(req.parent_link_id, 'declined');
           }
         }catch(e){}
+        try{
+          if(global.InboxStore && typeof global.InboxStore.resolveCoachLeaveRequest === 'function'){
+            global.InboxStore.resolveCoachLeaveRequest(req.id, 'declined');
+          }
+        }catch(e){}
         return {request: {...req, status: 'declined'}, removed: false};
       }
       // Accept: unlink parent + remove player from roster.
@@ -579,6 +589,11 @@
         }
       }catch(e){}
       this.removePlayer(session, pid);
+      try{
+        if(global.InboxStore && typeof global.InboxStore.resolveCoachLeaveRequest === 'function'){
+          global.InboxStore.resolveCoachLeaveRequest(req.id, 'accepted');
+        }
+      }catch(e){}
       return {request: {...req, status: 'accepted'}, removed: true};
     },
     getActiveMatchId(){

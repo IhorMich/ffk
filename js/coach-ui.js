@@ -115,9 +115,6 @@
     if(back) back.hidden = true;
     if(typeof applyHeader === 'function') applyHeader();
     if(typeof refreshCoachMediaUi === 'function') refreshCoachMediaUi();
-    if(global.CoachPush && typeof global.CoachPush.flushCoachAlerts === 'function'){
-      try{ global.CoachPush.flushCoachAlerts(); }catch(e){}
-    }
     syncCoachPlayerPhotosFromPersonal();
     renderWorkspace(session);
     syncPlanModeButtons();
@@ -268,34 +265,20 @@
   function renderCoachLeaveRequests(session){
     const box = document.getElementById('coachLeaveRequests');
     const store = global.CoachStore;
-    if(!box || !store || !session || typeof store.listLeaveRequests !== 'function'){
-      if(box) box.hidden = true;
-      return;
-    }
-    const list = store.listLeaveRequests(session, {status: 'pending'});
-    if(!list.length){
+    if(box){
       box.hidden = true;
       box.innerHTML = '';
-      return;
     }
-    box.hidden = false;
-    box.innerHTML = `<div class="pro-kicker">${esc(tt('coachLeaveKicker', 'Leave requests'))}</div>
-      <p class="hint">${esc(tt('coachLeaveLead', 'Player asks to leave after a club change. Confirm removes them from the roster.'))}</p>
-      <div class="coach-leave-list">${list.map(r => {
-        const where = [r.new_club, r.new_team].filter(Boolean).join(' · ')
-          || [r.academy_name, r.team_name].filter(Boolean).join(' · ')
-          || '—';
-        return `<div class="coach-leave-row" data-leave-id="${esc(r.id)}">
-          <div class="coach-leave-main">
-            <b>${esc(r.player_name || '—')}</b>
-            <span>${esc(tt('coachLeaveNewClub', 'New club'))}: ${esc(where)}</span>
-          </div>
-          <div class="parent-rsvp-actions coach-leave-actions">
-            <button type="button" class="parent-rsvp-btn yes" data-leave-decide="accept" data-leave-id="${esc(r.id)}" aria-label="${esc(tt('coachLeaveAccept', 'Confirm leave'))}">✓</button>
-            <button type="button" class="parent-rsvp-btn no" data-leave-decide="decline" data-leave-id="${esc(r.id)}" aria-label="${esc(tt('coachLeaveDecline', 'Keep on team'))}">✕</button>
-          </div>
-        </div>`;
-      }).join('')}</div>`;
+    if(!store || !session || typeof store.listLeaveRequests !== 'function') return;
+    const list = store.listLeaveRequests(session, {status: 'pending'});
+    if(global.InboxStore && typeof global.InboxStore.upsertCoachLeaveRequest === 'function'){
+      list.forEach(r => {
+        try{ global.InboxStore.upsertCoachLeaveRequest(r); }catch(e){}
+      });
+    }
+    if(typeof syncInboxBellUi === 'function'){
+      try{ syncInboxBellUi(); }catch(e){}
+    }
   }
   function onCoachLeaveDecide(btn){
     const id = btn && btn.dataset.leaveId;
@@ -601,6 +584,30 @@
     }
     return '';
   }
+  function bindLegacyPersonalPhotoLinks(){
+    try{
+      const parent = global.ParentStore;
+      if(!parent || typeof parent.listLinks !== 'function' || typeof parent.bindPersonalPlayer !== 'function') return;
+      const links = parent.listLinks();
+      const profiles = personalPlayersWithMedia();
+      const used = new Set(links.map(l => String(l && l.personal_player_id || '')).filter(Boolean));
+      links.filter(l => l && l.player && !l.personal_player_id).forEach(link => {
+        const matches = profiles.filter(p =>
+          p && !used.has(String(p.id)) &&
+          namesSoftMatch(link.player.first_name, link.player.last_name, p.firstName, p.lastName)
+        );
+        if(matches.length === 1){
+          parent.bindPersonalPlayer(link.id, matches[0].id);
+          used.add(String(matches[0].id));
+        }
+      });
+      const freshLinks = parent.listLinks().filter(l => l && !l.personal_player_id);
+      const freeProfiles = profiles.filter(p => p && !used.has(String(p.id)));
+      if(freshLinks.length === 1 && freeProfiles.length === 1){
+        parent.bindPersonalPlayer(freshLinks[0].id, freeProfiles[0].id);
+      }
+    }catch(e){}
+  }
   /** Resolve the personal profile explicitly attached when the coach invite was claimed. */
   function linkedPersonalPhoto(tp){
     if(!tp || !tp.id) return '';
@@ -680,6 +687,7 @@
     if(!store || !session) return 0;
     let n = 0;
     try{
+      bindLegacyPersonalPhotoLinks();
       const academy = store.myAcademy && store.myAcademy(session);
       const teams = academy && store.listTeams
         ? store.listTeams(session, academy.id)

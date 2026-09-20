@@ -71,6 +71,11 @@
   }
 
   function inboxMessages(){
+    if(typeof isCoachPlan === 'function' && isCoachPlan()){
+      return global.InboxStore && typeof global.InboxStore.listForCoach === 'function'
+        ? global.InboxStore.listForCoach()
+        : [];
+    }
     const store = global.ParentStore;
     // Always scope to linked children — never dump the whole on-device inbox.
     if(store && typeof store.listInbox === 'function') return store.listInbox();
@@ -80,6 +85,11 @@
     return [];
   }
   function inboxUnread(){
+    if(typeof isCoachPlan === 'function' && isCoachPlan()){
+      return global.InboxStore && typeof global.InboxStore.unreadCountForCoach === 'function'
+        ? global.InboxStore.unreadCountForCoach()
+        : 0;
+    }
     const store = global.ParentStore;
     if(store && typeof store.unreadInboxCount === 'function') return store.unreadInboxCount();
     if(store && typeof store.linkedPlayerIds === 'function' && global.InboxStore){
@@ -93,6 +103,20 @@
     }
     return msgs.map(m => {
       const unreadCls = m.status === 'read' ? '' : ' unread';
+      const isCoachLeave = m.type === 'coach_leave_request';
+      if(isCoachLeave){
+        const where = [m.new_club, m.new_team].filter(Boolean).join(' · ') || '—';
+        const decision = m.decision === 'accepted'
+          ? ` · ${tt('coachLeaveAcceptedShort', 'Accepted')}`
+          : (m.decision === 'declined' ? ` · ${tt('coachLeaveDeclinedShort', 'Declined')}` : '');
+        return `<button type="button" class="parent-msg-row${unreadCls}" data-parent-msg="${esc(m.id)}">
+          <span class="parent-link-main">
+            <b>${esc(tt('coachLeaveKicker', 'Leave request'))}${esc(decision)}</b>
+            <span>${esc([m.player_name, where].filter(Boolean).join(' · '))}</span>
+          </span>
+          <span class="parent-msg-dot" aria-hidden="true"></span>
+        </button>`;
+      }
       const isResult = m.type === 'match_result';
       const notice = !isResult ? (m.invite_notice || '') : '';
       const head = [m.date, m.opponent].filter(Boolean).join(' · ');
@@ -133,11 +157,15 @@
     const btn = document.getElementById('inboxBtn');
     const badge = document.getElementById('inboxBadge');
     if(!btn) return;
-    // Coach mode has its own workflow — parent inbox stays in Free / parent mode.
     if(typeof isCoachPlan === 'function' && isCoachPlan()){
-      btn.hidden = true;
-      btn.classList.remove('has-unread');
-      if(badge) badge.hidden = true;
+      const msgs = inboxMessages();
+      const unread = inboxUnread();
+      btn.hidden = msgs.length === 0;
+      btn.classList.toggle('has-unread', unread > 0);
+      if(badge){
+        badge.hidden = unread === 0;
+        if(unread > 0) badge.textContent = unread > 99 ? '99+' : String(unread);
+      }
       return;
     }
     const pushOn = !!(global.CoachPush && global.CoachPush.isEnabled && global.CoachPush.isEnabled());
@@ -194,6 +222,29 @@
   function fillParentMessageBody(msg){
     const body = document.getElementById('parentMsgBody');
     if(!body || !msg) return;
+    if(msg.type === 'coach_leave_request'){
+      const where = [msg.new_club, msg.new_team].filter(Boolean).join(' · ') || '—';
+      const pending = !msg.decision;
+      body.innerHTML = `
+        <div class="parent-confirm-badge">${esc(tt('coachLeaveKicker', 'Leave request'))}</div>
+        <h3 class="coach-rate-name">${esc(msg.player_name || '—')}</h3>
+        <div class="parent-msg-details">
+          <p class="parent-msg-detail"><b>${esc(tt('coachLeaveNewClub', 'New club'))}</b><span>${esc(where)}</span></p>
+          <p class="parent-msg-detail"><b>${esc(tt('parentInboxTeam', 'Team'))}</b><span>${esc(msg.team_name || '—')}</span></p>
+        </div>
+        ${pending ? `<div class="parent-rsvp parent-rsvp-footer">
+          <p class="parent-rsvp-lead">${esc(tt('coachLeaveLead', 'Player asks to leave after a club change. Confirm removes them from the roster.'))}</p>
+          <div class="parent-rsvp-actions">
+            <button type="button" class="parent-rsvp-btn yes" data-coach-leave-decision="accept" data-request-id="${esc(msg.request_id)}" aria-label="${esc(tt('coachLeaveAccept', 'Confirm leave'))}">✓</button>
+            <button type="button" class="parent-rsvp-btn no" data-coach-leave-decision="decline" data-request-id="${esc(msg.request_id)}" aria-label="${esc(tt('coachLeaveDecline', 'Keep on team'))}">✕</button>
+          </div>
+        </div>` : `<p class="hint">${esc(msg.decision === 'accepted'
+          ? tt('coachLeaveAccepted', 'Player removed from the team. Parent link cleared.')
+          : tt('coachLeaveDeclined', 'Leave declined. Player stays on the team.'))}</p>`}
+        <button type="button" class="ghost-btn" id="parentMsgCloseBtn">${esc(tt('btnClose', 'Close'))}</button>
+      `;
+      return;
+    }
     const venue = msg.venue === 'away'
       ? tt('venueAway', 'Away')
       : tt('venueHome', 'Home');
@@ -403,6 +454,28 @@
         const el = document.getElementById('parentMsgBody');
         if(el) el.dataset.rsvpBusy = '';
       }, 400);
+    }
+  }
+  function onCoachLeaveInboxDecision(btn){
+    const requestId = btn && btn.dataset.requestId;
+    const decision = btn && btn.dataset.coachLeaveDecision;
+    const coach = global.CoachStore;
+    const session = coach && coach.getSession && coach.getSession();
+    if(!requestId || !session || !['accept','decline'].includes(decision)) return;
+    try{
+      coach.resolveLeaveRequest(session, requestId, decision);
+      toast(decision === 'accept'
+        ? tt('coachLeaveAccepted', 'Player removed from the team. Parent link cleared.')
+        : tt('coachLeaveDeclined', 'Leave declined. Player stays on the team.'));
+      const msg = global.InboxStore && global.InboxStore.listForCoach
+        ? global.InboxStore.listForCoach().find(m => String(m.request_id) === String(requestId))
+        : null;
+      if(msg) fillParentMessageBody(msg);
+      renderParentInbox();
+      if(typeof renderCoachUi === 'function') renderCoachUi();
+      if(typeof syncPlayerLeaveUi === 'function') syncPlayerLeaveUi();
+    }catch(e){
+      toast(tt('coachErrGeneric', 'Something went wrong.'));
     }
   }
   function closeParentMsgSheet(){
@@ -904,6 +977,13 @@
         e.preventDefault();
         e.stopPropagation();
         onParentRsvp(rsvpBtn);
+        return;
+      }
+      const leaveBtn = e.target.closest('[data-coach-leave-decision]');
+      if(leaveBtn){
+        e.preventDefault();
+        e.stopPropagation();
+        onCoachLeaveInboxDecision(leaveBtn);
       }
     });
     document.getElementById('parentLinksList')?.addEventListener('click', e => {
@@ -1034,12 +1114,7 @@
     }
     if(!confirm(tt('playerLeaveConfirm', 'Send a leave request to the coach? They must confirm before the link is removed.'))) return;
     try{
-      const res = global.ParentStore.requestLeave(linkId, {new_club: clubVal, new_team: teamVal});
-      if(res && res.already){
-        toast(tt('playerLeavePendingHint', 'Leave request sent. Waiting for the coach to confirm.'));
-      }else{
-        toast(tt('playerLeaveSent', 'Leave request sent to the coach.'));
-      }
+      global.ParentStore.requestLeave(linkId, {new_club: clubVal, new_team: teamVal});
       syncPlayerLeaveUi();
       renderParentUi();
       if(typeof renderCoachUi === 'function'){

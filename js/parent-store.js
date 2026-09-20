@@ -107,6 +107,20 @@
     getLink(id){
       return readDb().links.find(l => l.id === id) || null;
     },
+    bindPersonalPlayer(linkId, personalPlayerId){
+      const lid = String(linkId || '');
+      const pid = String(personalPlayerId || '').slice(0, 32);
+      if(!lid || !pid) return null;
+      const db = readDb();
+      let hit = null;
+      db.links = db.links.map(link => {
+        if(link.id !== lid) return link;
+        hit = {...link, personal_player_id: pid, updatedAt: new Date().toISOString()};
+        return hit;
+      });
+      if(hit) writeDb(db);
+      return hit;
+    },
     setPending(payload){
       const db = readDb();
       db.pendingPayload = payload;
@@ -347,16 +361,6 @@
         reason: 'club_change'
       });
       const updated = this.setLeaveStatus(link.id, 'pending');
-      try{
-        if(global.CoachPush && typeof global.CoachPush.queueCoachAlert === 'function'){
-          const title = (global.tt && global.tt('coachLeavePushTitle', 'Player leave'))
-            || 'Player leave';
-          global.CoachPush.queueCoachAlert(
-            title,
-            `${req.player_name || ''} · ${req.new_club || req.new_team || ''}`.trim()
-          );
-        }
-      }catch(e){}
       return {link: updated || link, request: req, already: false};
     }
   };

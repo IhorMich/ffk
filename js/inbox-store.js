@@ -34,7 +34,12 @@
     listForPlayers(playerIds){
       const want = new Set((playerIds || []).map(String).filter(Boolean));
       if(!want.size) return [];
-      return this.listAll().filter(m => want.has(String(m.team_player_id || '')));
+      return this.listAll().filter(m =>
+        m.type !== 'coach_leave_request' && want.has(String(m.team_player_id || ''))
+      );
+    },
+    listForCoach(){
+      return this.listAll().filter(m => m.type === 'coach_leave_request');
     },
     get(id){
       return readDb().messages.find(m => m.id === id) || null;
@@ -201,6 +206,54 @@
       writeDb(db);
       return row;
     },
+    upsertCoachLeaveRequest(payload){
+      const db = readDb();
+      const requestId = String(payload.id || payload.request_id || '');
+      if(!requestId) throw new Error('bad_message');
+      const existing = db.messages.find(m =>
+        m.type === 'coach_leave_request' && String(m.request_id || '') === requestId
+      );
+      const now = new Date().toISOString();
+      const row = {
+        id: existing ? existing.id : uid('msg'),
+        type: 'coach_leave_request',
+        request_id: requestId,
+        team_id: String(payload.team_id || ''),
+        team_player_id: String(payload.team_player_id || ''),
+        parent_link_id: String(payload.parent_link_id || ''),
+        player_name: String(payload.player_name || '').slice(0, 80),
+        team_name: String(payload.team_name || '').slice(0, 60),
+        academy_name: String(payload.academy_name || '').slice(0, 80),
+        new_club: String(payload.new_club || '').slice(0, 60),
+        new_team: String(payload.new_team || '').slice(0, 60),
+        decision: String(payload.status || '') === 'accepted'
+          ? 'accepted'
+          : (String(payload.status || '') === 'declined' ? 'declined' : ''),
+        status: existing && existing.status === 'read' ? 'read' : 'delivered',
+        created_at: existing ? existing.created_at : (payload.created_at || now),
+        updated_at: now,
+        read_at: existing && existing.status === 'read' ? (existing.read_at || '') : ''
+      };
+      if(existing) db.messages = db.messages.map(m => m.id === existing.id ? row : m);
+      else db.messages.push(row);
+      writeDb(db);
+      return row;
+    },
+    resolveCoachLeaveRequest(requestId, decision){
+      const rid = String(requestId || '');
+      const result = decision === 'accepted' ? 'accepted' : decision === 'declined' ? 'declined' : '';
+      if(!rid || !result) return null;
+      const db = readDb();
+      const now = new Date().toISOString();
+      db.messages = db.messages.map(m => {
+        if(m.type !== 'coach_leave_request' || String(m.request_id || '') !== rid) return m;
+        return {...m, decision: result, status: 'read', read_at: m.read_at || now, updated_at: now};
+      });
+      writeDb(db);
+      return db.messages.find(m =>
+        m.type === 'coach_leave_request' && String(m.request_id || '') === rid
+      ) || null;
+    },
     importMessages(list){
       const out = [];
       (list || []).forEach(raw => {
@@ -259,6 +312,9 @@
     },
     unreadCountForPlayers(playerIds){
       return this.listForPlayers(playerIds).filter(m => m.status !== 'read').length;
+    },
+    unreadCountForCoach(){
+      return this.listForCoach().filter(m => m.status !== 'read').length;
     }
   };
 
