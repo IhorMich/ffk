@@ -434,6 +434,7 @@
         birth_date: String(fields.birth_date || '').trim().slice(0, 10),
         contact: String(fields.contact || '').trim().slice(0, 80),
         coach_notes: String(fields.coach_notes || '').trim().slice(0, 2000),
+        photo: fields.photo ? String(fields.photo) : '',
         created_at: new Date().toISOString()
       };
       db.team_players.push(player);
@@ -467,6 +468,9 @@
       if(Object.prototype.hasOwnProperty.call(fields, 'coach_notes')){
         // Staff-only notes — never included in parent/inbox payloads.
         player.coach_notes = String(fields.coach_notes || '').trim().slice(0, 2000);
+      }
+      if(Object.prototype.hasOwnProperty.call(fields, 'photo')){
+        player.photo = fields.photo ? String(fields.photo) : '';
       }
       writeDb(db);
       return player;
