@@ -526,10 +526,12 @@
   }
   .intro-fut-rail{
     position:absolute;left:0;top:6%;
+    width:32%;max-width:48px;
     display:flex;flex-direction:column;align-items:flex-start;gap:1px;
+    overflow:hidden;
   }
   .intro-fut-ovr{
-    font-size:1.55rem;font-weight:900;letter-spacing:-.05em;line-height:.9;
+    font-size:1.45rem;font-weight:900;letter-spacing:-.05em;line-height:.9;
     font-variant-numeric:tabular-nums;
     text-shadow:0 2px 8px rgba(0,0,0,.35), 0 0 12px var(--glow);
   }
@@ -540,40 +542,48 @@
     display:block;width:22px;height:1px;margin:3px 0 2px;background:var(--foil2);
   }
   .intro-fut-brand{
-    font-size:.38rem;font-weight:800;letter-spacing:.08em;color:var(--muted);
+    font-size:.3rem;font-weight:800;letter-spacing:.04em;color:var(--muted);
+    max-width:100%;overflow:hidden;white-space:nowrap;
   }
   .intro-fut-no{
     position:absolute;right:0;top:2%;
-    font-size:.7rem;font-weight:800;color:var(--plate);
+    font-size:.64rem;font-weight:800;color:var(--plate);
   }
   .intro-fut-hero{
-    font-size:2.55rem;font-weight:900;letter-spacing:-.06em;line-height:1;
-    padding-left:12%;
+    font-size:2.45rem;font-weight:900;letter-spacing:-.06em;line-height:1;
+    padding-left:28%;
     text-shadow:0 4px 14px rgba(0,0,0,.35), 0 0 18px var(--glow);
   }
   .intro-fut-name{
-    margin:4px 0 7px;padding:5px 4px 4px;
+    margin:4px 0 7px;padding:5px 6px 4px;
     border-radius:6px;text-align:center;
     background:linear-gradient(180deg, #fff 0%, var(--plate) 100%);
     color:var(--ink);
-    font-size:.52rem;font-weight:800;letter-spacing:.08em;
+    font-size:.5rem;font-weight:800;letter-spacing:.06em;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
     box-shadow:0 2px 6px rgba(0,0,0,.28), 0 0 0 1px rgba(255,255,255,.18);
   }
   .intro-fut-grid{
-    display:grid;grid-template-columns:1fr 1fr;gap:3px 8px;
+    display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:3px 10px;
   }
   .intro-fut-grid span{
-    display:flex;align-items:baseline;gap:4px;
-    color:var(--muted);font-size:.42rem;font-weight:800;letter-spacing:.04em;
+    display:grid;grid-template-columns:2.2ch minmax(0,1fr);
+    align-items:baseline;column-gap:4px;min-width:0;
+    color:var(--muted);font-weight:800;
   }
   .intro-fut-grid b{
-    color:var(--plate);font-size:.72rem;letter-spacing:-.03em;
-    font-variant-numeric:tabular-nums;
+    color:var(--plate);font-size:.66rem;letter-spacing:-.03em;
+    font-variant-numeric:tabular-nums;text-align:right;
     text-shadow:0 1px 6px rgba(0,0,0,.28);
+  }
+  .intro-fut-grid em{
+    font-style:normal;font-size:.34rem;letter-spacing:.03em;
+    overflow:hidden;white-space:nowrap;
   }
   .intro-fut-foot{
     margin-top:6px;text-align:center;
-    color:var(--muted);font-size:.4rem;font-weight:600;letter-spacing:.04em;
+    color:var(--muted);font-size:.38rem;font-weight:600;letter-spacing:.03em;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
   }
   @media (min-width:400px){
     .intro-fut{--w:198px;margin-top:-142px;}
