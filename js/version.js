@@ -1,2 +1,2 @@
 // Keep in sync with android/app/build.gradle versionName.
-window.FFK_VERSION = '1.2.98';
+window.FFK_VERSION = '1.2.99';

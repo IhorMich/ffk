@@ -1154,9 +1154,10 @@
   .pro-kicker{
     font-size:.72rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--card-muted);
   }
-  .pro-card p{margin:8px 0 10px;font-size:.92rem;font-weight:600;color:var(--card-muted);line-height:1.4;}
-  .pro-list{margin:0 0 14px;padding:0 0 0 1.1em;color:var(--card-ink);font-size:.86rem;font-weight:600;line-height:1.45;}
-  .pro-list li{margin:0 0 4px;}
+  .pro-card p{margin:8px 0 10px;font-size:.92rem;font-weight:600;color:var(--card-muted);line-height:1.45;}
+  .pro-list{margin:0 0 14px;padding:0 0 0 1.1em;color:var(--card-ink);font-size:.86rem;font-weight:600;line-height:1.5;}
+  .pro-list li{margin:0 0 8px;}
+  .pro-list li:last-child{margin-bottom:0;}
   .pro-card .save-btn,.pro-card .ghost-btn{margin-top:0;}
   .pro-card .ghost-btn{margin-top:8px;}
   .pro-lock{
