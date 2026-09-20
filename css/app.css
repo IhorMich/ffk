@@ -1293,17 +1293,41 @@
   .tabbtn.active{color:var(--gold);background:rgba(245,185,66,.14);}
   .app.live-on .tabbar,.app.live-on .topbar,.app.live-on .content{display:none;}
   .live{
-    display:none;position:fixed;inset:0;background:var(--bg);z-index:70;
+    display:none;position:fixed;inset:0;z-index:70;
     padding:calc(16px + env(safe-area-inset-top, 0px)) 16px 0;
     max-width:480px;margin:0 auto;width:100%;overflow:hidden;
+    --card-ink:#EDF1F7;
+    --card-muted:#8D9AB5;
+    --card-accent:#EDF1F7;
+    --card-line:rgba(237,241,247,.16);
+    --card-paper:linear-gradient(180deg, #1b1e2a 0%, #0b0c14 100%);
+    --card-track:rgba(237,241,247,.12);
+    --card-wash:rgba(237,241,247,.06);
+    background:
+      radial-gradient(ellipse 80% 42% at 50% 0%, rgba(245,185,66,.14) 0%, transparent 62%),
+      var(--bg);
   }
   .app.live-on .live,#app.live-on ~ .live{display:flex;flex-direction:column;}
   .live-head{
     display:flex;flex-direction:column;gap:8px;margin-bottom:12px;
-    flex-shrink:0;padding-bottom:4px;background:var(--bg);
+    flex-shrink:0;padding-bottom:4px;
   }
   .live-head .top-actions{margin-left:0;align-self:flex-end;}
+  .live-head .icon-btn{
+    background:#12141c;border-color:var(--card-line);color:var(--card-ink);
+  }
+  .live-pos{
+    width:auto;max-width:62%;padding:10px 12px;border-radius:12px;
+    border:1px solid var(--card-line);background:#12141c;color:var(--card-ink);
+    font-weight:700;font-size:.78rem;font-family:inherit;
+  }
   .live-hero{margin:0;}
+  .live-hero .hero-main{
+    flex-direction:row;align-items:center;gap:12px;margin-top:6px;
+  }
+  .live-hero .hero-score{font-size:2.15rem;}
+  .live-hero .hero-bars{flex:1;min-width:0;}
+  .live-hero .hero-kick{margin-top:10px;}
   .live-score{font-size:2rem;font-weight:800;color:var(--gold);}
   .live-clock{margin-top:4px;font-size:.82rem;font-weight:800;color:var(--text-soft);line-height:1.4;white-space:pre-line;}
   .live-clock.on{color:var(--gold);}
@@ -1356,33 +1380,35 @@
     flex:1;min-height:0;overflow:auto;-webkit-overflow-scrolling:touch;padding-bottom:8px;
   }
   .live-group{flex-shrink:0;}
+  .live .metric-group-title{color:var(--card-muted);}
   .live-grid-inner{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
   .live-btn{
-    min-height:96px;border-radius:16px;border:1px solid var(--border);
-    background:var(--surface);color:var(--text);font-weight:800;font-size:.88rem;cursor:pointer;padding:10px;
+    min-height:96px;border-radius:16px;border:1px solid var(--card-line);
+    background:var(--card-paper);color:var(--card-ink);font-weight:800;font-size:.88rem;cursor:pointer;padding:10px;
   }
-  .live-btn .n{display:block;font-size:1.55rem;color:var(--gold);margin-top:6px;}
+  .live-btn .n{display:block;font-size:1.55rem;color:var(--card-accent);margin-top:6px;}
   .live-btn.neg{border-color:rgba(251,103,103,.4);}
   .live-btn.neg .n{color:var(--danger);}
   .live-cell{
     display:flex;flex-direction:column;min-height:140px;border-radius:18px;overflow:hidden;
-    border:1px solid var(--border);background:var(--surface);
+    border:1px solid var(--card-line);background:var(--card-paper);color:var(--card-ink);
+    box-shadow:inset 3px 0 0 var(--card-accent);
   }
-  .live-cell.neg{border-color:rgba(251,103,103,.4);}
+  .live-cell.neg{border-color:rgba(251,103,103,.38);box-shadow:inset 3px 0 0 var(--danger);}
   .live-plus{
-    flex:1;border:none;background:none;color:var(--text);font-weight:800;font-size:.95rem;
+    flex:1;border:none;background:none;color:var(--card-ink);font-weight:800;font-size:.95rem;
     cursor:pointer;padding:14px 10px 8px;text-align:center;min-height:96px;
   }
-  .live-plus .n{display:block;font-size:1.7rem;color:var(--gold);margin-top:8px;}
-  .live-plus .live-w{display:block;font-size:.72rem;font-weight:700;color:var(--text-soft);margin-top:4px;}
+  .live-plus .n{display:block;font-size:1.7rem;color:var(--card-accent);margin-top:8px;}
+  .live-plus .live-w{display:block;font-size:.72rem;font-weight:700;color:var(--card-muted);margin-top:4px;}
   .live-cell.neg .live-plus .n{color:var(--danger);}
   .live-minus{
-    border:none;border-top:1px solid var(--border);background:var(--surface-2);color:var(--text);
+    border:none;border-top:1px solid var(--card-line);background:var(--card-wash);color:var(--card-muted);
     font-weight:800;font-size:1.2rem;padding:0;cursor:pointer;min-height:44px;
   }
   .live-foot{
     display:flex;gap:10px;flex-shrink:0;z-index:2;
-    padding:12px 0 calc(16px + env(safe-area-inset-bottom, 0px));background:var(--bg);
+    padding:12px 0 calc(16px + env(safe-area-inset-bottom, 0px));
   }
   .live-foot button{flex:1;min-height:52px;margin-top:0;}
   .live-foot .ghost-btn,.live-foot .save-btn{width:auto;margin-top:0;}
