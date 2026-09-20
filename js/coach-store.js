@@ -312,6 +312,18 @@
       writeDb(db);
       return academy;
     },
+    renameAcademy(session, name){
+      name = String(name || '').trim().slice(0, 80);
+      if(!session) throw new Error('auth');
+      if(!name) throw new Error('name');
+      if(!this.isAcademyOwner(session)) throw new Error('owner_only');
+      const academy = this.myAcademy(session);
+      if(!academy) throw new Error('forbidden');
+      const db = readDb();
+      db.academies = db.academies.map(a => a.id === academy.id ? {...a, name} : a);
+      writeDb(db);
+      return this.myAcademy(session);
+    },
     listTeams(session, academyId){
       const db = readDb();
       if(!session || !this.myAcademy(session) || this.myAcademy(session).id !== academyId) return [];

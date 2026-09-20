@@ -1924,7 +1924,9 @@
   .coach-settings-claim{margin-top:12px;}
   .coach-settings-block .save-btn,
   .coach-settings-block #coachSignOutBtn,
-  #coachSettingsSheet #coachSaveProfileBtn{width:100%;}
+  #coachSettingsSheet #coachSaveProfileBtn,
+  #coachSettingsSheet #coachSaveAcademyBtn,
+  #coachSettingsSheet #coachEnterParentBtn{width:100%;}
   #coachSettingsSheet #coachProfileEmail{margin:0 0 10px;}
   #coachSettingsSheet #coachSignOutBtn{margin-top:8px;}
   #coachSettingsSheet #coachClaimAssistantBtn{width:100%;margin-top:8px;}

@@ -983,7 +983,11 @@ window.ffkIsNative = function () {
 
       <div class="coach-settings-block">
         <div class="pro-kicker" data-i18n="coachAcademyLabel">Академия</div>
-        <h3 class="coach-team-heading" id="coachAcademyName">—</h3>
+        <div class="field">
+          <label data-i18n="coachAcademyLabel">Название академии</label>
+          <input id="coachAcademyRenameInput" type="text" maxlength="80" autocomplete="organization">
+        </div>
+        <button class="save-btn" id="coachSaveAcademyBtn" type="button" data-i18n="coachSaveAcademy">Сохранить академию</button>
         <p class="hint" data-i18n="coachSettingsTeamsHint">Команды и состав — на главной странице тренера.</p>
       </div>
 
@@ -1012,6 +1016,12 @@ window.ffkIsNative = function () {
         <p class="hint" id="coachCloudStatus"></p>
         <button class="save-btn" id="coachCloudSyncBtn" type="button" data-i18n="coachCloudSyncBtn">Синхронизировать сейчас</button>
         <p class="hint" data-i18n="coachCloudHint">Впиши URL и anon key в js/coach-config.js и прогони supabase/schema.sql.</p>
+      </div>
+
+      <div class="coach-settings-block">
+        <div class="pro-kicker" data-i18n="coachModeSwitchKicker">Режим приложения</div>
+        <p class="hint" data-i18n="coachModeSwitchHint">Coach и Free/Pro на одном телефоне. Можно временно уйти к оценке ребёнка у бровки.</p>
+        <button class="save-btn" id="coachEnterParentBtn" type="button" data-i18n="coachSwitchParent">Перейти в режим родителя / Free</button>
       </div>
 
       <div class="coach-settings-block">

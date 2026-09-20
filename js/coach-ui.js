@@ -285,6 +285,15 @@
 
     const nameEl = document.getElementById('coachAcademyName');
     if(nameEl) nameEl.textContent = academy.name;
+    const academyInput = document.getElementById('coachAcademyRenameInput');
+    if(academyInput && document.activeElement !== academyInput){
+      academyInput.value = academy.name || '';
+      academyInput.disabled = !(store.isAcademyOwner && store.isAcademyOwner(session));
+    }
+    const saveAcademyBtn = document.getElementById('coachSaveAcademyBtn');
+    if(saveAcademyBtn){
+      saveAcademyBtn.hidden = !(store.isAcademyOwner && store.isAcademyOwner(session));
+    }
 
     const teams = store.listTeams(session, academy.id);
     const profileEmail = document.getElementById('coachProfileEmail');
@@ -2197,6 +2206,23 @@
       toast(map[e.message] || tt('coachErrGeneric', 'Could not create academy.'));
     }
   }
+  function onSaveAcademy(){
+    const session = global.CoachStore.getSession();
+    const name = document.getElementById('coachAcademyRenameInput')?.value || '';
+    try{
+      global.CoachStore.renameAcademy(session, name);
+      toast(tt('coachAcademySaved', 'Academy saved.'));
+      renderCoachUi();
+    }catch(e){
+      const map = {
+        name: tt('coachErrAcademyName', 'Enter academy name.'),
+        owner_only: tt('coachErrOwnerOnlyTeam', 'Only the academy owner can add teams.'),
+        forbidden: tt('coachErrGeneric', 'Something went wrong.'),
+        auth: tt('coachErrGeneric', 'Something went wrong.')
+      };
+      toast(map[e.message] || tt('coachErrGeneric', 'Something went wrong.'));
+    }
+  }
   function setHomeCreateTeamOpen(on){
     const box = document.getElementById('coachHomeCreateTeam');
     if(box) box.hidden = !on;
@@ -3333,9 +3359,11 @@
     document.getElementById('coachSignUpBtn')?.addEventListener('click', () => { onSignUp(); });
     document.getElementById('coachSignInBtn')?.addEventListener('click', () => { onSignIn(); });
     document.getElementById('coachSignOutBtn')?.addEventListener('click', () => { onSignOut(); });
+    document.getElementById('coachEnterParentBtn')?.addEventListener('click', () => { enterParentMode(); });
     document.getElementById('enterParentModeBtn')?.addEventListener('click', () => { enterParentMode(); });
     document.getElementById('enterCoachModeBtn')?.addEventListener('click', () => { enterCoachMode(); });
     document.getElementById('coachCreateAcademyBtn')?.addEventListener('click', () => { onCreateAcademy(); });
+    document.getElementById('coachSaveAcademyBtn')?.addEventListener('click', () => { onSaveAcademy(); });
     document.getElementById('coachAddTeamBtn')?.addEventListener('click', () => {
       const box = document.getElementById('coachHomeCreateTeam');
       setHomeCreateTeamOpen(!!(box && box.hidden));
