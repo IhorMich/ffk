@@ -99,7 +99,8 @@ public class MainActivity extends BridgeActivity {
     if (Build.VERSION.SDK_INT >= 23) flags |= PendingIntent.FLAG_IMMUTABLE;
     PendingIntent pi = PendingIntent.getActivity(this, 0, open, flags);
     NotificationCompat.Builder builder = new NotificationCompat.Builder(this, ALERT_CHANNEL)
-      .setSmallIcon(getApplicationInfo().icon)
+      // Adaptive launcher icons crash NotificationManager — use a white status icon.
+      .setSmallIcon(R.drawable.ic_stat_notify)
       .setContentTitle(title == null || title.isEmpty() ? "Matchcard" : title)
       .setContentText(body == null ? "" : body)
       .setStyle(new NotificationCompat.BigTextStyle().bigText(body == null ? "" : body))

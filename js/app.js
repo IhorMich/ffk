@@ -5170,10 +5170,11 @@ async function shareCard(m){
     bindCameraRestore();
     syncScoreResultHint();
     syncPushSettingsUi();
+    // Do not prompt for notifications on launch — only from Settings.
+    // Remote FCM bootstrap is a no-op until google-services / FFK_PUSH_FCM is set.
     try{
       if(window.CoachPush && typeof window.CoachPush.bootstrap === 'function'){
-        // Ask notification permission on first install / keep registration warm.
-        setTimeout(() => { window.CoachPush.bootstrap().catch(() => {}); }, 600);
+        setTimeout(() => { window.CoachPush.bootstrap().catch(() => {}); }, 2500);
       }
     }catch(e){}
     hydrateAllMedia().then(() => {

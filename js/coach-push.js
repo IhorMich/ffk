@@ -1,4 +1,6 @@
-/* Matchcard push / local alerts — Capacitor PushNotifications + Android channel. */
+/* Matchcard push / local alerts — permission + Android FfkNotify channel.
+   Remote FCM (Push.register) is skipped until google-services.json is present —
+   calling register without Firebase crashes the Android process. */
 (function(global){
   const KEY = 'ffk_push_v1';
   let registered = false;
@@ -36,6 +38,16 @@
     }catch(e){}
     return null;
   }
+  /** Remote FCM only when explicitly configured (no google-services → never register). */
+  function canRegisterRemote(){
+    try{
+      if(global.CoachCloud && typeof global.CoachCloud.hasPushBackend === 'function'){
+        return !!global.CoachCloud.hasPushBackend();
+      }
+      if(global.FFK_PUSH_FCM === true) return true;
+    }catch(e){}
+    return false;
+  }
   function nativeNotify(title, body){
     try{
       if(global.FfkNotify && typeof global.FfkNotify.show === 'function'){
@@ -52,33 +64,44 @@
     try{
       if(typeof renderCloudPushStatus === 'function') renderCloudPushStatus();
     }catch(e){}
+    try{
+      if(global.ParentUI && typeof global.ParentUI.syncInboxBellUi === 'function'){
+        global.ParentUI.syncInboxBellUi();
+      }else if(typeof syncInboxBellUi === 'function'){
+        syncInboxBellUi();
+      }
+    }catch(e){}
   }
 
   async function wireListeners(Push){
     if(registered || !Push) return;
     registered = true;
-    Push.addListener('registration', async (token) => {
-      const s = read();
-      s.token = token && token.value ? token.value : '';
-      s.platform = (global.Capacitor.getPlatform && global.Capacitor.getPlatform()) || 'native';
-      write(s);
-      if(global.CoachCloud && typeof global.CoachCloud.registerDeviceToken === 'function'){
-        try{ await global.CoachCloud.registerDeviceToken(s.token, s.platform); }catch(e){}
-      }
-      if(global.CoachStore && typeof global.CoachStore.saveDeviceToken === 'function'){
-        try{ global.CoachStore.saveDeviceToken(s.token, s.platform); }catch(e){}
-      }
-    });
-    Push.addListener('registrationError', (err) => {
-      console.warn('push registration', err);
-    });
-    Push.addListener('pushNotificationReceived', (n) => {
-      const title = (n && n.title) || 'Matchcard';
-      const body = (n && n.body) || '';
-      // Always surface as a system alert (sound channel) — not only a toast.
-      notifyHeadsUp(title, body, true);
-    });
-    Push.addListener('pushNotificationActionPerformed', () => {});
+    try{
+      Push.addListener('registration', async (token) => {
+        const s = read();
+        s.token = token && token.value ? token.value : '';
+        s.platform = (global.Capacitor.getPlatform && global.Capacitor.getPlatform()) || 'native';
+        write(s);
+        if(global.CoachCloud && typeof global.CoachCloud.registerDeviceToken === 'function'){
+          try{ await global.CoachCloud.registerDeviceToken(s.token, s.platform); }catch(e){}
+        }
+        if(global.CoachStore && typeof global.CoachStore.saveDeviceToken === 'function'){
+          try{ global.CoachStore.saveDeviceToken(s.token, s.platform); }catch(e){}
+        }
+      });
+      Push.addListener('registrationError', (err) => {
+        console.warn('push registration', err);
+      });
+      Push.addListener('pushNotificationReceived', (n) => {
+        const title = (n && n.title) || 'Matchcard';
+        const body = (n && n.body) || '';
+        notifyHeadsUp(title, body, true);
+      });
+      Push.addListener('pushNotificationActionPerformed', () => {});
+    }catch(e){
+      console.warn('push listeners', e);
+      registered = false;
+    }
   }
 
   async function enable(opts){
@@ -118,13 +141,24 @@
         return {ok: false};
       }
       write(state);
-      await wireListeners(Push);
-      await Push.register();
+
+      // Local heads-up via FfkNotify works with POST_NOTIFICATIONS alone.
+      // Do NOT call Push.register() without Firebase — it kills the Android app.
+      if(canRegisterRemote()){
+        await wireListeners(Push);
+        try{
+          await Push.register();
+        }catch(e){
+          console.warn('push register skipped/failed', e);
+        }
+      }
+
       if(!quiet) toast(tt('coachPushOn', 'Push notifications enabled.'));
       syncSettingsUi();
-      return {ok: true};
+      return {ok: true, local: !canRegisterRemote()};
     }catch(e){
       console.warn(e);
+      // Still keep local enabled if permission may already be granted.
       if(!quiet) toast(tt('coachPushFail', 'Could not enable push.'));
       syncSettingsUi();
       return {ok: false};
@@ -180,18 +214,17 @@
     );
   }
 
-  /** First install / every cold start: ask once, then keep registration warm. */
+  /** Cold start: never prompt. Only re-wire remote FCM if already enabled + backend ready. */
   async function bootstrap(){
     if(bootstrapped) return;
     bootstrapped = true;
     const s = read();
-    if(!s.asked){
-      // First launch — request permission immediately (no toast spam).
+    if(!s.enabled) return;
+    if(!canRegisterRemote()) return;
+    try{
       await enable({quiet: true});
-      return;
-    }
-    if(s.enabled){
-      await enable({quiet: true});
+    }catch(e){
+      console.warn('push bootstrap', e);
     }
   }
 
