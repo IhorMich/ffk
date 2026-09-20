@@ -239,6 +239,35 @@
       writeDb(db);
       return row;
     },
+    upsertPlayerLeaveDecision(payload){
+      const db = readDb();
+      const requestId = String(payload.id || payload.request_id || '');
+      const playerId = String(payload.team_player_id || '');
+      if(!requestId || !playerId) throw new Error('bad_message');
+      const existing = db.messages.find(m =>
+        m.type === 'player_leave_decision' && String(m.request_id || '') === requestId
+      );
+      const now = new Date().toISOString();
+      const row = {
+        id: existing ? existing.id : uid('msg'),
+        type: 'player_leave_decision',
+        request_id: requestId,
+        team_id: String(payload.team_id || ''),
+        team_player_id: playerId,
+        player_name: String(payload.player_name || '').slice(0, 80),
+        team_name: String(payload.team_name || '').slice(0, 60),
+        academy_name: String(payload.academy_name || '').slice(0, 80),
+        leave_decision: payload.leave_decision === 'accepted' ? 'accepted' : 'declined',
+        status: 'delivered',
+        created_at: existing ? existing.created_at : now,
+        updated_at: now,
+        read_at: ''
+      };
+      if(existing) db.messages = db.messages.map(m => m.id === existing.id ? row : m);
+      else db.messages.push(row);
+      writeDb(db);
+      return row;
+    },
     resolveCoachLeaveRequest(requestId, decision){
       const rid = String(requestId || '');
       const result = decision === 'accepted' ? 'accepted' : decision === 'declined' ? 'declined' : '';

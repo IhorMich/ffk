@@ -573,6 +573,11 @@
             global.InboxStore.resolveCoachLeaveRequest(req.id, 'declined');
           }
         }catch(e){}
+        try{
+          if(global.InboxStore && typeof global.InboxStore.upsertPlayerLeaveDecision === 'function'){
+            global.InboxStore.upsertPlayerLeaveDecision({...req, leave_decision: 'declined'});
+          }
+        }catch(e){}
         return {request: {...req, status: 'declined'}, removed: false};
       }
       // Accept: unlink parent + remove player from roster.

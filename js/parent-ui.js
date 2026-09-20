@@ -117,6 +117,15 @@
           <span class="parent-msg-dot" aria-hidden="true"></span>
         </button>`;
       }
+      if(m.type === 'player_leave_decision'){
+        return `<button type="button" class="parent-msg-row${unreadCls}" data-parent-msg="${esc(m.id)}">
+          <span class="parent-link-main">
+            <b>${esc(tt('playerLeaveDeclinedShort', 'Leave declined'))}</b>
+            <span>${esc([m.player_name, m.team_name, m.academy_name].filter(Boolean).join(' · '))}</span>
+          </span>
+          <span class="parent-msg-dot" aria-hidden="true"></span>
+        </button>`;
+      }
       const isResult = m.type === 'match_result';
       const notice = !isResult ? (m.invite_notice || '') : '';
       const head = [m.date, m.opponent].filter(Boolean).join(' · ');
@@ -222,6 +231,19 @@
   function fillParentMessageBody(msg){
     const body = document.getElementById('parentMsgBody');
     if(!body || !msg) return;
+    if(msg.type === 'player_leave_decision'){
+      body.innerHTML = `
+        <div class="parent-confirm-badge">${esc(tt('playerLeaveDeclinedShort', 'Leave declined'))}</div>
+        <h3 class="coach-rate-name">${esc(msg.player_name || '—')}</h3>
+        <p class="hint">${esc(tt('playerLeaveDeclinedHint', 'Coach declined the leave. Edit the card and request again if the club really changed.'))}</p>
+        <div class="parent-msg-details">
+          <p class="parent-msg-detail"><b>${esc(tt('parentInboxTeam', 'Team'))}</b><span>${esc(msg.team_name || '—')}</span></p>
+          <p class="parent-msg-detail"><b>${esc(tt('parentLinksTitle', 'From coach'))}</b><span>${esc(msg.academy_name || '—')}</span></p>
+        </div>
+        <button type="button" class="ghost-btn" id="parentMsgCloseBtn">${esc(tt('btnClose', 'Close'))}</button>
+      `;
+      return;
+    }
     if(msg.type === 'coach_leave_request'){
       const where = [msg.new_club, msg.new_team].filter(Boolean).join(' · ') || '—';
       const pending = !msg.decision;
