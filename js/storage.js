@@ -93,7 +93,7 @@ function loadSettings(){
       onboarded: s.onboarded === true,
       pwaTransferSeen: s.pwaTransferSeen === true,
       introMark: String(s.introMark || ''),
-      cardSkin: ['mint','wine','ice','noir','royal','sand'].includes(s.cardSkin) ? s.cardSkin : 'mint'
+      cardSkin: ['ink','mint','wine','ice','noir','royal','sand'].includes(s.cardSkin) ? s.cardSkin : 'ink'
     };
     if(s.langManual !== true) saveSettings();
   }catch(e){}

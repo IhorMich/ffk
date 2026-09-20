@@ -131,9 +131,9 @@ function applyTheme(){
   syncIconSetChips();
   applyNativeChrome();
 }
-const CARD_SKINS = ['mint','wine','ice','noir','royal','sand'];
+const CARD_SKINS = ['ink','mint','wine','ice','noir','royal','sand'];
 function cardSkinName(){
-  return CARD_SKINS.includes(settings.cardSkin) ? settings.cardSkin : 'mint';
+  return CARD_SKINS.includes(settings.cardSkin) ? settings.cardSkin : 'ink';
 }
 function applyCardSkin(){
   document.documentElement.dataset.card = cardSkinName();
@@ -300,7 +300,7 @@ function applyI18n(){
   syncSeasonChipLabels();
 }
 
-let settings = {club:'', player:'', position:'fwd', format:'2x30', minutes:'60', lang:'ru', seasonCloseDeclined:'', theme:'dark', iconSet:'clear', onboarded:false, pwaTransferSeen:false, introMark:'', cardSkin:'mint'};
+let settings = {club:'', player:'', position:'fwd', format:'2x30', minutes:'60', lang:'ru', seasonCloseDeclined:'', theme:'dark', iconSet:'clear', onboarded:false, pwaTransferSeen:false, introMark:'', cardSkin:'ink'};
 let roster = {currentId:'', ids:[]};
 let player = defaultPlayer();
 let extraSelected = [];
