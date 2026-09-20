@@ -1416,6 +1416,18 @@
     padding:8px 10px;border-radius:12px;border:1px solid var(--card-line);
     font-size:.8rem;font-weight:700;
   }
+  button.coach-invite-player{
+    appearance:none;-webkit-appearance:none;width:100%;margin:0;
+    background:color-mix(in srgb, var(--card-paper) 92%, var(--card-accent));
+    color:inherit;font:inherit;text-align:left;cursor:pointer;
+    -webkit-tap-highlight-color:transparent;
+  }
+  button.coach-invite-player:active{
+    background:color-mix(in srgb, var(--card-paper) 80%, var(--card-accent));
+  }
+  .coach-invite-open-hint{
+    flex-shrink:0;font-size:1.1rem;font-weight:800;color:var(--card-muted);line-height:1;
+  }
   .coach-invite-st{font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.04em;}
   .coach-invite-st.ok{color:var(--card-accent);}
   .coach-invite-st.read{color:color-mix(in srgb, var(--card-accent) 70%, #2f9e44);}

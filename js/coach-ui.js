@@ -869,10 +869,10 @@
               : esc(tt('coachRated', 'Rated')))
             : esc(tt('coachNotRated', 'Not rated'));
           return `<div class="coach-player-row">
-            <div class="coach-player-main">
+            <button type="button" class="coach-player-main coach-player-open" data-open-player="${esc(p.id)}">
               <b>${esc(label)}</b>
               <span>${note}</span>
-            </div>
+            </button>
             <button type="button" class="save-btn coach-rate-btn" data-rate-player="${esc(p.id)}" data-match="${esc(activeMatch.id)}">${esc(btnLabel)}</button>
           </div>`;
         }).join('');
@@ -985,7 +985,10 @@
           playerLabel(p),
           p.position && typeof pitchPosLabelShort === 'function' ? pitchPosLabelShort(p.position) : (p.position || '')
         ].filter(Boolean);
-        return `<div class="coach-invite-row"><span>${esc(bits.join(' · '))}</span></div>`;
+        return `<button type="button" class="coach-invite-row coach-invite-player" data-open-player="${esc(p.id)}">
+          <span>${esc(bits.join(' · '))}</span>
+          <span class="coach-invite-open-hint" aria-hidden="true">›</span>
+        </button>`;
       }).join('');
       box.hidden = false;
       box.innerHTML = `<div class="coach-invite-card">
@@ -1241,10 +1244,10 @@
             ? `<button type="button" class="ghost-btn coach-rate-btn" data-share-player-card="${esc(p.id)}" data-match="${esc(match.id)}">${esc(tt('coachSharePlayerCard', 'Card'))}</button>`
             : '';
           return `<div class="coach-player-row">
-            <div class="coach-player-main">
+            <button type="button" class="coach-player-main coach-player-open" data-open-player="${esc(p.id)}">
               <b>${esc(label)}</b>
               <span>${note}</span>
-            </div>
+            </button>
             <div class="coach-history-rate-actions">
               <button type="button" class="save-btn coach-rate-btn" data-rate-player="${esc(p.id)}" data-match="${esc(match.id)}">${esc(rateBtn)}</button>
               ${cardBtn}
@@ -2769,6 +2772,20 @@
     pickTeam(document.getElementById('coachTeamList'), false);
     pickTeam(document.getElementById('coachSettingsTeamList'), true);
     document.getElementById('coachPlayerList')?.addEventListener('click', e => {
+      const open = e.target.closest('[data-open-player]');
+      if(open){
+        openCoachPlayerSheet(open.dataset.openPlayer);
+      }
+    });
+    document.getElementById('coachMatchTab')?.addEventListener('click', e => {
+      if(e.target.closest('[data-rate-player]')) return;
+      const open = e.target.closest('[data-open-player]');
+      if(open){
+        openCoachPlayerSheet(open.dataset.openPlayer);
+      }
+    });
+    document.getElementById('coachHistoryTab')?.addEventListener('click', e => {
+      if(e.target.closest('[data-rate-player]') || e.target.closest('[data-share-player-card]')) return;
       const open = e.target.closest('[data-open-player]');
       if(open){
         openCoachPlayerSheet(open.dataset.openPlayer);
