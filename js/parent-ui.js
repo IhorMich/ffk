@@ -55,6 +55,7 @@
       const head = [m.date, m.opponent].filter(Boolean).join(' · ');
       const meta = [
         m.player_name,
+        m.address || '',
         m.team_name,
         m.team_code ? `${tt('parentTeamCode', 'Code')}: ${m.team_code}` : ''
       ].filter(Boolean).join(' · ');
@@ -94,6 +95,7 @@
       <div class="parent-confirm-badge">${esc(tt('parentInboxFromCoach', 'From coach'))}</div>
       <h3 class="coach-rate-name">${esc(msg.opponent || '—')}</h3>
       <p class="hint">${esc([msg.date, venue, msg.kind].filter(Boolean).join(' · '))}</p>
+      ${msg.address ? `<p class="hint"><b>${esc(tt('coachMatchAddress', 'Match address'))}:</b> ${esc(msg.address)}</p>` : ''}
       <p class="hint"><b>${esc(tt('parentInboxChild', 'Child'))}:</b> ${esc(msg.player_name || '—')}</p>
       <p class="hint"><b>${esc(tt('parentCoachLabel', 'Coach'))}:</b> ${esc(msg.coach_name || '—')}</p>
       <p class="hint"><b>${esc(tt('parentInboxTeam', 'Team'))}:</b> ${esc([msg.academy_name, msg.team_name].filter(Boolean).join(' · ') || '—')}</p>

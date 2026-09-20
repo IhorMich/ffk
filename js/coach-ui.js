@@ -342,7 +342,7 @@
             : tt('coachMatchPlayed', 'played');
           return `<button type="button" class="coach-team-item${on}" data-match="${esc(m.id)}">
             <span class="coach-team-name">${esc(m.date)} · ${esc(m.opponent)}</span>
-            <span class="coach-team-meta">${esc(st)} · ${squadN} ${esc(tt('coachSquadShort', 'played'))} · ${sent}/${invites.length || squadN} ${esc(tt('coachInviteShort', 'invited'))} · ${rated} ${esc(tt('coachRatedShort', 'rated'))}</span>
+            <span class="coach-team-meta">${esc(st)}${m.address ? ` · ${esc(m.address)}` : ''} · ${squadN} ${esc(tt('coachSquadShort', 'played'))} · ${sent}/${invites.length || squadN} ${esc(tt('coachInviteShort', 'invited'))} · ${rated} ${esc(tt('coachRatedShort', 'rated'))}</span>
           </button>`;
         }).join('');
     document.querySelectorAll('.js-cm-matches').forEach(el => { el.innerHTML = matchListHtml; });
@@ -419,6 +419,7 @@
           .replace('{inApp}', String(delivered))
           .replace('{waiting}', String(waiting))
           .replace('{read}', String(read)))}</p>
+        ${match.address ? `<p class="hint"><b>${esc(tt('coachMatchAddress', 'Match address'))}:</b> ${esc(match.address)}</p>` : ''}
         <p class="hint">${esc(tt('coachInviteExplainApp', 'Invites go to parents/guardians inside Matchcard — not WhatsApp or SMS. Link a parent to the player first.'))}</p>
         <div class="coach-invite-rows">${rows}</div>
       </div>`;
@@ -474,7 +475,7 @@
       return `<div class="coach-hist-card">
         <div class="coach-hist-head">
           <b>${esc(m.date)} · ${esc(m.opponent)}</b>
-          <span>${m.score ? esc(m.score) : '—'} · ${squad.length} ${esc(tt('coachSquadShort', 'played'))}</span>
+          <span>${m.address ? esc(m.address) + ' · ' : ''}${m.score ? esc(m.score) : '—'} · ${squad.length} ${esc(tt('coachSquadShort', 'played'))}</span>
         </div>
         <div class="coach-player-list">${body || `<p class="hint">${esc(tt('coachSquadEmpty', 'No squad selected.'))}</p>`}</div>
       </div>`;
@@ -679,6 +680,9 @@
     const opponent = (root.querySelector('.js-cm-opponent')?.value
       || document.getElementById('coachMatchOpponent')?.value
       || '').trim();
+    const address = (root.querySelector('.js-cm-address')?.value
+      || document.getElementById('coachMatchAddress')?.value
+      || '').trim();
     const date = root.querySelector('.js-cm-date')?.value || today();
     const score = root.querySelector('.js-cm-score')?.value || '';
     let squad = selectedSquadFrom(root);
@@ -694,12 +698,14 @@
     try{
       const match = global.CoachStore.createMatch(session, teamId, {
         opponent,
+        address,
         date,
         score,
         squad,
         status: 'upcoming'
       });
       root.querySelectorAll('.js-cm-opponent').forEach(el => { el.value = ''; });
+      root.querySelectorAll('.js-cm-address').forEach(el => { el.value = ''; });
       root.querySelectorAll('.js-cm-score').forEach(el => { el.value = ''; });
       document.querySelectorAll('.js-cm-squad').forEach(el => { el.dataset.dirty = ''; });
       toast(tt('coachMatchCreated', 'Match created.'));

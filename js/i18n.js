@@ -4382,7 +4382,9 @@ ru:{
       coachTeamsKicker:'Teams',
       coachTeamsSettingsHint:'Academy, profile and new teams — in settings ⚙',
       coachTeamsManageKicker:'Teams',
-      coachAccountKicker:'Account'
+      coachAccountKicker:'Account',
+      coachMatchAddress:'Match address',
+      coachMatchAddressPh:'Stadium / street, city'
     },
     ru:{
       coachPhase2Note:'Матчи, оценки, аналитика + QR-invite родителя. Дальше — Supabase.',
@@ -4447,7 +4449,9 @@ ru:{
       coachTeamsKicker:'Команды',
       coachTeamsSettingsHint:'Академия, профиль и новые команды — в настройках ⚙',
       coachTeamsManageKicker:'Команды',
-      coachAccountKicker:'Аккаунт'
+      coachAccountKicker:'Аккаунт',
+      coachMatchAddress:'Адрес матча',
+      coachMatchAddressPh:'Стадион / улица, город'
     },
     uk:{
       coachPhase2Note:'Матчі, оцінки, аналітика + QR-invite батька. Далі — Supabase.',
@@ -4512,7 +4516,9 @@ ru:{
       coachTeamsKicker:'Команди',
       coachTeamsSettingsHint:'Академія, профіль і нові команди — у налаштуваннях ⚙',
       coachTeamsManageKicker:'Команди',
-      coachAccountKicker:'Акаунт'
+      coachAccountKicker:'Акаунт',
+      coachMatchAddress:'Адреса матчу',
+      coachMatchAddressPh:'Стадіон / вулиця, місто'
     }
   };
   LANGS.forEach(lang => {

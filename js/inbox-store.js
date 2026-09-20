@@ -68,6 +68,7 @@
         coach_name: String(payload.coach_name || '').slice(0, 80),
         date: String(payload.date || '').slice(0, 10),
         opponent: String(payload.opponent || '').slice(0, 48),
+        address: String(payload.address || '').slice(0, 120),
         venue: payload.venue === 'away' ? 'away' : 'home',
         kind: String(payload.kind || 'league').slice(0, 16),
         squad_names: Array.isArray(payload.squad_names)

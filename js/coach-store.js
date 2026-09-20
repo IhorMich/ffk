@@ -313,6 +313,7 @@
         team_id: teamId,
         date,
         opponent,
+        address: String(fields.address || '').trim().slice(0, 120),
         score: String(fields.score || '').trim().slice(0, 16),
         venue: fields.venue === 'away' ? 'away' : 'home',
         kind: ['league','friendly','cup','tournament'].includes(fields.kind) ? fields.kind : 'league',
@@ -370,6 +371,7 @@
         coach_name: coachName,
         date: match.date,
         opponent: match.opponent,
+        address: match.address || '',
         venue: match.venue,
         kind: match.kind,
         squad_names: players.map(p => {
@@ -412,6 +414,7 @@
               coach_name: payload.coach_name,
               date: payload.date,
               opponent: payload.opponent,
+              address: payload.address || '',
               venue: payload.venue,
               kind: payload.kind,
               squad_names: payload.squad_names
@@ -467,6 +470,7 @@
         `Matchcard Coach`,
         `${team ? team.name : 'Team'} vs ${match.opponent}`,
         match.date,
+        match.address ? `Address: ${match.address}` : '',
         names ? `Squad: ${names}` : '',
         code ? `Team code: ${code}` : '',
         `Coach: ${coachName}`,

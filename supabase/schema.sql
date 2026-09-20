@@ -166,6 +166,7 @@ create table if not exists public.team_matches (
   team_id uuid not null references public.teams(id) on delete cascade,
   date date not null,
   opponent text not null check (char_length(trim(opponent)) between 1 and 48),
+  address text not null default '' check (char_length(address) <= 120),
   score text not null default '' check (char_length(score) <= 16),
   venue text not null default 'home' check (venue in ('home','away')),
   kind text not null default 'league' check (kind in ('league','friendly','cup','tournament')),
