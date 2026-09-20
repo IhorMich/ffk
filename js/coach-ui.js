@@ -1568,24 +1568,102 @@
     sel.value = coachStatsSeason;
   }
 
-  function coachStatsFilteredMatches(session, team){
+  function coachDaysAgoStr(days){
+    try{
+      if(typeof daysAgoStr === 'function') return daysAgoStr(days);
+    }catch(e){}
+    const d = new Date();
+    d.setDate(d.getDate() - Number(days || 0));
+    return d.toISOString().slice(0, 10);
+  }
+
+  function coachFmtSigned(n, digits){
+    try{
+      if(typeof fmtSigned === 'function') return fmtSigned(n, digits);
+    }catch(e){}
+    const v = Number(n) || 0;
+    const s = coachFmtChartNum(Math.abs(v), digits);
+    return (v > 0 ? '+' : v < 0 ? '−' : '') + s;
+  }
+
+  function coachAvgNum(arr){
+    if(!arr || !arr.length) return null;
+    return arr.reduce((a, b) => a + b, 0) / arr.length;
+  }
+
+  /** Season pool (played), newest-first for lists. */
+  function coachStatsSeasonPool(session, team){
     const store = global.CoachStore;
     let matches = store.listMatches(session, team.id).filter(m => matchIsPlayed(m));
     fillCoachStatsSeasonSelect(matches);
     if(coachStatsSeason && coachStatsSeason !== 'all'){
       matches = matches.filter(m => coachMatchSeason(m) === coachStatsSeason);
     }
-    matches = sortMatchesForList(matches);
-    if(coachStatsPeriod === '10'){
-      matches = matches.slice(0, 10);
-    }else if(coachStatsPeriod === '30d'){
-      const cut = Date.now() - 30 * 24 * 60 * 60 * 1000;
-      matches = matches.filter(m => {
-        const t = Date.parse(m.date);
-        return Number.isFinite(t) && t >= cut;
-      });
+    return sortMatchesForList(matches);
+  }
+
+  /** Period slice of season pool — same ranges as personal stats. */
+  function coachStatsPeriodSlice(seasonPool){
+    const sortedAsc = (seasonPool || []).slice().sort((a, b) =>
+      String(a.date || '').localeCompare(String(b.date || '')) ||
+      String(a.id || '').localeCompare(String(b.id || ''))
+    );
+    const key = coachStatsPeriod || 'all';
+    if(key === '10') return sortedAsc.slice(-10);
+    if(key === '100') return sortedAsc.slice(-100);
+    if(key === 'year'){
+      const y = String(new Date().getFullYear());
+      return sortedAsc.filter(m => String(m.date || '').startsWith(y));
     }
-    return matches;
+    if(key === '7d') return sortedAsc.filter(m => String(m.date || '') >= coachDaysAgoStr(7));
+    if(key === '30d') return sortedAsc.filter(m => String(m.date || '') >= coachDaysAgoStr(30));
+    return sortedAsc;
+  }
+
+  function coachStatsFilteredMatches(session, team){
+    return coachStatsPeriodSlice(coachStatsSeasonPool(session, team));
+  }
+
+  function coachCollectRatings(session, matches){
+    const store = global.CoachStore;
+    const out = [];
+    (matches || []).forEach(m => {
+      store.listRatings(session, m.id).forEach(r => out.push(r));
+    });
+    return out;
+  }
+
+  function coachCountSum(ratings, key){
+    return (ratings || []).reduce((a, r) => {
+      const c = r.counts && typeof r.counts === 'object' ? r.counts : {};
+      return a + (Number(c[key]) || 0);
+    }, 0);
+  }
+
+  function coachRatingTrend(points){
+    const list = Array.isArray(points) ? points : [];
+    if(list.length < 2) return 0;
+    if(list.length < 4) return (Number(list[list.length - 1].rating) || 0) - (Number(list[0].rating) || 0);
+    const mid = Math.floor(list.length / 2);
+    const a = coachAvgNum(list.slice(mid).map(p => Number(p.rating) || 0)) || 0;
+    const b = coachAvgNum(list.slice(0, mid).map(p => Number(p.rating) || 0)) || 0;
+    return a - b;
+  }
+
+  function coachDynCls(now, start, invert){
+    const d = now - start;
+    if(Math.abs(d) < 0.05) return '';
+    const better = invert ? d < 0 : d > 0;
+    return better ? 'up' : 'down';
+  }
+
+  function coachKindLabel(kind){
+    return ({
+      league: tt('kindLeague', 'League'),
+      friendly: tt('kindFriendly', 'Friendly'),
+      cup: tt('kindCup', 'Cup'),
+      tournament: tt('kindTournament', 'Tournament')
+    })[kind] || kind || '';
   }
 
   function coachTeamChartPoints(session, matches){
@@ -1603,10 +1681,156 @@
       points.push({
         date: m.date || '',
         rating: avg,
-        opponent: m.opponent || ''
+        opponent: m.opponent || '',
+        kind: m.kind || 'league',
+        season: coachMatchSeason(m)
       });
     });
     return points;
+  }
+
+  function coachGroupPoints(points, keyFn){
+    const map = new Map();
+    (points || []).forEach(p => {
+      const k = keyFn(p);
+      if(!k) return;
+      if(!map.has(k)) map.set(k, []);
+      map.get(k).push(p);
+    });
+    return [...map.entries()].map(([key, arr]) => ({
+      key,
+      n: arr.length,
+      avg: coachAvgNum(arr.map(p => Number(p.rating) || 0))
+    })).filter(g => g.avg != null).sort((a, b) => b.n - a.n || b.avg - a.avg);
+  }
+
+  function coachCmpRowHtml(label, avg, n, vs){
+    if(avg == null) return '';
+    const cls = vs == null || n < 2 ? '' : coachDynCls(avg, vs, false);
+    return `<tr><td><span class="cmp-name">${esc(label)}</span><span class="cmp-n">${esc(String(n))} ${esc(tt('coachGames', 'games'))}</span></td><td class="${cls}">${esc(coachFmtChartNum(avg, 2))}</td></tr>`;
+  }
+
+  function coachSeasonBoardHtml(session, team, seasonMatches, seasonName){
+    const ratings = coachCollectRatings(session, seasonMatches);
+    const points = coachTeamChartPoints(session, seasonMatches);
+    const avg = points.length ? coachAvgNum(points.map(p => p.rating)) : null;
+    const minutes = ratings.reduce((a, r) => a + Math.max(0, Number(r.minutes) || 0), 0);
+    const starts = ratings.filter(r => r.role !== 'sub').length;
+    const subs = ratings.length - starts;
+    const goals = coachCountSum(ratings, 'goals');
+    const assists = coachCountSum(ratings, 'assists');
+    const kpis = [
+      [seasonMatches.length, tt('coachStatMatches', 'Matches')],
+      [ratings.length, tt('coachStatRatings', 'Ratings')],
+      [starts, tt('coachStatStarts', 'Starts')],
+      [subs, tt('coachStatSubs', 'Subs')],
+      [Math.round(minutes), tt('stMins', 'Minutes')],
+      [goals, tt('stGoals', 'Goals')],
+      [assists, metricLab('assists')]
+    ].map(([n, lab]) =>
+      `<div class="kpi-cell"><div class="n">${esc(String(n))}</div><div class="l">${esc(lab)}</div></div>`
+    ).join('');
+    const acts = [
+      ['goals', false],
+      ['assists', false],
+      ['dribbles', false],
+      ['tackles', false],
+      ['duelswon', false],
+      ['passes', false],
+      ['losses', true]
+    ].map(([key, bad]) => {
+      const n = coachCountSum(ratings, key);
+      if(!n) return '';
+      return `<div class="act-row${bad ? ' bad' : ''}"><span class="n">${esc(String(n))}</span><span>${esc(metricLab(key))}</span></div>`;
+    }).filter(Boolean).join('');
+    let dyn = '';
+    if(points.length >= 4){
+      const w = points.length >= 10 ? 5 : (points.length >= 6 ? Math.floor(points.length / 2) : 2);
+      const start = points.slice(0, w);
+      const now = points.slice(-w);
+      const r0 = coachAvgNum(start.map(p => p.rating)) || 0;
+      const r1 = coachAvgNum(now.map(p => p.rating)) || 0;
+      const rateStart = coachCollectRatings(session, seasonMatches.slice().sort((a, b) =>
+        String(a.date || '').localeCompare(String(b.date || ''))
+      ).slice(0, w));
+      const rateNow = coachCollectRatings(session, seasonMatches.slice().sort((a, b) =>
+        String(a.date || '').localeCompare(String(b.date || ''))
+      ).slice(-w));
+      const perMatch = (list, key) => {
+        const ids = new Set(list.map(r => r.match_id));
+        const n = ids.size || 1;
+        return coachCountSum(list, key) / n;
+      };
+      const rows = [
+        [tt('dyn_rating', 'Rating'), coachFmtChartNum(r0, 2), coachFmtChartNum(r1, 2), coachDynCls(r1, r0, false)],
+        [metricLab('goals'), coachFmtChartNum(perMatch(rateStart, 'goals'), 1), coachFmtChartNum(perMatch(rateNow, 'goals'), 1), coachDynCls(perMatch(rateNow, 'goals'), perMatch(rateStart, 'goals'), false)],
+        [metricLab('assists'), coachFmtChartNum(perMatch(rateStart, 'assists'), 1), coachFmtChartNum(perMatch(rateNow, 'assists'), 1), coachDynCls(perMatch(rateNow, 'assists'), perMatch(rateStart, 'assists'), false)],
+        [metricLab('losses'), coachFmtChartNum(perMatch(rateStart, 'losses'), 1), coachFmtChartNum(perMatch(rateNow, 'losses'), 1), coachDynCls(perMatch(rateNow, 'losses'), perMatch(rateStart, 'losses'), true)]
+      ].map(r => `<tr><td>${esc(r[0])}</td><td>${esc(r[1])}</td><td class="${r[3]}">${esc(r[2])}</td></tr>`).join('');
+      dyn = `<div class="board-block">
+        <h3>${esc(tt('stDynamics', 'Dynamics'))}</h3>
+        <table class="dyn-table">
+          <thead><tr><th>${esc(tt('stDynMetric', 'Metric'))}</th><th>${esc(tt('stDynStart', 'Start'))}</th><th>${esc(tt('stDynNow', 'Now'))}</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+        <p class="dyn-hint">${esc(tt('stDynHint', 'First and last {n} matches').replace('{n}', String(w)))}</p>
+      </div>`;
+    }
+    return `<article class="season-board coach-season-board">
+      <div class="season-head">
+        <div class="season-kicker">${esc(tt('stSeasonTitle', 'Season'))}</div>
+        <div class="season-name">${esc(seasonName)}</div>
+        <div class="season-avg">${esc(avg == null ? '—' : coachFmtChartNum(avg, 2))}<small>${esc(tt('stSeasonAvg', 'avg'))}</small></div>
+      </div>
+      <div class="kpi-grid">${kpis}</div>
+      ${acts ? `<div class="board-block"><h3>${esc(tt('stActions', 'Actions'))}</h3>${acts}</div>` : ''}
+      ${dyn}
+    </article>`;
+  }
+
+  function coachCompareBoardHtml(session, team, seasonMatches){
+    const allPlayed = global.CoachStore.listMatches(session, team.id).filter(m => matchIsPlayed(m));
+    const careerPts = coachTeamChartPoints(session, allPlayed);
+    const career = careerPts.length ? coachAvgNum(careerPts.map(p => p.rating)) : null;
+    if(career == null) return '';
+    const seasonPts = coachTeamChartPoints(session, seasonMatches);
+    const last = careerPts.slice(-Math.min(10, careerPts.length));
+    const lastLbl = last.length === 10
+      ? tt('cmpLast10', 'Last 10')
+      : tt('cmpLastN', 'Last {n}').replace('{n}', String(last.length));
+    let main = coachCmpRowHtml(lastLbl, coachAvgNum(last.map(p => p.rating)), last.length, career);
+    if(seasonPts.length && coachStatsSeason !== 'all'){
+      main += coachCmpRowHtml(
+        `${tt('cmpSeason', 'Season')} ${coachStatsSeason}`,
+        coachAvgNum(seasonPts.map(p => p.rating)),
+        seasonPts.length,
+        career
+      );
+    }
+    const kindGroups = coachGroupPoints(careerPts, p => p.kind || 'league');
+    const kindRows = kindGroups.length > 1
+      ? kindGroups.map(g => coachCmpRowHtml(coachKindLabel(g.key), g.avg, g.n, career)).join('')
+      : '';
+    const seasonGroups = coachGroupPoints(careerPts, p => p.season);
+    const seasonRows = seasonGroups.length > 1
+      ? seasonGroups.map(g => coachCmpRowHtml(g.key, g.avg, g.n, career)).join('')
+      : '';
+    const kindSection = kindRows
+      ? `<div class="board-block"><h3>${esc(tt('coachCmpKind', 'By match type'))}</h3><table class="cmp-table"><tbody>${kindRows}</tbody></table></div>`
+      : '';
+    const seasonSection = seasonRows
+      ? `<div class="board-block"><h3>${esc(tt('cmpSeasons', 'Seasons'))}</h3><table class="cmp-table"><tbody>${seasonRows}</tbody></table></div>`
+      : '';
+    return `<article class="season-board compare-board coach-compare-board">
+      <div class="season-head">
+        <div class="season-kicker">${esc(tt('cmpTitle', 'Compare'))}</div>
+        <div class="season-name">${esc(team.name || '—')}</div>
+        <div class="season-avg">${esc(coachFmtChartNum(career, 2))}<small>${esc(tt('cmpAll', 'all time'))}</small></div>
+      </div>
+      <table class="cmp-table"><tbody>${main}</tbody></table>
+      ${kindSection}
+      ${seasonSection}
+    </article>`;
   }
 
   function coachChartDateLabel(iso){
@@ -1693,9 +1917,11 @@
     document.querySelectorAll('#coachStatsPeriod [data-coach-stats-period]').forEach(btn => {
       btn.classList.toggle('active', btn.dataset.coachStatsPeriod === coachStatsPeriod);
     });
-    const filtered = coachStatsFilteredMatches(session, team);
+    const seasonPool = coachStatsSeasonPool(session, team);
+    const filtered = coachStatsPeriodSlice(seasonPool);
     const a = store.teamAnalytics(session, team.id, {matchIds: filtered.map(m => m.id)});
     const chartPoints = coachTeamChartPoints(session, filtered);
+    const periodRatings = coachCollectRatings(session, filtered);
     const avg = fmtScore(a.avg);
     const rec = a.record || {win: 0, draw: 0, loss: 0};
     const recordHtml = (rec.win + rec.draw + rec.loss)
@@ -1752,6 +1978,35 @@
         }).join('')}</div>`
       : `<p class="hint">${esc(tt('coachAnalyticsEmpty', 'Rate players in matches to see analytics.'))}</p>`;
 
+    const trend = coachRatingTrend(chartPoints);
+    const trendCls = trend > 0.05 ? 'up' : (trend < -0.05 ? 'down' : '');
+    const trendMark = trend > 0.05 ? '↗ ' : (trend < -0.05 ? '↘ ' : '→ ');
+    const minutes = periodRatings.reduce((s, r) => s + Math.max(0, Number(r.minutes) || 0), 0);
+    const goals = coachCountSum(periodRatings, 'goals');
+    const pointRatings = chartPoints.map(p => Number(p.rating) || 0);
+    const gridCards = filtered.length ? [
+      {num: coachFmtChartNum(coachAvgNum(pointRatings) || 0, 2), lbl: tt('stAvg', 'Average')},
+      {num: trendMark + coachFmtSigned(trend, 2), lbl: tt('stTrend', 'Trend'), cls: trendCls},
+      {num: pointRatings.length ? coachFmtChartNum(Math.max(...pointRatings), 2) : '—', lbl: tt('stBest', 'Best')},
+      {num: pointRatings.length ? coachFmtChartNum(Math.min(...pointRatings), 2) : '—', lbl: tt('stWorst', 'Worst')},
+      {num: String(filtered.length), lbl: tt('stMatches', 'Matches')},
+      {num: String(Math.round(minutes)), lbl: tt('stMins', 'Minutes')},
+      {num: String(goals), lbl: tt('stGoals', 'Goals')},
+      {num: minutes ? coachFmtChartNum(goals * 90 / minutes, 1) : coachFmtChartNum(0, 1), lbl: tt('stG90', 'G/90')}
+    ].map(c =>
+      `<div class="stat-card"><div class="num ${c.cls || ''}">${esc(c.num)}</div><div class="lbl">${esc(c.lbl)}</div></div>`
+    ).join('') : '';
+
+    const seasonName = coachStatsSeason === 'all'
+      ? tt('seasonAll', 'All seasons')
+      : coachStatsSeason;
+    const seasonBoard = seasonPool.length
+      ? coachSeasonBoardHtml(session, team, seasonPool, seasonName)
+      : '';
+    const compareBoard = seasonPool.length
+      ? coachCompareBoardHtml(session, team, seasonPool)
+      : '';
+
     const chartHtml = `
       <div class="chart-wrap coach-team-chart">
         <h3>${esc(tt('coachTeamChartTitle', 'Team rating trend'))}</h3>
@@ -1759,10 +2014,12 @@
       </div>`;
 
     let html;
-    if(!filtered.length){
+    if(!seasonPool.length){
       html = `<div class="inbox-empty coach-tab-empty">${esc(tt('coachStatsEmpty', 'No played matches in this period.'))}</div>`;
     }else{
       html = `
+      ${seasonBoard}
+      ${compareBoard}
       <div class="coach-analytics-sum coach-analytics-sum-4">
         <button type="button" class="coach-stat-jump" data-coach-jump="matches">
           <b>${a.played || a.matches}</b><span>${esc(tt('coachStatMatches', 'Matches'))}</span>
@@ -1775,6 +2032,7 @@
       </div>
       ${recordHtml}
       ${chartHtml}
+      ${gridCards ? `<div class="stat-grid coach-stat-grid">${gridCards}</div>` : `<div class="inbox-empty coach-tab-empty">${esc(tt('noPeriod', 'No matches in this period.'))}</div>`}
       ${band}
       ${momentsBlock}
       <div class="coach-stat-section">
@@ -1784,7 +2042,8 @@
     }
     const statsBoard = document.getElementById('coachStatsBoard');
     if(statsBoard) statsBoard.innerHTML = html;
-    if(filtered.length) drawCoachTeamChart(chartPoints);
+    if(seasonPool.length && filtered.length) drawCoachTeamChart(chartPoints);
+    else if(seasonPool.length) drawCoachTeamChart([]);
     const statsTeam = document.getElementById('coachStatsTeam');
     if(statsTeam) statsTeam.textContent = team.name + (team.age_group ? ` · ${team.age_group}` : '');
   }

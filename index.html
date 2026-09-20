@@ -654,10 +654,20 @@ window.ffkIsNative = function () {
             <label data-i18n="seasonFilter">Сезон</label>
             <select id="coachStatsSeason"></select>
           </div>
-          <div class="period-chips coach-hist-filters" id="coachStatsPeriod">
-            <button type="button" class="chip active" data-coach-stats-period="all" data-i18n="periodAll">Всё время</button>
-            <button type="button" class="chip" data-coach-stats-period="10" data-i18n="chart10">10 матчей</button>
-            <button type="button" class="chip" data-coach-stats-period="30d" data-i18n="periodMonth">Месяц</button>
+          <h3 class="period-head" data-i18n="stPeriodCards">За выбранный период</h3>
+          <div class="period-chips period-switch coach-hist-filters" id="coachStatsPeriod">
+            <div class="period-switch-row">
+              <button type="button" class="chip" data-coach-stats-period="10" data-i18n="chart10">10 матчей</button>
+              <button type="button" class="chip" data-coach-stats-period="100" data-i18n="chart100">100 матчей</button>
+            </div>
+            <div class="period-switch-row">
+              <button type="button" class="chip" data-coach-stats-period="7d" data-i18n="periodWeek">Неделя</button>
+              <button type="button" class="chip" data-coach-stats-period="30d" data-i18n="periodMonth">Месяц</button>
+            </div>
+            <div class="period-switch-row">
+              <button type="button" class="chip" data-coach-stats-period="year" data-i18n="periodYear">Год</button>
+              <button type="button" class="chip active" data-coach-stats-period="all" data-i18n="periodAll">Всё время</button>
+            </div>
           </div>
           <p class="hint" id="coachStatsHint" data-i18n="coachStatsHint">Сводка по сыгранным матчам — нажми игрока для деталей.</p>
           <div id="coachStatsBoard" class="coach-analytics"></div>

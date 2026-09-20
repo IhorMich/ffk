@@ -4563,6 +4563,9 @@ ru:{
       coachStatsHint:'Summary of played matches — tap a player for details.',
       coachStatsEmpty:'No played matches in this period.',
       coachTeamChartTitle:'Team rating trend',
+      coachStatStarts:'Starts',
+      coachStatSubs:'Subs',
+      coachCmpKind:'By match type',
 
       coachRosterToggleAria:'Collapse or expand roster',
       coachRosterExpand:'Expand · {n}',
@@ -4796,6 +4799,9 @@ ru:{
       coachStatsHint:'Сводка по сыгранным матчам — нажми игрока для деталей.',
       coachStatsEmpty:'Нет сыгранных матчей за этот период.',
       coachTeamChartTitle:'Динамика оценки команды',
+      coachStatStarts:'В старте',
+      coachStatSubs:'С запаса',
+      coachCmpKind:'По типу матча',
 
       coachRosterToggleAria:'Свернуть или развернуть состав',
       coachRosterExpand:'Показать · {n}',
@@ -5029,6 +5035,9 @@ ru:{
       coachStatsHint:'Підсумок зіграних матчів — натисни гравця для деталей.',
       coachStatsEmpty:'Немає зіграних матчів за цей період.',
       coachTeamChartTitle:'Динаміка оцінки команди',
+      coachStatStarts:'У старті',
+      coachStatSubs:'З запасу',
+      coachCmpKind:'За типом матчу',
 
       coachRosterToggleAria:'Згорнути або розгорнути склад',
       coachRosterExpand:'Показати · {n}',
