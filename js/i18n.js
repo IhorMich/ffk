@@ -4559,6 +4559,8 @@ ru:{
       coachHistUpcoming:'Upcoming',
       coachHistPlayed:'Played',
       coachStatsTapHint:'Tap a player to open their page with ratings.',
+      coachStatsHint:'Summary of played matches — tap a player for details.',
+      coachStatsEmpty:'No played matches in this period.',
 
       coachRosterToggleAria:'Collapse or expand roster',
       coachRosterExpand:'Expand · {n}',
@@ -4788,6 +4790,8 @@ ru:{
       coachHistUpcoming:'Предстоящие',
       coachHistPlayed:'Сыгранные',
       coachStatsTapHint:'Нажми игрока — откроется его страница с оценками.',
+      coachStatsHint:'Сводка по сыгранным матчам — нажми игрока для деталей.',
+      coachStatsEmpty:'Нет сыгранных матчей за этот период.',
 
       coachRosterToggleAria:'Свернуть или развернуть состав',
       coachRosterExpand:'Показать · {n}',
@@ -5017,6 +5021,8 @@ ru:{
       coachHistUpcoming:'Майбутні',
       coachHistPlayed:'Зіграні',
       coachStatsTapHint:'Натисни гравця — відкриється його сторінка з оцінками.',
+      coachStatsHint:'Підсумок зіграних матчів — натисни гравця для деталей.',
+      coachStatsEmpty:'Немає зіграних матчів за цей період.',
 
       coachRosterToggleAria:'Згорнути або розгорнути склад',
       coachRosterExpand:'Показати · {n}',

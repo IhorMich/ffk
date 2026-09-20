@@ -646,8 +646,18 @@ window.ffkIsNative = function () {
       </div>
       <div id="coachStatsTab" class="coach-tab-panel" hidden>
         <div class="coach-hero">
-          <div class="pro-kicker" data-i18n="coachAnalyticsKicker">Team analytics</div>
+          <div class="pro-kicker" data-i18n="coachAnalyticsKicker">Аналитика команды</div>
           <h3 class="coach-team-heading" id="coachStatsTeam">—</h3>
+          <div class="field coach-stats-season-field">
+            <label data-i18n="seasonFilter">Сезон</label>
+            <select id="coachStatsSeason"></select>
+          </div>
+          <div class="period-chips coach-hist-filters" id="coachStatsPeriod">
+            <button type="button" class="chip active" data-coach-stats-period="all" data-i18n="periodAll">Всё время</button>
+            <button type="button" class="chip" data-coach-stats-period="10" data-i18n="chart10">10 матчей</button>
+            <button type="button" class="chip" data-coach-stats-period="30d" data-i18n="periodMonth">Месяц</button>
+          </div>
+          <p class="hint" id="coachStatsHint" data-i18n="coachStatsHint">Сводка по сыгранным матчам — нажми игрока для деталей.</p>
           <div id="coachStatsBoard" class="coach-analytics"></div>
           <p class="hint" data-i18n="coachStatsTapHint">Нажми игрока — откроется его страница с оценками.</p>
         </div>

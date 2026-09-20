@@ -1817,7 +1817,23 @@
   .coach-hist-filters{margin:10px 0 12px;}
   .coach-hist-filters .chip{font-size:.72rem;padding:7px 10px;}
   .coach-hist-season-field{margin:8px 0 4px;}
+  .coach-stats-season-field{margin:8px 0 4px;}
   .coach-hist-kind-filters{margin:0 0 10px;}
+  .coach-stats-record{
+    display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:0 0 12px;
+  }
+  .coach-stats-record > span{
+    display:block;padding:10px 8px;border-radius:12px;text-align:center;
+    border:1px solid var(--card-line);font-size:.68rem;font-weight:700;
+    color:var(--card-muted);text-transform:uppercase;letter-spacing:.03em;
+  }
+  .coach-stats-record b{
+    display:block;font-size:1.15rem;font-weight:800;color:var(--card-ink);
+    margin-bottom:2px;text-transform:none;letter-spacing:0;
+  }
+  .coach-stats-record .is-win{box-shadow:inset 3px 0 0 #1faa5a;}
+  .coach-stats-record .is-draw{box-shadow:inset 3px 0 0 #8D9AB5;}
+  .coach-stats-record .is-loss{box-shadow:inset 3px 0 0 #e25555;}
   .coach-history-meta{
     margin:0 0 14px;padding:10px 12px;border-radius:14px;
     border:1px solid var(--card-line);

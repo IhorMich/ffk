@@ -1151,17 +1151,22 @@
         moments
       };
     },
-    teamAnalytics(session, teamId){
+    teamAnalytics(session, teamId, opts){
       if(!this.getTeam(session, teamId)){
         return {
           matches: 0, played: 0, ratings: 0, avg: null, best: null, worst: null,
-          high: 0, mid: 0, low: 0, players: [], topMoments: []
+          high: 0, mid: 0, low: 0, players: [], topMoments: [],
+          record: {win: 0, draw: 0, loss: 0}
         };
       }
       const db = readDb();
-      const matches = db.team_matches.filter(m => m.team_id === teamId);
-      const matchIds = new Set(matches.map(m => m.id));
-      const played = matches.filter(m => m.status === 'played' || m.score).length;
+      let matches = db.team_matches.filter(m => m.team_id === teamId);
+      if(opts && Array.isArray(opts.matchIds)){
+        const want = new Set(opts.matchIds.map(String));
+        matches = matches.filter(m => want.has(String(m.id)));
+      }
+      const playedList = matches.filter(m => m.status === 'played' || !!String(m.score || '').trim());
+      const matchIds = new Set(playedList.map(m => m.id));
       const ratings = db.ratings.filter(r => matchIds.has(r.match_id));
       const byPlayer = {};
       ratings.forEach(r => {
@@ -1201,9 +1206,20 @@
         .map(k => ({key: k, n: teamMoments[k]}))
         .sort((a, b) => b.n - a.n || a.key.localeCompare(b.key))
         .slice(0, 6);
+      let win = 0, draw = 0, loss = 0;
+      playedList.forEach(m => {
+        const s = String(m.score || '').trim().match(/^(\d+)\s*[:\-]\s*(\d+)$/);
+        if(!s) return;
+        const us = Number(s[1]);
+        const them = Number(s[2]);
+        if(!Number.isFinite(us) || !Number.isFinite(them)) return;
+        if(us > them) win += 1;
+        else if(us < them) loss += 1;
+        else draw += 1;
+      });
       return {
         matches: matchIds.size,
-        played,
+        played: playedList.length,
         ratings: ratings.length,
         avg,
         best,
@@ -1212,7 +1228,8 @@
         mid,
         low,
         topMoments,
-        players
+        players,
+        record: {win, draw, loss}
       };
     },
     getPlayer(session, playerId){

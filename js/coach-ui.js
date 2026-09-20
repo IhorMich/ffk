@@ -247,9 +247,10 @@
       return;
     }
     if(kind === 'matches'){
-      go('new');
+      // KPI is played matches — open Results, not upcoming Games.
+      go('history');
       renderCoachUi();
-      setTimeout(() => scrollCoachEl('coachMatchTab'), 60);
+      setTimeout(() => scrollCoachEl('coachHistoryTab'), 60);
       return;
     }
     if(kind === 'ratings'){
@@ -302,7 +303,7 @@
     teams.forEach(t => {
       players += store.listPlayers(session, t.id).length;
       const ms = store.listMatches(session, t.id);
-      matches += ms.length;
+      matches += ms.filter(m => m.status === 'played' || String(m.score || '').trim()).length;
       ms.forEach(m => {
         ratings += store.listRatings(session, m.id).length;
       });
@@ -1532,10 +1533,58 @@
     renderCoachHistoryDetail(session, team);
   }
 
+  let coachStatsSeason = 'all';
+  let coachStatsPeriod = 'all';
+
+  function fillCoachStatsSeasonSelect(matches){
+    const sel = document.getElementById('coachStatsSeason');
+    if(!sel) return;
+    const seasons = [...new Set(matches.map(coachMatchSeason).filter(Boolean))].sort().reverse();
+    if(coachStatsSeason !== 'all' && !seasons.includes(coachStatsSeason)){
+      coachStatsSeason = 'all';
+    }
+    sel.innerHTML = [`<option value="all">${esc(tt('seasonAll', 'All seasons'))}</option>`]
+      .concat(seasons.map(s => `<option value="${esc(s)}">${esc(s)}</option>`))
+      .join('');
+    sel.value = coachStatsSeason;
+  }
+
+  function coachStatsFilteredMatches(session, team){
+    const store = global.CoachStore;
+    let matches = store.listMatches(session, team.id).filter(m => matchIsPlayed(m));
+    fillCoachStatsSeasonSelect(matches);
+    if(coachStatsSeason && coachStatsSeason !== 'all'){
+      matches = matches.filter(m => coachMatchSeason(m) === coachStatsSeason);
+    }
+    matches = sortMatchesForList(matches);
+    if(coachStatsPeriod === '10'){
+      matches = matches.slice(0, 10);
+    }else if(coachStatsPeriod === '30d'){
+      const cut = Date.now() - 30 * 24 * 60 * 60 * 1000;
+      matches = matches.filter(m => {
+        const t = Date.parse(m.date);
+        return Number.isFinite(t) && t >= cut;
+      });
+    }
+    return matches;
+  }
+
   function renderAnalyticsPane(session, team){
     const store = global.CoachStore;
-    const a = store.teamAnalytics(session, team.id);
+    document.querySelectorAll('#coachStatsPeriod [data-coach-stats-period]').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.coachStatsPeriod === coachStatsPeriod);
+    });
+    const filtered = coachStatsFilteredMatches(session, team);
+    const a = store.teamAnalytics(session, team.id, {matchIds: filtered.map(m => m.id)});
     const avg = fmtScore(a.avg);
+    const rec = a.record || {win: 0, draw: 0, loss: 0};
+    const recordHtml = (rec.win + rec.draw + rec.loss)
+      ? `<div class="coach-stats-record">
+          <span class="is-win"><b>${rec.win}</b> ${esc(tt('coachMatchWin', 'Win'))}</span>
+          <span class="is-draw"><b>${rec.draw}</b> ${esc(tt('coachMatchDraw', 'Draw'))}</span>
+          <span class="is-loss"><b>${rec.loss}</b> ${esc(tt('coachMatchLoss', 'Loss'))}</span>
+        </div>`
+      : '';
     const band = a.ratings
       ? `<div class="coach-stat-bands">
           <span class="band high"><b>${a.high}</b> ${esc(tt('coachBandHigh', '≥7.5'))}</span>
@@ -1549,8 +1598,9 @@
           ${momentsHtml(a.topMoments)}
         </div>`
       : '';
-    const playersHtml = a.players.length
-      ? `<div class="coach-player-list">${a.players.map(p => {
+    const ranked = (a.players || []).filter(p => (p.games || 0) > 0);
+    const playersHtml = ranked.length
+      ? `<div class="coach-player-list">${ranked.map(p => {
           const tr = trendLabel(p.trend);
           const tc = trendClass(p.trend);
           const pos = p.position && typeof pitchPosLabelShort === 'function'
@@ -1581,20 +1631,30 @@
           </button>`;
         }).join('')}</div>`
       : `<p class="hint">${esc(tt('coachAnalyticsEmpty', 'Rate players in matches to see analytics.'))}</p>`;
-    const html = `
+
+    let html;
+    if(!filtered.length){
+      html = `<div class="inbox-empty coach-tab-empty">${esc(tt('coachStatsEmpty', 'No played matches in this period.'))}</div>`;
+    }else{
+      html = `
       <div class="coach-analytics-sum coach-analytics-sum-4">
-        <div><b>${a.played || a.matches}</b><span>${esc(tt('coachStatMatches', 'Matches'))}</span></div>
-        <div><b>${a.ratings}</b><span>${esc(tt('coachStatRatings', 'Ratings'))}</span></div>
+        <button type="button" class="coach-stat-jump" data-coach-jump="matches">
+          <b>${a.played || a.matches}</b><span>${esc(tt('coachStatMatches', 'Matches'))}</span>
+        </button>
+        <button type="button" class="coach-stat-jump" data-coach-jump="ratings">
+          <b>${a.ratings}</b><span>${esc(tt('coachStatRatings', 'Ratings'))}</span>
+        </button>
         <div><b>${esc(avg)}</b><span>${esc(tt('coachStatAvg', 'Team avg'))}</span></div>
         <div><b>${esc(fmtScore(a.best))}</b><span>${esc(tt('coachStatBest', 'Best'))}</span></div>
       </div>
+      ${recordHtml}
       ${band}
       ${momentsBlock}
       <div class="coach-stat-section">
         <div class="pro-kicker">${esc(tt('coachPlayersStatsKicker', 'Players'))}</div>
         ${playersHtml}
-      </div>
-    `;
+      </div>`;
+    }
     const statsBoard = document.getElementById('coachStatsBoard');
     if(statsBoard) statsBoard.innerHTML = html;
     const statsTeam = document.getElementById('coachStatsTeam');
@@ -2873,6 +2933,23 @@
       coachHistSeason = e.target.value || 'all';
       closeCoachHistoryMatch();
       renderCoachUi();
+    });
+    document.getElementById('coachStatsSeason')?.addEventListener('change', e => {
+      coachStatsSeason = e.target.value || 'all';
+      renderCoachUi();
+    });
+    document.getElementById('coachStatsPeriod')?.addEventListener('click', e => {
+      const btn = e.target.closest('[data-coach-stats-period]');
+      if(!btn) return;
+      coachStatsPeriod = btn.dataset.coachStatsPeriod || 'all';
+      renderCoachUi();
+    });
+    document.getElementById('coachStatsBoard')?.addEventListener('click', e => {
+      const jump = e.target.closest('[data-coach-jump]');
+      if(jump){
+        jumpCoachStat(jump.dataset.coachJump);
+        return;
+      }
     });
     document.getElementById('coachHistorySendResults')?.addEventListener('click', () => {
       shareMatchResults(coachHistoryMatchId);
