@@ -148,23 +148,27 @@
   function openParentMessage(id){
     const msg = global.InboxStore && global.InboxStore.get(id);
     if(!msg) return;
-    if(global.InboxStore) global.InboxStore.markRead(id);
-    // Reflect read status back to coach invites on this device
-    try{
-      const coach = global.CoachStore;
-      const session = coach && coach.getSession && coach.getSession();
-      if(session && msg.match_id && typeof coach.syncInviteReadStatuses === 'function'){
-        coach.syncInviteReadStatuses(session, msg.match_id);
-      }
-    }catch(e){}
     const sheet = document.getElementById('parentMsgSheet');
     const back = document.getElementById('parentMsgBack');
     const body = document.getElementById('parentMsgBody');
     if(!sheet || !body) return;
+
     const venue = msg.venue === 'away'
       ? tt('venueAway', 'Away')
       : tt('venueHome', 'Home');
+    const kindLab = ({
+      league: tt('kindLeague', 'League'),
+      friendly: tt('kindFriendly', 'Friendly'),
+      cup: tt('kindCup', 'Cup'),
+      tournament: tt('kindTournament', 'Tournament')
+    })[msg.kind] || (msg.kind || '');
     const isResult = msg.type === 'match_result';
+
+    const detailRow = (label, value) => {
+      if(value == null || value === '') return '';
+      return `<p class="parent-msg-detail"><b>${esc(label)}</b><span>${esc(value)}</span></p>`;
+    };
+
     const resultBlock = isResult
       ? `<div class="parent-msg-result">
           <div class="coach-analytics-sum">
@@ -177,9 +181,10 @@
           </div>` : ''}
         </div>`
       : '';
+
     const rsvp = msg.rsvp === 'accepted' || msg.rsvp === 'declined' ? msg.rsvp : '';
     const rsvpBlock = !isResult
-      ? `<div class="parent-rsvp" data-msg-id="${esc(msg.id)}">
+      ? `<div class="parent-rsvp parent-rsvp-footer" data-msg-id="${esc(msg.id)}">
           <p class="parent-rsvp-lead">${esc(tt('parentRsvpLead', '{name} is called up for this match. Can they play?')
             .replace('{name}', msg.player_name || tt('parentInboxChild', 'Child')))}</p>
           <div class="parent-rsvp-actions">
@@ -195,28 +200,36 @@
           )}</p>
         </div>`
       : '';
-    const whenBits = [
-      msg.date,
-      msg.meetup ? `${tt('coachMatchMeetup', 'Meetup')} ${msg.meetup}` : '',
-      msg.kickoff ? `${tt('coachMatchKickoff', 'Kick-off')} ${msg.kickoff}` : '',
-      venue,
-      msg.kind
-    ].filter(Boolean);
+
     body.innerHTML = `
       <div class="parent-confirm-badge">${esc(isResult
         ? tt('parentInboxResultFromCoach', 'Match card from coach')
-        : tt('parentInboxFromCoach', 'From coach'))}</div>
+        : tt('parentInboxMatch', 'Match invite'))}</div>
       <h3 class="coach-rate-name">${esc(msg.opponent || '—')}</h3>
-      <p class="hint">${esc(whenBits.join(' · '))}</p>
-      ${msg.tournament && !isResult ? `<p class="hint"><b>${esc(tt('labelCompTournament', 'Tournament'))}:</b> ${esc(msg.tournament)}</p>` : ''}
-      ${msg.address && !isResult ? `<p class="hint"><b>${esc(tt('coachMatchAddress', 'Match address'))}:</b> ${esc(msg.address)}</p>` : ''}
-      <p class="hint"><b>${esc(tt('parentInboxChild', 'Child'))}:</b> ${esc(msg.player_name || '—')}</p>
-      <p class="hint"><b>${esc(tt('parentCoachLabel', 'Coach'))}:</b> ${esc(msg.coach_name || '—')}</p>
-      <p class="hint"><b>${esc(tt('parentInboxTeam', 'Team'))}:</b> ${esc([msg.academy_name, msg.team_name].filter(Boolean).join(' · ') || '—')}</p>
-      ${rsvpBlock}
+      <div class="parent-msg-details">
+        ${detailRow(tt('labelDate', 'Date'), msg.date || '')}
+        ${detailRow(tt('coachMatchMeetup', 'Meetup time'), msg.meetup || '')}
+        ${detailRow(tt('coachMatchKickoff', 'Kick-off'), msg.kickoff || '')}
+        ${detailRow(tt('labelVenue', 'Venue'), venue)}
+        ${detailRow(tt('coachMatchKind', 'Match type'), kindLab)}
+        ${!isResult && msg.tournament
+          ? detailRow(tt('labelCompTournament', 'Tournament'), msg.tournament)
+          : ''}
+        ${!isResult && msg.address
+          ? detailRow(tt('coachMatchAddress', 'Match address'), msg.address)
+          : ''}
+        ${detailRow(tt('parentInboxChild', 'Child'), msg.player_name || '')}
+        ${detailRow(tt('parentCoachLabel', 'Coach'), msg.coach_name || '')}
+        ${detailRow(
+          tt('parentInboxTeam', 'Team'),
+          [msg.academy_name, msg.team_name].filter(Boolean).join(' · ')
+        )}
+      </div>
       ${resultBlock}
+      ${rsvpBlock}
       <button type="button" class="ghost-btn" id="parentMsgCloseBtn">${esc(tt('previewCancel', 'Close'))}</button>
     `;
+
     const card = document.getElementById('parentMsgCard');
     if(typeof presentSheetCard === 'function') presentSheetCard(card, back);
     else{
@@ -224,6 +237,17 @@
       if(back) back.hidden = false;
     }
     if(typeof pushAppState === 'function') pushAppState('layer');
+
+    // Mark read only after the sheet is actually shown (above the inbox page).
+    if(global.InboxStore) global.InboxStore.markRead(id);
+    try{
+      const coach = global.CoachStore;
+      const session = coach && coach.getSession && coach.getSession();
+      if(session && msg.match_id && typeof coach.syncInviteReadStatuses === 'function'){
+        coach.syncInviteReadStatuses(session, msg.match_id);
+      }
+    }catch(e){}
+
     renderParentInbox();
     if(typeof renderCoachUi === 'function') renderCoachUi();
     syncInboxBellUi();
