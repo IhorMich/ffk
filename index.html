@@ -422,6 +422,8 @@ window.ffkIsNative = function () {
         <input type="file" id="importFile" accept="application/json" hidden>
       </div>
       <button class="backup-btn js-pro-btn" id="cloudSyncBtn" type="button" data-i18n="proCloudBtn" style="width:100%;margin-bottom:16px;">Облако и синхронизация</button>
+      <h3 class="period-head" data-i18n="planPersonalHead">Personal</h3>
+      <p class="hint" data-i18n="planPersonalHint">Личный Matchcard: один игрок или ваш состав на этом телефоне. Free и Pro не связаны с командой.</p>
       <div class="pro-card" id="proCard">
         <div class="pro-kicker">Matchcard Pro</div>
         <p id="proBody"></p>
@@ -436,9 +438,49 @@ window.ffkIsNative = function () {
         <button class="save-btn" id="proUnlockBtn" type="button" data-i18n="proUnlock">Включить Pro (тест)</button>
         <button class="ghost-btn" id="proLockBtn" type="button" hidden data-i18n="proLock">Выключить Pro (тест)</button>
       </div>
+      <h3 class="period-head" data-i18n="planCoachHead">Coach</h3>
+      <p class="hint" data-i18n="planCoachHint">Matchcard Coach — командный продукт в облаке. Отдельное дерево: Academy → Team → игроки. Не смешивается с Free/Pro.</p>
+      <div class="pro-card coach-card" id="coachCard">
+        <div class="pro-kicker">Matchcard Coach</div>
+        <p data-i18n="coachTeaserBody">Управляй командой, оценивай каждого игрока и делись прогрессом с родителями.</p>
+        <ul class="pro-list">
+          <li data-i18n="coachTeaserTeam">Академия, команда, состав 10–30</li>
+          <li data-i18n="coachTeaserAnalytics">Командные матчи и аналитика</li>
+          <li data-i18n="coachTeaserParents">Invite родителя к профилю ребёнка</li>
+        </ul>
+        <button class="save-btn" id="openCoachBtn" type="button" data-i18n="coachOpen">Matchcard Coach</button>
+      </div>
       <button class="save-btn" id="saveSettingsBtn" type="button" data-i18n="sSave">Сохранить настройки</button>
       <p class="hint" id="appVersionHint"></p>
       <p class="hint"><a href="privacy.html" id="privacyLink" target="_blank" rel="noopener" data-i18n="sPrivacy">Конфиденциальность</a></p>
+    </div>
+
+    <div class="view" id="view-coach">
+      <button class="ghost-btn coach-back" id="coachBackBtn" type="button" data-i18n="coachBack">← Настройки</button>
+      <div class="coach-hero">
+        <div class="pro-kicker">Matchcard Coach</div>
+        <h2 class="coach-title" data-i18n="coachTitle">Matchcard for Teams</h2>
+        <p class="coach-lead" data-i18n="coachLead">Manage your team. Track every player. Analyze team performance. Share player progress with parents.</p>
+        <ul class="pro-list coach-bullets">
+          <li data-i18n="coachBullet1">Academy → Team → состав до 30 игроков</li>
+          <li data-i18n="coachBullet2">Командные матчи, оценки и аналитика</li>
+          <li data-i18n="coachBullet3">Invite родителя только к своему ребёнку</li>
+          <li data-i18n="coachBullet4">Облако отдельно от личного Free/Pro</li>
+        </ul>
+        <div class="coach-price-row">
+          <div class="coach-price">
+            <b data-i18n="coachPriceMonth">$9.99 / month</b>
+            <span data-i18n="coachPriceMonthHint">помесячно</span>
+          </div>
+          <div class="coach-price coach-price-year">
+            <b data-i18n="coachPriceYear">$79.99 / year</b>
+            <span data-i18n="coachPriceYearHint">сезон выгоднее</span>
+          </div>
+        </div>
+        <p class="hint coach-limits" data-i18n="coachLimits">Лимит на старте: 1 академия · 2 команды · 30 игроков · 2 ассистента</p>
+        <button class="save-btn" id="coachStartBtn" type="button" data-i18n="coachStart">Start with Coach</button>
+        <p class="hint" id="coachSoonHint" data-i18n="coachSoon">Скоро: аккаунт, облако и invite родителей. Personal Free/Pro остаются как есть.</p>
+      </div>
     </div>
   </div>
 

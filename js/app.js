@@ -2634,7 +2634,7 @@ function bindHeroPin(){
   syncHeroPin();
 }
 function showView(name){
-  const views = ['player','new','history','stats','settings','report'];
+  const views = ['player','new','history','stats','settings','report','coach'];
   if(!views.includes(name)) name = 'new';
   if(name !== 'player') closePlayerEdit();
   document.getElementById('app').classList.toggle('player-on', name === 'player');
@@ -2650,7 +2650,7 @@ function showView(name){
   if(name === 'stats') renderStats();
   renderLiveClock();
   if(clockPhase() === 'run') startClockTick();
-  try{ sessionStorage.setItem(VIEW_KEY, name === 'report' ? 'history' : name); }catch(e){}
+  try{ sessionStorage.setItem(VIEW_KEY, name === 'report' ? 'history' : (name === 'coach' ? 'settings' : name)); }catch(e){}
   if(!popping && name !== 'player') pushAppState('tab');
   syncHeroPin();
 }
@@ -2779,6 +2779,11 @@ document.getElementById('cloudSyncBtn')?.addEventListener('click', () => {
 });
 document.getElementById('proUnlockBtn')?.addEventListener('click', () => setPro(true));
 document.getElementById('proLockBtn')?.addEventListener('click', () => setPro(false));
+document.getElementById('openCoachBtn')?.addEventListener('click', () => showView('coach'));
+document.getElementById('coachBackBtn')?.addEventListener('click', () => showView('settings'));
+document.getElementById('coachStartBtn')?.addEventListener('click', () => {
+  showToast(t('coachSoonToast'));
+});
 document.addEventListener('click', e => {
   const btn = e.target.closest('.pro-lock-btn');
   if(!btn) return;
@@ -3550,6 +3555,7 @@ function handleAppBack(){
     if(openDetails){ openDetails.classList.remove('open'); return true; }
   }
   if(name === 'report'){ showView('history'); return true; }
+  if(name === 'coach'){ showView('settings'); return true; }
   if(name !== 'player'){ showView('player'); return true; }
   return false;
 }
