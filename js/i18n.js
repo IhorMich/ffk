@@ -4103,7 +4103,7 @@ ru:{
   const extra = {
     en:{
       coachMatchKicker:'Team matches',
-      coachMatchHint:'Create a match, then quickly rate players: score, key moments and a comment. No full live tally for every player.',
+      coachMatchHint:'Create a match, tick who plays, then quickly rate those players.',
       coachMatchOpponent:'Opponent',
       coachCreateMatchBtn:'Create match',
       coachMatchCreated:'Match created.',
@@ -4134,11 +4134,21 @@ ru:{
       tabCoach:'Coach',
       coachProfileKicker:'Coach profile',
       coachStatTeams:'Teams',
-      coachStatPlayers:'Players'
+      coachStatPlayers:'Players',
+      coachSquadLabel:'Who plays',
+      coachSquadHint:'Tick roster players who take part in this match.',
+      coachSquadAll:'All',
+      coachSquadNone:'Clear',
+      coachSquadShort:'played',
+      coachSquadEmpty:'Select who plays in this match.',
+      coachErrSquad:'Select at least one player who plays.',
+      coachPickTeamFirst:'Pick a team in the Coach tab first.',
+      coachHistoryKicker:'Team history',
+      coachHistoryHint:'Matches of the active team and ratings for players who took part.'
     },
     ru:{
       coachMatchKicker:'Матчи команды',
-      coachMatchHint:'Создай матч, затем быстро оцени игроков: оценка, ключевые моменты и комментарий. Без полного подсчёта на каждого.',
+      coachMatchHint:'Создай матч, отметь кто играет, затем быстро оцени участников.',
       coachMatchOpponent:'Соперник',
       coachCreateMatchBtn:'Создать матч',
       coachMatchCreated:'Матч создан.',
@@ -4169,11 +4179,21 @@ ru:{
       tabCoach:'Тренер',
       coachProfileKicker:'Профиль тренера',
       coachStatTeams:'Команды',
-      coachStatPlayers:'Игроки'
+      coachStatPlayers:'Игроки',
+      coachSquadLabel:'Кто играет',
+      coachSquadHint:'Отметь игроков состава, которые выходят на этот матч.',
+      coachSquadAll:'Все',
+      coachSquadNone:'Снять',
+      coachSquadShort:'в заявке',
+      coachSquadEmpty:'Отметь, кто играет в этом матче.',
+      coachErrSquad:'Выбери хотя бы одного игрока.',
+      coachPickTeamFirst:'Сначала выбери команду во вкладке Тренер.',
+      coachHistoryKicker:'История команды',
+      coachHistoryHint:'Матчи активной команды и оценки игроков, которые принимали участие.'
     },
     uk:{
       coachMatchKicker:'Матчі команди',
-      coachMatchHint:'Створи матч, потім швидко оціни гравців: оцінка, ключові моменти і коментар. Без повного підрахунку на кожного.',
+      coachMatchHint:'Створи матч, познач хто грає, потім швидко оціни учасників.',
       coachMatchOpponent:'Суперник',
       coachCreateMatchBtn:'Створити матч',
       coachMatchCreated:'Матч створено.',
@@ -4204,7 +4224,17 @@ ru:{
       tabCoach:'Тренер',
       coachProfileKicker:'Профіль тренера',
       coachStatTeams:'Команди',
-      coachStatPlayers:'Гравці'
+      coachStatPlayers:'Гравці',
+      coachSquadLabel:'Хто грає',
+      coachSquadHint:'Познач гравців складу, які виходять на цей матч.',
+      coachSquadAll:'Усі',
+      coachSquadNone:'Зняти',
+      coachSquadShort:'у заявці',
+      coachSquadEmpty:'Познач, хто грає в цьому матчі.',
+      coachErrSquad:'Вибери хоча б одного гравця.',
+      coachPickTeamFirst:'Спочатку вибери команду у вкладці Тренер.',
+      coachHistoryKicker:'Історія команди',
+      coachHistoryHint:'Матчі активної команди та оцінки гравців, які брали участь.'
     }
   };
   LANGS.forEach(lang => {

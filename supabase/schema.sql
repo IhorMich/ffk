@@ -169,6 +169,7 @@ create table if not exists public.team_matches (
   score text not null default '' check (char_length(score) <= 16),
   venue text not null default 'home' check (venue in ('home','away')),
   kind text not null default 'league' check (kind in ('league','friendly','cup','tournament')),
+  squad jsonb not null default '[]'::jsonb,
   created_at timestamptz not null default now()
 );
 

@@ -281,7 +281,13 @@ function isCoachPlan(){
   return settings.isCoach === true;
 }
 function setCoachPlan(on){
-  settings.isCoach = !!on;
+  on = !!on;
+  if(settings.isCoach === on){
+    syncCoachTabUi();
+    applyHeader();
+    return;
+  }
+  settings.isCoach = on;
   saveSettings();
   syncCoachTabUi();
   applyHeader();
@@ -299,8 +305,24 @@ function syncCoachTabUi(){
     lab.setAttribute('data-i18n', on ? 'tabCoach' : 'tabPlayer');
     lab.textContent = t(on ? 'tabCoach' : 'tabPlayer');
   }
+  syncCoachModeViews();
   if(on && activeViewName() === 'player') showView('coach');
 }
+function syncCoachModeViews(){
+  const on = isCoachPlan();
+  const map = [
+    ['personalMatchRoot', 'coachMatchTab'],
+    ['personalHistoryRoot', 'coachHistoryTab'],
+    ['personalStatsRoot', 'coachStatsTab']
+  ];
+  map.forEach(([personal, coach]) => {
+    const p = document.getElementById(personal);
+    const c = document.getElementById(coach);
+    if(p) p.hidden = on;
+    if(c) c.hidden = !on;
+  });
+}
+window.syncCoachModeViews = syncCoachModeViews;
 window.setCoachPlan = setCoachPlan;
 window.isCoachPlan = isCoachPlan;
 window.syncCoachTabUi = syncCoachTabUi;
@@ -2759,6 +2781,9 @@ function showView(name){
   if(name === 'history') renderHistory();
   if(name === 'stats') renderStats();
   if(name === 'coach' && typeof renderCoachUi === 'function') renderCoachUi();
+  if(isCoachPlan() && (name === 'new' || name === 'history' || name === 'stats') && typeof renderCoachUi === 'function'){
+    renderCoachUi();
+  }
   renderLiveClock();
   if(clockPhase() === 'run') startClockTick();
   try{

@@ -241,6 +241,11 @@
       const opponent = String(fields.opponent || '').trim().slice(0, 48);
       const date = /^\d{4}-\d{2}-\d{2}$/.test(fields.date) ? fields.date : new Date().toISOString().slice(0, 10);
       if(!opponent) throw new Error('opponent');
+      const roster = this.listPlayers(session, teamId);
+      const rosterIds = new Set(roster.map(p => p.id));
+      let squad = Array.isArray(fields.squad) ? fields.squad.map(String) : [];
+      squad = [...new Set(squad.filter(id => rosterIds.has(id)))];
+      if(!squad.length) throw new Error('squad');
       const db = readDb();
       const match = {
         id: uid('tmt'),
@@ -250,12 +255,39 @@
         score: String(fields.score || '').trim().slice(0, 16),
         venue: fields.venue === 'away' ? 'away' : 'home',
         kind: ['league','friendly','cup','tournament'].includes(fields.kind) ? fields.kind : 'league',
+        squad,
         created_at: new Date().toISOString()
       };
       db.team_matches.push(match);
       db.activeMatchId = match.id;
       writeDb(db);
       return match;
+    },
+    setMatchSquad(session, matchId, squadIds){
+      const match = this.getMatch(session, matchId);
+      if(!match) throw new Error('forbidden');
+      const rosterIds = new Set(this.listPlayers(session, match.team_id).map(p => p.id));
+      const squad = [...new Set((Array.isArray(squadIds) ? squadIds : []).map(String).filter(id => rosterIds.has(id)))];
+      if(!squad.length) throw new Error('squad');
+      const db = readDb();
+      db.team_matches = db.team_matches.map(m => m.id === matchId ? {...m, squad} : m);
+      writeDb(db);
+      return this.getMatch(session, matchId);
+    },
+    matchSquadIds(session, match){
+      if(!match) return [];
+      const roster = this.listPlayers(session, match.team_id);
+      const rosterIds = new Set(roster.map(p => p.id));
+      const raw = Array.isArray(match.squad) ? match.squad.map(String) : [];
+      const filtered = raw.filter(id => rosterIds.has(id));
+      // Legacy matches without squad: treat full roster as available
+      if(!filtered.length && !raw.length) return roster.map(p => p.id);
+      return filtered;
+    },
+    listMatchPlayers(session, match){
+      if(!match) return [];
+      const ids = new Set(this.matchSquadIds(session, match));
+      return this.listPlayers(session, match.team_id).filter(p => ids.has(p.id));
     },
     listRatings(session, matchId){
       const match = this.getMatch(session, matchId);

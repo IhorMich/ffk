@@ -37,6 +37,8 @@
       auth.hidden = !started;
       work.hidden = true;
       syncModeHint();
+      renderCoachTabsEmpty();
+      if(typeof syncCoachModeViews === 'function') syncCoachModeViews();
       return;
     }
 
@@ -138,7 +140,27 @@
       renderTeamPane(session, active);
       renderMatchPane(session, active);
       renderAnalyticsPane(session, active);
+      renderCoachHistoryTab(session, active);
+    }else{
+      renderCoachTabsEmpty();
     }
+    if(typeof syncCoachModeViews === 'function') syncCoachModeViews();
+  }
+
+  function renderCoachTabsEmpty(){
+    const teamEls = ['coachMatchTabTeam','coachHistoryTeam','coachStatsTeam'];
+    teamEls.forEach(id => {
+      const el = document.getElementById(id);
+      if(el) el.textContent = '—';
+    });
+    document.querySelectorAll('.js-cm-squad').forEach(el => {
+      el.innerHTML = `<p class="hint">${esc(tt('coachPickTeamFirst', 'Pick a team in the Coach tab first.'))}</p>`;
+    });
+    document.querySelectorAll('.js-cm-matches, .js-cm-rates').forEach(el => { el.innerHTML = ''; });
+    const hist = document.getElementById('coachHistoryList');
+    if(hist) hist.innerHTML = `<p class="hint">${esc(tt('coachPickTeamFirst', 'Pick a team in the Coach tab first.'))}</p>`;
+    const stats = document.getElementById('coachStatsBoard');
+    if(stats) stats.innerHTML = `<p class="hint">${esc(tt('coachPickTeamFirst', 'Pick a team in the Coach tab first.'))}</p>`;
   }
 
   function renderTeamPane(session, team){
@@ -176,70 +198,153 @@
     }).join('');
   }
 
+  function playerLabel(p){
+    return [p.first_name, p.last_name].filter(Boolean).join(' ');
+  }
+  function selectedSquadFrom(scope){
+    const root = scope && scope.classList && scope.classList.contains('js-cm-squad')
+      ? scope
+      : (scope && scope.querySelector ? (scope.querySelector('.js-cm-squad') || scope) : document);
+    return [...root.querySelectorAll('input[type="checkbox"]:checked')]
+      .map(el => el.value)
+      .filter(Boolean);
+  }
+  function setSquadChecks(root, ids){
+    const want = new Set((ids || []).map(String));
+    (root || document).querySelectorAll('.js-cm-squad input[type="checkbox"]').forEach(el => {
+      el.checked = want.has(el.value);
+    });
+  }
+  function squadPickerHtml(players, selectedIds){
+    if(!players.length){
+      return `<p class="hint">${esc(tt('coachNoPlayers', 'Add players to this team.'))}</p>`;
+    }
+    const sel = new Set((selectedIds || players.map(p => p.id)).map(String));
+    return players.map(p => {
+      const label = playerLabel(p);
+      const pos = p.position && typeof pitchPosLabelShort === 'function'
+        ? pitchPosLabelShort(p.position)
+        : (p.position || '');
+      const meta = [p.number ? `#${p.number}` : '', pos].filter(Boolean).join(' · ');
+      const on = sel.has(p.id) ? ' checked' : '';
+      return `<label class="coach-squad-item">
+        <input type="checkbox" value="${esc(p.id)}"${on}>
+        <span class="coach-squad-main">
+          <b>${esc(label)}</b>
+          ${meta ? `<span>${esc(meta)}</span>` : ''}
+        </span>
+      </label>`;
+    }).join('');
+  }
   function renderMatchPane(session, team){
     const store = global.CoachStore;
-    const dateEl = document.getElementById('coachMatchDate');
-    if(dateEl && !dateEl.value) dateEl.value = today();
-
+    const players = store.listPlayers(session, team.id);
     const matches = store.listMatches(session, team.id);
     let activeMatchId = store.getActiveMatchId();
     if(activeMatchId && !matches.some(m => m.id === activeMatchId)) activeMatchId = '';
-    if(!activeMatchId && matches[0]) {
+    if(!activeMatchId && matches[0]){
       activeMatchId = matches[0].id;
       store.setActiveMatchId(activeMatchId);
     }
+    const activeMatch = activeMatchId ? store.getMatch(session, activeMatchId) : null;
+    const squadIds = activeMatch
+      ? store.matchSquadIds(session, activeMatch)
+      : players.map(p => p.id);
 
-    const list = document.getElementById('coachMatchList');
-    if(list){
-      if(!matches.length){
-        list.innerHTML = `<p class="hint">${esc(tt('coachNoMatches', 'No team matches yet.'))}</p>`;
-      }else{
-        list.innerHTML = matches.map(m => {
+    const tabTeam = document.getElementById('coachMatchTabTeam');
+    if(tabTeam) tabTeam.textContent = team.name + (team.age_group ? ` · ${team.age_group}` : '');
+
+    document.querySelectorAll('.js-cm-date').forEach(el => {
+      if(!el.value) el.value = today();
+    });
+    document.querySelectorAll('.js-cm-squad').forEach(el => {
+      el.innerHTML = squadPickerHtml(players, squadIds);
+      el.dataset.mode = activeMatch ? 'edit' : 'create';
+      el.dataset.match = activeMatch ? activeMatch.id : '';
+    });
+
+    const matchListHtml = !matches.length
+      ? `<p class="hint">${esc(tt('coachNoMatches', 'No team matches yet.'))}</p>`
+      : matches.map(m => {
           const on = m.id === activeMatchId ? ' on' : '';
           const rated = store.listRatings(session, m.id).length;
+          const squadN = store.matchSquadIds(session, m).length;
           return `<button type="button" class="coach-team-item${on}" data-match="${esc(m.id)}">
             <span class="coach-team-name">${esc(m.date)} · ${esc(m.opponent)}</span>
-            <span class="coach-team-meta">${m.score ? esc(m.score) + ' · ' : ''}${rated} ${esc(tt('coachRatedShort', 'rated'))}</span>
+            <span class="coach-team-meta">${m.score ? esc(m.score) + ' · ' : ''}${squadN} ${esc(tt('coachSquadShort', 'played'))} · ${rated} ${esc(tt('coachRatedShort', 'rated'))}</span>
           </button>`;
         }).join('');
+    document.querySelectorAll('.js-cm-matches').forEach(el => { el.innerHTML = matchListHtml; });
+
+    let rateHtml = '';
+    if(!activeMatch){
+      rateHtml = `<p class="hint">${esc(tt('coachPickMatch', 'Create or pick a match, then rate players.'))}</p>`;
+    }else{
+      const squadPlayers = store.listMatchPlayers(session, activeMatch);
+      if(!squadPlayers.length){
+        rateHtml = `<p class="hint">${esc(tt('coachSquadEmpty', 'Select who plays in this match.'))}</p>`;
+      }else{
+        rateHtml = `<p class="hint">${esc(tt('coachRateFor', 'Rate players for'))}: <b>${esc(activeMatch.opponent)}</b> (${esc(activeMatch.date)})</p>` +
+          squadPlayers.map(p => {
+            const label = playerLabel(p);
+            const rating = store.getRatingForPlayer(session, activeMatch.id, p.id);
+            const btnLabel = rating
+              ? `${tt('coachEditRating', 'Edit')} ${Number(rating.rating).toFixed(1)}`
+              : tt('coachRatePlayer', 'Rate');
+            return `<div class="coach-player-row">
+              <div class="coach-player-main">
+                <b>${esc(label)}</b>
+                <span>${rating ? esc(tt('coachRated', 'Rated')) : esc(tt('coachNotRated', 'Not rated'))}</span>
+              </div>
+              <button type="button" class="save-btn coach-rate-btn" data-rate-player="${esc(p.id)}" data-match="${esc(activeMatch.id)}">${esc(btnLabel)}</button>
+            </div>`;
+          }).join('');
       }
     }
+    document.querySelectorAll('.js-cm-rates').forEach(el => { el.innerHTML = rateHtml; });
+  }
 
-    const rateList = document.getElementById('coachRateList');
-    if(!rateList) return;
-    const match = activeMatchId ? store.getMatch(session, activeMatchId) : null;
-    if(!match){
-      rateList.innerHTML = `<p class="hint">${esc(tt('coachPickMatch', 'Create or pick a match, then rate players.'))}</p>`;
+  function renderCoachHistoryTab(session, team){
+    const title = document.getElementById('coachHistoryTeam');
+    if(title) title.textContent = team.name + (team.age_group ? ` · ${team.age_group}` : '');
+    const el = document.getElementById('coachHistoryList');
+    if(!el) return;
+    const store = global.CoachStore;
+    const matches = store.listMatches(session, team.id);
+    if(!matches.length){
+      el.innerHTML = `<p class="hint">${esc(tt('coachNoMatches', 'No team matches yet.'))}</p>`;
       return;
     }
-    const players = store.listPlayers(session, team.id);
-    if(!players.length){
-      rateList.innerHTML = `<p class="hint">${esc(tt('coachNoPlayers', 'Add players to this team.'))}</p>`;
-      return;
-    }
-    rateList.innerHTML = `<p class="hint">${esc(tt('coachRateFor', 'Rate players for'))}: <b>${esc(match.opponent)}</b> (${esc(match.date)})</p>` +
-      players.map(p => {
-        const label = [p.first_name, p.last_name].filter(Boolean).join(' ');
-        const rating = store.getRatingForPlayer(session, match.id, p.id);
-        const btnLabel = rating
-          ? `${tt('coachEditRating', 'Edit')} ${Number(rating.rating).toFixed(1)}`
-          : tt('coachRatePlayer', 'Rate');
+    el.innerHTML = matches.map(m => {
+      const squad = store.listMatchPlayers(session, m);
+      const ratings = store.listRatings(session, m.id);
+      const byPlayer = Object.fromEntries(ratings.map(r => [r.team_player_id, r]));
+      const rows = squad.length ? squad : store.listPlayers(session, team.id);
+      const body = rows.map(p => {
+        const r = byPlayer[p.id];
         return `<div class="coach-player-row">
           <div class="coach-player-main">
-            <b>${esc(label)}</b>
-            <span>${rating ? esc(tt('coachRated', 'Rated')) : esc(tt('coachNotRated', 'Not rated'))}</span>
+            <b>${esc(playerLabel(p))}${p.number ? ` · #${esc(p.number)}` : ''}</b>
+            <span>${r ? esc(tt('coachRated', 'Rated')) : esc(tt('coachNotRated', 'Not rated'))}</span>
           </div>
-          <button type="button" class="save-btn coach-rate-btn" data-rate-player="${esc(p.id)}" data-match="${esc(match.id)}">${esc(btnLabel)}</button>
+          <b>${r ? Number(r.rating).toFixed(1) : '—'}</b>
         </div>`;
       }).join('');
+      return `<div class="coach-hist-card">
+        <div class="coach-hist-head">
+          <b>${esc(m.date)} · ${esc(m.opponent)}</b>
+          <span>${m.score ? esc(m.score) : '—'} · ${squad.length} ${esc(tt('coachSquadShort', 'played'))}</span>
+        </div>
+        <div class="coach-player-list">${body || `<p class="hint">${esc(tt('coachSquadEmpty', 'No squad selected.'))}</p>`}</div>
+      </div>`;
+    }).join('');
   }
 
   function renderAnalyticsPane(session, team){
-    const board = document.getElementById('coachAnalyticsBoard');
-    if(!board) return;
-    const a = global.CoachStore.teamAnalytics(session, team.id);
+    const store = global.CoachStore;
+    const a = store.teamAnalytics(session, team.id);
     const avg = a.avg == null ? '—' : Number(a.avg).toFixed(1);
-    board.innerHTML = `
+    const html = `
       <div class="coach-analytics-sum">
         <div><b>${a.matches}</b><span>${esc(tt('coachStatMatches', 'Matches'))}</span></div>
         <div><b>${a.ratings}</b><span>${esc(tt('coachStatRatings', 'Ratings'))}</span></div>
@@ -254,6 +359,12 @@
           <b>${p.avg == null ? '—' : Number(p.avg).toFixed(1)}</b>
         </div>`).join('')}</div>` : `<p class="hint">${esc(tt('coachAnalyticsEmpty', 'Rate players in matches to see analytics.'))}</p>`}
     `;
+    const board = document.getElementById('coachAnalyticsBoard');
+    if(board) board.innerHTML = html;
+    const statsBoard = document.getElementById('coachStatsBoard');
+    if(statsBoard) statsBoard.innerHTML = html;
+    const statsTeam = document.getElementById('coachStatsTeam');
+    if(statsTeam) statsTeam.textContent = team.name + (team.age_group ? ` · ${team.age_group}` : '');
   }
 
   function openAuth(){
@@ -371,26 +482,42 @@
       toast(map[e.message] || tt('coachErrGeneric', 'Could not add player.'));
     }
   }
-  function onCreateMatch(){
+  function onCreateMatch(fromEl){
     const session = global.CoachStore.getSession();
     const teamId = global.CoachStore.getActiveTeamId();
     if(!teamId) return;
+    const root = fromEl?.closest('.coach-hero') || fromEl?.closest('#coachMatchTab') || document;
+    const opponent = root.querySelector('.js-cm-opponent')?.value
+      || document.getElementById('coachMatchOpponent')?.value
+      || '';
+    const date = root.querySelector('.js-cm-date')?.value || today();
+    const score = root.querySelector('.js-cm-score')?.value || '';
+    const squad = selectedSquadFrom(root);
     try{
-      global.CoachStore.createMatch(session, teamId, {
-        opponent: document.getElementById('coachMatchOpponent')?.value || '',
-        date: document.getElementById('coachMatchDate')?.value || today(),
-        score: document.getElementById('coachMatchScore')?.value || ''
-      });
-      const opp = document.getElementById('coachMatchOpponent');
-      const score = document.getElementById('coachMatchScore');
-      if(opp) opp.value = '';
-      if(score) score.value = '';
+      global.CoachStore.createMatch(session, teamId, {opponent, date, score, squad});
+      root.querySelectorAll('.js-cm-opponent').forEach(el => { el.value = ''; });
+      root.querySelectorAll('.js-cm-score').forEach(el => { el.value = ''; });
       toast(tt('coachMatchCreated', 'Match created.'));
       renderCoachUi();
     }catch(e){
-      toast(e.message === 'opponent'
-        ? tt('coachErrOpponent', 'Enter opponent.')
-        : tt('coachErrGeneric', 'Could not create match.'));
+      const map = {
+        opponent: tt('coachErrOpponent', 'Enter opponent.'),
+        squad: tt('coachErrSquad', 'Select at least one player who plays.')
+      };
+      toast(map[e.message] || tt('coachErrGeneric', 'Could not create match.'));
+    }
+  }
+  function onSquadToggle(picker){
+    if(!picker || picker.dataset.mode !== 'edit' || !picker.dataset.match) return;
+    const session = global.CoachStore.getSession();
+    try{
+      global.CoachStore.setMatchSquad(session, picker.dataset.match, selectedSquadFrom(picker));
+      renderCoachUi();
+    }catch(e){
+      toast(e.message === 'squad'
+        ? tt('coachErrSquad', 'Select at least one player who plays.')
+        : tt('coachErrGeneric', 'Could not update squad.'));
+      renderCoachUi();
     }
   }
 
@@ -542,17 +669,46 @@
     document.getElementById('coachCreateAcademyBtn')?.addEventListener('click', () => { onCreateAcademy(); });
     document.getElementById('coachCreateTeamBtn')?.addEventListener('click', () => { onCreateTeam(); });
     document.getElementById('coachAddPlayerBtn')?.addEventListener('click', () => { onAddPlayer(); });
-    document.getElementById('coachCreateMatchBtn')?.addEventListener('click', () => { onCreateMatch(); });
+    document.addEventListener('click', e => {
+      const createBtn = e.target.closest('.js-cm-create');
+      if(createBtn){
+        onCreateMatch(createBtn);
+        return;
+      }
+      const allBtn = e.target.closest('.js-cm-squad-all');
+      if(allBtn){
+        const root = allBtn.closest('.coach-hero') || allBtn.closest('#coachMatchTab') || document;
+        root.querySelectorAll('.js-cm-squad input[type="checkbox"]').forEach(el => { el.checked = true; });
+        const picker = root.querySelector('.js-cm-squad');
+        onSquadToggle(picker);
+        return;
+      }
+      const noneBtn = e.target.closest('.js-cm-squad-none');
+      if(noneBtn){
+        const root = noneBtn.closest('.coach-hero') || noneBtn.closest('#coachMatchTab') || document;
+        root.querySelectorAll('.js-cm-squad input[type="checkbox"]').forEach(el => { el.checked = false; });
+        return;
+      }
+      const matchBtn = e.target.closest('.js-cm-matches [data-match]');
+      if(matchBtn){
+        global.CoachStore.setActiveMatchId(matchBtn.dataset.match);
+        renderCoachUi();
+        return;
+      }
+      const rateBtn = e.target.closest('.js-cm-rates [data-rate-player]');
+      if(rateBtn){
+        openCoachQuickRate(rateBtn.dataset.match, rateBtn.dataset.ratePlayer);
+      }
+    });
+    document.addEventListener('change', e => {
+      const box = e.target.closest('.js-cm-squad input[type="checkbox"]');
+      if(!box) return;
+      onSquadToggle(box.closest('.js-cm-squad'));
+    });
     document.getElementById('coachTeamList')?.addEventListener('click', e => {
       const btn = e.target.closest('[data-team]');
       if(!btn) return;
       global.CoachStore.setActiveTeamId(btn.dataset.team);
-      renderCoachUi();
-    });
-    document.getElementById('coachMatchList')?.addEventListener('click', e => {
-      const btn = e.target.closest('[data-match]');
-      if(!btn) return;
-      global.CoachStore.setActiveMatchId(btn.dataset.match);
       renderCoachUi();
     });
     document.getElementById('coachPlayerList')?.addEventListener('click', e => {
@@ -562,11 +718,6 @@
         global.CoachStore.removePlayer(global.CoachStore.getSession(), btn.dataset.delPlayer);
         renderCoachUi();
       }catch(err){}
-    });
-    document.getElementById('coachRateList')?.addEventListener('click', e => {
-      const btn = e.target.closest('[data-rate-player]');
-      if(!btn) return;
-      openCoachQuickRate(btn.dataset.match, btn.dataset.ratePlayer);
     });
     document.getElementById('coachRateMinus')?.addEventListener('click', () => {
       if(!quickRate) return;

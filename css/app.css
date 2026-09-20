@@ -1255,6 +1255,39 @@
   html.is-coach .tab-ico-coach{display:block;}
   html:not(.is-coach) .tab-ico-coach{display:none;}
   html.is-coach #coachBackBtn{display:none;}
+  html.is-coach #personalMatchRoot,
+  html.is-coach #personalHistoryRoot,
+  html.is-coach #personalStatsRoot{display:none !important;}
+  html:not(.is-coach) #coachMatchTab,
+  html:not(.is-coach) #coachHistoryTab,
+  html:not(.is-coach) #coachStatsTab{display:none !important;}
+  .coach-tab-panel{margin:0 0 20px;}
+  .coach-squad-head{
+    display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 4px;
+  }
+  .coach-squad-head label{margin:0;}
+  .coach-squad-actions{display:flex;gap:6px;flex-shrink:0;}
+  .coach-squad-actions .ghost-btn{
+    margin:0;padding:6px 10px;width:auto;font-size:.72rem;border-radius:999px;
+  }
+  .coach-squad-picker{display:grid;gap:8px;margin:8px 0 12px;max-height:280px;overflow:auto;}
+  .coach-squad-item{
+    display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border-radius:12px;
+    border:1px solid var(--card-line);cursor:pointer;user-select:none;
+  }
+  .coach-squad-item:has(input:checked){box-shadow:inset 3px 0 0 var(--card-accent);}
+  .coach-squad-item input{margin-top:3px;flex-shrink:0;}
+  .coach-squad-main{display:flex;flex-direction:column;gap:2px;min-width:0;}
+  .coach-squad-main b{font-size:.92rem;}
+  .coach-squad-main span{font-size:.75rem;font-weight:700;color:var(--card-muted);}
+  .coach-hist-card{
+    padding:12px;border-radius:14px;border:1px solid var(--card-line);margin:0 0 10px;
+  }
+  .coach-hist-head{
+    display:flex;flex-direction:column;gap:2px;margin:0 0 8px;
+  }
+  .coach-hist-head b{font-size:.95rem;}
+  .coach-hist-head span{font-size:.75rem;font-weight:700;color:var(--card-muted);}
   .coach-profile-hero{margin-bottom:12px;}
   .coach-profile-hero .coach-title{margin-bottom:2px;}
   .coach-profile-hero #coachProfileEmail{margin:0 0 12px;}
