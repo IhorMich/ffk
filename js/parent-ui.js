@@ -64,15 +64,14 @@
     const btn = document.getElementById('inboxBtn');
     const badge = document.getElementById('inboxBadge');
     if(!btn) return;
-    const coachOn = typeof isCoachPlan === 'function' && isCoachPlan();
     const pushOn = !!(global.CoachPush && global.CoachPush.isEnabled && global.CoachPush.isEnabled());
     const msgs = inboxMessages();
     const unread = inboxUnread();
     const links = global.ParentStore && global.ParentStore.listLinks
       ? global.ParentStore.listLinks().length
       : 0;
-    // Show like modern apps: when push is on, or there are messages / linked kids (parent mode).
-    const show = !coachOn && (pushOn || unread > 0 || msgs.length > 0 || links > 0);
+    // Top messages icon like other apps — independent of Coach / parent plan.
+    const show = pushOn || unread > 0 || msgs.length > 0 || links > 0;
     btn.hidden = !show;
     btn.classList.toggle('has-unread', unread > 0);
     if(badge){
@@ -85,10 +84,6 @@
     }
   }
   function openInboxSheet(){
-    if(typeof isCoachPlan === 'function' && isCoachPlan()){
-      toast(tt('parentNotInCoach', 'Switch off Coach plan to open parent messages.'));
-      return;
-    }
     const sheet = document.getElementById('inboxSheet');
     const back = document.getElementById('inboxSheetBack');
     const list = document.getElementById('inboxSheetList');

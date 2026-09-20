@@ -313,6 +313,7 @@ function syncCoachTabUi(){
   syncCoachModeViews();
   // Child player page is a dedicated screen — do not bounce it to Coach home.
   if(on && activeViewName() === 'player' && !isCoachChildView()) showView('coach');
+  if(typeof syncInboxBellUi === 'function') syncInboxBellUi();
 }
 function syncCoachModeViews(){
   const on = isCoachPlan();
