@@ -2648,6 +2648,7 @@ function showView(name){
   }
   if(name === 'history') renderHistory();
   if(name === 'stats') renderStats();
+  if(name === 'coach' && typeof renderCoachUi === 'function') renderCoachUi();
   renderLiveClock();
   if(clockPhase() === 'run') startClockTick();
   try{ sessionStorage.setItem(VIEW_KEY, name === 'report' ? 'history' : (name === 'coach' ? 'settings' : name)); }catch(e){}
@@ -2781,9 +2782,7 @@ document.getElementById('proUnlockBtn')?.addEventListener('click', () => setPro(
 document.getElementById('proLockBtn')?.addEventListener('click', () => setPro(false));
 document.getElementById('openCoachBtn')?.addEventListener('click', () => showView('coach'));
 document.getElementById('coachBackBtn')?.addEventListener('click', () => showView('settings'));
-document.getElementById('coachStartBtn')?.addEventListener('click', () => {
-  showToast(t('coachSoonToast'));
-});
+if(typeof bindCoachUi === 'function') bindCoachUi();
 document.addEventListener('click', e => {
   const btn = e.target.closest('.pro-lock-btn');
   if(!btn) return;

@@ -457,29 +457,101 @@ window.ffkIsNative = function () {
 
     <div class="view" id="view-coach">
       <button class="ghost-btn coach-back" id="coachBackBtn" type="button" data-i18n="coachBack">← Настройки</button>
-      <div class="coach-hero">
-        <div class="pro-kicker">Matchcard Coach</div>
-        <h2 class="coach-title" data-i18n="coachTitle">Matchcard for Teams</h2>
-        <p class="coach-lead" data-i18n="coachLead">Manage your team. Track every player. Analyze team performance. Share player progress with parents.</p>
-        <ul class="pro-list coach-bullets">
-          <li data-i18n="coachBullet1">Academy → Team → состав до 30 игроков</li>
-          <li data-i18n="coachBullet2">Командные матчи, оценки и аналитика</li>
-          <li data-i18n="coachBullet3">Invite родителя только к своему ребёнку</li>
-          <li data-i18n="coachBullet4">Облако отдельно от личного Free/Pro</li>
-        </ul>
-        <div class="coach-price-row">
-          <div class="coach-price">
-            <b data-i18n="coachPriceMonth">$9.99 / month</b>
-            <span data-i18n="coachPriceMonthHint">помесячно</span>
+
+      <div id="coachMarketing">
+        <div class="coach-hero">
+          <div class="pro-kicker">Matchcard Coach</div>
+          <h2 class="coach-title" data-i18n="coachTitle">Matchcard for Teams</h2>
+          <p class="coach-lead" data-i18n="coachLead">Manage your team. Track every player. Analyze team performance. Share player progress with parents.</p>
+          <ul class="pro-list coach-bullets">
+            <li data-i18n="coachBullet1">Academy → Team → состав до 30 игроков</li>
+            <li data-i18n="coachBullet2">Командные матчи, оценки и аналитика</li>
+            <li data-i18n="coachBullet3">Invite родителя только к своему ребёнку</li>
+            <li data-i18n="coachBullet4">Облако отдельно от личного Free/Pro</li>
+          </ul>
+          <div class="coach-price-row">
+            <div class="coach-price">
+              <b data-i18n="coachPriceMonth">$9.99 / month</b>
+              <span data-i18n="coachPriceMonthHint">помесячно</span>
+            </div>
+            <div class="coach-price coach-price-year">
+              <b data-i18n="coachPriceYear">$79.99 / year</b>
+              <span data-i18n="coachPriceYearHint">сезон выгоднее</span>
+            </div>
           </div>
-          <div class="coach-price coach-price-year">
-            <b data-i18n="coachPriceYear">$79.99 / year</b>
-            <span data-i18n="coachPriceYearHint">сезон выгоднее</span>
+          <p class="hint coach-limits" data-i18n="coachLimits">Лимит на старте: 1 академия · 10 команд · 30 игроков · 2 ассистента</p>
+          <button class="save-btn" id="coachStartBtn" type="button" data-i18n="coachStart">Start with Coach</button>
+          <p class="hint" id="coachModeHint"></p>
+        </div>
+      </div>
+
+      <div id="coachAuth" class="coach-panel" hidden>
+        <div class="coach-hero">
+          <div class="pro-kicker" data-i18n="coachAuthKicker">Coach account</div>
+          <p class="coach-lead" data-i18n="coachAuthLead">Phase 1: account on this phone. Cloud login connects later via Supabase — Personal Free/Pro stay untouched.</p>
+          <div class="field">
+            <label data-i18n="coachEmail">Email</label>
+            <input id="coachEmail" type="email" autocomplete="username" inputmode="email">
+          </div>
+          <div class="field">
+            <label data-i18n="coachPassword">Password</label>
+            <input id="coachPassword" type="password" autocomplete="new-password">
+          </div>
+          <div class="coach-auth-actions">
+            <button class="save-btn" id="coachSignUpBtn" type="button" data-i18n="coachSignUp">Create account</button>
+            <button class="ghost-btn" id="coachSignInBtn" type="button" data-i18n="coachSignIn">Sign in</button>
           </div>
         </div>
-        <p class="hint coach-limits" data-i18n="coachLimits">Лимит на старте: 1 академия · 10 команд · 30 игроков · 2 ассистента</p>
-        <button class="save-btn" id="coachStartBtn" type="button" data-i18n="coachStart">Start with Coach</button>
-        <p class="hint" id="coachSoonHint" data-i18n="coachSoon">Скоро: аккаунт, облако и invite родителей. Personal Free/Pro остаются как есть.</p>
+      </div>
+
+      <div id="coachWorkspace" class="coach-panel" hidden>
+        <div class="coach-session-bar">
+          <span id="coachSessionEmail"></span>
+          <button class="ghost-btn" id="coachSignOutBtn" type="button" data-i18n="coachSignOut">Sign out</button>
+        </div>
+
+        <div id="coachCreateAcademy" class="coach-hero" hidden>
+          <div class="pro-kicker" data-i18n="coachCreateAcademyKicker">Create academy</div>
+          <p class="coach-lead" data-i18n="coachCreateAcademyLead">One academy per coach on launch. Then add up to 10 teams.</p>
+          <div class="field">
+            <label data-i18n="coachAcademyLabel">Academy name</label>
+            <input id="coachAcademyInput" type="text" maxlength="80" placeholder="Barcelona Academy">
+          </div>
+          <button class="save-btn" id="coachCreateAcademyBtn" type="button" data-i18n="coachCreateAcademyBtn">Create academy</button>
+        </div>
+
+        <div id="coachAcademyHome" hidden>
+          <div class="coach-hero">
+            <div class="pro-kicker">Academy</div>
+            <h2 class="coach-title" id="coachAcademyName"></h2>
+            <div class="field">
+              <label data-i18n="coachTeamLabel">New team</label>
+              <input id="coachTeamInput" type="text" maxlength="60" placeholder="U13 Blue">
+            </div>
+            <div class="field">
+              <label data-i18n="coachAgeLabel">Age group</label>
+              <input id="coachTeamAgeInput" type="text" maxlength="24" placeholder="U13">
+            </div>
+            <button class="save-btn" id="coachCreateTeamBtn" type="button" data-i18n="coachCreateTeamBtn">Add team</button>
+            <div id="coachTeamList" class="coach-team-list"></div>
+          </div>
+
+          <div id="coachTeamPane" class="coach-hero" hidden>
+            <div class="pro-kicker" data-i18n="coachRosterKicker">Team roster</div>
+            <h3 class="coach-team-heading" id="coachTeamTitle"></h3>
+            <p class="hint" data-i18n="coachInviteCodeHint">Team invite code (parents later):</p>
+            <p class="coach-code" id="coachTeamCode"></p>
+            <div class="coach-player-form">
+              <input id="coachPlayerFirst" type="text" maxlength="40" data-i18n-placeholder="coachFirstPh" placeholder="First name">
+              <input id="coachPlayerLast" type="text" maxlength="40" data-i18n-placeholder="coachLastPh" placeholder="Last name">
+              <input id="coachPlayerNumber" type="text" maxlength="4" inputmode="numeric" placeholder="#">
+              <input id="coachPlayerPos" type="text" maxlength="8" placeholder="RW">
+            </div>
+            <button class="save-btn" id="coachAddPlayerBtn" type="button" data-i18n="coachAddPlayerBtn">Add player</button>
+            <div id="coachPlayerList" class="coach-player-list"></div>
+            <p class="hint" data-i18n="coachPhase1Note">Phase 1: academy, teams, roster. Matches, analytics and parent invite come next.</p>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -756,6 +828,9 @@ window.ffkIsNative = function () {
 <script src="js/rating.js"></script>
 <script src="js/metric-icons.js"></script>
 <script src="js/storage.js"></script>
+<script src="js/coach-config.js"></script>
+<script src="js/coach-store.js"></script>
+<script src="js/coach-ui.js"></script>
 <script src="js/app.js"></script>
 <script>
 if (typeof emptyForm !== 'function' || typeof loadSettings !== 'function') {

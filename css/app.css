@@ -1191,7 +1191,45 @@
   .coach-price-year{box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--card-accent) 45%, transparent);}
   .coach-limits{margin:0 0 14px;}
   #coachStartBtn{width:100%;margin:0 0 10px;}
-  #coachSoonHint{margin:0;}
+  #coachSoonHint,#coachModeHint{margin:0;}
+  .coach-panel{margin-top:12px;}
+  .coach-auth-actions{display:grid;gap:8px;margin-top:4px;}
+  .coach-session-bar{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;
+    margin:0 0 12px;padding:10px 12px;border-radius:14px;
+    background:var(--card-paper);border:1px solid var(--card-line);color:var(--card-ink);
+    font-size:.82rem;font-weight:700;
+  }
+  .coach-session-bar .ghost-btn{margin:0;padding:8px 12px;width:auto;}
+  .coach-team-list{display:grid;gap:8px;margin-top:14px;}
+  .coach-team-item{
+    display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;
+    padding:12px 14px;border-radius:14px;border:1px solid var(--card-line);
+    background:color-mix(in srgb, var(--card-paper) 92%, var(--card-accent));
+    color:var(--card-ink);font:inherit;cursor:pointer;
+  }
+  .coach-team-item.on{box-shadow:inset 3px 0 0 var(--card-accent);}
+  .coach-team-name{font-weight:800;font-size:.95rem;}
+  .coach-team-meta{font-size:.75rem;font-weight:700;color:var(--card-muted);}
+  .coach-team-heading{margin:6px 0 4px;font-size:1.1rem;font-weight:800;color:var(--card-ink);}
+  .coach-code{
+    margin:0 0 12px;font-size:1.35rem;font-weight:800;letter-spacing:.18em;color:var(--card-accent);
+  }
+  .coach-player-form{
+    display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 0 10px;
+  }
+  .coach-player-form input{
+    width:100%;box-sizing:border-box;padding:11px 12px;border-radius:12px;
+    border:1px solid var(--card-line);background:var(--surface);color:var(--text);font:inherit;font-weight:600;
+  }
+  .coach-player-list{display:grid;gap:8px;margin:12px 0 8px;}
+  .coach-player-row{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;
+    padding:10px 12px;border-radius:12px;border:1px solid var(--card-line);
+  }
+  .coach-player-main{display:flex;flex-direction:column;gap:2px;min-width:0;}
+  .coach-player-main b{font-size:.92rem;}
+  .coach-player-main span{font-size:.75rem;font-weight:700;color:var(--card-muted);}
   .pro-lock{
     margin:0 0 14px;padding:16px 14px 14px 18px;border-radius:18px;text-align:left;
     background:var(--card-paper);color:var(--card-ink);
