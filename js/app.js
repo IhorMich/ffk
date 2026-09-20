@@ -3595,7 +3595,7 @@ function playIntro(){
   el.classList.add('play');
   requestAnimationFrame(() => requestAnimationFrame(hideNativeSplash));
   el.addEventListener('click', finishIntro, {once:true});
-  window.setTimeout(finishIntro, 6800);
+  window.setTimeout(finishIntro, 8200);
   return true;
 }
 function finishOnboard(){
