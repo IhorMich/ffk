@@ -136,10 +136,18 @@
         address: String(payload.address || '').slice(0, 120),
         venue: payload.venue === 'away' ? 'away' : 'home',
         kind: String(payload.kind || 'league').slice(0, 16),
+        meetup: String(payload.meetup || '').slice(0, 8),
+        kickoff: String(payload.kickoff || '').slice(0, 8),
+        tournament: String(payload.tournament || '').slice(0, 48),
         score: String(payload.score || '').slice(0, 16),
         rating: Number(payload.rating) || 0,
         comment: String(payload.comment || '').slice(0, 400),
+        match_comment: String(payload.match_comment || '').slice(0, 400),
         pitchPos: String(payload.pitchPos || '').slice(0, 8),
+        minutes: Math.min(120, Math.max(0, Number(payload.minutes) || 0)),
+        role: payload.role === 'sub' ? 'sub' : 'start',
+        format: String(payload.format || '').slice(0, 16),
+        match_len: Math.min(120, Math.max(0, Number(payload.match_len) || 0)),
         status: existing && existing.status === 'read' && !payload.forceUnread
           ? 'read'
           : 'delivered',

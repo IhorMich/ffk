@@ -811,13 +811,34 @@
       const match = this.getMatch(session, matchId);
       const rating = this.getRatingForPlayer(session, matchId, teamPlayerId);
       if(!rating) return null;
+      // Results are game-only: never include entry fee from the invite payload.
       return {
-        ...base,
+        match_id: base.match_id,
+        team_id: base.team_id,
+        team_player_id: base.team_player_id,
+        player_name: base.player_name,
+        academy_name: base.academy_name,
+        team_name: base.team_name,
+        team_code: base.team_code,
+        coach_name: base.coach_name,
+        date: base.date,
+        opponent: base.opponent,
+        address: base.address || '',
+        venue: base.venue,
+        kind: base.kind,
+        meetup: base.meetup || '',
+        kickoff: base.kickoff || '',
+        tournament: base.tournament || '',
         type: 'match_result',
         score: match ? (match.score || '') : '',
         rating: Number(rating.rating) || 0,
         comment: String(rating.comment || '').slice(0, 400),
-        pitchPos: String(rating.pitchPos || '').slice(0, 8)
+        match_comment: match ? String(match.comment || '').trim().slice(0, 400) : '',
+        pitchPos: String(rating.pitchPos || '').slice(0, 8),
+        minutes: Math.min(120, Math.max(0, Number(rating.minutes) || 0)),
+        role: rating.role === 'sub' ? 'sub' : 'start',
+        format: String(rating.format || '').slice(0, 16),
+        match_len: Math.min(120, Math.max(0, Number(rating.matchLen) || 0))
       };
     },
     deliverMatchResults(session, matchId, opts){

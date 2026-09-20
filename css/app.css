@@ -1883,6 +1883,9 @@
   .parent-msg-row.result{box-shadow:inset 3px 0 0 color-mix(in srgb, var(--card-accent) 55%, #2f9e44);}
   .parent-msg-result{margin:12px 0;}
   .parent-msg-result .coach-analytics-sum{grid-template-columns:repeat(2,1fr);}
+  .parent-msg-result.has-mins .coach-analytics-sum{grid-template-columns:repeat(3,1fr);}
+  .parent-msg-comments{margin:14px 0 4px;}
+  .parent-msg-comments .parent-msg-comment + .parent-msg-comment{margin-top:10px;}
   .parent-msg-comment{
     margin:10px 0 0;padding:12px 14px;border-radius:14px;
     border:1px solid color-mix(in srgb, var(--card-accent) 24%, var(--card-line));

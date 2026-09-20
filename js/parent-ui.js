@@ -180,18 +180,46 @@
       return `<p class="parent-msg-detail"><b>${esc(label)}</b><span>${esc(value)}</span></p>`;
     };
 
+    let pitchLab = msg.pitchPos || '';
+    try{
+      if(msg.pitchPos && typeof pitchPosLabelShort === 'function'){
+        pitchLab = pitchPosLabelShort(msg.pitchPos) || msg.pitchPos;
+      }
+    }catch(e){}
+    const roleLab = msg.role === 'sub'
+      ? tt('roleSub', 'Off the bench')
+      : (msg.role === 'start' ? tt('roleStart', 'Started') : '');
+    const minutesLab = Number(msg.minutes) > 0 ? String(Number(msg.minutes)) : '';
+
     const resultBlock = isResult
-      ? `<div class="parent-msg-result">
+      ? `<div class="parent-msg-result${minutesLab ? ' has-mins' : ''}">
           <div class="coach-analytics-sum">
             <div><b>${esc(msg.score || '—')}</b><span>${esc(tt('labelScore', 'Score'))}</span></div>
             <div><b>${esc(msg.rating ? Number(msg.rating).toFixed(1) : '—')}</b><span>${esc(tt('coachQuickScore', 'Rating'))}</span></div>
+            ${minutesLab ? `<div><b>${esc(minutesLab)}</b><span>${esc(tt('labelMin', 'Minutes'))}</span></div>` : ''}
           </div>
-          ${msg.comment ? `<div class="parent-msg-comment">
-            <span class="parent-msg-comment-kicker">${esc(tt('parentMsgCommentKicker', 'Coach comment'))}</span>
-            <p class="parent-msg-comment-text">${esc(msg.comment)}</p>
-          </div>` : ''}
         </div>`
       : '';
+
+    const commentsBlock = (() => {
+      const matchNote = String(msg.match_comment || '').trim();
+      const playerNote = String(msg.comment || '').trim();
+      if(!matchNote && !playerNote) return '';
+      const parts = [];
+      if(matchNote){
+        parts.push(`<div class="parent-msg-comment">
+          <span class="parent-msg-comment-kicker">${esc(tt('coachMatchComment', 'Match comment'))}</span>
+          <p class="parent-msg-comment-text">${esc(matchNote)}</p>
+        </div>`);
+      }
+      if(playerNote){
+        parts.push(`<div class="parent-msg-comment">
+          <span class="parent-msg-comment-kicker">${esc(tt('parentMsgCommentKicker', 'Coach comment'))}</span>
+          <p class="parent-msg-comment-text">${esc(playerNote)}</p>
+        </div>`);
+      }
+      return `<div class="parent-msg-comments">${parts.join('')}</div>`;
+    })();
 
     const rsvp = msg.rsvp === 'accepted' || msg.rsvp === 'declined' ? msg.rsvp : '';
     const rsvpBlock = !isResult
@@ -221,20 +249,20 @@
         ${detailRow(tt('labelDate', 'Date'), msg.date || '')}
         ${detailRow(tt('coachMatchMeetup', 'Meetup time'), msg.meetup || '')}
         ${detailRow(tt('coachMatchKickoff', 'Kick-off'), msg.kickoff || '')}
-        ${detailRow(
+        ${!isResult ? detailRow(
           tt('coachMatchFee', 'Entry fee'),
           msg.fee_type === 'paid'
             ? (msg.fee
               ? msg.fee
               : tt('coachMatchFeePaid', 'Paid entry'))
             : tt('coachMatchFeeFree', 'Free')
-        )}
+        ) : ''}
         ${detailRow(tt('labelVenue', 'Venue'), venue)}
         ${detailRow(tt('coachMatchKind', 'Match type'), kindLab)}
-        ${!isResult && msg.tournament
+        ${msg.tournament
           ? detailRow(tt('labelCompTournament', 'Tournament'), msg.tournament)
           : ''}
-        ${!isResult && msg.address
+        ${msg.address
           ? detailRow(tt('coachMatchAddress', 'Match address'), msg.address)
           : ''}
         ${(() => {
@@ -246,6 +274,9 @@
           const verified = isCoachVerifiedPerson(first, last) || !!(msg.team_player_id);
           return `<p class="parent-msg-detail"><b>${esc(tt('parentInboxChild', 'Child'))}</b><span>${nameWithVerified(child, verified)}</span></p>`;
         })()}
+        ${isResult && pitchLab ? detailRow(tt('labelPos', 'Position'), pitchLab) : ''}
+        ${isResult && roleLab ? detailRow(tt('labelRole', 'Role'), roleLab) : ''}
+        ${isResult && msg.format ? detailRow(tt('labelFormat', 'Format'), msg.format) : ''}
         ${detailRow(tt('parentCoachLabel', 'Coach'), msg.coach_name || '')}
         ${detailRow(
           tt('parentInboxTeam', 'Team'),
@@ -254,6 +285,7 @@
       </div>
       ${resultBlock}
       ${rsvpBlock}
+      ${isResult ? commentsBlock : ''}
       <button type="button" class="ghost-btn" id="parentMsgCloseBtn">${esc(tt('btnClose', 'Close'))}</button>
     `;
   }
