@@ -307,6 +307,45 @@
       writeDb(db);
       return team;
     },
+    updateTeam(session, teamId, fields){
+      const team = this.getTeam(session, teamId);
+      if(!team) throw new Error('forbidden');
+      if(!this.isAcademyOwner(session)) throw new Error('owner_only');
+      const db = readDb();
+      const row = db.teams.find(t => t.id === teamId);
+      if(!row) throw new Error('forbidden');
+      if(Object.prototype.hasOwnProperty.call(fields, 'name')){
+        const name = String(fields.name || '').trim().slice(0, 60);
+        if(!name) throw new Error('name');
+        row.name = name;
+      }
+      if(Object.prototype.hasOwnProperty.call(fields, 'age_group')){
+        row.age_group = String(fields.age_group || '').trim().slice(0, 24);
+      }
+      writeDb(db);
+      return row;
+    },
+    removeTeam(session, teamId){
+      const team = this.getTeam(session, teamId);
+      if(!team) throw new Error('forbidden');
+      if(!this.isAcademyOwner(session)) throw new Error('owner_only');
+      const db = readDb();
+      const matchIds = new Set(db.team_matches.filter(m => m.team_id === teamId).map(m => m.id));
+      const playerIds = new Set(db.team_players.filter(p => p.team_id === teamId).map(p => p.id));
+      db.teams = db.teams.filter(t => t.id !== teamId);
+      db.team_players = db.team_players.filter(p => p.team_id !== teamId);
+      db.team_matches = db.team_matches.filter(m => m.team_id !== teamId);
+      db.ratings = db.ratings.filter(r => !matchIds.has(r.match_id) && !playerIds.has(r.team_player_id));
+      db.match_invites = db.match_invites.filter(i => i.team_id !== teamId && !matchIds.has(i.match_id));
+      db.parent_invites = db.parent_invites.filter(i => i.team_id !== teamId && !playerIds.has(i.team_player_id));
+      db.memberships = db.memberships.filter(m => m.team_id !== teamId && !playerIds.has(m.team_player_id));
+      if(db.activeTeamId === teamId){
+        const next = db.teams.find(t => t.academy_id === team.academy_id);
+        db.activeTeamId = next ? next.id : '';
+      }
+      if(matchIds.has(db.activeMatchId)) db.activeMatchId = '';
+      writeDb(db);
+    },
     getActiveTeamId(){
       return readDb().activeTeamId || '';
     },

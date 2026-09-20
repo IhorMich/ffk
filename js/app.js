@@ -4001,6 +4001,16 @@ function handleAppBack(){
     if(typeof closeCoachParentInviteSheet === 'function') closeCoachParentInviteSheet();
     return true;
   }
+  if(isElShown('coachTeamMenuSheet') || isElShown('coachTeamMenuBack')){
+    if(typeof closeTeamMenu === 'function') closeTeamMenu();
+    else {
+      const s = document.getElementById('coachTeamMenuSheet');
+      const b = document.getElementById('coachTeamMenuBack');
+      if(s) s.hidden = true;
+      if(b) b.hidden = true;
+    }
+    return true;
+  }
   if(isElShown('coachSettingsSheet')){
     if(typeof closeCoachSettings === 'function') closeCoachSettings();
     return true;

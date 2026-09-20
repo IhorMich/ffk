@@ -266,7 +266,6 @@
     const createBox = document.getElementById('coachCreateAcademy');
     const home = document.getElementById('coachAcademyHome');
     const teamPane = document.getElementById('coachTeamPane');
-    const homeNav = document.getElementById('coachHomeNav');
     const emailEl = document.getElementById('coachSessionEmail');
     if(emailEl) emailEl.textContent = session.email;
 
@@ -274,10 +273,10 @@
       if(createBox) createBox.hidden = false;
       if(home) home.hidden = true;
       if(teamPane) teamPane.hidden = true;
-      if(homeNav) homeNav.hidden = true;
       const homeStatsOff = document.getElementById('coachHomeStats');
       if(homeStatsOff) homeStatsOff.hidden = true;
       closeCoachSettings();
+      closeTeamMenu();
       return;
     }
     if(createBox) createBox.hidden = true;
@@ -340,23 +339,30 @@
       homeMeta.textContent = bits.join(' · ');
     }
 
+    const canAddTeam = !!(store.isAcademyOwner && store.isAcademyOwner(session));
     const teamListHtml = !teams.length
-      ? `<p class="hint">${esc(tt('coachNoTeams', 'No teams yet. Create the first one.'))}</p>`
+      ? `<div class="inbox-empty coach-tab-empty">${esc(tt('coachNoTeams', 'No teams'))}</div>`
       : teams.map(t => {
-          const on = t.id === activeId ? ' on' : '';
+          const on = t.id === activeId;
           const n = store.listPlayers(session, t.id).length;
           const maxP = typeof COACH_MAX_PLAYERS_PER_TEAM === 'number' ? COACH_MAX_PLAYERS_PER_TEAM : 50;
-          return `<button type="button" class="coach-team-item${on}" data-team="${esc(t.id)}">
-            <span class="coach-team-name">${esc(t.name)}${t.age_group ? ` · ${esc(t.age_group)}` : ''}</span>
-            <span class="coach-team-meta">${n}/${maxP} · ${esc(t.invite_code)}</span>
-          </button>`;
+          const activeLab = on ? `<span class="coach-team-active">${esc(tt('coachTeamActive', 'Active'))}</span>` : '';
+          const menuBtn = canAddTeam
+            ? `<button type="button" class="coach-team-more" data-team-menu="${esc(t.id)}" aria-label="${esc(tt('coachTeamMenuAria', 'Team menu'))}">⋯</button>`
+            : '';
+          return `<div class="coach-team-item${on ? ' on' : ''}">
+            <button type="button" class="coach-team-main" data-team="${esc(t.id)}">
+              <span class="coach-team-name">${esc(t.name)}${t.age_group ? ` · ${esc(t.age_group)}` : ''}</span>
+              <span class="coach-team-meta">${n}/${maxP}${activeLab ? ` · ` : ''}${activeLab}</span>
+            </button>
+            ${menuBtn}
+          </div>`;
         }).join('');
     const list = document.getElementById('coachTeamList');
     if(list) list.innerHTML = teamListHtml;
     const settingsList = document.getElementById('coachSettingsTeamList');
     if(settingsList) settingsList.innerHTML = teamListHtml;
 
-    const canAddTeam = !!(store.isAcademyOwner && store.isAcademyOwner(session));
     const addBtn = document.getElementById('coachAddTeamBtn');
     if(addBtn){
       addBtn.hidden = !canAddTeam;
@@ -372,7 +378,6 @@
     }
 
     if(teamPane) teamPane.hidden = !active;
-    if(homeNav) homeNav.hidden = !active;
     if(active){
       renderTeamPane(session, active);
       renderMatchPane(session, active);
@@ -425,12 +430,21 @@
     if(stats) stats.innerHTML = `<p class="hint">${esc(tt('coachPickTeamFirst', 'Pick a team in the Coach tab first.'))}</p>`;
   }
 
+  function setPlayerFormOpen(on){
+    const wrap = document.getElementById('coachPlayerFormWrap');
+    const showBtn = document.getElementById('coachShowAddPlayerBtn');
+    if(wrap) wrap.hidden = !on;
+    if(showBtn) showBtn.hidden = !!on;
+    if(on){
+      try{ document.getElementById('coachPlayerFirst')?.focus(); }catch(e){}
+    }
+  }
   function renderTeamPane(session, team){
     const store = global.CoachStore;
     const title = document.getElementById('coachTeamTitle');
     const code = document.getElementById('coachTeamCode');
     if(title) title.textContent = team.name + (team.age_group ? ` · ${team.age_group}` : '');
-    if(code) code.textContent = team.invite_code;
+    if(code) code.textContent = team.invite_code || '—';
     const posSel = document.getElementById('coachPlayerPos');
     if(posSel && typeof fillPitchSelect === 'function'){
       const keep = posSel.value;
@@ -439,10 +453,13 @@
 
     const players = store.listPlayers(session, team.id);
     syncRosterFoldUi(players.length);
+    const formWrap = document.getElementById('coachPlayerFormWrap');
+    // Keep form closed unless user opened it (and it's currently visible).
+    if(formWrap && formWrap.hidden) setPlayerFormOpen(false);
     const el = document.getElementById('coachPlayerList');
     if(!el) return;
     if(!players.length){
-      el.innerHTML = `<p class="hint">${esc(tt('coachNoPlayers', 'Add players to this team.'))}</p>`;
+      el.innerHTML = `<div class="inbox-empty coach-tab-empty">${esc(tt('coachNoPlayers', 'No players'))}</div>`;
       return;
     }
     el.innerHTML = players.map(p => {
@@ -1033,7 +1050,7 @@
         const el = document.getElementById(id);
         if(el) el.value = '';
       });
-      document.getElementById('coachPlayerFirst')?.focus();
+      setPlayerFormOpen(false);
       toast(tt('coachPlayerAdded', 'Player added.'));
       renderCoachUi();
     }catch(e){
@@ -1042,6 +1059,108 @@
         player_limit: tt('coachErrPlayerLimit', 'Player limit for this team.')
       };
       toast(map[e.message] || tt('coachErrGeneric', 'Could not add player.'));
+    }
+  }
+
+  let teamMenuId = '';
+  function openTeamMenu(teamId){
+    const store = global.CoachStore;
+    const session = store.getSession();
+    const team = store.getTeam(session, teamId);
+    if(!team) return;
+    teamMenuId = team.id;
+    const nameEl = document.getElementById('coachTeamRenameInput');
+    const ageEl = document.getElementById('coachTeamRenameAgeInput');
+    if(nameEl) nameEl.value = team.name || '';
+    if(ageEl) ageEl.value = team.age_group || '';
+    const sheet = document.getElementById('coachTeamMenuSheet');
+    const back = document.getElementById('coachTeamMenuBack');
+    if(sheet) sheet.hidden = false;
+    if(back) back.hidden = false;
+    if(typeof pushAppState === 'function') pushAppState('layer');
+  }
+  function closeTeamMenu(){
+    teamMenuId = '';
+    const sheet = document.getElementById('coachTeamMenuSheet');
+    const back = document.getElementById('coachTeamMenuBack');
+    if(sheet) sheet.hidden = true;
+    if(back) back.hidden = true;
+  }
+  function onSaveTeamRename(){
+    if(!teamMenuId) return;
+    const session = global.CoachStore.getSession();
+    try{
+      global.CoachStore.updateTeam(session, teamMenuId, {
+        name: document.getElementById('coachTeamRenameInput')?.value || '',
+        age_group: document.getElementById('coachTeamRenameAgeInput')?.value || ''
+      });
+      toast(tt('coachTeamUpdated', 'Team updated.'));
+      closeTeamMenu();
+      renderCoachUi();
+    }catch(e){
+      const map = {
+        name: tt('coachErrTeamName', 'Enter team name.'),
+        owner_only: tt('coachErrOwnerOnlyTeam', 'Only the academy owner can add teams.')
+      };
+      toast(map[e.message] || tt('coachErrGeneric', 'Could not create team.'));
+    }
+  }
+  function onDeleteTeam(){
+    if(!teamMenuId) return;
+    const ok = window.confirm(tt('coachTeamDeleteConfirm', 'Delete this team and all its players and matches?'));
+    if(!ok) return;
+    const session = global.CoachStore.getSession();
+    try{
+      global.CoachStore.removeTeam(session, teamMenuId);
+      toast(tt('coachTeamDeleted', 'Team deleted.'));
+      closeTeamMenu();
+      renderCoachUi();
+    }catch(e){
+      const map = {
+        owner_only: tt('coachErrOwnerOnlyTeam', 'Only the academy owner can add teams.')
+      };
+      toast(map[e.message] || tt('coachErrGeneric', 'Could not create team.'));
+    }
+  }
+
+  async function copyTeamCode(){
+    const code = document.getElementById('coachTeamCode')?.textContent?.trim() || '';
+    if(!code || code === '—') return;
+    try{
+      await navigator.clipboard.writeText(code);
+      toast(tt('coachCodeCopied', 'Code copied.'));
+    }catch(e){
+      toast(tt('coachErrGeneric', 'Something went wrong.'));
+    }
+  }
+  async function shareTeamCode(){
+    const store = global.CoachStore;
+    const session = store.getSession();
+    const team = store.getTeam(session, store.getActiveTeamId());
+    if(!team || !team.invite_code) return;
+    const title = tt('coachShareCodeTitle', 'Team code');
+    const text = tt('coachShareCodeText', '{team}: {code}')
+      .replace('{team}', team.name || '')
+      .replace('{code}', team.invite_code);
+    try{
+      const C = global.Capacitor;
+      const Share = C && C.Plugins && C.Plugins.Share;
+      if(Share && typeof Share.share === 'function'){
+        await Share.share({title, text, dialogTitle: title});
+        return;
+      }
+    }catch(e){}
+    try{
+      if(navigator.share){
+        await navigator.share({title, text});
+        return;
+      }
+    }catch(e){}
+    try{
+      await navigator.clipboard.writeText(text);
+      toast(tt('coachCodeCopied', 'Code copied.'));
+    }catch(e){
+      toast(tt('coachErrGeneric', 'Something went wrong.'));
     }
   }
   function onSaveProfile(){
@@ -1366,17 +1485,18 @@
   function closeAllCoachOverlays(){
     closeCoachPlayerSheet();
     closeCoachSettings();
+    closeTeamMenu();
     if(typeof closeCoachQuickRate === 'function') closeCoachQuickRate();
     closeCoachParentInviteSheet();
     [
-      'coachSettingsBack','coachRateBack','coachPlayerBack','coachParentInviteBack',
+      'coachSettingsBack','coachRateBack','coachPlayerBack','coachParentInviteBack','coachTeamMenuBack',
       'parentClaimBack','parentLinkBack','parentMsgBack','inboxSheetBack'
     ].forEach(id => {
       const el = document.getElementById(id);
       if(el) el.hidden = true;
     });
     [
-      'coachSettingsSheet','coachRateSheet','coachPlayerSheet','coachParentInviteSheet',
+      'coachSettingsSheet','coachRateSheet','coachPlayerSheet','coachParentInviteSheet','coachTeamMenuSheet',
       'parentClaimSheet','parentLinkSheet','parentMsgSheet','inboxSheet'
     ].forEach(id => {
       const el = document.getElementById(id);
@@ -1767,7 +1887,15 @@
     });
     document.getElementById('coachHomeCreateTeamBtn')?.addEventListener('click', () => { onCreateTeam(true); });
     document.getElementById('coachHomeCreateTeamCancel')?.addEventListener('click', () => { setHomeCreateTeamOpen(false); });
+    document.getElementById('coachShowAddPlayerBtn')?.addEventListener('click', () => { setPlayerFormOpen(true); });
+    document.getElementById('coachAddPlayerCancel')?.addEventListener('click', () => { setPlayerFormOpen(false); });
     document.getElementById('coachAddPlayerBtn')?.addEventListener('click', () => { onAddPlayer(); });
+    document.getElementById('coachCopyCodeBtn')?.addEventListener('click', () => { copyTeamCode(); });
+    document.getElementById('coachShareCodeBtn')?.addEventListener('click', () => { shareTeamCode(); });
+    document.getElementById('coachTeamMenuBack')?.addEventListener('click', () => closeTeamMenu());
+    document.getElementById('coachTeamMenuCloseBtn')?.addEventListener('click', () => closeTeamMenu());
+    document.getElementById('coachTeamRenameSaveBtn')?.addEventListener('click', () => onSaveTeamRename());
+    document.getElementById('coachTeamDeleteBtn')?.addEventListener('click', () => onDeleteTeam());
     document.getElementById('coachRosterToggle')?.addEventListener('click', () => {
       setRosterFolded(!rosterFolded());
       const session = global.CoachStore && global.CoachStore.getSession();
@@ -1956,9 +2084,16 @@
     });
     const pickTeam = (root, closeAfter) => {
       root?.addEventListener('click', e => {
+        const menu = e.target.closest('[data-team-menu]');
+        if(menu){
+          e.preventDefault();
+          openTeamMenu(menu.dataset.teamMenu);
+          return;
+        }
         const btn = e.target.closest('[data-team]');
         if(!btn) return;
         global.CoachStore.setActiveTeamId(btn.dataset.team);
+        setPlayerFormOpen(false);
         renderCoachUi();
         if(closeAfter) closeCoachSettings();
       });
@@ -2051,5 +2186,6 @@
   global.closeCoachParentInviteSheet = closeCoachParentInviteSheet;
   global.closeCoachSettings = closeCoachSettings;
   global.openCoachSettings = openCoachSettings;
+  global.closeTeamMenu = closeTeamMenu;
   global.openCoachChildPlayerPage = openCoachChildPlayerPage;
 })(window);

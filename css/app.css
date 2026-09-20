@@ -1279,12 +1279,50 @@
   .coach-session-bar .ghost-btn{margin:0;padding:8px 12px;width:auto;}
   .coach-team-list{display:grid;gap:8px;margin-top:14px;}
   .coach-team-item{
-    display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;
-    padding:12px 14px;border-radius:14px;border:1px solid var(--card-line);
+    display:flex;align-items:stretch;gap:0;padding:0;overflow:hidden;
+    border-radius:14px;border:1px solid var(--card-line);
     background:color-mix(in srgb, var(--card-paper) 92%, var(--card-accent));
-    color:var(--card-ink);font:inherit;cursor:pointer;
+    color:var(--card-ink);
   }
   .coach-team-item.on{box-shadow:inset 3px 0 0 var(--card-accent);}
+  .coach-team-item.coach-match-item{
+    flex-direction:column;align-items:flex-start;gap:2px;text-align:left;
+    padding:12px 14px;width:100%;font:inherit;cursor:pointer;background:color-mix(in srgb, var(--card-paper) 92%, var(--card-accent));
+  }
+  .coach-team-main{
+    flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:2px;
+    text-align:left;padding:12px 14px;border:0;background:transparent;color:inherit;font:inherit;cursor:pointer;
+  }
+  .coach-team-more{
+    flex-shrink:0;width:44px;border:0;border-left:1px solid var(--card-line);
+    background:transparent;color:var(--card-muted);font-size:1.25rem;font-weight:800;cursor:pointer;
+  }
+  .coach-team-more:active{background:var(--card-wash);}
+  .coach-team-active{
+    display:inline-block;padding:1px 7px;border-radius:999px;font-size:.65rem;font-weight:800;
+    letter-spacing:.02em;text-transform:uppercase;color:#86efac;
+    background:rgba(34,197,94,.18);border:1px solid rgba(34,197,94,.35);
+  }
+  html[data-theme="day"] .coach-team-active{
+    color:#166534;background:rgba(34,197,94,.14);border-color:rgba(22,163,74,.35);
+  }
+  .coach-code-row{
+    display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:10px;
+    margin:0 0 12px;padding:12px;border-radius:14px;border:1px solid var(--card-line);
+    background:color-mix(in srgb, var(--card-paper) 90%, var(--card-accent));
+  }
+  .coach-code-block{min-width:0;flex:1;}
+  .coach-code-lab{
+    display:block;margin:0 0 4px;font-size:.68rem;font-weight:800;letter-spacing:.06em;
+    text-transform:uppercase;color:var(--card-muted);
+  }
+  .coach-code-row .coach-code{margin:0;}
+  .coach-code-actions{display:flex;flex-wrap:wrap;gap:8px;}
+  .coach-code-actions .ghost-btn{width:auto;margin:0;padding:8px 12px;}
+  .coach-player-form-wrap{margin:0 0 12px;}
+  #coachShowAddPlayerBtn{width:100%;margin:0 0 12px;}
+  .sheet-danger{color:var(--danger) !important;border-color:color-mix(in srgb, var(--danger) 35%, var(--card-line)) !important;}
+  .coach-home-nav{display:none !important;}
   .coach-match-item.is-upcoming{box-shadow:inset 3px 0 0 #3b82f6;}
   .coach-match-item.is-win{box-shadow:inset 3px 0 0 #1faa5a;}
   .coach-match-item.is-draw{box-shadow:inset 3px 0 0 #d4a017;}
