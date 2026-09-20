@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ru" class="intro-on">
+<html lang="ru">
 <head>
 <meta charset="UTF-8">
 <script>
@@ -44,9 +44,7 @@ window.ffkIsNative = function () {
 (function () {
   try {
     var s = JSON.parse(localStorage.getItem('ffk_settings') || '{}');
-    if (s.introMark && window.FFK_VERSION && s.introMark === window.FFK_VERSION) {
-      document.documentElement.classList.remove('intro-on');
-    }
+    if (!s.introMark) document.documentElement.classList.add('intro-on');
   } catch (e) {}
 })();
 </script>
@@ -441,7 +439,7 @@ window.ffkIsNative = function () {
     </div>
   </div>
 
-  <div class="intro" id="intro">
+  <div class="intro" id="intro" hidden>
     <div class="intro-ambience" aria-hidden="true"></div>
     <div class="intro-col">
       <div class="intro-stack" aria-hidden="true">
@@ -544,6 +542,17 @@ window.ffkIsNative = function () {
       </div>
     </div>
   </div>
+  <script>
+  (function () {
+    try {
+      var s = JSON.parse(localStorage.getItem('ffk_settings') || '{}');
+      if (!s.introMark) {
+        var el = document.getElementById('intro');
+        if (el) el.hidden = false;
+      }
+    } catch (e) {}
+  })();
+  </script>
   <div class="onboard" id="transfer" hidden>
     <div class="onboard-card">
       <div class="brand-fan" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
