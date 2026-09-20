@@ -610,6 +610,19 @@ window.ffkIsNative = function () {
         </div>
 
         <div id="coachAcademyHome" hidden>
+          <div class="profile-hero coach-media" id="coachProfileMedia">
+            <button class="profile-cover" id="cCoverBtn" type="button" data-i18n-aria="coachCoverAria">
+              <img class="cover-fill" id="cCoverBlur" alt="" hidden>
+              <img class="cover-fit" id="cCoverImg" alt="" hidden>
+              <span class="cover-cta" data-i18n="pAddCover">Добавить фото</span>
+            </button>
+            <div class="avatar-pin" id="cPhotoWrap">
+              <button class="photo-box" id="cPhotoBox" type="button" data-i18n-aria="coachPhotoAria">Т</button>
+            </div>
+            <input type="file" id="c-photo" accept="image/jpeg,image/png,image/webp,image/gif,image/heic,image/heif,.jpg,.jpeg,.png,.webp,.gif,.heic,.heif" hidden>
+            <input type="file" id="c-cover" accept="image/jpeg,image/png,image/webp,image/gif,image/heic,image/heif,.jpg,.jpeg,.png,.webp,.gif,.heic,.heif" hidden>
+          </div>
+
           <div class="coach-home-bar">
             <div class="coach-home-bar-text">
               <div class="pro-kicker" id="coachHomeAcademy">—</div>
@@ -696,21 +709,8 @@ window.ffkIsNative = function () {
         <button type="button" class="ghost-btn coach-settings-close" id="coachSettingsCloseBtn" data-i18n="previewCancel">Закрыть</button>
       </div>
 
-      <div class="profile-hero coach-media" id="coachProfileMedia">
-        <button class="profile-cover" id="cCoverBtn" type="button" data-i18n-aria="coachCoverAria">
-          <img class="cover-fill" id="cCoverBlur" alt="" hidden>
-          <img class="cover-fit" id="cCoverImg" alt="" hidden>
-          <span class="cover-cta" data-i18n="pAddCover">Добавить фото</span>
-        </button>
-        <div class="avatar-pin" id="cPhotoWrap">
-          <button class="photo-box" id="cPhotoBox" type="button" data-i18n-aria="coachPhotoAria">Т</button>
-        </div>
-        <input type="file" id="c-photo" accept="image/jpeg,image/png,image/webp,image/gif,image/heic,image/heif,.jpg,.jpeg,.png,.webp,.gif,.heic,.heif" hidden>
-        <input type="file" id="c-cover" accept="image/jpeg,image/png,image/webp,image/gif,image/heic,image/heif,.jpg,.jpeg,.png,.webp,.gif,.heic,.heif" hidden>
-      </div>
-
-      <p class="hint" data-i18n="coachPhotoHint" style="text-align:center;margin:0 0 12px;">Нажмите на фото или фон, чтобы сменить.</p>
       <div class="pro-kicker" data-i18n="coachProfileKicker">Coach profile</div>
+      <p class="hint" data-i18n="coachPhotoHint">Фото и фон меняются на странице тренера — нажмите на аватар или обложку.</p>
       <div class="row2">
         <div class="field">
           <label data-i18n="coachFirstName">Имя</label>

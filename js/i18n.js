@@ -4182,7 +4182,7 @@ ru:{
       coachPickTeamFirst:'Pick a team in the Coach tab first.',
       coachHistoryKicker:'Team history',
       coachHistoryHint:'Matches of the active team and ratings for players who took part.',
-      coachPhotoHint:'Tap the photo or cover to change it.',
+      coachPhotoHint:'Photo and cover change on the Coach page — tap the avatar or cover.',
       coachPhotoAria:'Coach photo',
       coachCoverAria:'Coach cover'
     },
@@ -4252,7 +4252,7 @@ ru:{
       coachPickTeamFirst:'Сначала выбери команду во вкладке Тренер.',
       coachHistoryKicker:'История команды',
       coachHistoryHint:'Матчи активной команды и оценки игроков, которые принимали участие.',
-      coachPhotoHint:'Нажмите на фото или фон, чтобы сменить.',
+      coachPhotoHint:'Фото и фон меняются на странице тренера — нажмите на аватар или обложку.',
       coachPhotoAria:'Фото тренера',
       coachCoverAria:'Фон профиля тренера'
     },
@@ -4322,7 +4322,7 @@ ru:{
       coachPickTeamFirst:'Спочатку вибери команду у вкладці Тренер.',
       coachHistoryKicker:'Історія команди',
       coachHistoryHint:'Матчі активної команди та оцінки гравців, які брали участь.',
-      coachPhotoHint:'Натисніть на фото або фон, щоб змінити.',
+      coachPhotoHint:'Фото і фон змінюються на сторінці тренера — натисніть на аватар або обкладинку.',
       coachPhotoAria:'Фото тренера',
       coachCoverAria:'Фон профілю тренера'
     }
