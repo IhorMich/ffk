@@ -4394,6 +4394,9 @@ ru:{
 
       coachAssistantsKicker:'Assistants',
       coachMatchBack:'← Back to list',
+      coachEditPlayerBtn:'Edit player',
+      coachHideEditPlayer:'Hide edit',
+      coachEditPlayerFirst:'Edit the player, then save.',
       coachAssistantsHint:'Up to 2 assistants. Invite by email — they get code MC-XXXXXX.',
       coachAssistantEmail:'Assistant email',
       coachAssistantName:'Name (optional)',
@@ -4573,6 +4576,9 @@ ru:{
 
       coachAssistantsKicker:'Ассистенты',
       coachMatchBack:'← К списку',
+      coachEditPlayerBtn:'Редактировать',
+      coachHideEditPlayer:'Скрыть правку',
+      coachEditPlayerFirst:'Сначала открой правку, потом сохрани.',
       coachAssistantsHint:'До 2 ассистентов. Пригласи по email — им придёт код MC-XXXXXX.',
       coachAssistantEmail:'Email ассистента',
       coachAssistantName:'Имя (необязательно)',
@@ -4752,6 +4758,9 @@ ru:{
 
       coachAssistantsKicker:'Асистенти',
       coachMatchBack:'← До списку',
+      coachEditPlayerBtn:'Редагувати',
+      coachHideEditPlayer:'Сховати правку',
+      coachEditPlayerFirst:'Спочатку відкрий правку, потім збережи.',
       coachAssistantsHint:'До 2 асистентів. Запросіть за email — вони отримають код MC-XXXXXX.',
       coachAssistantEmail:'Email асистента',
       coachAssistantName:'Імʼя (необовʼязково)',

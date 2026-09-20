@@ -1609,6 +1609,16 @@
     width:100%;margin:0 0 8px;color:#c0392b;border-color:color-mix(in srgb, #c0392b 35%, var(--card-line));
   }
   #coachOpenChildPageBtn,#coachAddParentBtn{width:100%;margin:8px 0;}
+  .coach-player-sheet-actions{
+    display:grid;gap:8px;margin:12px 0 0;
+  }
+  .coach-player-sheet-actions .save-btn,
+  .coach-player-sheet-actions .ghost-btn{width:100%;margin:0;}
+  .coach-player-edit-block{
+    margin-top:12px;padding-top:12px;border-top:1px solid var(--card-line);
+  }
+  .coach-player-edit-block .save-btn,
+  .coach-player-edit-block .ghost-btn{width:100%;margin:8px 0 0;}
   .coach-child-page{padding-bottom:8px;}
   .coach-child-banner{
     display:flex;align-items:flex-start;justify-content:space-between;gap:12px;

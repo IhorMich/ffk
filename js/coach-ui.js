@@ -1257,10 +1257,12 @@
   }
 
   let detailPlayerId = '';
+  let detailEditOpen = false;
   let parentInviteRow = null;
 
   function closeCoachPlayerSheet(){
     detailPlayerId = '';
+    detailEditOpen = false;
     const sheet = document.getElementById('coachPlayerSheet');
     const back = document.getElementById('coachPlayerBack');
     if(sheet) sheet.hidden = true;
@@ -1286,7 +1288,7 @@
       if(el) el.hidden = true;
     });
   }
-  function openCoachPlayerSheet(playerId){
+  function openCoachPlayerSheet(playerId, opts){
     const store = global.CoachStore;
     const session = store && store.getSession();
     const detail = session && store.playerDetail(session, playerId);
@@ -1294,13 +1296,29 @@
       toast(tt('coachErrGeneric', 'Something went wrong.'));
       return;
     }
+    opts = opts || {};
+    // From Stats — go straight to the ratings page (no edit form).
+    if(opts.viewRatings){
+      openCoachChildPlayerPage(playerId);
+      return;
+    }
     detailPlayerId = playerId;
+    if(typeof opts.editOpen === 'boolean') detailEditOpen = opts.editOpen;
     const sheet = document.getElementById('coachPlayerSheet');
     const back = document.getElementById('coachPlayerBack');
     const body = document.getElementById('coachPlayerBody');
     if(!sheet || !body) return;
     const p = detail.player;
     const label = [p.first_name, p.last_name].filter(Boolean).join(' ');
+    const posLab = p.position && typeof pitchPosLabelShort === 'function'
+      ? pitchPosLabelShort(p.position)
+      : (p.position || '');
+    const metaBits = [
+      p.number ? `#${p.number}` : '',
+      posLab,
+      detail.team && detail.team.name,
+      detail.academy && detail.academy.name
+    ].filter(Boolean).join(' · ');
     const ratingsHtml = detail.ratings.length
       ? detail.ratings.slice(0, 12).map(r => {
           const head = [r.date, r.opponent, r.score].filter(Boolean).join(' · ');
@@ -1321,23 +1339,24 @@
           </div>`;
         }).join('')
       : `<p class="hint">${esc(tt('coachPlayerNoRatings', 'No ratings for this player yet.'))}</p>`;
+    const editBlock = detailEditOpen
+      ? `<div class="coach-player-edit-block">
+          <div class="coach-player-form coach-player-edit">
+            <input id="coachEditFirst" type="text" maxlength="40" value="${esc(p.first_name || '')}" data-i18n-placeholder="coachFirstPh" placeholder="First name">
+            <input id="coachEditLast" type="text" maxlength="40" value="${esc(p.last_name || '')}" data-i18n-placeholder="coachLastPh" placeholder="Last name">
+            <input id="coachEditNumber" type="text" maxlength="4" inputmode="numeric" value="${esc(p.number || '')}" placeholder="#">
+            <input id="coachEditContact" type="text" maxlength="80" value="${esc(p.contact || '')}" data-i18n-placeholder="coachContactPh" placeholder="Parent phone or email">
+            <select id="coachEditPos" class="coach-pos-select" aria-label="position"></select>
+          </div>
+          <button type="button" class="save-btn" id="coachSavePlayerBtn">${esc(tt('coachSavePlayer', 'Save player'))}</button>
+          <button type="button" class="ghost-btn" id="coachCancelEditPlayerBtn">${esc(tt('previewCancel', 'Cancel'))}</button>
+        </div>`
+      : '';
     body.innerHTML = `
       <div class="sheet-grab" aria-hidden="true"><span></span></div>
       <div class="pro-kicker">${esc(tt('coachPlayerDetailKicker', 'Player'))}</div>
       <h3 class="coach-rate-name" id="coachPlayerSheetTitle">${esc(label)}</h3>
-      <p class="hint">${esc([
-        detail.team && detail.team.name,
-        detail.academy && detail.academy.name
-      ].filter(Boolean).join(' · '))}</p>
-      <div class="pro-kicker">${esc(tt('coachEditPlayerKicker', 'Edit player'))}</div>
-      <div class="coach-player-form coach-player-edit">
-        <input id="coachEditFirst" type="text" maxlength="40" value="${esc(p.first_name || '')}" data-i18n-placeholder="coachFirstPh" placeholder="First name">
-        <input id="coachEditLast" type="text" maxlength="40" value="${esc(p.last_name || '')}" data-i18n-placeholder="coachLastPh" placeholder="Last name">
-        <input id="coachEditNumber" type="text" maxlength="4" inputmode="numeric" value="${esc(p.number || '')}" placeholder="#">
-        <input id="coachEditContact" type="text" maxlength="80" value="${esc(p.contact || '')}" data-i18n-placeholder="coachContactPh" placeholder="Parent phone or email">
-        <select id="coachEditPos" class="coach-pos-select" aria-label="position"></select>
-      </div>
-      <button type="button" class="save-btn" id="coachSavePlayerBtn">${esc(tt('coachSavePlayer', 'Save player'))}</button>
+      <p class="hint">${esc(metaBits)}</p>
       <div class="coach-analytics-sum coach-analytics-sum-4">
         <div><b>${esc(detail.games)}</b><span>${esc(tt('coachGames', 'games'))}</span></div>
         <div><b>${esc(fmtScore(detail.avg))}</b><span>${esc(tt('coachStatAvgShort', 'avg'))}</span></div>
@@ -1353,14 +1372,20 @@
       ${detail.topMoments && detail.topMoments.length ? `<div class="coach-stat-section"><div class="pro-kicker">${esc(tt('coachPlayerMomentsKicker', 'Key moments'))}</div>${momentsHtml(detail.topMoments)}</div>` : ''}
       <div class="pro-kicker">${esc(tt('coachPlayerRatingsKicker', 'Recent ratings'))}</div>
       <div class="coach-player-list">${ratingsHtml}</div>
-      <button type="button" class="save-btn" id="coachOpenChildPageBtn">${esc(tt('coachOpenChildPage', 'Open player page'))}</button>
-      <button type="button" class="save-btn" id="coachAddParentBtn">${esc(tt('coachAddParentBtn', 'Add parent / guardian'))}</button>
-      <button type="button" class="ghost-btn coach-remove-player" id="coachRemovePlayerBtn">${esc(tt('coachRemovePlayer', 'Remove player'))}</button>
-      <button type="button" class="ghost-btn" id="coachPlayerCloseBtn">${esc(tt('previewCancel', 'Cancel'))}</button>
+      <div class="coach-player-sheet-actions">
+        <button type="button" class="save-btn" id="coachOpenChildPageBtn">${esc(tt('coachOpenChildPage', 'Open player page'))}</button>
+        <button type="button" class="ghost-btn" id="coachToggleEditPlayerBtn">${esc(detailEditOpen ? tt('coachHideEditPlayer', 'Hide edit') : tt('coachEditPlayerBtn', 'Edit player'))}</button>
+        <button type="button" class="ghost-btn" id="coachAddParentBtn">${esc(tt('coachAddParentBtn', 'Add parent / guardian'))}</button>
+        <button type="button" class="ghost-btn coach-remove-player" id="coachRemovePlayerBtn">${esc(tt('coachRemovePlayer', 'Remove player'))}</button>
+        <button type="button" class="ghost-btn" id="coachPlayerCloseBtn">${esc(tt('previewCancel', 'Close'))}</button>
+      </div>
+      ${editBlock}
     `;
-    const posSel = document.getElementById('coachEditPos');
-    if(posSel && typeof fillPitchSelect === 'function'){
-      fillPitchSelect(posSel, p.position || 'RW', true);
+    if(detailEditOpen){
+      const posSel = document.getElementById('coachEditPos');
+      if(posSel && typeof fillPitchSelect === 'function'){
+        fillPitchSelect(posSel, p.position || 'RW', true);
+      }
     }
     sheet.hidden = false;
     if(back) back.hidden = false;
@@ -1372,25 +1397,31 @@
     const store = global.CoachStore;
     const session = store.getSession();
     if(!session) return;
-    const first = document.getElementById('coachEditFirst')?.value || '';
+    const firstEl = document.getElementById('coachEditFirst');
+    if(!firstEl){
+      detailEditOpen = true;
+      openCoachPlayerSheet(detailPlayerId, {editOpen: true});
+      toast(tt('coachEditPlayerFirst', 'Edit the player, then save.'));
+      return;
+    }
+    const first = firstEl.value || '';
     const last = document.getElementById('coachEditLast')?.value || '';
     const number = document.getElementById('coachEditNumber')?.value || '';
     const contact = document.getElementById('coachEditContact')?.value || '';
     const position = document.getElementById('coachEditPos')?.value || '';
     try{
-      const player = store.updatePlayer(session, detailPlayerId, {
+      store.updatePlayer(session, detailPlayerId, {
         first_name: first,
         last_name: last,
         number,
         contact,
         position
       });
-      const title = document.getElementById('coachPlayerSheetTitle');
-      if(title){
-        title.textContent = [player.first_name, player.last_name].filter(Boolean).join(' ');
-      }
       toast(tt('coachPlayerSaved', 'Player saved.'));
+      detailEditOpen = false;
+      const keepId = detailPlayerId;
       renderCoachUi();
+      openCoachPlayerSheet(keepId, {editOpen: false});
     }catch(e){
       const map = {
         name: tt('coachErrPlayerName', 'Enter first name.'),
@@ -1808,7 +1839,7 @@
       }
       const statsPlayer = e.target.closest('#coachStatsBoard [data-open-player]');
       if(statsPlayer){
-        openCoachPlayerSheet(statsPlayer.dataset.openPlayer);
+        openCoachPlayerSheet(statsPlayer.dataset.openPlayer, {viewRatings: true});
         return;
       }
       const rateBtn = e.target.closest('.js-cm-rates [data-rate-player]');
@@ -1843,6 +1874,16 @@
     document.getElementById('coachPlayerBody')?.addEventListener('click', e => {
       if(e.target.closest('#coachPlayerCloseBtn')){
         closeCoachPlayerSheet();
+        return;
+      }
+      if(e.target.closest('#coachToggleEditPlayerBtn') && detailPlayerId){
+        detailEditOpen = !detailEditOpen;
+        openCoachPlayerSheet(detailPlayerId, {editOpen: detailEditOpen});
+        return;
+      }
+      if(e.target.closest('#coachCancelEditPlayerBtn') && detailPlayerId){
+        detailEditOpen = false;
+        openCoachPlayerSheet(detailPlayerId, {editOpen: false});
         return;
       }
       if(e.target.closest('#coachSavePlayerBtn') && detailPlayerId){
