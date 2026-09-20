@@ -81,7 +81,7 @@
         meetup: String(payload.meetup || '').slice(0, 8),
         kickoff: String(payload.kickoff || '').slice(0, 8),
         fee_type: payload.fee_type === 'paid' ? 'paid' : 'free',
-        fee: payload.fee_type === 'paid' ? String(payload.fee || '').slice(0, 24) : '',
+        fee: payload.fee_type === 'paid' ? String(payload.fee || '').slice(0, 32) : '',
         tournament: String(payload.tournament || '').slice(0, 48),
         // Never persist other children's names on parent messages.
         squad_names: [],

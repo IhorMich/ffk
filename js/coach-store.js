@@ -93,7 +93,7 @@
   function normalizeFee(fields){
     const mode = fields && fields.fee_type === 'paid' ? 'paid' : 'free';
     if(mode !== 'paid') return {fee_type: 'free', fee: ''};
-    return {fee_type: 'paid', fee: String(fields.fee || '').trim().slice(0, 24)};
+    return {fee_type: 'paid', fee: String(fields.fee || '').trim().slice(0, 32)};
   }
   function kickoffMinutes(kickoff){
     const s = normalizeKickoff(kickoff);

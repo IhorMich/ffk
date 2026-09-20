@@ -773,7 +773,7 @@
       scope.querySelector?.('.js-cm-fee')?.value
       || document.getElementById('coachFeeAmount')?.value
       || ''
-    ).trim().slice(0, 24);
+    ).trim().slice(0, 32);
     return {fee_type: 'paid', fee};
   }
   function clearCoachFee(){
@@ -1263,7 +1263,7 @@
     if(type !== 'paid') return {fee_type: 'free', fee: ''};
     return {
       fee_type: 'paid',
-      fee: String(document.getElementById('coachHistoryFeeAmount')?.value || '').trim().slice(0, 24)
+      fee: String(document.getElementById('coachHistoryFeeAmount')?.value || '').trim().slice(0, 32)
     };
   }
   function syncHistoryCompetitionField(){

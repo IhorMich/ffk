@@ -197,7 +197,7 @@ create table if not exists public.team_matches (
   meetup text not null default '' check (char_length(meetup) <= 8),
   kickoff text not null default '' check (char_length(kickoff) <= 8),
   fee_type text not null default 'free' check (fee_type in ('free','paid')),
-  fee text not null default '' check (char_length(fee) <= 24),
+  fee text not null default '' check (char_length(fee) <= 32),
   tournament text not null default '' check (char_length(tournament) <= 48),
   event_id text not null default '' check (char_length(event_id) <= 40),
   comment text not null default '' check (char_length(comment) <= 400),
