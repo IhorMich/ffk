@@ -1834,6 +1834,7 @@
   .coach-stats-record .is-win{box-shadow:inset 3px 0 0 #1faa5a;}
   .coach-stats-record .is-draw{box-shadow:inset 3px 0 0 #8D9AB5;}
   .coach-stats-record .is-loss{box-shadow:inset 3px 0 0 #e25555;}
+  .coach-team-chart{margin:0 0 14px;}
   .coach-history-meta{
     margin:0 0 14px;padding:10px 12px;border-radius:14px;
     border:1px solid var(--card-line);

@@ -1588,6 +1588,106 @@
     return matches;
   }
 
+  function coachTeamChartPoints(session, matches){
+    const store = global.CoachStore;
+    const list = (matches || []).slice().sort((a, b) =>
+      String(a.date || '').localeCompare(String(b.date || '')) ||
+      String(a.id || '').localeCompare(String(b.id || ''))
+    );
+    const points = [];
+    list.forEach(m => {
+      const ratings = store.listRatings(session, m.id);
+      if(!ratings.length) return;
+      const sum = ratings.reduce((s, r) => s + (Number(r.rating) || 0), 0);
+      const avg = Math.round((sum / ratings.length) * 10) / 10;
+      points.push({
+        date: m.date || '',
+        rating: avg,
+        opponent: m.opponent || ''
+      });
+    });
+    return points;
+  }
+
+  function coachChartDateLabel(iso){
+    try{
+      if(typeof chartDateLabel === 'function') return chartDateLabel(iso);
+    }catch(e){}
+    const parts = String(iso || '').split('-');
+    if(parts.length < 3) return '';
+    return `${parts[2]}.${parts[1]}`;
+  }
+
+  function coachCssVar(name, fallback){
+    try{
+      if(typeof cssVar === 'function') return cssVar(name, fallback);
+    }catch(e){}
+    try{
+      const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+      if(v) return v;
+    }catch(e){}
+    return fallback;
+  }
+
+  function coachFmtChartNum(n, digits){
+    try{
+      if(typeof fmtNum === 'function') return fmtNum(n, digits);
+    }catch(e){}
+    const d = Number.isFinite(digits) ? digits : 1;
+    return Number(n).toFixed(d);
+  }
+
+  function drawCoachTeamChart(list){
+    const svg = document.getElementById('coachTeamChartSvg');
+    if(!svg) return;
+    const points = Array.isArray(list) ? list : [];
+    if(points.length < 2){
+      const msg = points.length
+        ? tt('chartNeed', 'Need {n} matches for the chart').replace('{n}', '2')
+        : tt('chartEmpty', 'No data yet');
+      svg.innerHTML = `<text x="160" y="100" text-anchor="middle" font-size="12" fill="${coachCssVar('--text-soft','#8D9AB5')}">${esc(msg)}</text>`;
+      return;
+    }
+    const w = 320, h = 200, padL = 36, padR = 14, padT = 14, padB = 30;
+    const ratings = points.map(p => Number(p.rating) || 0);
+    let yMin = Math.min(...ratings);
+    let yMax = Math.max(...ratings);
+    if(yMax - yMin < 0.6){
+      const mid = (yMax + yMin) / 2;
+      yMin = mid - 0.4;
+      yMax = mid + 0.4;
+    }else{
+      yMin -= 0.2;
+      yMax += 0.2;
+    }
+    yMin = Math.max(0, yMin);
+    yMax = Math.min(10, yMax);
+    const innerW = w - padL - padR;
+    const innerH = h - padT - padB;
+    const xAt = i => padL + (points.length === 1 ? innerW / 2 : i * innerW / (points.length - 1));
+    const yAt = r => padT + (1 - (r - yMin) / (yMax - yMin)) * innerH;
+    const ticks = 4;
+    let grid = '';
+    for(let i = 0; i <= ticks; i++){
+      const val = yMin + (yMax - yMin) * (i / ticks);
+      const y = yAt(val);
+      grid += `<line x1="${padL}" y1="${y.toFixed(1)}" x2="${w - padR}" y2="${y.toFixed(1)}" stroke="rgba(255,255,255,.08)"/>
+        <text x="${padL - 6}" y="${y + 3}" font-size="9" fill="${coachCssVar('--text-soft','#8D9AB5')}" text-anchor="end">${esc(coachFmtChartNum(val, 1))}</text>`;
+    }
+    const xs = points.map((_, i) => xAt(i));
+    const ys = ratings.map(r => yAt(r));
+    const path = `<path d="${xs.map((x, i) => `${i === 0 ? 'M' : 'L'}${x.toFixed(1)},${ys[i].toFixed(1)}`).join(' ')}" fill="none" stroke="${coachCssVar('--accent','#E8C56A')}" stroke-width="2.5"/>`;
+    const step = points.length > 10 ? Math.ceil(points.length / 8) : 1;
+    const dots = xs.map((x, i) =>
+      `<circle cx="${x.toFixed(1)}" cy="${ys[i].toFixed(1)}" r="${i === xs.length - 1 ? 5 : 3.2}" fill="${i === xs.length - 1 ? coachCssVar('--gold','#F5B942') : coachCssVar('--accent','#E8C56A')}"/>`
+    ).join('');
+    const labels = xs.map((x, i) => {
+      if(i !== 0 && i !== xs.length - 1 && i % step) return '';
+      return `<text x="${x.toFixed(1)}" y="${h - 8}" font-size="9" fill="${coachCssVar('--text-soft','#8D9AB5')}" text-anchor="middle">${esc(coachChartDateLabel(points[i].date))}</text>`;
+    }).join('');
+    svg.innerHTML = `${grid}${path}${dots}${labels}`;
+  }
+
   function renderAnalyticsPane(session, team){
     const store = global.CoachStore;
     document.querySelectorAll('#coachStatsPeriod [data-coach-stats-period]').forEach(btn => {
@@ -1595,6 +1695,7 @@
     });
     const filtered = coachStatsFilteredMatches(session, team);
     const a = store.teamAnalytics(session, team.id, {matchIds: filtered.map(m => m.id)});
+    const chartPoints = coachTeamChartPoints(session, filtered);
     const avg = fmtScore(a.avg);
     const rec = a.record || {win: 0, draw: 0, loss: 0};
     const recordHtml = (rec.win + rec.draw + rec.loss)
@@ -1651,6 +1752,12 @@
         }).join('')}</div>`
       : `<p class="hint">${esc(tt('coachAnalyticsEmpty', 'Rate players in matches to see analytics.'))}</p>`;
 
+    const chartHtml = `
+      <div class="chart-wrap coach-team-chart">
+        <h3>${esc(tt('coachTeamChartTitle', 'Team rating trend'))}</h3>
+        <svg id="coachTeamChartSvg" viewBox="0 0 320 200" role="img" aria-label="${esc(tt('chartAria', 'Rating chart'))}"></svg>
+      </div>`;
+
     let html;
     if(!filtered.length){
       html = `<div class="inbox-empty coach-tab-empty">${esc(tt('coachStatsEmpty', 'No played matches in this period.'))}</div>`;
@@ -1667,6 +1774,7 @@
         <div><b>${esc(fmtScore(a.best))}</b><span>${esc(tt('coachStatBest', 'Best'))}</span></div>
       </div>
       ${recordHtml}
+      ${chartHtml}
       ${band}
       ${momentsBlock}
       <div class="coach-stat-section">
@@ -1676,6 +1784,7 @@
     }
     const statsBoard = document.getElementById('coachStatsBoard');
     if(statsBoard) statsBoard.innerHTML = html;
+    if(filtered.length) drawCoachTeamChart(chartPoints);
     const statsTeam = document.getElementById('coachStatsTeam');
     if(statsTeam) statsTeam.textContent = team.name + (team.age_group ? ` · ${team.age_group}` : '');
   }
