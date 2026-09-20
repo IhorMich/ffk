@@ -3144,7 +3144,12 @@ document.getElementById('openCoachBtn')?.addEventListener('click', () => {
   if(typeof enterCoachMode === 'function') enterCoachMode();
   else showView('coach');
 });
-document.getElementById('coachBackBtn')?.addEventListener('click', () => showView('settings'));
+document.getElementById('coachBackBtn')?.addEventListener('click', () => {
+  if(isCoachPlan() && !(window.CoachStore && window.CoachStore.getSession && window.CoachStore.getSession())){
+    setCoachPlan(false);
+  }
+  showView('settings');
+});
 if(typeof bindCoachUi === 'function') bindCoachUi();
 if(typeof bindParentUi === 'function') bindParentUi();
 document.addEventListener('click', e => {
@@ -4275,6 +4280,13 @@ document.getElementById('transferFile').addEventListener('change', async (e) => 
   e.target.value = '';
 });
 document.getElementById('settingsBtn').addEventListener('click', () => {
+  if(isCoachPlan() && typeof openCoachSettings === 'function'){
+    const session = window.CoachStore && window.CoachStore.getSession && window.CoachStore.getSession();
+    if(session){
+      openCoachSettings();
+      return;
+    }
+  }
   document.getElementById('s-lang').value = settings.lang;
   refreshBackupBanner();
   showView('settings');
@@ -4292,7 +4304,7 @@ document.getElementById('saveSettingsBtn').addEventListener('click', () => {
   applyHeader();
   applyI18n();
   showToast(t('toastSettings'));
-  showView('new');
+  showView(isCoachPlan() ? 'coach' : 'new');
   updateHero();
 });
 

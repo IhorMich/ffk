@@ -1374,6 +1374,7 @@
   html.is-coach .tab-ico-coach{display:block;}
   html:not(.is-coach) .tab-ico-coach{display:none;}
   html.is-coach #coachBackBtn{display:none;}
+  html.is-coach #view-coach #coachBackBtn:not([hidden]){display:inline-flex;}
   html.is-coach #personalMatchRoot,
   html.is-coach #personalHistoryRoot,
   html.is-coach #personalStatsRoot{display:none !important;}
@@ -1441,6 +1442,13 @@
     stroke-linecap:round;stroke-linejoin:round;
   }
   .coach-home-teams{margin-bottom:14px;}
+  .coach-home-nav{
+    display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;
+    margin:0 0 14px;
+  }
+  .coach-home-nav .ghost-btn{
+    margin:0;width:100%;padding:10px 8px;font-size:.78rem;border-radius:12px;
+  }
   .coach-settings-head{
     display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 8px;
   }

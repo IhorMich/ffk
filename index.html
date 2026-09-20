@@ -461,7 +461,7 @@ window.ffkIsNative = function () {
           <div class="pro-kicker" data-i18n="coachAnalyticsKicker">Team analytics</div>
           <h3 class="coach-team-heading" id="coachStatsTeam">—</h3>
           <div id="coachStatsBoard" class="coach-analytics"></div>
-          <p class="hint" data-i18n="coachPhase2Note">Phase 2: matches + ratings + team analytics.</p>
+          <p class="hint" data-i18n="coachPhase2Note">Матчи, оценки и аналитика команды. Облако Supabase — следующий шаг.</p>
         </div>
       </div>
     </div>
@@ -572,7 +572,7 @@ window.ffkIsNative = function () {
       <div id="coachAuth" class="coach-panel" hidden>
         <div class="coach-hero">
           <div class="pro-kicker" data-i18n="coachAuthKicker">Coach account</div>
-          <p class="coach-lead" data-i18n="coachAuthLead">Phase 1: account on this phone. Cloud login connects later via Supabase — Personal Free/Pro stay untouched.</p>
+          <p class="coach-lead" data-i18n="coachAuthLead">Аккаунт тренера на этом телефоне. Облачный вход позже через Supabase — Personal Free/Pro не трогаем.</p>
           <div class="field">
             <label data-i18n="coachEmail">Email</label>
             <input id="coachEmail" type="email" autocomplete="username" inputmode="email">
@@ -630,10 +630,16 @@ window.ffkIsNative = function () {
             <p class="hint" data-i18n="coachTeamsSettingsHint">Академия, профиль и новые команды — в настройках ⚙</p>
           </div>
 
+          <div id="coachHomeNav" class="coach-home-nav" hidden>
+            <button type="button" class="ghost-btn" data-go-view="new" data-i18n="tabMatch">Матч</button>
+            <button type="button" class="ghost-btn" data-go-view="history" data-i18n="tabHistory">История</button>
+            <button type="button" class="ghost-btn" data-go-view="stats" data-i18n="tabStats">Статистика</button>
+          </div>
+
           <div id="coachTeamPane" class="coach-hero" hidden>
             <div class="pro-kicker" data-i18n="coachRosterKicker">Team roster</div>
             <h3 class="coach-team-heading" id="coachTeamTitle"></h3>
-            <p class="hint" data-i18n="coachInviteCodeHint">Team invite code (parents later):</p>
+            <p class="hint" data-i18n="coachInviteCodeHint">Код команды для родителя:</p>
             <p class="coach-code" id="coachTeamCode"></p>
             <div class="coach-player-form">
               <input id="coachPlayerFirst" type="text" maxlength="40" data-i18n-placeholder="coachFirstPh" placeholder="First name">
@@ -644,45 +650,7 @@ window.ffkIsNative = function () {
             </div>
             <button class="save-btn" id="coachAddPlayerBtn" type="button" data-i18n="coachAddPlayerBtn">Add player</button>
             <div id="coachPlayerList" class="coach-player-list"></div>
-          </div>
-
-          <div id="coachMatchPane" class="coach-hero" hidden>
-            <div class="pro-kicker" data-i18n="coachMatchKicker">Team matches</div>
-            <p class="hint" data-i18n="coachMatchHint">Создай предстоящий матч, отметь кто играет — приложение отправит им приглашение.</p>
-            <div class="field">
-              <label data-i18n="coachMatchOpponent">Opponent</label>
-              <input id="coachMatchOpponent" class="js-cm-opponent" type="text" maxlength="48" placeholder="Rival FC">
-            </div>
-            <div class="field">
-              <label data-i18n="coachMatchAddress">Адрес матча</label>
-              <input id="coachMatchAddress" class="js-cm-address" type="text" maxlength="120" data-i18n-placeholder="coachMatchAddressPh" placeholder="Стадион / улица, город">
-            </div>
-            <div class="coach-player-form">
-              <input id="coachMatchDate" class="js-cm-date" type="date">
-            </div>
-            <div class="field">
-              <div class="coach-squad-head">
-                <label data-i18n="coachSquadLabel">Кто играет</label>
-                <div class="coach-squad-actions">
-                  <button type="button" class="ghost-btn js-cm-squad-all" data-i18n="coachSquadAll">Все</button>
-                  <button type="button" class="ghost-btn js-cm-squad-none" data-i18n="coachSquadNone">Снять</button>
-                </div>
-              </div>
-              <p class="hint" data-i18n="coachSquadHint">Отметь или сними галочки вручную — кто выходит на матч.</p>
-              <div id="coachSquadPicker" class="js-cm-squad coach-squad-picker"></div>
-            </div>
-            <button class="save-btn js-cm-create" id="coachCreateMatchBtn" type="button" data-i18n="coachCreateMatchInviteBtn">Создать матч и пригласить</button>
-            <button class="ghost-btn js-cm-squad-save" type="button" data-i18n="coachSquadSave" hidden>Сохранить заявку</button>
-            <button class="ghost-btn js-cm-invite-again" type="button" data-i18n="coachInviteAgain" hidden>Отправить приглашения ещё раз</button>
-            <div class="js-cm-invite-box coach-invite-box" hidden></div>
-            <div id="coachMatchList" class="js-cm-matches coach-team-list"></div>
-            <div id="coachRateList" class="js-cm-rates coach-player-list"></div>
-          </div>
-
-          <div id="coachAnalyticsPane" class="coach-hero" hidden>
-            <div class="pro-kicker" data-i18n="coachAnalyticsKicker">Team analytics</div>
-            <div id="coachAnalyticsBoard" class="coach-analytics"></div>
-            <p class="hint" data-i18n="coachPhase2Note">Phase 2: matches + ratings + team analytics. Parent invite and Supabase sync come next.</p>
+            <p class="hint" data-i18n="coachRosterToMatchHint">Матчи и оценки — во вкладке «Матч». История и аналитика — в своих вкладках.</p>
           </div>
         </div>
       </div>
@@ -745,6 +713,12 @@ window.ffkIsNative = function () {
         </div>
         <button class="save-btn" id="coachCreateTeamBtn" type="button" data-i18n="coachCreateTeamBtn">Add team</button>
         <div id="coachSettingsTeamList" class="coach-team-list"></div>
+      </div>
+
+      <div class="coach-settings-block">
+        <div class="pro-kicker" data-i18n="coachAppSettingsKicker">Приложение</div>
+        <p class="hint" data-i18n="coachAppSettingsHint">Тема, язык, Free/Pro и копия данных — в общих настройках Matchcard.</p>
+        <button class="ghost-btn" id="coachOpenAppSettingsBtn" type="button" data-i18n="coachOpenAppSettings">Открыть настройки приложения</button>
       </div>
 
       <div class="coach-settings-block">

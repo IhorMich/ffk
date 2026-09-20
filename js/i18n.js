@@ -3739,8 +3739,8 @@ ru:{
       coachPriceYearHint:'сезон вигідніше',
       coachLimits:'Ліміт на старті: 1 академія · 10 команд · 50 гравців · 2 асистенти',
       coachStart:'Start with Coach',
-      coachSoon:'Скоро: акаунт, хмара і invite батьків. Personal Free/Pro лишаються як є.',
-      coachSoonToast:'Matchcard Coach скоро. Personal Free/Pro уже працюють.'
+      coachSoon:'Coach уже локально. Supabase підключимо окремо — Personal Free/Pro як є.',
+      coachSoonToast:'Matchcard Coach уже працює локально. Personal Free/Pro без змін.'
     },
     pl:{
       planPersonalHead:'Personal',
@@ -3765,8 +3765,8 @@ ru:{
       coachPriceYearHint:'sezon taniej',
       coachLimits:'Limit na start: 1 akademia · 10 zespołów · 50 zawodników · 2 asystentów',
       coachStart:'Start with Coach',
-      coachSoon:'Wkrótce: konto, chmura i invite rodziców. Personal Free/Pro zostaje.',
-      coachSoonToast:'Matchcard Coach wkrótce. Personal Free/Pro już działa.'
+      coachSoon:'Coach działa lokalnie. Supabase osobno — Personal Free/Pro bez zmian.',
+      coachSoonToast:'Matchcard Coach już działa lokalnie. Personal Free/Pro bez zmian.'
     },
     en:{
       planPersonalHead:'Personal',
@@ -3791,8 +3791,8 @@ ru:{
       coachPriceYearHint:'better for a season',
       coachLimits:'Launch limits: 1 academy · 10 teams · 50 players · 2 assistants',
       coachStart:'Start with Coach',
-      coachSoon:'Coming soon: account, cloud and parent invites. Personal Free/Pro stay as they are.',
-      coachSoonToast:'Matchcard Coach is coming. Personal Free/Pro already work.'
+      coachSoon:'Coach is live locally. Connect Supabase when ready — Personal Free/Pro stay as they are.',
+      coachSoonToast:'Matchcard Coach is live locally. Personal Free/Pro stay as they are.'
     },
     ru:{
       planPersonalHead:'Personal',
@@ -3817,8 +3817,8 @@ ru:{
       coachPriceYearHint:'сезон выгоднее',
       coachLimits:'Лимит на старте: 1 академия · 10 команд · 50 игроков · 2 ассистента',
       coachStart:'Start with Coach',
-      coachSoon:'Скоро: аккаунт, облако и invite родителей. Personal Free/Pro остаются как есть.',
-      coachSoonToast:'Matchcard Coach скоро. Personal Free/Pro уже работают.'
+      coachSoon:'Coach уже локально. Supabase подключим отдельно — Personal Free/Pro как есть.',
+      coachSoonToast:'Matchcard Coach уже работает локально. Personal Free/Pro без изменений.'
     },
     es:{
       planPersonalHead:'Personal',
@@ -3843,8 +3843,8 @@ ru:{
       coachPriceYearHint:'mejor por temporada',
       coachLimits:'Límite inicial: 1 academia · 10 equipos · 50 jugadores · 2 asistentes',
       coachStart:'Start with Coach',
-      coachSoon:'Pronto: cuenta, nube e invites de padres. Free/Pro personal siguen igual.',
-      coachSoonToast:'Matchcard Coach llega pronto. Free/Pro personal ya funcionan.'
+      coachSoon:'Coach ya funciona en el móvil. Supabase después — Free/Pro personal igual.',
+      coachSoonToast:'Matchcard Coach ya funciona en local. Free/Pro personal igual.'
     },
     de:{
       planPersonalHead:'Personal',
@@ -3869,8 +3869,8 @@ ru:{
       coachPriceYearHint:'besser für die Saison',
       coachLimits:'Start-Limit: 1 Akademie · 10 Teams · 50 Spieler · 2 Assistenten',
       coachStart:'Start with Coach',
-      coachSoon:'Bald: Konto, Cloud und Eltern-Invites. Personal Free/Pro bleiben.',
-      coachSoonToast:'Matchcard Coach kommt bald. Personal Free/Pro laufen schon.'
+      coachSoon:'Coach läuft lokal. Supabase später — Personal Free/Pro bleiben.',
+      coachSoonToast:'Matchcard Coach läuft lokal. Personal Free/Pro bleiben.'
     },
     it:{
       planPersonalHead:'Personal',
@@ -3895,8 +3895,8 @@ ru:{
       coachPriceYearHint:'meglio per la stagione',
       coachLimits:'Limite di avvio: 1 accademia · 10 squadre · 50 giocatori · 2 assistenti',
       coachStart:'Start with Coach',
-      coachSoon:'Presto: account, cloud e invite genitori. Free/Pro personale restano.',
-      coachSoonToast:'Matchcard Coach arriva presto. Free/Pro personale già funzionano.'
+      coachSoon:'Coach già locale. Supabase dopo — Free/Pro personale restano.',
+      coachSoonToast:'Matchcard Coach già in locale. Free/Pro personale restano.'
     },
     fr:{
       planPersonalHead:'Personal',
@@ -3921,8 +3921,8 @@ ru:{
       coachPriceYearHint:'mieux pour la saison',
       coachLimits:'Limite de lancement : 1 académie · 10 équipes · 50 joueurs · 2 assistants',
       coachStart:'Start with Coach',
-      coachSoon:'Bientôt : compte, cloud et invites parents. Free/Pro perso restent.',
-      coachSoonToast:'Matchcard Coach arrive bientôt. Free/Pro perso marchent déjà.'
+      coachSoon:'Coach déjà en local. Supabase ensuite — Free/Pro perso restent.',
+      coachSoonToast:'Matchcard Coach déjà en local. Free/Pro perso restent.'
     },
     pt:{
       planPersonalHead:'Personal',
@@ -3947,8 +3947,8 @@ ru:{
       coachPriceYearHint:'melhor para a época',
       coachLimits:'Limite no lançamento: 1 academia · 10 equipas · 50 jogadores · 2 assistentes',
       coachStart:'Start with Coach',
-      coachSoon:'Em breve: conta, nuvem e invites dos pais. Free/Pro pessoal ficam.',
-      coachSoonToast:'Matchcard Coach chega em breve. Free/Pro pessoal já funcionam.'
+      coachSoon:'Coach já local. Supabase depois — Free/Pro pessoal ficam.',
+      coachSoonToast:'Matchcard Coach já local. Free/Pro pessoal ficam.'
     }
   };
   LANGS.forEach(lang => {
@@ -3959,10 +3959,10 @@ ru:{
 (function mergeCoachPhase1I18n(){
   const extra = {
     en:{
-      coachModeLocal:'Phase 1 local mode: academy data stays on this phone until Supabase is connected.',
+      coachModeLocal:'Local mode: academy data stays on this phone until Supabase is connected.',
       coachModeCloud:'Cloud mode ready — Supabase keys found.',
       coachAuthKicker:'Coach account',
-      coachAuthLead:'Phase 1: account on this phone. Cloud login connects later via Supabase — Personal Free/Pro stay untouched.',
+      coachAuthLead:'Coach account on this phone. Cloud login connects later via Supabase — Personal Free/Pro stay untouched.',
       coachEmail:'Email',
       coachPassword:'Password',
       coachSignUp:'Create account',
@@ -3996,7 +3996,7 @@ ru:{
       coachErrTeamLimit:'Team limit reached for this academy.',
       coachNoTeams:'No teams yet. Create the first one.',
       coachRosterKicker:'Team roster',
-      coachInviteCodeHint:'Team invite code (parents later):',
+      coachInviteCodeHint:'Team invite code for parents:',
       coachAddPlayerBtn:'Add player',
       coachPlayerAdded:'Player added.',
       coachErrPlayerName:'Enter first name.',
@@ -4004,15 +4004,15 @@ ru:{
       coachNoPlayers:'Add players to this team.',
       coachFirstPh:'First name',
       coachLastPh:'Last name',
-      coachPhase1Note:'Phase 1: academy, teams, roster. Matches, analytics and parent invite come next.',
+      coachPhase1Note:'Academy, teams and roster on this phone. Matches, ratings and parent invites are ready in their tabs.',
       coachStart:'Start with Coach',
-      coachSoon:'Phase 1 is live locally. Connect Supabase when ready — Personal Free/Pro stay as they are.'
+      coachSoon:'Coach is live locally. Connect Supabase when ready — Personal Free/Pro stay as they are.'
     },
     ru:{
-      coachModeLocal:'Phase 1 локально: данные академии на этом телефоне, пока не подключён Supabase.',
+      coachModeLocal:'Локально: данные академии на этом телефоне, пока не подключён Supabase.',
       coachModeCloud:'Cloud готов — ключи Supabase найдены.',
       coachAuthKicker:'Аккаунт тренера',
-      coachAuthLead:'Phase 1: аккаунт на этом телефоне. Облачный вход позже через Supabase — Personal Free/Pro не трогаем.',
+      coachAuthLead:'Аккаунт тренера на этом телефоне. Облачный вход позже через Supabase — Personal Free/Pro не трогаем.',
       coachEmail:'Email',
       coachPassword:'Пароль',
       coachSignUp:'Создать аккаунт',
@@ -4046,7 +4046,7 @@ ru:{
       coachErrTeamLimit:'Лимит команд в академии.',
       coachNoTeams:'Команд пока нет. Создайте первую.',
       coachRosterKicker:'Состав команды',
-      coachInviteCodeHint:'Код команды (родители позже):',
+      coachInviteCodeHint:'Код команды для родителя:',
       coachAddPlayerBtn:'Добавить игрока',
       coachPlayerAdded:'Игрок добавлен.',
       coachErrPlayerName:'Введите имя.',
@@ -4054,15 +4054,15 @@ ru:{
       coachNoPlayers:'Добавьте игроков в команду.',
       coachFirstPh:'Имя',
       coachLastPh:'Фамилия',
-      coachPhase1Note:'Phase 1: академия, команды, состав. Матчи, аналитика и invite родителей — дальше.',
+      coachPhase1Note:'Академия, команды и состав на этом телефоне. Матчи, оценки и invite родителей — в своих вкладках.',
       coachStart:'Start with Coach',
-      coachSoon:'Phase 1 уже локально. Supabase подключим отдельно — Personal Free/Pro как есть.'
+      coachSoon:'Coach уже локально. Supabase подключим отдельно — Personal Free/Pro как есть.'
     },
     uk:{
-      coachModeLocal:'Phase 1 локально: дані академії на цьому телефоні, доки не підключено Supabase.',
+      coachModeLocal:'Локально: дані академії на цьому телефоні, доки не підключено Supabase.',
       coachModeCloud:'Cloud готовий — ключі Supabase знайдено.',
       coachAuthKicker:'Акаунт тренера',
-      coachAuthLead:'Phase 1: акаунт на цьому телефоні. Хмарний вхід пізніше через Supabase — Personal Free/Pro не чіпаємо.',
+      coachAuthLead:'Акаунт тренера на цьому телефоні. Хмарний вхід пізніше через Supabase — Personal Free/Pro не чіпаємо.',
       coachEmail:'Email',
       coachPassword:'Пароль',
       coachSignUp:'Створити акаунт',
@@ -4096,7 +4096,7 @@ ru:{
       coachErrTeamLimit:'Ліміт команд в академії.',
       coachNoTeams:'Команд ще немає. Створіть першу.',
       coachRosterKicker:'Склад команди',
-      coachInviteCodeHint:'Код команди (батьки пізніше):',
+      coachInviteCodeHint:'Код команди для батька:',
       coachAddPlayerBtn:'Додати гравця',
       coachPlayerAdded:'Гравця додано.',
       coachErrPlayerName:'Введіть ім’я.',
@@ -4104,9 +4104,9 @@ ru:{
       coachNoPlayers:'Додайте гравців до команди.',
       coachFirstPh:'Ім’я',
       coachLastPh:'Прізвище',
-      coachPhase1Note:'Phase 1: академія, команди, склад. Матчі, аналітика і invite батьків — далі.',
+      coachPhase1Note:'Академія, команди і склад на цьому телефоні. Матчі, оцінки та invite батьків — у своїх вкладках.',
       coachStart:'Start with Coach',
-      coachSoon:'Phase 1 уже локально. Supabase підключимо окремо — Personal Free/Pro як є.'
+      coachSoon:'Coach уже локально. Supabase підключимо окремо — Personal Free/Pro як є.'
     }
   };
   LANGS.forEach(lang => {
@@ -4137,7 +4137,7 @@ ru:{
       coachStatAvg:'Team avg',
       coachGames:'games',
       coachAnalyticsEmpty:'Rate players in matches to see analytics.',
-      coachPhase2Note:'Phase 2: matches + quick ratings + team analytics. Parent invite and Supabase sync come next.',
+      coachPhase2Note:'Matches, ratings and team analytics. Cloud sync via Supabase is next.',
       coachRateBanner:'Coach rating · {name} vs {opp}. Save writes to Coach only.',
       coachRatingSaved:'Player rating saved to Coach.',
       coachQuickKicker:'Quick rating',
@@ -4207,7 +4207,7 @@ ru:{
       coachStatAvg:'Средняя',
       coachGames:'игр',
       coachAnalyticsEmpty:'Оцени игроков в матчах, чтобы увидеть аналитику.',
-      coachPhase2Note:'Phase 2: матчи + быстрые оценки + аналитика. Invite родителей и Supabase — дальше.',
+      coachPhase2Note:'Матчи, быстрые оценки и аналитика команды. Дальше — облако Supabase.',
       coachRateBanner:'Coach · {name} против {opp}. Сохранение только в Coach.',
       coachRatingSaved:'Оценка игрока сохранена в Coach.',
       coachQuickKicker:'Быстрая оценка',
@@ -4277,7 +4277,7 @@ ru:{
       coachStatAvg:'Середня',
       coachGames:'ігор',
       coachAnalyticsEmpty:'Оціни гравців у матчах, щоб побачити аналітику.',
-      coachPhase2Note:'Phase 2: матчі + швидкі оцінки + аналітика. Invite батьків і Supabase — далі.',
+      coachPhase2Note:'Матчі, швидкі оцінки та аналітика команди. Далі — хмара Supabase.',
       coachRateBanner:'Coach · {name} проти {opp}. Збереження лише в Coach.',
       coachRatingSaved:'Оцінку гравця збережено в Coach.',
       coachQuickKicker:'Швидка оцінка',
@@ -4336,6 +4336,10 @@ ru:{
   const extra = {
     en:{
       coachPhase2Note:'Matches, ratings, analytics + parent QR invite. Supabase cloud sync next.',
+      coachRosterToMatchHint:'Matches and ratings — Match tab. History and analytics — their own tabs.',
+      coachAppSettingsKicker:'App',
+      coachAppSettingsHint:'Theme, language, Free/Pro and data backup — in Matchcard app settings.',
+      coachOpenAppSettings:'Open app settings',
       coachPlayerDetailKicker:'Player',
       coachPlayerNoRatings:'No ratings for this player yet.',
       coachPlayerRatingsKicker:'Recent ratings',
@@ -4415,6 +4419,10 @@ ru:{
     },
     ru:{
       coachPhase2Note:'Матчи, оценки, аналитика + QR-invite родителя. Дальше — Supabase.',
+      coachRosterToMatchHint:'Матчи и оценки — во вкладке «Матч». История и аналитика — в своих вкладках.',
+      coachAppSettingsKicker:'Приложение',
+      coachAppSettingsHint:'Тема, язык, Free/Pro и копия данных — в общих настройках Matchcard.',
+      coachOpenAppSettings:'Открыть настройки приложения',
       coachPlayerDetailKicker:'Игрок',
       coachPlayerNoRatings:'Оценок по этому игроку пока нет.',
       coachPlayerRatingsKicker:'Недавние оценки',
@@ -4494,6 +4502,10 @@ ru:{
     },
     uk:{
       coachPhase2Note:'Матчі, оцінки, аналітика + QR-invite батька. Далі — Supabase.',
+      coachRosterToMatchHint:'Матчі та оцінки — у вкладці «Матч». Історія та аналітика — у своїх вкладках.',
+      coachAppSettingsKicker:'Застосунок',
+      coachAppSettingsHint:'Тема, мова, Free/Pro і копія даних — у загальних налаштуваннях Matchcard.',
+      coachOpenAppSettings:'Відкрити налаштування застосунку',
       coachPlayerDetailKicker:'Гравець',
       coachPlayerNoRatings:'Оцінок по цьому гравцю ще немає.',
       coachPlayerRatingsKicker:'Нещодавні оцінки',

@@ -29,6 +29,7 @@
     const marketing = document.getElementById('coachMarketing');
     const auth = document.getElementById('coachAuth');
     const work = document.getElementById('coachWorkspace');
+    const back = document.getElementById('coachBackBtn');
     if(!marketing || !auth || !work) return;
 
     if(!session){
@@ -36,6 +37,7 @@
       marketing.hidden = false;
       auth.hidden = !started;
       work.hidden = true;
+      if(back) back.hidden = false;
       syncModeHint();
       renderCoachTabsEmpty();
       if(typeof syncCoachModeViews === 'function') syncCoachModeViews();
@@ -47,6 +49,7 @@
     auth.hidden = true;
     work.hidden = false;
     work.dataset.started = '1';
+    if(back) back.hidden = true;
     if(typeof applyHeader === 'function') applyHeader();
     if(typeof refreshCoachMediaUi === 'function') refreshCoachMediaUi();
     renderWorkspace(session);
@@ -93,7 +96,7 @@
     const cloud = global.CoachStore && global.CoachStore.isCloudConfigured();
     hint.textContent = cloud
       ? tt('coachModeCloud', 'Cloud mode ready — Supabase keys found.')
-      : tt('coachModeLocal', 'Local Coach mode: academy data stays on this phone until Supabase is connected.');
+      : tt('coachModeLocal', 'Local mode: academy data stays on this phone until Supabase is connected.');
   }
 
   function renderWorkspace(session){
@@ -102,8 +105,7 @@
     const createBox = document.getElementById('coachCreateAcademy');
     const home = document.getElementById('coachAcademyHome');
     const teamPane = document.getElementById('coachTeamPane');
-    const matchPane = document.getElementById('coachMatchPane');
-    const analyticsPane = document.getElementById('coachAnalyticsPane');
+    const homeNav = document.getElementById('coachHomeNav');
     const emailEl = document.getElementById('coachSessionEmail');
     if(emailEl) emailEl.textContent = session.email;
 
@@ -111,8 +113,7 @@
       if(createBox) createBox.hidden = false;
       if(home) home.hidden = true;
       if(teamPane) teamPane.hidden = true;
-      if(matchPane) matchPane.hidden = true;
-      if(analyticsPane) analyticsPane.hidden = true;
+      if(homeNav) homeNav.hidden = true;
       closeCoachSettings();
       return;
     }
@@ -192,8 +193,7 @@
     if(settingsList) settingsList.innerHTML = teamListHtml;
 
     if(teamPane) teamPane.hidden = !active;
-    if(matchPane) matchPane.hidden = !active;
-    if(analyticsPane) analyticsPane.hidden = !active;
+    if(homeNav) homeNav.hidden = !active;
     if(active){
       renderTeamPane(session, active);
       renderMatchPane(session, active);
@@ -534,8 +534,6 @@
           <b>${p.avg == null ? '—' : Number(p.avg).toFixed(1)}</b>
         </div>`).join('')}</div>` : `<p class="hint">${esc(tt('coachAnalyticsEmpty', 'Rate players in matches to see analytics.'))}</p>`}
     `;
-    const board = document.getElementById('coachAnalyticsBoard');
-    if(board) board.innerHTML = html;
     const statsBoard = document.getElementById('coachStatsBoard');
     if(statsBoard) statsBoard.innerHTML = html;
     const statsTeam = document.getElementById('coachStatsTeam');
@@ -1235,6 +1233,12 @@
     document.getElementById('coachSettingsBtn')?.addEventListener('click', () => openCoachSettings());
     document.getElementById('coachSettingsBack')?.addEventListener('click', () => closeCoachSettings());
     document.getElementById('coachSettingsCloseBtn')?.addEventListener('click', () => closeCoachSettings());
+    document.getElementById('coachOpenAppSettingsBtn')?.addEventListener('click', () => {
+      closeCoachSettings();
+      document.getElementById('s-lang').value = settings.lang;
+      if(typeof refreshBackupBanner === 'function') refreshBackupBanner();
+      if(typeof showView === 'function') showView('settings');
+    });
     document.addEventListener('click', e => {
       const createBtn = e.target.closest('.js-cm-create');
       if(createBtn){
