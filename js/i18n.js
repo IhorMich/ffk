@@ -4010,7 +4010,7 @@ ru:{
     },
     ru:{
       coachModeLocal:'Локально: данные академии на этом телефоне, пока не подключён Supabase.',
-      coachModeCloud:'Cloud готов — ключи Supabase найдены.',
+      coachModeCloud:'Облако готово — ключи Supabase найдены.',
       coachAuthKicker:'Аккаунт тренера',
       coachAuthLead:'Аккаунт тренера на этом телефоне. Облачный вход позже через Supabase — Personal Free/Pro не трогаем.',
       coachEmail:'Email',
@@ -4060,7 +4060,7 @@ ru:{
     },
     uk:{
       coachModeLocal:'Локально: дані академії на цьому телефоні, доки не підключено Supabase.',
-      coachModeCloud:'Cloud готовий — ключі Supabase знайдено.',
+      coachModeCloud:'Хмара готова — ключі Supabase знайдено.',
       coachAuthKicker:'Акаунт тренера',
       coachAuthLead:'Акаунт тренера на цьому телефоні. Хмарний вхід пізніше через Supabase — Personal Free/Pro не чіпаємо.',
       coachEmail:'Email',

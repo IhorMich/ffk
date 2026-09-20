@@ -466,8 +466,6 @@
     // Don't auto-select first match — keeps list clean until coach taps one
     const activeMatch = activeMatchId ? store.getMatch(session, activeMatchId) : null;
 
-    fillCoachTabHeads(session, team);
-
     const tabTeam = document.getElementById('coachMatchTabTeam');
     if(tabTeam) tabTeam.textContent = team.name + (team.age_group ? ` · ${team.age_group}` : '');
 
@@ -627,26 +625,6 @@
         <div class="coach-invite-rows">${rows}</div>
       </div>`;
     });
-  }
-
-  function fillCoachTabHeads(session, team){
-    const store = global.CoachStore;
-    const profile = store.getProfile ? store.getProfile(session) : {photo:'', email: session.email || '', first_name:'', last_name:''};
-    const coachName = [profile.first_name, profile.last_name].filter(Boolean).join(' ');
-    const title = coachName
-      || ((team && team.name) ? (team.name + (team.age_group ? ` · ${team.age_group}` : '')) : '')
-      || (store.myAcademy(session)?.name || tt('tabCoach', 'Coach'));
-    const meta = [
-      team && team.name ? (team.name + (team.age_group ? ` · ${team.age_group}` : '')) : '',
-      profile.email || session.email || ''
-    ].filter(Boolean).join(' · ');
-    const letter = (coachName || title || 'C').trim().slice(0, 1).toUpperCase() || 'C';
-    const who = document.getElementById('coachMatchTabWho');
-    const metaEl = document.getElementById('coachMatchTabMeta');
-    if(who) who.textContent = title;
-    if(metaEl) metaEl.textContent = meta;
-    const av = document.getElementById('coachMatchTabAv');
-    if(av && typeof setBadge === 'function') setBadge(av, profile.photo || '', letter);
   }
 
   let coachHistFilter = 'all';

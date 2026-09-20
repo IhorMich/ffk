@@ -14,7 +14,8 @@ function detectLang(){
 }
 function t(key, vars){
   const lang = LANGS.includes(settings.lang) ? settings.lang : detectLang();
-  let s = (I18N[lang] && I18N[lang][key]) || I18N.en[key] || I18N.ru[key] || key;
+  // Never cross-leak another UI language (e.g. Russian into English).
+  let s = (I18N[lang] && I18N[lang][key]) || (I18N.en && I18N.en[key]) || key;
   if(vars) Object.keys(vars).forEach(k => { s = s.split('{'+k+'}').join(vars[k]); });
   return s;
 }
@@ -272,6 +273,9 @@ function applyI18n(){
   syncSeasonChipLabels();
   if(isElShown('onboard')) renderOnboard();
   syncProUi();
+  if(typeof syncCoachBillingUi === 'function') syncCoachBillingUi();
+  if(typeof renderCoachUi === 'function') renderCoachUi();
+  if(typeof renderParentUi === 'function') renderParentUi();
 }
 
 function isPro(){
