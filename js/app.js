@@ -5337,6 +5337,12 @@ async function shareCard(m){
     }catch(e){}
     hydrateAllMedia().then(() => {
       applyHeader();
+      if(typeof syncCoachPlayerPhotosFromPersonal === 'function'){
+        try{ syncCoachPlayerPhotosFromPersonal(); }catch(e){}
+      }
+      if(typeof renderCoachUi === 'function' && typeof isCoachPlan === 'function' && isCoachPlan()){
+        try{ renderCoachUi(); }catch(e){}
+      }
       if(document.getElementById('view-player')?.classList.contains('active')) fillPlayerForm();
       else {
         setBadge(document.getElementById('pPhotoBox'), currentPhoto(), initials());

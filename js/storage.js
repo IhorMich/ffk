@@ -141,6 +141,38 @@ function readPlayerRecord(id, rawLs){
     return p;
   }catch(e){ return null; }
 }
+/** Free/Pro players with hydrated photos — safe for Coach UI (other scripts can't see let roster). */
+function listPersonalPlayersWithMedia(){
+  const out = [];
+  const seen = new Set();
+  let ids = [];
+  try{
+    const stored = JSON.parse(localStorage.getItem(ROSTER_KEY) || 'null');
+    if(stored && Array.isArray(stored.ids)) ids = stored.ids.map(String).filter(Boolean);
+  }catch(e){}
+  try{
+    const cur = JSON.parse(localStorage.getItem(PLAYER_KEY) || 'null');
+    if(cur && cur.id){
+      const cid = String(cur.id);
+      if(!ids.includes(cid)) ids.unshift(cid);
+    }
+  }catch(e){}
+  ids.forEach(id => {
+    const sid = String(id);
+    if(seen.has(sid)) return;
+    seen.add(sid);
+    const p = readPlayerRecord(sid);
+    if(!p) return;
+    const photo = (mediaCache[sid] && mediaCache[sid].photo) || p.photo || '';
+    out.push({
+      id: sid,
+      firstName: p.firstName || '',
+      lastName: p.lastName || '',
+      photo
+    });
+  });
+  return out;
+}
 function parseMatchList(raw){
   const parsed = raw ? JSON.parse(raw) : [];
   const list = Array.isArray(parsed) ? parsed : (Array.isArray(parsed.matches) ? parsed.matches : []);

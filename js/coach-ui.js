@@ -517,18 +517,17 @@
   }
   function personalPhotoByName(first, last){
     try{
-      if(typeof roster === 'undefined' || !roster || !Array.isArray(roster.ids)) return '';
-      for(const id of roster.ids){
-        const p = (typeof player !== 'undefined' && player && String(player.id) === String(id))
-          ? player
-          : (typeof readPlayerRecord === 'function' ? readPlayerRecord(id) : null);
+      const list = typeof listPersonalPlayersWithMedia === 'function'
+        ? listPersonalPlayersWithMedia()
+        : [];
+      for(const p of list){
         if(!p || !p.photo) continue;
         if(namesSoftMatch(first, last, p.firstName, p.lastName)) return String(p.photo);
       }
     }catch(e){}
     return '';
   }
-  /** Photo for a coach roster child: stored on player, else matching Free/Pro profile on this phone. */
+  /** Photo for a coach roster player: stored on player, else matching Free/Pro profile on this phone. */
   function resolveCoachPlayerPhoto(tp){
     if(!tp) return '';
     if(tp.photo) return String(tp.photo);
@@ -576,13 +575,13 @@
     if(!store || !session || typeof store.updatePlayer !== 'function') return 0;
     let n = 0;
     try{
-      const teamId = store.getActiveTeamId && store.getActiveTeamId();
-      const teams = teamId
-        ? [store.getTeam(session, teamId)].filter(Boolean)
-        : (store.myAcademy(session)
-          ? store.listTeams(session, store.myAcademy(session).id)
-          : []);
+      const academy = store.myAcademy && store.myAcademy(session);
+      const teams = academy && store.listTeams
+        ? store.listTeams(session, academy.id)
+        : [];
+      // Always walk every team — active-team-only left other rosters without photos.
       teams.forEach(team => {
+        if(!team) return;
         store.listPlayers(session, team.id).forEach(tp => {
           // Ignore stored photo so we always prefer a fresher Free/Pro match when present.
           const photo = resolveCoachPlayerPhoto({...tp, photo: ''}) || tp.photo || '';
