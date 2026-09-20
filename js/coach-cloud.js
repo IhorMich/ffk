@@ -131,6 +131,10 @@
         kind: m.kind || 'league',
         status: m.status || (m.score ? 'played' : 'upcoming'),
         squad: m.squad || [],
+        kickoff: m.kickoff || '',
+        tournament: m.tournament || '',
+        event_id: m.event_id || '',
+        comment: m.comment || '',
         created_at: m.created_at || new Date().toISOString()
       }, {onConflict: 'id'});
     }
@@ -220,7 +224,11 @@
       memberships: mems || [],
       team_matches: (matches || []).map(m => ({
         ...m,
-        squad: Array.isArray(m.squad) ? m.squad : (m.squad || [])
+        squad: Array.isArray(m.squad) ? m.squad : (m.squad || []),
+        kickoff: m.kickoff || '',
+        tournament: m.tournament || '',
+        event_id: m.event_id || '',
+        comment: m.comment || ''
       })),
       ratings: (ratings || []).map(r => ({
         ...r,

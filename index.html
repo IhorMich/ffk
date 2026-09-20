@@ -347,6 +347,10 @@ window.ffkIsNative = function () {
                 <input class="js-cm-date" type="date">
               </div>
               <div class="field">
+                <label data-i18n="coachMatchKickoff">Время начала</label>
+                <input class="js-cm-kickoff" type="time" step="300">
+              </div>
+              <div class="field">
                 <label data-i18n="labelVenue">Где играете</label>
                 <select class="js-cm-venue">
                   <option value="home" data-i18n="venueHome">Дома</option>
@@ -355,12 +359,17 @@ window.ffkIsNative = function () {
               </div>
               <div class="field">
                 <label data-i18n="coachMatchKind">Тип матча</label>
-                <select class="js-cm-kind">
+                <select class="js-cm-kind" id="coachMatchKindSelect">
                   <option value="league" data-i18n="kindLeague">Чемпионат</option>
                   <option value="friendly" data-i18n="kindFriendly">Товарищеский</option>
                   <option value="cup" data-i18n="kindCup">Кубок</option>
                   <option value="tournament" data-i18n="kindTournament">Турнир</option>
                 </select>
+              </div>
+              <div class="field" id="coachMatchCompWrap">
+                <label id="coachMatchCompLabel" data-i18n="labelCompLeague">Лига</label>
+                <input class="js-cm-tournament" id="coachMatchTournament" type="text" maxlength="48" list="coachTourList" data-i18n-placeholder="phCompLeague" placeholder="Название лиги">
+                <datalist id="coachTourList"></datalist>
               </div>
               <div class="field coach-match-create-wide">
                 <label data-i18n="coachMatchAddress">Адрес матча</label>
@@ -383,6 +392,8 @@ window.ffkIsNative = function () {
             </div>
           </div>
 
+          <div class="js-cm-match-suggestions" id="coachMatchSuggestions" hidden></div>
+
           <div class="js-cm-matches coach-team-list coach-match-list"></div>
 
           <div id="coachMatchDetail" class="coach-match-detail" hidden>
@@ -393,9 +404,25 @@ window.ffkIsNative = function () {
 
             <div id="coachMatchUpcomingBox" hidden>
               <div class="js-cm-squad-view coach-squad-view" hidden></div>
-              <div class="coach-match-actions-row coach-match-actions-row-1">
+              <div id="coachMatchSquadEdit" class="coach-match-squad-edit" hidden>
+                <div class="coach-squad-head">
+                  <label data-i18n="coachSquadLabel">Кто играет</label>
+                  <div class="coach-squad-actions">
+                    <button type="button" class="ghost-btn js-cm-squad-all" data-i18n="coachSquadAll">Все</button>
+                    <button type="button" class="ghost-btn js-cm-squad-none" data-i18n="coachSquadNone">Снять</button>
+                  </div>
+                </div>
+                <div class="js-cm-squad-edit coach-squad-picker"></div>
+                <div class="coach-match-create-actions">
+                  <button type="button" class="save-btn js-cm-save-squad" data-i18n="coachSquadSave">Сохранить состав</button>
+                  <button type="button" class="ghost-btn js-cm-cancel-squad" data-i18n="previewCancel">Отмена</button>
+                </div>
+              </div>
+              <div class="coach-match-actions-row">
+                <button class="ghost-btn js-cm-edit-squad" type="button" data-i18n="coachSquadEdit">Изменить состав</button>
                 <button class="save-btn js-cm-finish" type="button" data-i18n="coachMatchFinishBtn">Сыгран → счёт</button>
               </div>
+              <button class="ghost-btn coach-match-cancel-btn js-cm-cancel-match" type="button" data-i18n="coachMatchCancelBtn">Отменить матч</button>
             </div>
 
             <div id="coachMatchPlayedBox" hidden>

@@ -81,6 +81,43 @@
     const buf = await crypto.subtle.digest('SHA-256', data);
     return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
   }
+  function normalizeKickoff(raw){
+    const s = String(raw || '').trim();
+    if(!s) return '';
+    const m = s.match(/^(\d{1,2}):(\d{2})$/);
+    if(!m) return '';
+    const h = Math.max(0, Math.min(23, Number(m[1])));
+    const min = Math.max(0, Math.min(59, Number(m[2])));
+    return `${String(h).padStart(2,'0')}:${String(min).padStart(2,'0')}`;
+  }
+  function kickoffMinutes(kickoff){
+    const s = normalizeKickoff(kickoff);
+    if(!s) return 12 * 60; // noon default for clustering
+    const [h, m] = s.split(':').map(Number);
+    return h * 60 + m;
+  }
+  function daysBetween(a, b){
+    const da = Date.parse(`${a}T12:00:00`);
+    const db = Date.parse(`${b}T12:00:00`);
+    if(!Number.isFinite(da) || !Number.isFinite(db)) return 99;
+    return Math.round((db - da) / 86400000);
+  }
+  function guessTournamentName(cluster){
+    const named = (cluster || []).find(m => String(m.tournament || '').trim());
+    return named ? String(named.tournament).trim() : '';
+  }
+  function maybePushGroup(groups, used, cluster, tournamentName){
+    if(!cluster || cluster.length < 2) return;
+    if(cluster.some(m => used.has(m.id))) return;
+    cluster.forEach(m => used.add(m.id));
+    const dates = [...new Set(cluster.map(m => m.date))].sort();
+    groups.push({
+      id: `sug_${cluster.map(m => m.id).join('_').slice(0, 40)}`,
+      tournament: tournamentName || '',
+      dates,
+      matches: cluster.slice()
+    });
+  }
 
   const CoachStore = {
     getSession(){ return readSession(); },
@@ -459,6 +496,21 @@
       let squad = Array.isArray(fields.squad) ? fields.squad.map(String) : [];
       squad = [...new Set(squad.filter(id => rosterIds.has(id)))];
       if(!squad.length) throw new Error('squad');
+      const kind = ['league','friendly','cup','tournament'].includes(fields.kind) ? fields.kind : 'league';
+      const kickoff = normalizeKickoff(fields.kickoff);
+      const tournament = kind === 'friendly'
+        ? ''
+        : String(fields.tournament || '').trim().slice(0, 48);
+      let eventId = String(fields.event_id || '').trim().slice(0, 40);
+      if(!eventId && tournament){
+        // Auto-link to an existing event with the same competition name on this team.
+        const existing = readDb().team_matches.find(m =>
+          m.team_id === teamId
+          && String(m.tournament || '').trim().toLowerCase() === tournament.toLowerCase()
+          && m.event_id
+        );
+        if(existing) eventId = existing.event_id;
+      }
       const db = readDb();
       const match = {
         id: uid('tmt'),
@@ -468,9 +520,13 @@
         address: String(fields.address || '').trim().slice(0, 120),
         score: String(fields.score || '').trim().slice(0, 16),
         venue: fields.venue === 'away' ? 'away' : 'home',
-        kind: ['league','friendly','cup','tournament'].includes(fields.kind) ? fields.kind : 'league',
+        kind,
         status: fields.status === 'played' ? 'played' : 'upcoming',
         squad,
+        kickoff,
+        tournament,
+        event_id: eventId,
+        comment: String(fields.comment || '').trim().slice(0, 400),
         created_at: new Date().toISOString()
       };
       db.team_matches.push(match);
@@ -506,12 +562,193 @@
       if(fields && Object.prototype.hasOwnProperty.call(fields, 'comment')){
         next.comment = String(fields.comment || '').trim().slice(0, 400);
       }
+      if(fields && Object.prototype.hasOwnProperty.call(fields, 'opponent')){
+        const opponent = String(fields.opponent || '').trim().slice(0, 48);
+        if(!opponent) throw new Error('opponent');
+        next.opponent = opponent;
+      }
+      if(fields && Object.prototype.hasOwnProperty.call(fields, 'date')){
+        if(/^\d{4}-\d{2}-\d{2}$/.test(fields.date)) next.date = fields.date;
+      }
+      if(fields && Object.prototype.hasOwnProperty.call(fields, 'venue')){
+        next.venue = fields.venue === 'away' ? 'away' : 'home';
+      }
+      if(fields && Object.prototype.hasOwnProperty.call(fields, 'kind')){
+        next.kind = ['league','friendly','cup','tournament'].includes(fields.kind) ? fields.kind : next.kind;
+        if(next.kind === 'friendly') next.tournament = '';
+      }
+      if(fields && Object.prototype.hasOwnProperty.call(fields, 'kickoff')){
+        next.kickoff = normalizeKickoff(fields.kickoff);
+      }
+      if(fields && Object.prototype.hasOwnProperty.call(fields, 'tournament')){
+        next.tournament = next.kind === 'friendly'
+          ? ''
+          : String(fields.tournament || '').trim().slice(0, 48);
+      }
+      if(fields && Object.prototype.hasOwnProperty.call(fields, 'event_id')){
+        next.event_id = String(fields.event_id || '').trim().slice(0, 40);
+      }
       if(fields && fields.status === 'played') next.status = 'played';
       if(fields && fields.status === 'upcoming') next.status = 'upcoming';
       if(next.score && next.status !== 'upcoming') next.status = 'played';
       db.team_matches = db.team_matches.map(m => m.id === matchId ? next : m);
       writeDb(db);
       return this.getMatch(session, matchId);
+    },
+    setMatchSquad(session, matchId, squadIds){
+      const match = this.getMatch(session, matchId);
+      if(!match) throw new Error('forbidden');
+      if(match.status === 'played' && String(match.score || '').trim()){
+        // Allow edits until fully wrapped; still ok for unfinished played.
+      }
+      const roster = this.listPlayers(session, match.team_id);
+      const rosterIds = new Set(roster.map(p => p.id));
+      let squad = Array.isArray(squadIds) ? squadIds.map(String) : [];
+      squad = [...new Set(squad.filter(id => rosterIds.has(id)))];
+      if(!squad.length) throw new Error('squad');
+      const prev = new Set(this.matchSquadIds(session, match));
+      const nextSet = new Set(squad);
+      const db = readDb();
+      db.team_matches = db.team_matches.map(m => m.id === matchId ? {...m, squad} : m);
+      // Add invites for newly selected players
+      squad.forEach(pid => {
+        if(prev.has(pid)) return;
+        const exists = db.match_invites.some(i => i.match_id === matchId && i.team_player_id === pid);
+        if(exists) return;
+        db.match_invites.push({
+          id: uid('inv'),
+          match_id: matchId,
+          team_id: match.team_id,
+          team_player_id: pid,
+          status: 'pending',
+          sent_at: '',
+          created_at: new Date().toISOString()
+        });
+      });
+      // Drop invites (and unsent only) for removed players without ratings
+      const rated = new Set(
+        db.ratings.filter(r => r.match_id === matchId).map(r => String(r.team_player_id))
+      );
+      db.match_invites = db.match_invites.filter(inv => {
+        if(inv.match_id !== matchId) return true;
+        if(nextSet.has(String(inv.team_player_id))) return true;
+        if(rated.has(String(inv.team_player_id))) return true;
+        return false;
+      });
+      writeDb(db);
+      return this.getMatch(session, matchId);
+    },
+    removeMatch(session, matchId){
+      const match = this.getMatch(session, matchId);
+      if(!match) throw new Error('forbidden');
+      const db = readDb();
+      const ratings = db.ratings.filter(r => r.match_id === matchId);
+      const played = match.status === 'played' || !!String(match.score || '').trim();
+      if(played || ratings.length){
+        throw new Error('has_results');
+      }
+      db.team_matches = db.team_matches.filter(m => m.id !== matchId);
+      db.match_invites = db.match_invites.filter(i => i.match_id !== matchId);
+      db.ratings = db.ratings.filter(r => r.match_id !== matchId);
+      if(db.activeMatchId === matchId) db.activeMatchId = '';
+      writeDb(db);
+      return true;
+    },
+    listCompetitionNames(session, teamId){
+      if(!this.getTeam(session, teamId)) return [];
+      const names = readDb().team_matches
+        .filter(m => m.team_id === teamId && String(m.tournament || '').trim())
+        .map(m => String(m.tournament).trim());
+      return [...new Set(names)].sort((a, b) => a.localeCompare(b));
+    },
+    /**
+     * Suggest grouping matches that look like one tournament / cup day.
+     * Heuristics: same competition name within 2 days, OR same day + kickoffs within 3h
+     * for cup/tournament (or any with a shared name).
+     */
+    suggestMatchGroups(session, teamId){
+      if(!this.getTeam(session, teamId)) return [];
+      const matches = this.listMatches(session, teamId).slice();
+      const used = new Set();
+      const groups = [];
+      const byName = new Map();
+      matches.forEach(m => {
+        const name = String(m.tournament || '').trim().toLowerCase();
+        if(!name) return;
+        if(!byName.has(name)) byName.set(name, []);
+        byName.get(name).push(m);
+      });
+      byName.forEach((list, nameKey) => {
+        if(list.length < 2) return;
+        list.sort((a, b) => String(a.date).localeCompare(String(b.date)) || String(a.kickoff||'').localeCompare(String(b.kickoff||'')));
+        // Split into clusters if dates are farther than 2 days apart
+        let cluster = [list[0]];
+        for(let i = 1; i < list.length; i++){
+          const prev = cluster[cluster.length - 1];
+          const gap = Math.abs(daysBetween(prev.date, list[i].date));
+          if(gap <= 2) cluster.push(list[i]);
+          else{
+            maybePushGroup(groups, used, cluster, list[0].tournament);
+            cluster = [list[i]];
+          }
+        }
+        maybePushGroup(groups, used, cluster, list[0].tournament);
+      });
+      // Same-day close kickoffs without (or with mixed) names — cup/tournament preferred
+      const byDate = new Map();
+      matches.forEach(m => {
+        if(used.has(m.id)) return;
+        if(!['cup','tournament'].includes(m.kind) && !String(m.tournament||'').trim()) return;
+        if(!byDate.has(m.date)) byDate.set(m.date, []);
+        byDate.get(m.date).push(m);
+      });
+      byDate.forEach((list) => {
+        if(list.length < 2) return;
+        list.sort((a, b) => kickoffMinutes(a.kickoff) - kickoffMinutes(b.kickoff));
+        let cluster = [list[0]];
+        for(let i = 1; i < list.length; i++){
+          const prev = cluster[cluster.length - 1];
+          const dt = Math.abs(kickoffMinutes(list[i].kickoff) - kickoffMinutes(prev.kickoff));
+          // If either lacks kickoff, still group same-day cup/tournament matches
+          const close = (!list[i].kickoff || !prev.kickoff) ? true : dt <= 180;
+          if(close) cluster.push(list[i]);
+          else{
+            maybePushGroup(groups, used, cluster, guessTournamentName(cluster));
+            cluster = [list[i]];
+          }
+        }
+        maybePushGroup(groups, used, cluster, guessTournamentName(cluster));
+      });
+      return groups.filter(g => {
+        // Only suggest if not already fully linked under one event_id
+        const events = new Set(g.matches.map(m => m.event_id || '').filter(Boolean));
+        if(events.size === 1 && g.matches.every(m => m.event_id === [...events][0])) return false;
+        return g.matches.length >= 2;
+      });
+    },
+    linkMatchesToEvent(session, matchIds, fields){
+      const ids = (matchIds || []).map(String);
+      if(ids.length < 2) throw new Error('group_small');
+      const matches = ids.map(id => this.getMatch(session, id)).filter(Boolean);
+      if(matches.length < 2) throw new Error('forbidden');
+      const teamId = matches[0].team_id;
+      if(matches.some(m => m.team_id !== teamId)) throw new Error('forbidden');
+      const tournament = String((fields && fields.tournament) || matches.find(m => m.tournament)?.tournament || '').trim().slice(0, 48);
+      if(!tournament) throw new Error('tournament');
+      const eventId = String((fields && fields.event_id) || matches.find(m => m.event_id)?.event_id || uid('tev')).slice(0, 40);
+      const db = readDb();
+      const idSet = new Set(ids);
+      db.team_matches = db.team_matches.map(m => {
+        if(!idSet.has(m.id)) return m;
+        return {
+          ...m,
+          tournament,
+          event_id: eventId,
+          kind: ['cup','tournament'].includes(m.kind) ? m.kind : (m.kind === 'friendly' ? 'tournament' : m.kind)
+        };
+      });
+      writeDb(db);
+      return {event_id: eventId, tournament, matchIds: ids};
     },
     finishMatch(session, matchId, score){
       return this.updateMatch(session, matchId, {
@@ -627,7 +864,9 @@
         opponent: match.opponent,
         address: match.address || '',
         venue: match.venue,
-        kind: match.kind
+        kind: match.kind,
+        kickoff: match.kickoff || '',
+        tournament: match.tournament || ''
       };
     },
     deliverMatchInvites(session, matchId, opts){
@@ -666,7 +905,9 @@
               opponent: payload.opponent,
               address: payload.address || '',
               venue: payload.venue,
-              kind: payload.kind
+              kind: payload.kind,
+              kickoff: payload.kickoff || '',
+              tournament: payload.tournament || ''
             });
             pinv.payload = {...pinv.payload, mi: mi.slice(0, 8)};
             pinv.updated_at = now;

@@ -1699,7 +1699,45 @@
   .coach-match-actions-row .ghost-btn,
   .coach-match-actions-row .save-btn{margin:0;width:100%;padding:10px 12px;font-size:.82rem;}
   .coach-match-open-kicker{margin:14px 0 6px;}
-  .coach-match-create select{
+  .coach-match-tour{
+    display:block;margin:2px 0 0;font-size:.68rem;font-weight:800;color:var(--card-accent);
+  }
+  .coach-match-event{
+    margin:0 0 10px;padding:8px;border-radius:14px;border:1px solid var(--card-line);
+    background:color-mix(in srgb, var(--card-paper) 92%, var(--card-accent));
+  }
+  .coach-match-event-head{
+    display:flex;align-items:baseline;justify-content:space-between;gap:8px;
+    margin:0 0 6px;padding:0 4px;
+  }
+  .coach-match-event-head b{font-size:.82rem;}
+  .coach-match-event-head span{font-size:.68rem;font-weight:700;color:var(--card-muted);}
+  .coach-match-event .coach-team-item{margin:0 0 6px;}
+  .coach-match-event .coach-team-item:last-child{margin-bottom:0;}
+  .coach-match-suggest{
+    margin:0 0 10px;padding:10px 12px;border-radius:14px;
+    border:1px dashed color-mix(in srgb, var(--card-accent) 45%, var(--card-line));
+    background:color-mix(in srgb, var(--card-paper) 88%, var(--card-accent));
+    display:grid;gap:8px;
+  }
+  .coach-match-suggest-text{display:grid;gap:2px;}
+  .coach-match-suggest-text b{font-size:.85rem;}
+  .coach-match-suggest-text span{font-size:.72rem;font-weight:700;color:var(--card-muted);}
+  .coach-match-suggest input[type="text"]{
+    width:100%;box-sizing:border-box;min-height:40px;padding:8px 10px;border-radius:12px;
+    border:1px solid var(--card-line);background:var(--surface);color:var(--text);font:inherit;
+  }
+  .coach-match-suggest-actions{display:grid;grid-template-columns:1fr auto;gap:8px;}
+  .coach-match-suggest-actions .save-btn,
+  .coach-match-suggest-actions .ghost-btn{margin:0;width:100%;}
+  .coach-match-suggest-actions .ghost-btn{width:auto;}
+  .coach-match-squad-edit{margin:0 0 10px;}
+  .coach-match-cancel-btn{
+    width:100%;margin:8px 0 0;color:#c0392b;
+    border-color:color-mix(in srgb, #c0392b 35%, var(--card-line));
+  }
+  .coach-match-create select,
+  .coach-match-create input[type="time"]{
     width:100%;box-sizing:border-box;min-height:42px;padding:8px 10px;border-radius:12px;
     border:1px solid var(--card-line);background:var(--surface);color:var(--text);font:inherit;
   }

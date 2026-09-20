@@ -515,16 +515,22 @@
     return '';
   }
   function selectedSquadFrom(scope){
-    const root = scope && scope.classList && scope.classList.contains('js-cm-squad')
-      ? scope
-      : (scope && scope.querySelector ? (scope.querySelector('.js-cm-squad') || scope) : document);
+    if(scope && scope.classList && (scope.classList.contains('js-cm-squad') || scope.classList.contains('js-cm-squad-edit'))){
+      return [...scope.querySelectorAll('input[type="checkbox"]:checked')]
+        .map(el => el.value)
+        .filter(Boolean);
+    }
+    const root = scope && scope.querySelector
+      ? (scope.querySelector('.js-cm-squad-edit') || scope.querySelector('.js-cm-squad') || scope)
+      : document;
     return [...root.querySelectorAll('input[type="checkbox"]:checked')]
       .map(el => el.value)
       .filter(Boolean);
   }
   function setSquadChecks(root, ids){
     const want = new Set((ids || []).map(String));
-    (root || document).querySelectorAll('.js-cm-squad input[type="checkbox"]').forEach(el => {
+    const scope = root || document;
+    scope.querySelectorAll('.js-cm-squad input[type="checkbox"], .js-cm-squad-edit input[type="checkbox"]').forEach(el => {
       el.checked = want.has(el.value);
     });
   }
@@ -603,15 +609,21 @@
     const meta = played
       ? `${squadN} ${tt('coachSquadShort', 'played')} · ${rated}/${squadN} ${tt('coachRatedShort', 'rated')}`
       : [
+          m.kickoff ? m.kickoff : '',
+          m.tournament || '',
           `${squadN} ${tt('coachSquadShort', 'played')}`,
           opts.showAddress && m.address ? m.address : ''
         ].filter(Boolean).join(' · ');
     const attr = opts.openAttr || 'data-match';
+    const tourBit = m.tournament
+      ? `<span class="coach-match-tour">${esc(m.tournament)}</span>`
+      : '';
     return `<button type="button" class="coach-team-item coach-match-item ${badgeCls}${on}" ${attr}="${esc(m.id)}">
       <span class="coach-match-row-top">
-        <span class="coach-team-name">${esc(m.date)} · ${esc(m.opponent)}</span>
+        <span class="coach-team-name">${esc(m.date)}${m.kickoff ? ` · ${esc(m.kickoff)}` : ''} · ${esc(m.opponent)}</span>
         <span class="coach-match-badge ${badgeCls}">${badgeInner}</span>
       </span>
+      ${tourBit}
       <span class="coach-team-meta">${esc(meta)}</span>
     </button>`;
   }
@@ -646,6 +658,58 @@
   function setCoachMatchCreateOpen(on){
     const box = document.getElementById('coachMatchCreate');
     if(box) box.hidden = !on;
+    if(on){
+      syncCoachCompetitionField();
+      fillCoachTourDatalist();
+    }
+  }
+  function syncCoachCompetitionField(){
+    const kind = document.getElementById('coachMatchKindSelect')?.value
+      || document.querySelector('#coachMatchCreate .js-cm-kind')?.value
+      || 'league';
+    const wrap = document.getElementById('coachMatchCompWrap');
+    const label = document.getElementById('coachMatchCompLabel');
+    const input = document.getElementById('coachMatchTournament');
+    if(!wrap) return;
+    if(kind === 'friendly'){
+      wrap.hidden = true;
+      return;
+    }
+    wrap.hidden = false;
+    if(!label || !input) return;
+    if(kind === 'league'){
+      label.textContent = tt('labelCompLeague', 'League');
+      label.setAttribute('data-i18n', 'labelCompLeague');
+      input.placeholder = tt('phCompLeague', 'League name');
+      input.setAttribute('data-i18n-placeholder', 'phCompLeague');
+    }else if(kind === 'cup'){
+      label.textContent = tt('labelCompCup', 'Cup');
+      label.setAttribute('data-i18n', 'labelCompCup');
+      input.placeholder = tt('phCompCup', 'Cup name');
+      input.setAttribute('data-i18n-placeholder', 'phCompCup');
+    }else{
+      label.textContent = tt('labelCompTournament', 'Tournament');
+      label.setAttribute('data-i18n', 'labelCompTournament');
+      input.placeholder = tt('phTournament', 'Tournament name');
+      input.setAttribute('data-i18n-placeholder', 'phTournament');
+    }
+  }
+  function fillCoachTourDatalist(){
+    const store = global.CoachStore;
+    const session = store && store.getSession();
+    const teamId = store && store.getActiveTeamId();
+    const list = document.getElementById('coachTourList');
+    if(!list || !session || !teamId) return;
+    const names = store.listCompetitionNames(session, teamId) || [];
+    list.innerHTML = names.map(n => `<option value="${esc(n)}"></option>`).join('');
+  }
+  let squadEditOpen = false;
+  function setSquadEditOpen(on){
+    squadEditOpen = !!on;
+    const edit = document.getElementById('coachMatchSquadEdit');
+    const view = document.querySelector('#coachMatchUpcomingBox .js-cm-squad-view');
+    if(edit) edit.hidden = !squadEditOpen;
+    if(view) view.hidden = squadEditOpen ? true : view.hidden;
   }
   function renderMatchPane(session, team){
     const store = global.CoachStore;
@@ -692,15 +756,16 @@
       }
       const parts = [];
       if(upcoming.length){
-        parts.push(upcoming.map(m => matchListRowHtml(m, {activeId: activeMatchId, showAddress: true})).join(''));
+        parts.push(renderGroupedMatchList(upcoming, activeMatchId, {showAddress: true}));
       }
       if(openPlayed.length){
         parts.push(`<div class="pro-kicker coach-match-open-kicker">${esc(tt('coachMatchNeedsAttention', 'Needs rating / score'))}</div>`);
-        parts.push(openPlayed.map(m => matchListRowHtml(m, {activeId: activeMatchId})).join(''));
+        parts.push(renderGroupedMatchList(openPlayed, activeMatchId, {}));
       }
       return parts.join('');
     })();
     document.querySelectorAll('.js-cm-matches').forEach(el => { el.innerHTML = matchListHtml; });
+    renderMatchGroupSuggestions(session, team.id, !!activeMatch);
 
     const listEl = document.querySelector('#coachMatchTab .js-cm-matches');
     const newBtn = document.getElementById('coachMatchNewBtn');
@@ -720,6 +785,7 @@
       if(summary) summary.innerHTML = '';
       if(listEl) listEl.hidden = false;
       if(newBtn) newBtn.hidden = false;
+      squadEditOpen = false;
       return;
     }
 
@@ -727,6 +793,7 @@
     const played = matchIsPlayed(activeMatch);
     if(upcomingBox) upcomingBox.hidden = played;
     if(playedBox) playedBox.hidden = !played;
+    if(played) squadEditOpen = false;
 
     if(summary){
       const outcome = matchOutcome(activeMatch);
@@ -742,8 +809,10 @@
       })[activeMatch.kind] || '';
       const bits = [
         activeMatch.date,
+        activeMatch.kickoff || '',
         venueLab,
         kindLab,
+        activeMatch.tournament || '',
         activeMatch.address || '',
         played
           ? (activeMatch.score
@@ -767,6 +836,20 @@
 
     if(!played){
       renderUpcomingSquad(session, activeMatch);
+      const editBox = document.getElementById('coachMatchSquadEdit');
+      if(squadEditOpen){
+        const picker = document.querySelector('#coachMatchSquadEdit .js-cm-squad-edit');
+        if(picker){
+          const ids = store.matchSquadIds(session, activeMatch);
+          picker.innerHTML = squadPickerHtml(players, ids);
+          picker.dataset.dirty = '1';
+          picker.dataset.match = activeMatch.id;
+        }
+        if(editBox) editBox.hidden = false;
+        document.querySelectorAll('#coachMatchUpcomingBox .js-cm-squad-view').forEach(el => { el.hidden = true; });
+      }else if(editBox){
+        editBox.hidden = true;
+      }
     }else{
       fillCoachScoreFields(document.getElementById('coachMatchPlayedBox'), activeMatch.score || '');
       const squadPlayers = store.listMatchPlayers(session, activeMatch);
@@ -815,6 +898,71 @@
           : tt('coachSendResultsBtn', 'Send cards to parents');
       });
     }
+  }
+
+  function renderGroupedMatchList(list, activeMatchId, opts){
+    opts = opts || {};
+    const groups = new Map();
+    const singles = [];
+    (list || []).forEach(m => {
+      const eid = String(m.event_id || '').trim();
+      if(eid){
+        if(!groups.has(eid)) groups.set(eid, []);
+        groups.get(eid).push(m);
+      }else singles.push(m);
+    });
+    const parts = [];
+    groups.forEach((items) => {
+      items.sort((a, b) => String(a.date).localeCompare(String(b.date)) || String(a.kickoff||'').localeCompare(String(b.kickoff||'')));
+      const title = items.find(x => x.tournament)?.tournament
+        || tt('kindTournament', 'Tournament');
+      const dates = [...new Set(items.map(x => x.date))].join(' · ');
+      parts.push(`<div class="coach-match-event">
+        <div class="coach-match-event-head">
+          <b>${esc(title)}</b>
+          <span>${esc(dates)} · ${items.length} ${esc(tt('coachGames', 'games'))}</span>
+        </div>
+        ${items.map(m => matchListRowHtml(m, {activeId: activeMatchId, showAddress: opts.showAddress})).join('')}
+      </div>`);
+    });
+    singles.forEach(m => {
+      parts.push(matchListRowHtml(m, {activeId: activeMatchId, showAddress: opts.showAddress}));
+    });
+    return parts.join('');
+  }
+  function renderMatchGroupSuggestions(session, teamId, hide){
+    const box = document.getElementById('coachMatchSuggestions');
+    if(!box) return;
+    if(hide){
+      box.hidden = true;
+      box.innerHTML = '';
+      return;
+    }
+    const store = global.CoachStore;
+    const groups = store.suggestMatchGroups(session, teamId) || [];
+    if(!groups.length){
+      box.hidden = true;
+      box.innerHTML = '';
+      return;
+    }
+    box.hidden = false;
+    box.innerHTML = groups.slice(0, 3).map((g, idx) => {
+      const dates = (g.dates || []).join(' · ');
+      const ops = g.matches.map(m => m.opponent).slice(0, 4).join(', ');
+      const name = g.tournament
+        || tt('coachMatchSuggestNamePh', 'Tournament name');
+      return `<div class="coach-match-suggest" data-suggest-idx="${idx}">
+        <div class="coach-match-suggest-text">
+          <b>${esc(tt('coachMatchSuggestTitle', 'Group as one tournament?'))}</b>
+          <span>${esc(dates)} · ${g.matches.length} ${esc(tt('coachGames', 'games'))}: ${esc(ops)}</span>
+        </div>
+        <input type="text" class="js-cm-suggest-name" maxlength="48" value="${esc(g.tournament || '')}" placeholder="${esc(name)}">
+        <div class="coach-match-suggest-actions">
+          <button type="button" class="save-btn js-cm-suggest-link" data-ids="${esc(g.matches.map(m => m.id).join(','))}">${esc(tt('coachMatchSuggestLink', 'Group'))}</button>
+          <button type="button" class="ghost-btn js-cm-suggest-dismiss">${esc(tt('previewCancel', 'Cancel'))}</button>
+        </div>
+      </div>`;
+    }).join('');
   }
 
   function renderUpcomingSquad(session, match){
@@ -1442,6 +1590,76 @@
       toast(tt('coachErrGeneric', 'Could not save profile.'));
     }
   }
+  function onCancelMatch(){
+    const store = global.CoachStore;
+    const session = store.getSession();
+    const matchId = store.getActiveMatchId();
+    if(!session || !matchId) return;
+    const ok = window.confirm(tt('coachMatchCancelConfirm', 'Cancel this upcoming match? Parents will not get a result card.'));
+    if(!ok) return;
+    try{
+      store.removeMatch(session, matchId);
+      squadEditOpen = false;
+      toast(tt('coachMatchCancelled', 'Match cancelled.'));
+      renderCoachUi();
+    }catch(e){
+      const map = {
+        has_results: tt('coachMatchCancelBlocked', 'Cannot cancel — score or ratings already exist. Use History.')
+      };
+      toast(map[e.message] || tt('coachErrGeneric', 'Something went wrong.'));
+    }
+  }
+  function onSaveMatchSquad(){
+    const store = global.CoachStore;
+    const session = store.getSession();
+    const matchId = store.getActiveMatchId();
+    if(!session || !matchId) return;
+    const match = store.getMatch(session, matchId);
+    const prev = new Set(store.matchSquadIds(session, match));
+    const picker = document.querySelector('#coachMatchSquadEdit .js-cm-squad-edit');
+    const squad = selectedSquadFrom(picker || document);
+    if(!squad.length){
+      toast(tt('coachErrSquad', 'Select at least one player who plays.'));
+      return;
+    }
+    try{
+      store.setMatchSquad(session, matchId, squad);
+      squadEditOpen = false;
+      toast(tt('coachSquadSaved', 'Squad updated.'));
+      const added = squad.filter(id => !prev.has(String(id)));
+      if(added.length){
+        store.deliverMatchInvites(session, matchId, {playerIds: added, forceUnread: true});
+        if(typeof renderParentUi === 'function') renderParentUi();
+      }
+      renderCoachUi();
+    }catch(e){
+      toast(tt('coachErrGeneric', 'Something went wrong.'));
+    }
+  }
+  function onLinkSuggestedGroup(btn){
+    const store = global.CoachStore;
+    const session = store.getSession();
+    if(!session || !btn) return;
+    const ids = String(btn.dataset.ids || '').split(',').map(s => s.trim()).filter(Boolean);
+    const card = btn.closest('.coach-match-suggest');
+    const name = String(card?.querySelector('.js-cm-suggest-name')?.value || '').trim();
+    if(!name){
+      toast(tt('coachMatchSuggestNeedName', 'Enter a tournament name.'));
+      return;
+    }
+    try{
+      store.linkMatchesToEvent(session, ids, {tournament: name});
+      toast(tt('coachMatchSuggestLinked', 'Matches grouped under one tournament.'));
+      renderCoachUi();
+    }catch(e){
+      const map = {
+        tournament: tt('coachMatchSuggestNeedName', 'Enter a tournament name.'),
+        group_small: tt('coachErrGeneric', 'Something went wrong.')
+      };
+      toast(map[e.message] || tt('coachErrGeneric', 'Something went wrong.'));
+    }
+  }
+
   function onFinishMatch(){
     const store = global.CoachStore;
     const session = store.getSession();
@@ -1462,6 +1680,7 @@
     const store = global.CoachStore;
     if(store && store.setActiveMatchId) store.setActiveMatchId('');
     setCoachMatchCreateOpen(false);
+    squadEditOpen = false;
     renderCoachUi();
   }
   function onSaveMatchScore(fromEl){
@@ -1584,6 +1803,10 @@
     const venue = root.querySelector('.js-cm-venue')?.value === 'away' ? 'away' : 'home';
     const kindRaw = root.querySelector('.js-cm-kind')?.value || 'league';
     const kind = ['league','friendly','cup','tournament'].includes(kindRaw) ? kindRaw : 'league';
+    const kickoff = root.querySelector('.js-cm-kickoff')?.value || '';
+    const tournament = kind === 'friendly'
+      ? ''
+      : String(root.querySelector('.js-cm-tournament')?.value || '').trim();
     let squad = selectedSquadFrom(root);
     const picker = root.querySelector('.js-cm-squad');
     if(!squad.length && picker?.dataset.dirty !== '1'){
@@ -1601,12 +1824,16 @@
         date,
         venue,
         kind,
+        kickoff,
+        tournament,
         score: '',
         squad,
         status: 'upcoming'
       });
       root.querySelectorAll('.js-cm-opponent').forEach(el => { el.value = ''; });
       root.querySelectorAll('.js-cm-address').forEach(el => { el.value = ''; });
+      root.querySelectorAll('.js-cm-kickoff').forEach(el => { el.value = ''; });
+      root.querySelectorAll('.js-cm-tournament').forEach(el => { el.value = ''; });
       document.querySelectorAll('.js-cm-squad').forEach(el => { el.dataset.dirty = ''; });
       setCoachMatchCreateOpen(false);
       const notify = await notifyMatchParents(match.id, {silent: true});
@@ -2335,6 +2562,9 @@
     document.getElementById('coachMatchCreateCancel')?.addEventListener('click', () => {
       setCoachMatchCreateOpen(false);
     });
+    document.getElementById('coachMatchKindSelect')?.addEventListener('change', () => {
+      syncCoachCompetitionField();
+    });
     document.getElementById('coachMatchBackBtn')?.addEventListener('click', () => {
       closeCoachMatchDetail();
     });
@@ -2414,6 +2644,41 @@
         onFinishMatch();
         return;
       }
+      const cancelMatchBtn = e.target.closest('.js-cm-cancel-match');
+      if(cancelMatchBtn){
+        onCancelMatch();
+        return;
+      }
+      const editSquadBtn = e.target.closest('.js-cm-edit-squad');
+      if(editSquadBtn){
+        squadEditOpen = true;
+        renderCoachUi();
+        return;
+      }
+      const cancelSquadBtn = e.target.closest('.js-cm-cancel-squad');
+      if(cancelSquadBtn){
+        squadEditOpen = false;
+        renderCoachUi();
+        return;
+      }
+      const saveSquadBtn = e.target.closest('.js-cm-save-squad');
+      if(saveSquadBtn){
+        onSaveMatchSquad();
+        return;
+      }
+      const suggestLink = e.target.closest('.js-cm-suggest-link');
+      if(suggestLink){
+        onLinkSuggestedGroup(suggestLink);
+        return;
+      }
+      const suggestDismiss = e.target.closest('.js-cm-suggest-dismiss');
+      if(suggestDismiss){
+        const card = suggestDismiss.closest('.coach-match-suggest');
+        if(card) card.remove();
+        const box = document.getElementById('coachMatchSuggestions');
+        if(box && !box.querySelector('.coach-match-suggest')) box.hidden = true;
+        return;
+      }
       const saveScoreBtn = e.target.closest('.js-cm-save-score');
       if(saveScoreBtn){
         onSaveMatchScore(saveScoreBtn);
@@ -2426,17 +2691,23 @@
       }
       const allBtn = e.target.closest('.js-cm-squad-all');
       if(allBtn){
-        const root = allBtn.closest('.coach-hero') || allBtn.closest('#coachMatchTab') || document;
-        const picker = root.querySelector('.js-cm-squad');
-        root.querySelectorAll('.js-cm-squad input[type="checkbox"]').forEach(el => { el.checked = true; });
+        const root = allBtn.closest('#coachMatchSquadEdit')
+          || allBtn.closest('.coach-hero')
+          || allBtn.closest('#coachMatchTab')
+          || document;
+        const picker = root.querySelector('.js-cm-squad-edit') || root.querySelector('.js-cm-squad');
+        root.querySelectorAll('.js-cm-squad-edit input[type="checkbox"], .js-cm-squad input[type="checkbox"]').forEach(el => { el.checked = true; });
         markSquadDirty(picker);
         return;
       }
       const noneBtn = e.target.closest('.js-cm-squad-none');
       if(noneBtn){
-        const root = noneBtn.closest('.coach-hero') || noneBtn.closest('#coachMatchTab') || document;
-        const picker = root.querySelector('.js-cm-squad');
-        root.querySelectorAll('.js-cm-squad input[type="checkbox"]').forEach(el => { el.checked = false; });
+        const root = noneBtn.closest('#coachMatchSquadEdit')
+          || noneBtn.closest('.coach-hero')
+          || noneBtn.closest('#coachMatchTab')
+          || document;
+        const picker = root.querySelector('.js-cm-squad-edit') || root.querySelector('.js-cm-squad');
+        root.querySelectorAll('.js-cm-squad-edit input[type="checkbox"], .js-cm-squad input[type="checkbox"]').forEach(el => { el.checked = false; });
         markSquadDirty(picker);
         return;
       }

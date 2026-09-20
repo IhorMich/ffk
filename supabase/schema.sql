@@ -194,8 +194,18 @@ create table if not exists public.team_matches (
   kind text not null default 'league' check (kind in ('league','friendly','cup','tournament')),
   status text not null default 'upcoming' check (status in ('upcoming','played')),
   squad jsonb not null default '[]'::jsonb,
+  kickoff text not null default '' check (char_length(kickoff) <= 8),
+  tournament text not null default '' check (char_length(tournament) <= 48),
+  event_id text not null default '' check (char_length(event_id) <= 40),
+  comment text not null default '' check (char_length(comment) <= 400),
   created_at timestamptz not null default now()
 );
+
+-- Existing projects: run once
+-- alter table public.team_matches add column if not exists kickoff text not null default '';
+-- alter table public.team_matches add column if not exists tournament text not null default '';
+-- alter table public.team_matches add column if not exists event_id text not null default '';
+-- alter table public.team_matches add column if not exists comment text not null default '';
 
 create table if not exists public.ratings (
   id text primary key,
