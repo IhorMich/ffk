@@ -2363,9 +2363,10 @@
         openCoachPlayerSheet(statsPlayer.dataset.openPlayer, {viewRatings: true});
         return;
       }
-      const rateBtn = e.target.closest('.js-cm-rates [data-rate-player]');
+      const rateBtn = e.target.closest('[data-rate-player]');
       if(rateBtn){
         openCoachQuickRate(rateBtn.dataset.match, rateBtn.dataset.ratePlayer);
+        return;
       }
     });
     document.addEventListener('change', e => {
