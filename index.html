@@ -428,18 +428,49 @@ window.ffkIsNative = function () {
   <div class="intro" id="intro">
     <div class="intro-ambience" aria-hidden="true"></div>
     <div class="intro-col">
-      <svg class="intro-chart" viewBox="0 0 200 84" aria-hidden="true">
-        <line class="intro-chart-grid" x1="0" y1="70" x2="200" y2="70"/>
-        <line class="intro-chart-grid" x1="0" y1="40" x2="200" y2="40"/>
-        <line class="intro-chart-grid" x1="0" y1="12" x2="200" y2="12"/>
-        <path id="introChartLine" class="intro-chart-line" d="M6 70 L28 62 L50 64 L72 48 L94 44 L116 30 L138 26 L160 16 L186 8" stroke-dasharray="400" stroke-dashoffset="400"/>
-        <circle id="introChartDot" class="intro-chart-dot" cx="6" cy="70" r="4.5"/>
+      <svg class="intro-chart" viewBox="0 0 240 110" aria-hidden="true">
+        <defs>
+          <linearGradient id="introLineGold" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stop-color="#C48416"/>
+            <stop offset=".55" stop-color="#F5B942"/>
+            <stop offset="1" stop-color="#FFE29A"/>
+          </linearGradient>
+          <linearGradient id="introAreaGold" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#F5B942" stop-opacity=".42"/>
+            <stop offset="1" stop-color="#F5B942" stop-opacity="0"/>
+          </linearGradient>
+          <linearGradient id="introAreaSoft" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#FFE29A" stop-opacity=".2"/>
+            <stop offset="1" stop-color="#FFE29A" stop-opacity="0"/>
+          </linearGradient>
+          <clipPath id="introChartClip">
+            <rect id="introChartClipRect" x="0" y="0" width="0" height="110"/>
+          </clipPath>
+          <filter id="introLineGlow" x="-20%" y="-40%" width="140%" height="180%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="1.8" result="blur"/>
+            <feMerge>
+              <feMergeNode in="blur"/>
+              <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+          </filter>
+        </defs>
+        <line class="intro-chart-grid" x1="0" y1="92" x2="240" y2="92"/>
+        <line class="intro-chart-grid" x1="0" y1="58" x2="240" y2="58"/>
+        <line class="intro-chart-grid" x1="0" y1="24" x2="240" y2="24"/>
+        <g clip-path="url(#introChartClip)">
+          <path class="intro-chart-area" d="M8 90 L34 80 L58 84 L84 66 L108 60 L134 44 L158 40 L184 26 L210 20 L232 14 L232 102 L8 102 Z"/>
+          <path class="intro-chart-area intro-chart-area-soft" d="M8 82 L40 76 L74 72 L108 58 L142 50 L176 38 L208 30 L232 24 L232 102 L8 102 Z"/>
+          <path class="intro-chart-draw intro-chart-back" d="M8 94 L36 88 L70 90 L104 78 L138 72 L172 60 L204 54 L232 46"/>
+          <path class="intro-chart-draw intro-chart-mid" d="M8 82 L40 76 L74 72 L108 58 L142 50 L176 38 L208 30 L232 24"/>
+          <path id="introChartLine" class="intro-chart-draw intro-chart-line" d="M8 90 L34 80 L58 84 L84 66 L108 60 L134 44 L158 40 L184 26 L210 20 L232 14"/>
+        </g>
+        <circle id="introChartDot" class="intro-chart-dot" cx="8" cy="90" r="5"/>
       </svg>
       <div class="intro-lockup">
         <div class="intro-score" id="introScore">6.0</div>
         <svg class="intro-check" viewBox="0 0 24 24" aria-hidden="true">
-          <circle cx="12" cy="12" r="12"/>
-          <path d="M6.7 12.2l3.3 3.3 7.3-7.4"/>
+          <circle cx="12" cy="12" r="11"/>
+          <path id="introCheckPath" d="M6.6 12.3 L10.2 15.8 L17.6 8.2"/>
         </svg>
       </div>
       <div class="intro-name" aria-label="Matchcard">

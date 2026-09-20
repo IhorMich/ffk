@@ -3558,29 +3558,45 @@ function onboardPages(){
 }
 let introBusy = false;
 let introScoreTimer = 0;
-let introChartLen = 0;
+let introCheckTimer = 0;
 function paintIntroScore(score){
   const el = document.getElementById('introScore');
   const v = Math.max(6, Math.min(10, Number(score) || 6));
   if(el) el.textContent = fmtNum(Math.round(v * 10) / 10, 1);
 }
 function paintIntroChart(p){
+  const t = Math.max(0, Math.min(1, Number(p) || 0));
+  document.querySelectorAll('.intro-chart-draw').forEach(line => {
+    const len = Number(line.dataset.len);
+    if(!len) return;
+    line.style.strokeDashoffset = String(len * (1 - t));
+  });
+  const clip = document.getElementById('introChartClipRect');
+  if(clip) clip.setAttribute('width', String(240 * t));
   const line = document.getElementById('introChartLine');
   const dot = document.getElementById('introChartDot');
-  if(!line || !introChartLen) return;
-  const t = Math.max(0, Math.min(1, Number(p) || 0));
-  line.style.strokeDashoffset = String(introChartLen * (1 - t));
-  const pt = line.getPointAtLength(introChartLen * t);
-  if(dot){
+  const len = line && Number(line.dataset.len);
+  if(line && dot && len){
+    const pt = line.getPointAtLength(len * t);
     dot.setAttribute('cx', String(pt.x));
     dot.setAttribute('cy', String(pt.y));
   }
 }
 function prepareIntroChart(){
-  const line = document.getElementById('introChartLine');
-  if(!line) return;
-  introChartLen = line.getTotalLength();
-  line.style.strokeDasharray = String(introChartLen);
+  document.querySelectorAll('.intro-chart-draw').forEach(line => {
+    const len = line.getTotalLength();
+    line.dataset.len = String(len);
+    line.style.strokeDasharray = String(len);
+    line.style.strokeDashoffset = String(len);
+  });
+  const check = document.getElementById('introCheckPath');
+  if(check){
+    const len = check.getTotalLength();
+    check.style.strokeDasharray = String(len);
+    check.style.strokeDashoffset = String(len);
+  }
+  const clip = document.getElementById('introChartClipRect');
+  if(clip) clip.setAttribute('width', '0');
   paintIntroChart(0);
 }
 function stopIntroScore(){
@@ -3588,6 +3604,35 @@ function stopIntroScore(){
     cancelAnimationFrame(introScoreTimer);
     introScoreTimer = 0;
   }
+  if(introCheckTimer){
+    cancelAnimationFrame(introCheckTimer);
+    introCheckTimer = 0;
+  }
+}
+function drawIntroCheck(){
+  const check = document.getElementById('introCheckPath');
+  const root = document.getElementById('intro');
+  if(root) root.classList.add('ok');
+  if(!check) return;
+  const len = check.getTotalLength();
+  check.style.strokeDasharray = String(len);
+  check.style.strokeDashoffset = String(len);
+  const delay = 70;
+  const dur = 560;
+  const t0 = performance.now();
+  const tick = now => {
+    const t = now - t0 - delay;
+    if(t < 0){
+      introCheckTimer = requestAnimationFrame(tick);
+      return;
+    }
+    const p = Math.min(1, t / dur);
+    const e = 1 - Math.pow(1 - p, 3);
+    check.style.strokeDashoffset = String(len * (1 - e));
+    if(p < 1) introCheckTimer = requestAnimationFrame(tick);
+    else introCheckTimer = 0;
+  };
+  introCheckTimer = requestAnimationFrame(tick);
 }
 function startIntroScore(){
   stopIntroScore();
@@ -3596,8 +3641,8 @@ function startIntroScore(){
   prepareIntroChart();
   paintIntroScore(6);
   paintIntroChart(0);
-  const delay = 800;
-  const dur = 4400;
+  const delay = 420;
+  const dur = 2800;
   const t0 = performance.now();
   const tick = now => {
     const t = now - t0 - delay;
@@ -3614,7 +3659,7 @@ function startIntroScore(){
       paintIntroScore(10);
       paintIntroChart(1);
       introScoreTimer = 0;
-      if(root) root.classList.add('ok');
+      drawIntroCheck();
     }
   };
   introScoreTimer = requestAnimationFrame(tick);
@@ -3660,7 +3705,7 @@ function playIntro(){
   startIntroScore();
   requestAnimationFrame(() => requestAnimationFrame(hideNativeSplash));
   el.addEventListener('click', finishIntro, {once:true});
-  window.setTimeout(finishIntro, 8200);
+  window.setTimeout(finishIntro, 7200);
   return true;
 }
 function finishOnboard(){
