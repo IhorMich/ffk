@@ -2182,13 +2182,48 @@ function scoresNow(){
 }
 function updateHero(){
   const s = scoresNow();
-  document.getElementById('heroScore').innerHTML = fmtNum(s.overall, 2) + '<small>/10</small>';
-  document.getElementById('heroAction').textContent = fmtNum(s.action, 2);
-  document.getElementById('heroEffort').textContent = fmtNum(s.effort, 2);
-  document.getElementById('heroLabel').textContent = isShortOuting(s.minutes, s.matchLen)
-    ? t('ratingForMins', {n: s.minutes})
-    : t('heroOverall');
-  document.getElementById('liveScore').textContent = fmtNum(s.action, 2);
+  const overall = fmtNum(s.overall, 2) + '<small>/10</small>';
+  const heroScore = document.getElementById('heroScore');
+  if(heroScore) heroScore.innerHTML = overall;
+  const liveScore = document.getElementById('liveScore');
+  if(liveScore) liveScore.innerHTML = overall;
+  const setNum = (id, n) => {
+    const el = document.getElementById(id);
+    if(el) el.textContent = fmtNum(n, 2);
+  };
+  setNum('heroAction', s.action);
+  setNum('heroEffort', s.effort);
+  setNum('liveAction', s.action);
+  setNum('liveEffort', s.effort);
+  const setBar = (id, n) => {
+    const el = document.getElementById(id);
+    if(el) el.style.setProperty('--p', String(Math.max(0, Math.min(1, Number(n) / 10))));
+  };
+  setBar('heroActionBar', s.action);
+  setBar('heroEffortBar', s.effort);
+  setBar('liveActionBar', s.action);
+  setBar('liveEffortBar', s.effort);
+  const label = document.getElementById('heroLabel');
+  if(label){
+    label.textContent = isShortOuting(s.minutes, s.matchLen)
+      ? t('ratingForMins', {n: s.minutes})
+      : t('heroOverall');
+  }
+  const pitch = String(currentPitch() || 'ST').toUpperCase();
+  ['heroPosTag','livePosTag'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.textContent = pitch;
+  });
+  const meta = document.getElementById('heroMeta');
+  if(meta){
+    const opp = (document.getElementById('f-opponent')?.value || '').trim();
+    const score = scoreFromFields();
+    const bits = [];
+    if(opp) bits.push(opp);
+    if(score) bits.push(score);
+    meta.textContent = bits.join('  ·  ');
+    meta.hidden = !bits.length;
+  }
   syncLiveUndo();
 }
 
@@ -2223,7 +2258,7 @@ function resetForm(keepDraft){
   updateHero();
   syncDateShown();
   const ctx = document.getElementById('matchContext');
-  if(ctx && !keepDraft) ctx.open = true;
+  if(ctx && !keepDraft) ctx.open = false;
   if(!keepDraft){
     sessionStorage.removeItem(draftStorageKey());
     sessionStorage.removeItem(DRAFT_KEY);
