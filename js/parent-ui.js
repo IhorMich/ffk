@@ -23,6 +23,36 @@
     return [p.first_name, p.last_name].filter(Boolean).join(' ') || '—';
   }
 
+  function verifiedBadgeHtml(){
+    const label = tt('parentVerifiedByCoach', 'Verified by coach');
+    return `<span class="verified-badge" title="${esc(label)}" aria-label="${esc(label)}"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M9.2 17.05 4.7 12.55l1.55-1.55 2.95 2.95 8.1-8.1 1.55 1.55z"/></svg></span>`;
+  }
+  function nameWithVerified(name, on){
+    const text = esc(name || '—');
+    if(!on) return text;
+    return `<span class="name-with-verified"><span class="name-with-verified-text">${text}</span>${verifiedBadgeHtml()}</span>`;
+  }
+  function isCoachVerifiedPerson(first, last){
+    const store = global.ParentStore;
+    if(!store || typeof store.listLinks !== 'function') return false;
+    const f = String(first || '').trim().toLowerCase();
+    const l = String(last || '').trim().toLowerCase();
+    if(!f && !l) return false;
+    return store.listLinks().some(link => {
+      const p = link && link.player;
+      if(!p) return false;
+      return String(p.first_name || '').trim().toLowerCase() === f
+        && String(p.last_name || '').trim().toLowerCase() === l;
+    });
+  }
+  function isCoachVerifiedPlayer(p){
+    if(!p) return false;
+    return isCoachVerifiedPerson(
+      p.first_name || p.firstName,
+      p.last_name || p.lastName
+    );
+  }
+
   function inboxMessages(){
     const store = global.ParentStore;
     // Always scope to linked children — never dump the whole on-device inbox.
@@ -207,11 +237,19 @@
         ${!isResult && msg.address
           ? detailRow(tt('coachMatchAddress', 'Match address'), msg.address)
           : ''}
-        ${detailRow(tt('parentInboxChild', 'Child'), msg.player_name || '')}
+        ${(() => {
+          const child = msg.player_name || '';
+          if(!child) return '';
+          const parts = String(child).trim().split(/\s+/);
+          const first = parts[0] || '';
+          const last = parts.slice(1).join(' ');
+          const verified = isCoachVerifiedPerson(first, last) || !!(msg.team_player_id);
+          return `<p class="parent-msg-detail"><b>${esc(tt('parentInboxChild', 'Child'))}</b><span>${nameWithVerified(child, verified)}</span></p>`;
+        })()}
         ${detailRow(tt('parentCoachLabel', 'Coach'), msg.coach_name || '')}
         ${detailRow(
           tt('parentInboxTeam', 'Team'),
-          [msg.academy_name, msg.team_name].filter(Boolean).join(' · ')
+          msg.team_name || ''
         )}
       </div>
       ${resultBlock}
@@ -369,12 +407,12 @@
       const meta = [
         l.player && l.player.number ? `#${l.player.number}` : '',
         l.team && l.team.name ? l.team.name : '',
-        l.academy && l.academy.name ? l.academy.name : ''
+        l.team && l.team.age_group ? l.team.age_group : ''
       ].filter(Boolean).join(' · ');
       const avg = l.avg != null ? Number(l.avg).toFixed(1) : '—';
       return `<button type="button" class="parent-link-row" data-parent-link="${esc(l.id)}">
         <span class="parent-link-main">
-          <b>${esc(name)}</b>
+          <b>${nameWithVerified(name, true)}</b>
           <span>${esc(meta)}</span>
         </span>
         <span class="parent-link-avg">${esc(avg)}</span>
@@ -401,10 +439,9 @@
     board.innerHTML = links.map(l => {
       const name = playerName(l.player);
       const confirmBits = [
-        `<div class="parent-confirm-badge">${esc(tt('parentConfirmed', 'Confirmed by academy'))}</div>`,
-        `<h3 class="coach-team-heading">${esc(name)}</h3>`,
+        `<div class="parent-confirm-badge">${esc(tt('parentConfirmed', 'Confirmed by coach'))}</div>`,
+        `<h3 class="coach-team-heading">${nameWithVerified(name, true)}</h3>`,
         `<p class="hint">${esc([
-          l.academy && l.academy.name,
           l.team && l.team.name,
           l.team && l.team.age_group,
           l.coach && l.coach.name ? `${tt('parentCoachLabel', 'Coach')}: ${l.coach.name}` : ''
@@ -471,14 +508,13 @@
       store.setPending(payload);
       const name = playerName(payload.player);
       preview.innerHTML = `<div class="parent-confirm-card">
-        <div class="parent-confirm-badge">${esc(tt('parentConfirmed', 'Confirmed by academy'))}</div>
-        <b>${esc(name)}</b>
+        <div class="parent-confirm-badge">${esc(tt('parentConfirmed', 'Confirmed by coach'))}</div>
+        <b>${nameWithVerified(name, true)}</b>
         <span>${esc([
           payload.player.number ? `#${payload.player.number}` : '',
           payload.player.position || ''
         ].filter(Boolean).join(' · '))}</span>
         <p class="hint">${esc([
-          payload.academy.name,
           payload.team.name,
           payload.team.age_group,
           payload.coach.name ? `${tt('parentCoachLabel', 'Coach')}: ${payload.coach.name}` : ''
@@ -536,12 +572,11 @@
         }).join('')}</div>`
       : `<p class="hint">${esc(tt('parentNoCoachRatings', 'Coach has not shared ratings in this invite yet.'))}</p>`;
     body.innerHTML = `
-      <div class="parent-confirm-badge">${esc(tt('parentConfirmed', 'Confirmed by academy'))}</div>
-      <h3 class="coach-rate-name">${esc(name)}</h3>
+      <div class="parent-confirm-badge">${esc(tt('parentConfirmed', 'Confirmed by coach'))}</div>
+      <h3 class="coach-rate-name">${nameWithVerified(name, true)}</h3>
       <p class="hint">${esc([
         link.player.number ? `#${link.player.number}` : '',
         link.player.position || '',
-        link.academy && link.academy.name,
         link.team && link.team.name,
         link.team && link.team.age_group
       ].filter(Boolean).join(' · '))}</p>
@@ -687,4 +722,8 @@
   global.closeParentLinkSheet = closeParentLinkSheet;
   global.ingestParentDeepLink = ingestDeepLink;
   global.closeParentMsgSheet = closeParentMsgSheet;
+  global.isCoachVerifiedPerson = isCoachVerifiedPerson;
+  global.isCoachVerifiedPlayer = isCoachVerifiedPlayer;
+  global.nameWithVerifiedHtml = nameWithVerified;
+  global.coachVerifiedBadgeHtml = verifiedBadgeHtml;
 })(window);

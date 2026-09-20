@@ -1496,7 +1496,6 @@
       return [
         'Matchcard — parent invite',
         `Child: ${num}${child}`,
-        `Academy: ${p.a && p.a.name ? p.a.name : ''}`,
         `Team: ${p.tm && p.tm.name ? p.tm.name : ''}${p.tm && p.tm.age_group ? ` · ${p.tm.age_group}` : ''}`,
         `Coach: ${p.c && p.c.name ? p.c.name : ''}`,
         `Code: MC-${invite.code}`,

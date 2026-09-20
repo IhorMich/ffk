@@ -2117,7 +2117,6 @@ function applyHeader(){
   const age = ageYears(player.birthDate);
   const meta = [age != null ? ageLabel(age) : '', posLine()].filter(Boolean).join(' · ');
   const clubBits = [...new Set([player.team, player.club, player.season].map(x => String(x||'').trim()).filter(Boolean))].join(' · ');
-  document.getElementById('playerNameDisplay').textContent = player.firstName || displayName();
   const avgEl = document.getElementById('playerSeasonAvg');
   const seasonAvg = avgRating(feedList().list);
   if(seasonAvg == null) avgEl.hidden = true;
@@ -2130,7 +2129,24 @@ function applyHeader(){
   setBadge(document.getElementById('clubBadge'), player.photo, initials());
   const fbName = document.getElementById('fbName');
   const fbMeta = document.getElementById('fbMeta');
-  if(fbName) fbName.textContent = displayName();
+  const verified = typeof isCoachVerifiedPerson === 'function'
+    && isCoachVerifiedPerson(player.firstName, player.lastName);
+  const fullName = displayName();
+  if(fbName){
+    if(verified && typeof nameWithVerifiedHtml === 'function'){
+      fbName.innerHTML = nameWithVerifiedHtml(fullName, true);
+    }else{
+      fbName.textContent = fullName;
+    }
+  }
+  const headName = document.getElementById('playerNameDisplay');
+  if(headName){
+    if(verified && typeof nameWithVerifiedHtml === 'function'){
+      headName.innerHTML = nameWithVerifiedHtml(player.firstName || fullName, true);
+    }else{
+      headName.textContent = player.firstName || fullName;
+    }
+  }
   if(fbMeta) fbMeta.textContent = [no ? ((langLatin() ? '#' : '№') + no) : '', posLine(), clubBits].filter(Boolean).join(' · ');
   renderPlayerFeed();
   if(typeof renderParentUi === 'function') renderParentUi();
@@ -2189,8 +2205,13 @@ function renderRoster(){
     const del = roster.ids.length > 1
       ? `<button class="roster-x" type="button" data-del="${escapeHtml(id)}" aria-label="${escapeHtml(t('deletePlayer'))}">×</button>`
       : '';
+    const verified = typeof isCoachVerifiedPerson === 'function'
+      && isCoachVerifiedPerson(p.firstName, p.lastName);
+    const label = verified && typeof nameWithVerifiedHtml === 'function'
+      ? nameWithVerifiedHtml(playerLabel(p), true)
+      : escapeHtml(playerLabel(p));
     return `<div class="roster-row">
-      <button class="roster-item${on}" type="button" data-switch="${escapeHtml(id)}">${rosterAvatarHtml(p)}<span>${escapeHtml(playerLabel(p))}</span></button>
+      <button class="roster-item${on}" type="button" data-switch="${escapeHtml(id)}">${rosterAvatarHtml(p)}<span>${label}</span></button>
       ${del}
     </div>`;
   }).join('');

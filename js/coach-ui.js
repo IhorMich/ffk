@@ -3296,7 +3296,6 @@
     if(nameEl) nameEl.textContent = child;
     if(metaEl){
       metaEl.textContent = [
-        p.a && p.a.name,
         p.tm && p.tm.name,
         p.tm && p.tm.age_group
       ].filter(Boolean).join(' · ');

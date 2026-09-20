@@ -1554,6 +1554,28 @@
     font-size:.68rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;
     background:color-mix(in srgb, var(--card-accent) 18%, transparent);color:var(--card-accent);
   }
+  .name-with-verified{
+    display:inline-flex;align-items:center;gap:.28em;max-width:100%;
+  }
+  .name-with-verified-text{
+    min-width:0;overflow:hidden;text-overflow:ellipsis;
+  }
+  .verified-badge{
+    display:inline-flex;align-items:center;justify-content:center;
+    width:1.05em;height:1.05em;min-width:1.05em;border-radius:50%;
+    background:#1d9bf0;color:#fff;flex-shrink:0;vertical-align:middle;
+    box-shadow:0 0 0 1.5px color-mix(in srgb, #1d9bf0 35%, transparent);
+  }
+  .verified-badge svg{width:62%;height:62%;display:block;}
+  .fb-name .verified-badge,
+  #playerNameDisplay .verified-badge{
+    width:1.15rem;height:1.15rem;min-width:1.15rem;
+  }
+  .coach-rate-name .name-with-verified,
+  .coach-team-heading .name-with-verified,
+  .parent-link-main b .name-with-verified{
+    vertical-align:baseline;
+  }
   .parent-confirm-card{
     margin:10px 0 12px;padding:12px 14px;border-radius:14px;border:1px solid var(--card-line);
     background:color-mix(in srgb, var(--card-paper) 88%, var(--card-accent));
