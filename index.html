@@ -541,6 +541,8 @@ window.ffkIsNative = function () {
           <li data-i18n="coachTeaserParents">Invite родителя к профилю ребёнка</li>
         </ul>
         <button class="save-btn" id="openCoachBtn" type="button" data-i18n="coachOpen">Matchcard Coach</button>
+        <button class="ghost-btn" id="enterParentModeBtn" type="button" hidden data-i18n="coachSwitchParent">Перейти в режим родителя / Free</button>
+        <button class="ghost-btn" id="enterCoachModeBtn" type="button" hidden data-i18n="coachSwitchCoach">Вернуться в режим тренера</button>
       </div>
       <button class="save-btn" id="saveSettingsBtn" type="button" data-i18n="sSave">Сохранить настройки</button>
       <p class="hint" id="appVersionHint"></p>
@@ -740,6 +742,12 @@ window.ffkIsNative = function () {
         </div>
         <button class="save-btn" id="coachCreateTeamBtn" type="button" data-i18n="coachCreateTeamBtn">Add team</button>
         <div id="coachSettingsTeamList" class="coach-team-list"></div>
+      </div>
+
+      <div class="coach-settings-block">
+        <div class="pro-kicker" data-i18n="coachModeSwitchKicker">Режим приложения</div>
+        <p class="hint" data-i18n="coachModeSwitchHint">Coach и Free/Pro на одном телефоне. Можно временно уйти к оценке ребёнка у бровки.</p>
+        <button class="save-btn" id="coachEnterParentBtn" type="button" data-i18n="coachSwitchParent">Перейти в режим родителя / Free</button>
       </div>
 
       <div class="coach-settings-block">

@@ -382,6 +382,7 @@ function syncProUi(){
     btn.classList.toggle('pro-gated', !isPro());
   });
   syncCoachTabUi();
+  if(typeof syncPlanModeButtons === 'function') syncPlanModeButtons();
 }
 
 let settings = {club:'', player:'', position:'fwd', format:'2x30', minutes:'60', lang:'ru', seasonCloseDeclined:'', theme:'dark', iconSet:'clear', onboarded:false, onboardSkin:'', isPro:false, isCoach:false, pwaTransferSeen:false, introMark:''};
@@ -3159,7 +3160,10 @@ document.getElementById('cloudSyncBtn')?.addEventListener('click', () => {
 });
 document.getElementById('proUnlockBtn')?.addEventListener('click', () => setPro(true));
 document.getElementById('proLockBtn')?.addEventListener('click', () => setPro(false));
-document.getElementById('openCoachBtn')?.addEventListener('click', () => showView('coach'));
+document.getElementById('openCoachBtn')?.addEventListener('click', () => {
+  if(typeof enterCoachMode === 'function') enterCoachMode();
+  else showView('coach');
+});
 document.getElementById('coachBackBtn')?.addEventListener('click', () => showView('settings'));
 if(typeof bindCoachUi === 'function') bindCoachUi();
 if(typeof bindParentUi === 'function') bindParentUi();

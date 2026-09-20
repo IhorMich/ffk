@@ -39,6 +39,7 @@
       syncModeHint();
       renderCoachTabsEmpty();
       if(typeof syncCoachModeViews === 'function') syncCoachModeViews();
+      syncPlanModeButtons();
       return;
     }
 
@@ -46,12 +47,45 @@
     auth.hidden = true;
     work.hidden = false;
     work.dataset.started = '1';
-    const academy = store.myAcademy(session);
-    if(academy && typeof setCoachPlan === 'function') setCoachPlan(true);
-    else if(typeof applyHeader === 'function') applyHeader();
+    if(typeof applyHeader === 'function') applyHeader();
     if(typeof refreshCoachMediaUi === 'function') refreshCoachMediaUi();
     renderWorkspace(session);
+    syncPlanModeButtons();
   }
+
+  function enterCoachMode(){
+    if(typeof setCoachPlan === 'function') setCoachPlan(true);
+    if(typeof showView === 'function') showView('coach');
+    renderCoachUi();
+    syncPlanModeButtons();
+  }
+
+  function enterParentMode(){
+    closeCoachSettings();
+    if(typeof closeCoachQuickRate === 'function') closeCoachQuickRate();
+    window.coachChildView = null;
+    if(typeof syncCoachChildPlayerUi === 'function') syncCoachChildPlayerUi();
+    if(typeof setCoachPlan === 'function') setCoachPlan(false);
+    if(typeof showView === 'function') showView('player');
+    if(typeof renderParentUi === 'function') renderParentUi();
+    if(typeof applyHeader === 'function') applyHeader();
+    syncPlanModeButtons();
+    toast(tt('coachSwitchedParent', 'Режим родителя / Free'));
+  }
+
+  function syncPlanModeButtons(){
+    const session = global.CoachStore && global.CoachStore.getSession && global.CoachStore.getSession();
+    const hasCoach = !!session;
+    const onCoach = typeof isCoachPlan === 'function' ? isCoachPlan() : false;
+    const parentBtn = document.getElementById('enterParentModeBtn');
+    const coachBtn = document.getElementById('enterCoachModeBtn');
+    if(parentBtn) parentBtn.hidden = !(hasCoach && onCoach);
+    if(coachBtn) coachBtn.hidden = !(hasCoach && !onCoach);
+  }
+
+  global.enterCoachMode = enterCoachMode;
+  global.enterParentMode = enterParentMode;
+  global.syncPlanModeButtons = syncPlanModeButtons;
 
   function syncModeHint(){
     const hint = document.getElementById('coachModeHint');
@@ -520,6 +554,7 @@
     const pass = document.getElementById('coachPassword')?.value || '';
     try{
       await global.CoachStore.signUp(email, pass);
+      if(typeof setCoachPlan === 'function') setCoachPlan(true);
       toast(tt('coachSignedUp', 'Coach account created on this phone.'));
       renderCoachUi();
     }catch(e){
@@ -536,6 +571,7 @@
     const pass = document.getElementById('coachPassword')?.value || '';
     try{
       await global.CoachStore.signIn(email, pass);
+      if(typeof setCoachPlan === 'function') setCoachPlan(true);
       toast(tt('coachSignedIn', 'Signed in.'));
       renderCoachUi();
     }catch(e){
@@ -747,10 +783,10 @@
   }
 
   const COACH_QUICK_KEYS = {
-    fwd: ['goals','assists','shots','dribbles'],
-    mid: ['goals','assists','chances','tackles'],
-    def: ['tackles','interceptions','clearances','blocks'],
-    gk: ['saves','claims','conceded','interceptions']
+    fwd: ['goals','assists','shots','dribbles','passes','losses'],
+    mid: ['goals','assists','chances','tackles','passes','duelswon'],
+    def: ['tackles','interceptions','clearances','blocks','duelswon','losses'],
+    gk: ['saves','claims','conceded','interceptions','gkpass','buildpass']
   };
   let quickRate = null; // {matchId, teamPlayerId, pitchPos, position, playerName, opponent, date, score, rating, counts}
 
@@ -1121,12 +1157,17 @@
     document.getElementById('coachStartBtn')?.addEventListener('click', () => {
       if(global.CoachStore.getSession()){
         document.getElementById('coachWorkspace').dataset.started = '1';
+        if(typeof setCoachPlan === 'function') setCoachPlan(true);
         renderCoachUi();
+        if(typeof showView === 'function') showView('coach');
       }else openAuth();
     });
     document.getElementById('coachSignUpBtn')?.addEventListener('click', () => { onSignUp(); });
     document.getElementById('coachSignInBtn')?.addEventListener('click', () => { onSignIn(); });
     document.getElementById('coachSignOutBtn')?.addEventListener('click', () => { onSignOut(); });
+    document.getElementById('coachEnterParentBtn')?.addEventListener('click', () => { enterParentMode(); });
+    document.getElementById('enterParentModeBtn')?.addEventListener('click', () => { enterParentMode(); });
+    document.getElementById('enterCoachModeBtn')?.addEventListener('click', () => { enterCoachMode(); });
     document.getElementById('coachCreateAcademyBtn')?.addEventListener('click', () => { onCreateAcademy(); });
     document.getElementById('coachCreateTeamBtn')?.addEventListener('click', () => { onCreateTeam(); });
     document.getElementById('coachAddPlayerBtn')?.addEventListener('click', () => { onAddPlayer(); });
