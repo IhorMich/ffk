@@ -709,14 +709,11 @@
       const team = this.getTeam(session, match.team_id);
       const profile = this.getProfile(session);
       const coachName = [profile.first_name, profile.last_name].filter(Boolean).join(' ') || profile.email || 'Coach';
-      // Do not list the full squad here — parents/group chats must not get other kids' names by default.
-      const code = team ? team.invite_code : '';
       return [
         `Matchcard Coach`,
         `${team ? team.name : 'Team'} vs ${match.opponent}`,
         match.date,
         match.address ? `Address: ${match.address}` : '',
-        code ? `Team code: ${code}` : '',
         `Coach: ${coachName}`,
         `Please confirm you can play.`
       ].filter(Boolean).join('\n');

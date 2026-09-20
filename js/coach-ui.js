@@ -467,9 +467,7 @@
   function renderTeamPane(session, team){
     const store = global.CoachStore;
     const title = document.getElementById('coachTeamTitle');
-    const code = document.getElementById('coachTeamCode');
     if(title) title.textContent = team.name + (team.age_group ? ` · ${team.age_group}` : '');
-    if(code) code.textContent = team.invite_code || '—';
     const posSel = document.getElementById('coachPlayerPos');
     if(posSel && typeof fillPitchSelect === 'function'){
       const keep = posSel.value;
@@ -1407,46 +1405,6 @@
     }
   }
 
-  async function copyTeamCode(){
-    const code = document.getElementById('coachTeamCode')?.textContent?.trim() || '';
-    if(!code || code === '—') return;
-    try{
-      await navigator.clipboard.writeText(code);
-      toast(tt('coachCodeCopied', 'Code copied.'));
-    }catch(e){
-      toast(tt('coachErrGeneric', 'Something went wrong.'));
-    }
-  }
-  async function shareTeamCode(){
-    const store = global.CoachStore;
-    const session = store.getSession();
-    const team = store.getTeam(session, store.getActiveTeamId());
-    if(!team || !team.invite_code) return;
-    const title = tt('coachShareCodeTitle', 'Team code');
-    const text = tt('coachShareCodeText', '{team}: {code}')
-      .replace('{team}', team.name || '')
-      .replace('{code}', team.invite_code);
-    try{
-      const C = global.Capacitor;
-      const Share = C && C.Plugins && C.Plugins.Share;
-      if(Share && typeof Share.share === 'function'){
-        await Share.share({title, text, dialogTitle: title});
-        return;
-      }
-    }catch(e){}
-    try{
-      if(navigator.share){
-        await navigator.share({title, text});
-        return;
-      }
-    }catch(e){}
-    try{
-      await navigator.clipboard.writeText(text);
-      toast(tt('coachCodeCopied', 'Code copied.'));
-    }catch(e){
-      toast(tt('coachErrGeneric', 'Something went wrong.'));
-    }
-  }
   function onSaveProfile(){
     const session = global.CoachStore.getSession();
     if(!session) return;
@@ -2166,8 +2124,6 @@
     document.getElementById('coachShowAddPlayerBtn')?.addEventListener('click', () => { setPlayerFormOpen(true); });
     document.getElementById('coachAddPlayerCancel')?.addEventListener('click', () => { setPlayerFormOpen(false); });
     document.getElementById('coachAddPlayerBtn')?.addEventListener('click', () => { onAddPlayer(); });
-    document.getElementById('coachCopyCodeBtn')?.addEventListener('click', () => { copyTeamCode(); });
-    document.getElementById('coachShareCodeBtn')?.addEventListener('click', () => { shareTeamCode(); });
     document.getElementById('coachTeamMenuBack')?.addEventListener('click', () => closeTeamMenu());
     document.getElementById('coachTeamMenuCloseBtn')?.addEventListener('click', () => closeTeamMenu());
     document.getElementById('coachTeamRenameSaveBtn')?.addEventListener('click', () => onSaveTeamRename());
