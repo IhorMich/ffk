@@ -3158,14 +3158,9 @@ function showView(name){
   syncHeroPin();
 }
 function restoreView(){
-  let name = 'new';
-  try{ name = sessionStorage.getItem(VIEW_KEY) || 'new'; }catch(e){}
-  if(name === 'report') name = 'history';
-  if(name === 'coach' && !isCoachPlan()) name = 'settings';
-  const allowed = ['player','new','history','stats','settings'];
-  if(isCoachPlan()) allowed.push('coach');
-  if(!allowed.includes(name)) name = 'new';
-  if(name === 'player' && isCoachPlan()) name = 'coach';
+  // App launch home: Player for Free/Pro, Coach for coach plan.
+  let name = isCoachPlan() ? 'coach' : 'player';
+  if(name === 'coach' && !isCoachPlan()) name = 'player';
   showView(name);
 }
 
@@ -4536,7 +4531,7 @@ document.getElementById('saveSettingsBtn').addEventListener('click', () => {
   applyHeader();
   applyI18n();
   showToast(t('toastSettings'));
-  showView(isCoachPlan() ? 'coach' : 'new');
+  showView(isCoachPlan() ? 'coach' : 'player');
   updateHero();
 });
 
