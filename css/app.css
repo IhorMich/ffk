@@ -1362,9 +1362,23 @@
   @media (min-width:380px){
     .coach-analytics-sum-4{grid-template-columns:repeat(4,1fr);}
   }
-  .coach-analytics-sum div{
+  .coach-analytics-sum div,
+  .coach-analytics-sum .coach-stat-jump{
     padding:10px 8px;border-radius:12px;border:1px solid var(--card-line);text-align:center;
   }
+  .coach-stat-jump{
+    margin:0;width:100%;background:var(--card-paper);color:inherit;font:inherit;
+    cursor:pointer;-webkit-tap-highlight-color:transparent;
+  }
+  .coach-stat-jump:active{opacity:.82;transform:scale(.98);}
+  .coach-home-stats{margin:0 0 14px;}
+  .coach-home-stats .coach-stat-jump{
+    background:var(--surface);border-color:var(--border);color:var(--text);
+  }
+  .coach-home-stats .coach-stat-jump b{color:var(--text);}
+  .coach-home-stats .coach-stat-jump span{color:var(--muted);}
+  #coachProfileStats .coach-stat-jump,
+  #coachHomeStats .coach-stat-jump{display:block;}
   .coach-analytics-sum b{display:block;font-size:1.15rem;font-weight:800;color:var(--card-ink);}
   .coach-analytics-sum b.up{color:#1faa5a;}
   .coach-analytics-sum b.down{color:#e25555;}

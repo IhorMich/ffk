@@ -203,6 +203,67 @@
     if(pushOff) pushOff.hidden = !enabled;
   }
 
+  function coachJumpStatsHtml(teamsN, playersN, matchesN, ratingsN){
+    const cell = (jump, n, label) =>
+      `<button type="button" class="coach-stat-jump" data-coach-jump="${esc(jump)}">
+        <b>${esc(String(n))}</b><span>${esc(label)}</span>
+      </button>`;
+    return [
+      cell('teams', teamsN, tt('coachStatTeams', 'Teams')),
+      cell('players', playersN, tt('coachStatPlayers', 'Players')),
+      cell('matches', matchesN, tt('coachStatMatches', 'Matches')),
+      cell('ratings', ratingsN, tt('coachStatRatings', 'Ratings'))
+    ].join('');
+  }
+  function scrollCoachEl(id){
+    try{
+      const el = document.getElementById(id);
+      if(el) el.scrollIntoView({behavior: 'smooth', block: 'start'});
+    }catch(e){}
+  }
+  function jumpCoachStat(kind){
+    closeCoachSettings();
+    if(typeof closeCoachPlayerSheet === 'function') closeCoachPlayerSheet();
+    const go = (view) => {
+      if(typeof showView === 'function') showView(view);
+    };
+    if(kind === 'teams'){
+      go('coach');
+      renderCoachUi();
+      setTimeout(() => scrollCoachEl('coachTeamList'), 60);
+      return;
+    }
+    if(kind === 'players'){
+      go('coach');
+      setRosterFolded(false);
+      renderCoachUi();
+      setTimeout(() => {
+        syncRosterFoldUi(
+          (global.CoachStore && global.CoachStore.getSession && global.CoachStore.getActiveTeamId)
+            ? global.CoachStore.listPlayers(
+                global.CoachStore.getSession(),
+                global.CoachStore.getActiveTeamId()
+              ).length
+            : 0
+        );
+        scrollCoachEl('coachTeamPane');
+      }, 60);
+      return;
+    }
+    if(kind === 'matches'){
+      go('new');
+      renderCoachUi();
+      setTimeout(() => scrollCoachEl('coachMatchTab'), 60);
+      return;
+    }
+    if(kind === 'ratings'){
+      go('stats');
+      renderCoachUi();
+      setTimeout(() => scrollCoachEl('coachStatsTab'), 60);
+      return;
+    }
+  }
+
   function renderWorkspace(session){
     const store = global.CoachStore;
     const academy = store.myAcademy(session);
@@ -218,6 +279,8 @@
       if(home) home.hidden = true;
       if(teamPane) teamPane.hidden = true;
       if(homeNav) homeNav.hidden = true;
+      const homeStatsOff = document.getElementById('coachHomeStats');
+      if(homeStatsOff) homeStatsOff.hidden = true;
       closeCoachSettings();
       return;
     }
@@ -250,11 +313,12 @@
       });
     });
     if(profileStats){
-      profileStats.innerHTML = `
-        <div><b>${teams.length}</b><span>${esc(tt('coachStatTeams', 'Teams'))}</span></div>
-        <div><b>${players}</b><span>${esc(tt('coachStatPlayers', 'Players'))}</span></div>
-        <div><b>${matches}</b><span>${esc(tt('coachStatMatches', 'Matches'))}</span></div>
-        <div><b>${ratings}</b><span>${esc(tt('coachStatRatings', 'Ratings'))}</span></div>`;
+      profileStats.innerHTML = coachJumpStatsHtml(teams.length, players, matches, ratings);
+    }
+    const homeStats = document.getElementById('coachHomeStats');
+    if(homeStats){
+      homeStats.hidden = false;
+      homeStats.innerHTML = coachJumpStatsHtml(teams.length, players, matches, ratings);
     }
 
     let activeId = store.getActiveTeamId();
@@ -1573,6 +1637,14 @@
     });
     document.getElementById('coachSaveProfileBtn')?.addEventListener('click', () => { onSaveProfile(); });
     document.getElementById('coachSettingsBtn')?.addEventListener('click', () => openCoachSettings());
+    document.getElementById('coachHomeStats')?.addEventListener('click', e => {
+      const btn = e.target.closest('[data-coach-jump]');
+      if(btn) jumpCoachStat(btn.dataset.coachJump);
+    });
+    document.getElementById('coachProfileStats')?.addEventListener('click', e => {
+      const btn = e.target.closest('[data-coach-jump]');
+      if(btn) jumpCoachStat(btn.dataset.coachJump);
+    });
     document.getElementById('coachSettingsBack')?.addEventListener('click', () => closeCoachSettings());
     document.getElementById('coachSettingsCloseBtn')?.addEventListener('click', () => closeCoachSettings());
     document.getElementById('coachOpenAppSettingsBtn')?.addEventListener('click', () => {
