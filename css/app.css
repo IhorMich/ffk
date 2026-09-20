@@ -136,7 +136,7 @@
     color-scheme:light;
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
-  html,body{margin:0;padding:0;height:100%;overflow:hidden;}
+  html,body{margin:0;padding:0;overflow-x:hidden;}
   html,body,button,input,select,textarea{
     font-family:var(--font);
   }
@@ -146,7 +146,7 @@
   }
   a{color:var(--accent);}
   a:visited{color:var(--gold);}
-  .app{max-width:480px;margin:0 auto;height:100vh;height:100dvh;display:flex;flex-direction:column;overflow:hidden;}
+  .app{max-width:480px;margin:0 auto;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;}
   .topbar{
     padding:calc(18px + env(safe-area-inset-top, 0px)) 18px 16px;
     background:
@@ -771,7 +771,7 @@
   .top-actions{display:flex;gap:8px;margin-left:auto;flex-shrink:0;align-items:center;}
   .live-head .top-actions{margin-left:0;}
   .hero-dock{
-    position:sticky;top:-18px;z-index:16;
+    position:sticky;top:env(safe-area-inset-top, 0px);z-index:16;
     margin:-18px -16px 14px;padding:10px 16px 12px;
     background:var(--bg);
   }
@@ -844,7 +844,7 @@
   .hero-mini{display:flex;justify-content:space-between;align-items:baseline;font-weight:700;}
   .hero-mini .n{font-size:1.25rem;font-variant-numeric:tabular-nums;color:var(--gold);}
   .hero-mini .l{font-size:.72rem;color:var(--text-soft);}
-  .content{flex:1;min-height:0;overflow:auto;-webkit-overflow-scrolling:touch;padding:18px 16px calc(148px + env(safe-area-inset-bottom, 0px));}
+  .content{flex:1;padding:18px 16px calc(148px + env(safe-area-inset-bottom, 0px));}
   .view{display:none;pointer-events:none;}
   .view.active{display:block;pointer-events:auto;animation:fadein .2s ease;}
   @keyframes fadein{from{opacity:0;}to{opacity:1;}}
@@ -1320,7 +1320,7 @@
       max-width:1180px;display:grid;
       grid-template-columns:200px minmax(0,1fr);
       grid-template-rows:auto 1fr;
-      height:100vh;height:100dvh;min-height:0;overflow:hidden;
+      min-height:100vh;min-height:100dvh;
     }
     .tabbar{
       position:sticky;top:16px;left:auto;transform:none;bottom:auto;
@@ -1344,7 +1344,6 @@
     .app.player-on .profile-hero{margin-top:0;}
     .content{
       grid-column:2;max-width:none;
-      min-height:0;overflow:auto;
       padding:18px 20px 32px;
     }
     .hero-dock{margin-left:-20px;margin-right:-20px;padding-left:20px;padding-right:20px;}
