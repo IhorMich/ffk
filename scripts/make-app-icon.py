@@ -76,7 +76,7 @@ def save_resized(src, path, size, round_mask=False):
 
 
 def main():
-    full = capture()
+    full = padded(capture(), 0.04)
     fg = padded(full, 0.08)
     bg = Image.new("RGBA", (1024, 1024), BG)
 
