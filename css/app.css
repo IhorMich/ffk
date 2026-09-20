@@ -1487,6 +1487,22 @@
     pointer-events:none;
   }
   .coach-rate-sheet:not([hidden]){pointer-events:auto;}
+  .coach-rate-back[hidden],
+  .coach-rate-sheet[hidden]{display:none !important;pointer-events:none !important;}
+  .app.coach-child-on .club-row-main{
+    display:flex !important;pointer-events:auto;position:relative;z-index:7;
+  }
+  .app.coach-child-on .topbar{
+    position:static;background:var(--bg);pointer-events:auto;
+    padding:calc(12px + env(safe-area-inset-top, 0px)) 16px 10px;
+  }
+  .app.coach-child-on .icon-btn{
+    background:var(--surface);border-color:var(--border);color:var(--text);
+    backdrop-filter:none;-webkit-backdrop-filter:none;
+  }
+  .app.coach-child-on .profile-hero{display:none;}
+  .app.coach-child-on .fb-id{margin-top:4px;}
+  .app.coach-child-on .content{padding-top:10px;}
   .coach-rate-card{
     margin:0 auto;max-width:520px;max-height:min(88vh,760px);overflow:auto;
     padding:10px 16px 18px;border-radius:22px 22px 0 0;

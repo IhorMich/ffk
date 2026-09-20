@@ -885,6 +885,26 @@
     if(sheet) sheet.hidden = true;
     if(back) back.hidden = true;
   }
+  function closeAllCoachOverlays(){
+    closeCoachPlayerSheet();
+    closeCoachSettings();
+    if(typeof closeCoachQuickRate === 'function') closeCoachQuickRate();
+    closeCoachParentInviteSheet();
+    [
+      'coachSettingsBack','coachRateBack','coachPlayerBack','coachParentInviteBack',
+      'parentClaimBack','parentLinkBack','parentMsgBack'
+    ].forEach(id => {
+      const el = document.getElementById(id);
+      if(el) el.hidden = true;
+    });
+    [
+      'coachSettingsSheet','coachRateSheet','coachPlayerSheet','coachParentInviteSheet',
+      'parentClaimSheet','parentLinkSheet','parentMsgSheet'
+    ].forEach(id => {
+      const el = document.getElementById(id);
+      if(el) el.hidden = true;
+    });
+  }
   function openCoachPlayerSheet(playerId){
     const store = global.CoachStore;
     const session = store && store.getSession();
@@ -1007,8 +1027,10 @@
       parentStats,
       parentAvg
     };
-    closeCoachPlayerSheet();
+    closeAllCoachOverlays();
     if(typeof showView === 'function') showView('player');
+    if(typeof syncCoachChildPlayerUi === 'function') syncCoachChildPlayerUi();
+    try{ window.scrollTo({top:0, behavior:'instant'}); }catch(e){ window.scrollTo(0, 0); }
   }
 
   function removeCoachPlayerFromSheet(){
@@ -1348,6 +1370,7 @@
   global.openCoachQuickRate = openCoachQuickRate;
   global.closeCoachQuickRate = closeCoachQuickRate;
   global.closeCoachPlayerSheet = closeCoachPlayerSheet;
+  global.closeAllCoachOverlays = closeAllCoachOverlays;
   global.closeCoachParentInviteSheet = closeCoachParentInviteSheet;
   global.closeCoachSettings = closeCoachSettings;
   global.openCoachSettings = openCoachSettings;

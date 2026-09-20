@@ -306,7 +306,8 @@ function syncCoachTabUi(){
     lab.textContent = t(on ? 'tabCoach' : 'tabPlayer');
   }
   syncCoachModeViews();
-  if(on && activeViewName() === 'player') showView('coach');
+  // Child player page reuses view-player while still in Coach plan — do not bounce to Coach.
+  if(on && activeViewName() === 'player' && !isCoachChildView()) showView('coach');
 }
 function syncCoachModeViews(){
   const on = isCoachPlan();
@@ -1927,14 +1928,25 @@ function syncCoachChildPlayerUi(){
   if(addBtn){
     // addPlayerBtn visibility also gated by pro — only force-hide in child view
     if(on) addBtn.hidden = true;
-    else if(typeof syncProUi === 'function') syncProUi();
-    else addBtn.hidden = false;
+    else {
+      try{
+        if(roster.ids.length >= MAX_PLAYERS) addBtn.hidden = true;
+        else {
+          addBtn.hidden = false;
+          addBtn.textContent = (!isPro() && roster.ids.length >= FREE_MAX_PLAYERS)
+            ? t('proAddPlayer')
+            : t('addPlayer');
+        }
+      }catch(e){
+        addBtn.hidden = false;
+      }
+    }
   }
   if(rosterCard) rosterCard.hidden = on;
   if(!on){
     const inbox = document.getElementById('parentInboxCard');
     const links = document.getElementById('parentLinksCard');
-    // parent cards restored by renderParentUi
+    // parent cards restored by renderParentUi — avoid syncProUi here (it can redirect Coach tabs)
     if(typeof renderParentUi === 'function') renderParentUi();
     else {
       if(inbox) inbox.hidden = true;
@@ -2044,6 +2056,7 @@ function renderCoachChildFeed(ctx){
 }
 function exitCoachChildView(){
   window.coachChildView = null;
+  if(typeof closeAllCoachOverlays === 'function') closeAllCoachOverlays();
   syncCoachChildPlayerUi();
   if(typeof showView === 'function') showView('coach');
   if(typeof renderCoachUi === 'function') renderCoachUi();
@@ -3942,10 +3955,11 @@ function handleAppBack(){
     return true;
   }
   if(isCoachChildView() && activeViewName() === 'player'){
+    if(typeof closeAllCoachOverlays === 'function') closeAllCoachOverlays();
     exitCoachChildView();
     return true;
   }
-  if(isElShown('coachPlayerSheet')){
+  if(isElShown('coachPlayerSheet') || isElShown('coachPlayerBack')){
     if(typeof closeCoachPlayerSheet === 'function') closeCoachPlayerSheet();
     return true;
   }
