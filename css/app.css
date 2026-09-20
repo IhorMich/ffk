@@ -1453,9 +1453,9 @@
   .coach-squad-actions .ghost-btn{
     margin:0;padding:6px 10px;width:auto;font-size:.72rem;border-radius:999px;
   }
-  .coach-squad-picker{display:grid;gap:8px;margin:8px 0 12px;max-height:280px;overflow:auto;}
+  .coach-squad-picker{display:grid;gap:6px;margin:6px 0 0;max-height:180px;overflow:auto;}
   .coach-squad-item{
-    display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border-radius:12px;
+    display:flex;align-items:flex-start;gap:10px;padding:8px 10px;border-radius:12px;
     border:1px solid var(--card-line);cursor:pointer;user-select:none;
   }
   .coach-squad-item:has(input:checked){box-shadow:inset 3px 0 0 var(--card-accent);}
@@ -1518,29 +1518,68 @@
   .coach-match-top .coach-team-heading{margin:4px 0 0;}
   .coach-match-new{margin:0;width:auto;padding:10px 14px;flex-shrink:0;}
   .coach-match-create{
-    margin:0 0 14px;padding:14px 12px;border-radius:14px;
+    margin:0 0 10px;padding:10px;border-radius:14px;
     border:1px solid var(--card-line);
     background:color-mix(in srgb, var(--card-paper) 92%, var(--card-accent));
   }
-  .coach-match-create .save-btn,.coach-match-create .ghost-btn{margin-top:8px;}
-  .coach-match-list{margin:12px 0;}
+  .coach-match-create .field{margin:0 0 8px;}
+  .coach-match-create-grid{
+    display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 0 4px;
+  }
+  .coach-match-create-wide{grid-column:1 / -1;}
+  .coach-match-create-actions{
+    display:grid;grid-template-columns:1fr auto;gap:8px;align-items:stretch;margin-top:4px;
+  }
+  .coach-match-create-actions .save-btn,
+  .coach-match-create-actions .ghost-btn{margin:0;width:100%;}
+  .coach-match-create-actions .ghost-btn{width:auto;padding:10px 14px;}
+  .coach-match-list{margin:8px 0;}
+  .coach-match-list .coach-team-item{padding:10px 12px;}
   .coach-match-detail{
-    margin-top:8px;padding-top:12px;border-top:1px solid var(--card-line);
+    margin-top:0;padding:10px;border-radius:14px;border:1px solid var(--card-line);
+    background:var(--card-paper);
   }
+  .coach-match-detail-bar{margin:0 0 8px;}
+  .coach-match-back{margin:0;width:auto;padding:8px 12px;font-size:.78rem;border-radius:999px;}
   .coach-match-summary{
-    display:grid;gap:4px;margin:0 0 14px;
+    display:grid;gap:2px;margin:0 0 10px;
   }
-  .coach-match-summary b{font-size:1.05rem;font-weight:800;}
+  .coach-match-summary b{font-size:1rem;font-weight:800;}
+  .coach-match-actions-row{
+    display:grid;grid-template-columns:auto 1fr;gap:8px;margin-top:8px;
+  }
+  .coach-match-actions-row .ghost-btn,
+  .coach-match-actions-row .save-btn{margin:0;width:100%;padding:10px 12px;font-size:.82rem;}
+  .coach-score-row{
+    display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center;
+    margin:0 0 12px;padding:8px;border-radius:12px;border:1px solid var(--card-line);
+  }
+  .coach-score-row > label{
+    margin:0;font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:var(--card-muted);
+  }
+  .coach-score-row .coach-score-split{margin:0;}
+  .coach-score-row .js-cm-save-score{
+    margin:0;width:auto;padding:10px 12px;font-size:.78rem;border-radius:12px;
+  }
+  @media (max-width:400px){
+    .coach-score-row{grid-template-columns:1fr;}
+    .coach-score-row .js-cm-save-score{width:100%;}
+    .coach-match-create-grid{grid-template-columns:1fr;}
+    .coach-match-actions-row{grid-template-columns:1fr;}
+  }
   .coach-score-split{
-    display:flex;align-items:center;gap:10px;margin-top:6px;
+    display:flex;align-items:center;gap:6px;
   }
   .coach-score-split input{
-    flex:1;min-width:0;width:auto;text-align:center;font-size:1.2rem;font-weight:800;
-    padding:12px 10px;border-radius:12px;border:1px solid var(--card-line);
-    background:var(--card-paper);color:var(--card-ink);
+    flex:1;min-width:0;width:auto;text-align:center;font-size:1.05rem;font-weight:800;
+    padding:8px 6px;border-radius:10px;border:1px solid var(--card-line);
+    background:var(--surface);color:var(--text);
   }
-  #coachMatchPlayedBox .save-btn,#coachMatchPlayedBox .ghost-btn,
-  #coachMatchUpcomingBox .save-btn,#coachMatchUpcomingBox .ghost-btn{margin-top:8px;}
+  .coach-rates-compact{margin:6px 0 8px;gap:6px;}
+  .coach-rates-compact .coach-player-row{padding:8px 10px;}
+  .coach-rates-compact .coach-rate-btn{padding:6px 10px;font-size:.72rem;}
+  #coachMatchPlayedBox .save-btn.js-cm-send-results{margin-top:4px;}
+  #coachMatchUpcomingBox .save-btn,#coachMatchUpcomingBox .ghost-btn{margin-top:0;}
   .parent-msg-row.result{box-shadow:inset 3px 0 0 color-mix(in srgb, var(--card-accent) 55%, #2f9e44);}
   .parent-msg-result{margin:12px 0;}
   .parent-msg-result .coach-analytics-sum{grid-template-columns:repeat(2,1fr);}

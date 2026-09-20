@@ -568,6 +568,13 @@
         }).join('');
     document.querySelectorAll('.js-cm-matches').forEach(el => { el.innerHTML = matchListHtml; });
 
+    const listEl = document.querySelector('#coachMatchTab .js-cm-matches');
+    const newBtn = document.getElementById('coachMatchNewBtn');
+    const createBox = document.getElementById('coachMatchCreate');
+    if(listEl) listEl.hidden = !!activeMatch;
+    if(newBtn) newBtn.hidden = !!activeMatch;
+    if(createBox && activeMatch) createBox.hidden = true;
+
     const detail = document.getElementById('coachMatchDetail');
     const upcomingBox = document.getElementById('coachMatchUpcomingBox');
     const playedBox = document.getElementById('coachMatchPlayedBox');
@@ -577,6 +584,8 @@
       if(upcomingBox) upcomingBox.hidden = true;
       if(playedBox) playedBox.hidden = true;
       if(summary) summary.innerHTML = '';
+      if(listEl) listEl.hidden = false;
+      if(newBtn) newBtn.hidden = false;
       return;
     }
 
@@ -684,8 +693,7 @@
           .replace('{inApp}', String(delivered))
           .replace('{waiting}', String(waiting))
           .replace('{read}', String(read)))}</p>
-        ${match.address ? `<p class="hint"><b>${esc(tt('coachMatchAddress', 'Match address'))}:</b> ${esc(match.address)}</p>` : ''}
-        <p class="hint">${esc(tt('coachInviteExplainApp', 'Invites go to parents/guardians inside Matchcard — not WhatsApp or SMS. Link a parent to the player first.'))}</p>
+        ${match.address ? `<p class="hint">${esc(match.address)}</p>` : ''}
         <div class="coach-invite-rows">${rows}</div>
       </div>`;
     });
@@ -976,6 +984,12 @@
       toast(tt('coachErrGeneric', 'Something went wrong.'));
     }
   }
+  function closeCoachMatchDetail(){
+    const store = global.CoachStore;
+    if(store && store.setActiveMatchId) store.setActiveMatchId('');
+    setCoachMatchCreateOpen(false);
+    renderCoachUi();
+  }
   function onSaveMatchScore(fromEl){
     const store = global.CoachStore;
     const session = store.getSession();
@@ -989,6 +1003,7 @@
     }
     try{
       store.updateMatch(session, matchId, {score, status: 'played'});
+      store.setActiveMatchId('');
       toast(tt('coachMatchScoreSaved', 'Score saved.'));
       renderCoachUi();
     }catch(e){
@@ -1662,6 +1677,9 @@
     });
     document.getElementById('coachMatchCreateCancel')?.addEventListener('click', () => {
       setCoachMatchCreateOpen(false);
+    });
+    document.getElementById('coachMatchBackBtn')?.addEventListener('click', () => {
+      closeCoachMatchDetail();
     });
     document.getElementById('coachInviteAssistantBtn')?.addEventListener('click', () => {
       const session = global.CoachStore.getSession();
