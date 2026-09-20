@@ -343,6 +343,109 @@ let photoSheetTarget = 'photo';
 let lastReportMatch = null;
 let matches = [];
 let editingId = null;
+let coachRateCtx = null; // {matchId, teamPlayerId, teamId, playerName, pitchPos, ratingId}
+
+function isCoachRateMode(){ return !!coachRateCtx; }
+function clearCoachRateContext(){
+  coachRateCtx = null;
+  document.getElementById('app')?.classList.remove('coach-rate-on');
+  const banner = document.getElementById('coachRateBanner');
+  if(banner) banner.textContent = '';
+}
+function syncCoachRateBanner(){
+  const banner = document.getElementById('coachRateBanner');
+  const app = document.getElementById('app');
+  if(!banner || !app) return;
+  if(!coachRateCtx){
+    app.classList.remove('coach-rate-on');
+    banner.textContent = '';
+    return;
+  }
+  app.classList.add('coach-rate-on');
+  banner.textContent = t('coachRateBanner', {
+    name: coachRateCtx.playerName || '—',
+    opp: coachRateCtx.opponent || '—'
+  });
+}
+function startCoachPlayerRating(matchId, teamPlayerId){
+  const store = window.CoachStore;
+  const session = store && store.getSession();
+  if(!store || !session) return;
+  const match = store.getMatch(session, matchId);
+  const players = match ? store.listPlayers(session, match.team_id) : [];
+  const tp = players.find(p => p.id === teamPlayerId);
+  if(!match || !tp){
+    showToast(t('coachErrGeneric'));
+    return;
+  }
+  const existing = store.getRatingForPlayer(session, matchId, teamPlayerId);
+  coachRateCtx = {
+    matchId: match.id,
+    teamId: match.team_id,
+    teamPlayerId: tp.id,
+    playerName: [tp.first_name, tp.last_name].filter(Boolean).join(' '),
+    pitchPos: (isPitchCode(tp.position) ? tp.position : null) || 'RW',
+    opponent: match.opponent,
+    score: match.score || '',
+    ratingId: existing ? existing.id : null
+  };
+  if(existing){
+    fillForm({
+      ...existing,
+      id: existing.id,
+      player: existing.player_name,
+      pitchPos: existing.pitchPos,
+      position: existing.position
+    });
+  }else{
+    resetForm();
+    document.getElementById('f-date').value = match.date;
+    document.getElementById('f-opponent').value = match.opponent;
+    fillScoreFields(match.score || '');
+    fillMatchPitchSelects(coachRateCtx.pitchPos);
+    syncDateShown();
+  }
+  syncCoachRateBanner();
+  showView('new');
+  openLive();
+}
+function saveCoachRatingFromForm(){
+  const store = window.CoachStore;
+  const session = store && store.getSession();
+  if(!store || !session || !coachRateCtx) return false;
+  const row = collectMatch();
+  if(!row.opponent && !confirm(t('confirmNoOpp'))) return false;
+  store.upsertRating(session, {
+    match_id: coachRateCtx.matchId,
+    team_player_id: coachRateCtx.teamPlayerId,
+    player_name: coachRateCtx.playerName,
+    pitchPos: row.pitchPos,
+    position: row.position,
+    minutes: row.minutes,
+    format: row.format,
+    matchLen: row.matchLen,
+    role: row.role,
+    comment: row.comment,
+    counts: row.counts,
+    behaviors: row.behaviors,
+    timeline: row.timeline,
+    kickoffAt: row.kickoffAt,
+    kickoffClock: row.kickoffClock,
+    actionRating: row.actionRating,
+    effortRating: row.effortRating,
+    rating: row.rating,
+    score: row.score
+  });
+  showToast(t('coachRatingSaved'));
+  clearCoachRateContext();
+  resetForm();
+  if(document.getElementById('app')?.classList.contains('live-on')) closeLive();
+  showView('coach');
+  if(typeof renderCoachUi === 'function') renderCoachUi();
+  return true;
+}
+window.startCoachPlayerRating = startCoachPlayerRating;
+window.clearCoachRateContext = clearCoachRateContext;
 let form = emptyForm();
 let liveStack = [];
 let matchClock = emptyClock();
@@ -2395,7 +2498,7 @@ function collectMatch(){
   const effort = effortScore(behaviors);
   return {
     id: editingId || Date.now(),
-    player: displayName(),
+    player: isCoachRateMode() ? (coachRateCtx.playerName || displayName()) : displayName(),
     date: document.getElementById('f-date').value || todayStr(),
     opponent: document.getElementById('f-opponent').value.trim(),
     score: scoreFromFields(),
@@ -2410,7 +2513,9 @@ function collectMatch(){
     matchLen,
     kind: document.getElementById('f-kind').value,
     season: (editingId && matches.find(x => x.id === editingId)?.season) || (seasonIsOpen() ? (player.season || seasonFromDate(document.getElementById('f-date').value)) : seasonFromDate(document.getElementById('f-date').value)),
-    team: (editingId && matches.find(x => x.id === editingId)?.team) || player.team || player.club || '',
+    team: isCoachRateMode()
+      ? ((window.CoachStore?.getTeam(window.CoachStore.getSession(), coachRateCtx.teamId) || {}).name || '')
+      : ((editingId && matches.find(x => x.id === editingId)?.team) || player.team || player.club || ''),
     counts, behaviors,
     timeline: matchClock.events.slice(),
     kickoffAt: matchClock.startedAt || 0,
@@ -2422,6 +2527,7 @@ function collectMatch(){
 }
 
 function saveCurrentMatch(){
+  if(isCoachRateMode()) return saveCoachRatingFromForm();
   const row = collectMatch();
   if(!row.opponent && !confirm(t('confirmNoOpp'))) return false;
   const dup = matches.some(m => m.id !== row.id && m.date === row.date && m.opponent === row.opponent && row.opponent);
@@ -2449,7 +2555,16 @@ function saveCurrentMatch(){
 }
 document.getElementById('saveBtn').addEventListener('click', saveCurrentMatch);
 
-document.getElementById('cancelEditBtn').addEventListener('click', resetForm);
+document.getElementById('cancelEditBtn').addEventListener('click', () => {
+  if(isCoachRateMode()){
+    clearCoachRateContext();
+    resetForm();
+    showView('coach');
+    if(typeof renderCoachUi === 'function') renderCoachUi();
+    return;
+  }
+  resetForm();
+});
 
 ['f-date','f-position','f-opponent','f-score-us','f-score-them','f-minutes','f-format','f-matchlen','f-kind','f-tournament','f-venue','f-role','f-comment'].forEach(id => {
   const el = document.getElementById(id);
@@ -3548,6 +3663,13 @@ function handleAppBack(){
   if(isElShown('previewModal')){ closeCardPreview(); return true; }
   if(isElShown('playerEdit')){ closePlayerEdit(true); return true; }
   if(document.getElementById('app')?.classList.contains('live-on')){ closeLive(); return true; }
+  if(isCoachRateMode()){
+    clearCoachRateContext();
+    resetForm();
+    showView('coach');
+    if(typeof renderCoachUi === 'function') renderCoachUi();
+    return true;
+  }
   const name = activeViewName();
   if(name === 'history'){
     const openDetails = document.querySelector('#historyList .match-details.open');

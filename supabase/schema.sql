@@ -159,3 +159,67 @@ create policy memberships_delete on public.memberships
         and m.role = 'owner'
     )
   );
+
+-- Phase 2 tables (team matches + per-player ratings)
+create table if not exists public.team_matches (
+  id uuid primary key default gen_random_uuid(),
+  team_id uuid not null references public.teams(id) on delete cascade,
+  date date not null,
+  opponent text not null check (char_length(trim(opponent)) between 1 and 48),
+  score text not null default '' check (char_length(score) <= 16),
+  venue text not null default 'home' check (venue in ('home','away')),
+  kind text not null default 'league' check (kind in ('league','friendly','cup','tournament')),
+  created_at timestamptz not null default now()
+);
+
+create table if not exists public.ratings (
+  id uuid primary key default gen_random_uuid(),
+  match_id uuid not null references public.team_matches(id) on delete cascade,
+  team_id uuid not null references public.teams(id) on delete cascade,
+  team_player_id uuid not null references public.team_players(id) on delete cascade,
+  player_name text not null default '',
+  pitch_pos text not null default '',
+  position text not null default 'fwd',
+  minutes int not null default 60,
+  format text not null default '2x30',
+  match_len int not null default 60,
+  role text not null default 'start',
+  comment text not null default '',
+  counts jsonb not null default '{}'::jsonb,
+  behaviors jsonb not null default '{}'::jsonb,
+  timeline jsonb not null default '[]'::jsonb,
+  action_rating numeric not null default 6,
+  effort_rating numeric not null default 6,
+  rating numeric not null default 6,
+  updated_at timestamptz not null default now(),
+  unique (match_id, team_player_id)
+);
+
+create index if not exists team_matches_team_idx on public.team_matches(team_id);
+create index if not exists ratings_match_idx on public.ratings(match_id);
+create index if not exists ratings_player_idx on public.ratings(team_player_id);
+
+alter table public.team_matches enable row level security;
+alter table public.ratings enable row level security;
+
+create policy team_matches_select on public.team_matches
+  for select using (public.is_team_coach(team_id));
+create policy team_matches_insert on public.team_matches
+  for insert with check (public.is_team_coach(team_id));
+create policy team_matches_update on public.team_matches
+  for update using (public.is_team_coach(team_id));
+create policy team_matches_delete on public.team_matches
+  for delete using (public.is_team_coach(team_id));
+
+-- Coaches see all ratings on their teams; parents only their linked player
+create policy ratings_select on public.ratings
+  for select using (
+    public.is_team_coach(team_id)
+    or public.parent_of_player(team_player_id)
+  );
+create policy ratings_insert on public.ratings
+  for insert with check (public.is_team_coach(team_id));
+create policy ratings_update on public.ratings
+  for update using (public.is_team_coach(team_id));
+create policy ratings_delete on public.ratings
+  for delete using (public.is_team_coach(team_id));

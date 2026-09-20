@@ -174,6 +174,7 @@ window.ffkIsNative = function () {
       </div>
     </div>
     <div class="view active" id="view-new">
+      <div class="coach-banner" id="coachRateBanner"></div>
       <div class="match-col match-col-ctx">
       <div class="hero" id="heroBlock">
         <div class="hero-top">
@@ -549,7 +550,28 @@ window.ffkIsNative = function () {
             </div>
             <button class="save-btn" id="coachAddPlayerBtn" type="button" data-i18n="coachAddPlayerBtn">Add player</button>
             <div id="coachPlayerList" class="coach-player-list"></div>
-            <p class="hint" data-i18n="coachPhase1Note">Phase 1: academy, teams, roster. Matches, analytics and parent invite come next.</p>
+          </div>
+
+          <div id="coachMatchPane" class="coach-hero" hidden>
+            <div class="pro-kicker" data-i18n="coachMatchKicker">Team matches</div>
+            <p class="hint" data-i18n="coachMatchHint">Create a match, then rate each player with the live Matchcard tools. Ratings stay in Coach — not in Personal Free/Pro.</p>
+            <div class="field">
+              <label data-i18n="coachMatchOpponent">Opponent</label>
+              <input id="coachMatchOpponent" type="text" maxlength="48" placeholder="Rival FC">
+            </div>
+            <div class="coach-player-form">
+              <input id="coachMatchDate" type="date">
+              <input id="coachMatchScore" type="text" maxlength="16" placeholder="2:1">
+            </div>
+            <button class="save-btn" id="coachCreateMatchBtn" type="button" data-i18n="coachCreateMatchBtn">Create match</button>
+            <div id="coachMatchList" class="coach-team-list"></div>
+            <div id="coachRateList" class="coach-player-list"></div>
+          </div>
+
+          <div id="coachAnalyticsPane" class="coach-hero" hidden>
+            <div class="pro-kicker" data-i18n="coachAnalyticsKicker">Team analytics</div>
+            <div id="coachAnalyticsBoard" class="coach-analytics"></div>
+            <p class="hint" data-i18n="coachPhase2Note">Phase 2: matches + ratings + team analytics. Parent invite and Supabase sync come next.</p>
           </div>
         </div>
       </div>

@@ -15,13 +15,16 @@
   }
   function emptyDb(){
     return {
-      version: 1,
+      version: 2,
       accounts: {},
       academies: [],
       teams: [],
       team_players: [],
       memberships: [],
-      activeTeamId: ''
+      team_matches: [],
+      ratings: [],
+      activeTeamId: '',
+      activeMatchId: ''
     };
   }
   function readDb(){
@@ -31,13 +34,16 @@
       const db = JSON.parse(raw);
       if(!db || typeof db !== 'object') return emptyDb();
       return {
-        version: 1,
+        version: 2,
         accounts: db.accounts && typeof db.accounts === 'object' ? db.accounts : {},
         academies: Array.isArray(db.academies) ? db.academies : [],
         teams: Array.isArray(db.teams) ? db.teams : [],
         team_players: Array.isArray(db.team_players) ? db.team_players : [],
         memberships: Array.isArray(db.memberships) ? db.memberships : [],
-        activeTeamId: String(db.activeTeamId || '')
+        team_matches: Array.isArray(db.team_matches) ? db.team_matches : [],
+        ratings: Array.isArray(db.ratings) ? db.ratings : [],
+        activeTeamId: String(db.activeTeamId || ''),
+        activeMatchId: String(db.activeMatchId || '')
       };
     }catch(e){
       return emptyDb();
@@ -207,7 +213,134 @@
       if(!this.getTeam(session, player.team_id)) throw new Error('forbidden');
       db.team_players = db.team_players.filter(p => p.id !== playerId);
       db.memberships = db.memberships.filter(m => m.team_player_id !== playerId);
+      db.ratings = db.ratings.filter(r => r.team_player_id !== playerId);
       writeDb(db);
+    },
+    getActiveMatchId(){
+      return readDb().activeMatchId || '';
+    },
+    setActiveMatchId(matchId){
+      const db = readDb();
+      db.activeMatchId = String(matchId || '');
+      writeDb(db);
+    },
+    listMatches(session, teamId){
+      if(!this.getTeam(session, teamId)) return [];
+      return readDb().team_matches
+        .filter(m => m.team_id === teamId)
+        .sort((a, b) => String(b.date).localeCompare(String(a.date)) || String(b.created_at).localeCompare(String(a.created_at)));
+    },
+    getMatch(session, matchId){
+      const db = readDb();
+      const m = db.team_matches.find(x => x.id === matchId);
+      if(!m || !this.getTeam(session, m.team_id)) return null;
+      return m;
+    },
+    createMatch(session, teamId, fields){
+      if(!this.getTeam(session, teamId)) throw new Error('forbidden');
+      const opponent = String(fields.opponent || '').trim().slice(0, 48);
+      const date = /^\d{4}-\d{2}-\d{2}$/.test(fields.date) ? fields.date : new Date().toISOString().slice(0, 10);
+      if(!opponent) throw new Error('opponent');
+      const db = readDb();
+      const match = {
+        id: uid('tmt'),
+        team_id: teamId,
+        date,
+        opponent,
+        score: String(fields.score || '').trim().slice(0, 16),
+        venue: fields.venue === 'away' ? 'away' : 'home',
+        kind: ['league','friendly','cup','tournament'].includes(fields.kind) ? fields.kind : 'league',
+        created_at: new Date().toISOString()
+      };
+      db.team_matches.push(match);
+      db.activeMatchId = match.id;
+      writeDb(db);
+      return match;
+    },
+    listRatings(session, matchId){
+      const match = this.getMatch(session, matchId);
+      if(!match) return [];
+      return readDb().ratings.filter(r => r.match_id === matchId);
+    },
+    getRatingForPlayer(session, matchId, teamPlayerId){
+      return this.listRatings(session, matchId).find(r => r.team_player_id === teamPlayerId) || null;
+    },
+    upsertRating(session, payload){
+      const match = this.getMatch(session, payload.match_id);
+      if(!match) throw new Error('forbidden');
+      const players = this.listPlayers(session, match.team_id);
+      if(!players.some(p => p.id === payload.team_player_id)) throw new Error('forbidden');
+      const db = readDb();
+      const existing = db.ratings.find(r => r.match_id === payload.match_id && r.team_player_id === payload.team_player_id);
+      const row = {
+        id: existing ? existing.id : uid('rtg'),
+        match_id: payload.match_id,
+        team_id: match.team_id,
+        team_player_id: payload.team_player_id,
+        player_name: String(payload.player_name || '').slice(0, 80),
+        date: match.date,
+        opponent: match.opponent,
+        score: match.score,
+        pitchPos: String(payload.pitchPos || 'RW').slice(0, 8),
+        position: String(payload.position || 'fwd').slice(0, 8),
+        minutes: Math.min(120, Math.max(1, Number(payload.minutes) || 60)),
+        format: String(payload.format || '2x30').slice(0, 16),
+        matchLen: Math.min(120, Math.max(1, Number(payload.matchLen) || 60)),
+        role: payload.role === 'sub' ? 'sub' : 'start',
+        venue: match.venue,
+        kind: match.kind,
+        comment: String(payload.comment || '').slice(0, 400),
+        counts: payload.counts && typeof payload.counts === 'object' ? payload.counts : {},
+        behaviors: payload.behaviors && typeof payload.behaviors === 'object' ? payload.behaviors : {},
+        timeline: Array.isArray(payload.timeline) ? payload.timeline : [],
+        kickoffAt: Number(payload.kickoffAt) || 0,
+        kickoffClock: String(payload.kickoffClock || '').slice(0, 40),
+        actionRating: Number(payload.actionRating) || 6,
+        effortRating: Number(payload.effortRating) || 6,
+        rating: Number(payload.rating) || 6,
+        updated_at: new Date().toISOString()
+      };
+      if(existing){
+        db.ratings = db.ratings.map(r => r.id === existing.id ? row : r);
+      }else{
+        db.ratings.push(row);
+      }
+      // keep match score in sync if provided from form
+      if(payload.score){
+        db.team_matches = db.team_matches.map(m => m.id === match.id ? {...m, score: String(payload.score).slice(0, 16)} : m);
+      }
+      writeDb(db);
+      return row;
+    },
+    teamAnalytics(session, teamId){
+      if(!this.getTeam(session, teamId)) return {matches: 0, ratings: 0, avg: null, players: []};
+      const db = readDb();
+      const matchIds = new Set(db.team_matches.filter(m => m.team_id === teamId).map(m => m.id));
+      const ratings = db.ratings.filter(r => matchIds.has(r.match_id));
+      const byPlayer = {};
+      ratings.forEach(r => {
+        if(!byPlayer[r.team_player_id]) byPlayer[r.team_player_id] = [];
+        byPlayer[r.team_player_id].push(Number(r.rating) || 0);
+      });
+      const players = this.listPlayers(session, teamId).map(p => {
+        const list = byPlayer[p.id] || [];
+        const avg = list.length ? Math.round((list.reduce((a, b) => a + b, 0) / list.length) * 10) / 10 : null;
+        return {
+          id: p.id,
+          name: [p.first_name, p.last_name].filter(Boolean).join(' '),
+          number: p.number,
+          games: list.length,
+          avg
+        };
+      }).sort((a, b) => (b.avg || 0) - (a.avg || 0) || a.name.localeCompare(b.name));
+      const all = ratings.map(r => Number(r.rating) || 0);
+      const avg = all.length ? Math.round((all.reduce((a, b) => a + b, 0) / all.length) * 10) / 10 : null;
+      return {
+        matches: matchIds.size,
+        ratings: ratings.length,
+        avg,
+        players
+      };
     },
     isCloudConfigured(){
       const c = global.FFK_COACH_CONFIG || {};

@@ -4099,6 +4099,89 @@ ru:{
   });
 })();
 
+(function mergeCoachPhase2I18n(){
+  const extra = {
+    en:{
+      coachMatchKicker:'Team matches',
+      coachMatchHint:'Create a match, then rate each player with the live Matchcard tools. Ratings stay in Coach — not in Personal Free/Pro.',
+      coachMatchOpponent:'Opponent',
+      coachCreateMatchBtn:'Create match',
+      coachMatchCreated:'Match created.',
+      coachErrOpponent:'Enter opponent.',
+      coachNoMatches:'No team matches yet.',
+      coachRatedShort:'rated',
+      coachPickMatch:'Create or pick a match, then rate players.',
+      coachRateFor:'Rate players for',
+      coachRatePlayer:'Rate',
+      coachEditRating:'Edit',
+      coachRated:'Rated',
+      coachNotRated:'Not rated',
+      coachAnalyticsKicker:'Team analytics',
+      coachStatMatches:'Matches',
+      coachStatRatings:'Ratings',
+      coachStatAvg:'Team avg',
+      coachGames:'games',
+      coachAnalyticsEmpty:'Rate players in matches to see analytics.',
+      coachPhase2Note:'Phase 2: matches + ratings + team analytics. Parent invite and Supabase sync come next.',
+      coachRateBanner:'Coach rating · {name} vs {opp}. Save writes to Coach only.',
+      coachRatingSaved:'Player rating saved to Coach.'
+    },
+    ru:{
+      coachMatchKicker:'Матчи команды',
+      coachMatchHint:'Создай матч, затем оцени каждого игрока в live Matchcard. Оценки только в Coach — не в Personal Free/Pro.',
+      coachMatchOpponent:'Соперник',
+      coachCreateMatchBtn:'Создать матч',
+      coachMatchCreated:'Матч создан.',
+      coachErrOpponent:'Введите соперника.',
+      coachNoMatches:'Матчей команды пока нет.',
+      coachRatedShort:'оценок',
+      coachPickMatch:'Создай или выбери матч, затем оцени игроков.',
+      coachRateFor:'Оценка игроков для',
+      coachRatePlayer:'Оценить',
+      coachEditRating:'Изменить',
+      coachRated:'Оценён',
+      coachNotRated:'Без оценки',
+      coachAnalyticsKicker:'Аналитика команды',
+      coachStatMatches:'Матчи',
+      coachStatRatings:'Оценки',
+      coachStatAvg:'Средняя',
+      coachGames:'игр',
+      coachAnalyticsEmpty:'Оцени игроков в матчах, чтобы увидеть аналитику.',
+      coachPhase2Note:'Phase 2: матчи + оценки + аналитика. Invite родителей и Supabase — дальше.',
+      coachRateBanner:'Coach · {name} против {opp}. Сохранение только в Coach.',
+      coachRatingSaved:'Оценка игрока сохранена в Coach.'
+    },
+    uk:{
+      coachMatchKicker:'Матчі команди',
+      coachMatchHint:'Створи матч, потім оціни кожного гравця в live Matchcard. Оцінки лише в Coach — не в Personal Free/Pro.',
+      coachMatchOpponent:'Суперник',
+      coachCreateMatchBtn:'Створити матч',
+      coachMatchCreated:'Матч створено.',
+      coachErrOpponent:'Введіть суперника.',
+      coachNoMatches:'Матчів команди ще немає.',
+      coachRatedShort:'оцінок',
+      coachPickMatch:'Створи або вибери матч, потім оціни гравців.',
+      coachRateFor:'Оцінка гравців для',
+      coachRatePlayer:'Оцінити',
+      coachEditRating:'Змінити',
+      coachRated:'Оцінено',
+      coachNotRated:'Без оцінки',
+      coachAnalyticsKicker:'Аналітика команди',
+      coachStatMatches:'Матчі',
+      coachStatRatings:'Оцінки',
+      coachStatAvg:'Середня',
+      coachGames:'ігор',
+      coachAnalyticsEmpty:'Оціни гравців у матчах, щоб побачити аналітику.',
+      coachPhase2Note:'Phase 2: матчі + оцінки + аналітика. Invite батьків і Supabase — далі.',
+      coachRateBanner:'Coach · {name} проти {opp}. Збереження лише в Coach.',
+      coachRatingSaved:'Оцінку гравця збережено в Coach.'
+    }
+  };
+  LANGS.forEach(lang => {
+    Object.assign(I18N[lang], extra.en, extra[lang] || {});
+  });
+})();
+
 (function mergeOnboardVisualI18n(){
   const extra = {
     uk:{
