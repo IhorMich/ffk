@@ -115,6 +115,9 @@
     if(back) back.hidden = true;
     if(typeof applyHeader === 'function') applyHeader();
     if(typeof refreshCoachMediaUi === 'function') refreshCoachMediaUi();
+    if(global.CoachPush && typeof global.CoachPush.flushCoachAlerts === 'function'){
+      try{ global.CoachPush.flushCoachAlerts(); }catch(e){}
+    }
     syncCoachPlayerPhotosFromPersonal();
     renderWorkspace(session);
     syncPlanModeButtons();

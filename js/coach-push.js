@@ -201,6 +201,32 @@
     notifyHeadsUp(title, body, false);
   }
 
+  /** Keep coach-only alerts quiet while the phone is in Player mode. */
+  function queueCoachAlert(title, body){
+    const s = read();
+    const alerts = Array.isArray(s.coachAlerts) ? s.coachAlerts.slice(-9) : [];
+    alerts.push({
+      title: String(title || 'Matchcard'),
+      body: String(body || ''),
+      createdAt: new Date().toISOString()
+    });
+    s.coachAlerts = alerts;
+    write(s);
+  }
+
+  function flushCoachAlerts(){
+    try{
+      if(typeof isCoachPlan === 'function' && !isCoachPlan()) return 0;
+    }catch(e){ return 0; }
+    const s = read();
+    const alerts = Array.isArray(s.coachAlerts) ? s.coachAlerts : [];
+    if(!alerts.length) return 0;
+    s.coachAlerts = [];
+    write(s);
+    alerts.forEach(alert => notifyHeadsUp(alert.title, alert.body, false));
+    return alerts.length;
+  }
+
   function notifyInvite(payload){
     notifyLocal(
       tt('coachPushInviteTitle', 'Match invite'),
@@ -235,6 +261,8 @@
     notifyInvite,
     notifyResult,
     notifyLocal,
+    queueCoachAlert,
+    flushCoachAlerts,
     bootstrap,
     getToken(){ return read().token || ''; },
     wasAsked(){ return !!read().asked; }

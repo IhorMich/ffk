@@ -348,10 +348,10 @@
       });
       const updated = this.setLeaveStatus(link.id, 'pending');
       try{
-        if(global.CoachPush && typeof global.CoachPush.notifyLocal === 'function'){
+        if(global.CoachPush && typeof global.CoachPush.queueCoachAlert === 'function'){
           const title = (global.tt && global.tt('coachLeavePushTitle', 'Player leave'))
             || 'Player leave';
-          global.CoachPush.notifyLocal(
+          global.CoachPush.queueCoachAlert(
             title,
             `${req.player_name || ''} · ${req.new_club || req.new_team || ''}`.trim()
           );
