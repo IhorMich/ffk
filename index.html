@@ -165,6 +165,17 @@ window.ffkIsNative = function () {
         <label data-i18n="pClub">Клуб / академия</label>
         <input type="text" id="p-club" maxlength="40">
       </div>
+      <div class="field player-leave-block" id="playerLeaveBlock" hidden>
+        <div class="pro-kicker" data-i18n="playerLeaveKicker">Тренер и команда</div>
+        <p class="hint" id="playerLeaveMeta"></p>
+        <p class="hint" data-i18n="playerLeaveHint">Отвязать можно только при смене клуба — тренер должен подтвердить.</p>
+        <label class="player-leave-check">
+          <input type="checkbox" id="p-club-changed">
+          <span data-i18n="playerLeaveChangedClub">Сменил клуб / академию</span>
+        </label>
+        <button class="ghost-btn danger-btn" id="playerLeaveBtn" type="button" data-i18n="playerLeaveBtn" disabled>Отвязать тренера и команду</button>
+        <p class="hint" id="playerLeaveStatus" hidden></p>
+      </div>
       <div class="field">
         <label data-i18n="pPrimary">Основная позиция</label>
         <select id="p-primary"></select>
@@ -183,6 +194,7 @@ window.ffkIsNative = function () {
       <button class="save-btn" id="savePlayerBtn" type="button" data-i18n="pSave">Сохранить данные</button>
         </div>
       </div>
+      <button class="ghost-btn" id="parentAddLinkBtnBottom" type="button" data-i18n="parentAddLinkBtn" hidden>Добавить по QR / ссылке</button>
     </div>
     <div class="view active" id="view-new">
       <div id="personalMatchRoot">
@@ -930,6 +942,7 @@ window.ffkIsNative = function () {
           </div>
 
           <div id="coachHomeStats" class="coach-analytics-sum coach-home-stats" hidden></div>
+          <div id="coachLeaveRequests" class="coach-leave-box" hidden></div>
 
           <div class="coach-hero coach-home-teams">
             <div class="coach-match-top">

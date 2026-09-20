@@ -186,7 +186,9 @@
         topMoments: Array.isArray(norm.topMoments) ? norm.topMoments : [],
         issued_at: norm.issued_at,
         claimedAt: existing ? existing.claimedAt : new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString(),
+        leave_status: existing && existing.leave_status === 'pending' ? 'pending' : '',
+        leave_requested_at: existing && existing.leave_status === 'pending' ? (existing.leave_requested_at || '') : ''
       };
       if(existing){
         db.links = db.links.map(l => l.id === existing.id ? row : l);
@@ -282,6 +284,66 @@
       const db = readDb();
       db.links = db.links.filter(l => l.id !== id);
       writeDb(db);
+    },
+    removeLinksForPlayer(playerId){
+      const pid = String(playerId || '');
+      if(!pid) return 0;
+      const db = readDb();
+      const before = db.links.length;
+      db.links = db.links.filter(l => !(l.player && String(l.player.id) === pid));
+      writeDb(db);
+      return before - db.links.length;
+    },
+    setLeaveStatus(linkId, status){
+      const id = String(linkId || '');
+      const st = status === 'pending' || status === 'declined' || status === 'accepted' ? status : '';
+      if(!id) return null;
+      const db = readDb();
+      let hit = null;
+      db.links = db.links.map(l => {
+        if(l.id !== id) return l;
+        hit = {
+          ...l,
+          leave_status: st === 'accepted' ? '' : st,
+          leave_requested_at: st === 'pending'
+            ? (l.leave_requested_at || new Date().toISOString())
+            : (st ? (l.leave_requested_at || '') : ''),
+          updatedAt: new Date().toISOString()
+        };
+        return hit;
+      });
+      if(hit) writeDb(db);
+      return hit;
+    },
+    /** Parent/player asks coach to unlink after a club change — not instant. */
+    requestLeave(linkId, meta){
+      const link = this.getLink(linkId);
+      if(!link || !link.player || !link.player.id) throw new Error('no_link');
+      if(link.leave_status === 'pending') return {link, request: null, already: true};
+      const coach = global.CoachStore;
+      if(!coach || typeof coach.requestPlayerLeave !== 'function') throw new Error('no_coach');
+      const req = coach.requestPlayerLeave({
+        team_player_id: link.player.id,
+        parent_link_id: link.id,
+        player_name: [link.player.first_name, link.player.last_name].filter(Boolean).join(' '),
+        team_name: link.team && link.team.name ? link.team.name : '',
+        academy_name: link.academy && link.academy.name ? link.academy.name : '',
+        new_club: meta && meta.new_club ? meta.new_club : '',
+        new_team: meta && meta.new_team ? meta.new_team : '',
+        reason: 'club_change'
+      });
+      const updated = this.setLeaveStatus(link.id, 'pending');
+      try{
+        if(global.CoachPush && typeof global.CoachPush.notifyLocal === 'function'){
+          const title = (global.tt && global.tt('coachLeavePushTitle', 'Player leave'))
+            || 'Player leave';
+          global.CoachPush.notifyLocal(
+            title,
+            `${req.player_name || ''} · ${req.new_club || req.new_team || ''}`.trim()
+          );
+        }
+      }catch(e){}
+      return {link: updated || link, request: req, already: false};
     }
   };
 

@@ -262,6 +262,63 @@
     }
   }
 
+  function renderCoachLeaveRequests(session){
+    const box = document.getElementById('coachLeaveRequests');
+    const store = global.CoachStore;
+    if(!box || !store || !session || typeof store.listLeaveRequests !== 'function'){
+      if(box) box.hidden = true;
+      return;
+    }
+    const list = store.listLeaveRequests(session, {status: 'pending'});
+    if(!list.length){
+      box.hidden = true;
+      box.innerHTML = '';
+      return;
+    }
+    box.hidden = false;
+    box.innerHTML = `<div class="pro-kicker">${esc(tt('coachLeaveKicker', 'Leave requests'))}</div>
+      <p class="hint">${esc(tt('coachLeaveLead', 'Player asks to leave after a club change. Confirm removes them from the roster.'))}</p>
+      <div class="coach-leave-list">${list.map(r => {
+        const where = [r.new_club, r.new_team].filter(Boolean).join(' · ')
+          || [r.academy_name, r.team_name].filter(Boolean).join(' · ')
+          || '—';
+        return `<div class="coach-leave-row" data-leave-id="${esc(r.id)}">
+          <div class="coach-leave-main">
+            <b>${esc(r.player_name || '—')}</b>
+            <span>${esc(tt('coachLeaveNewClub', 'New club'))}: ${esc(where)}</span>
+          </div>
+          <div class="parent-rsvp-actions coach-leave-actions">
+            <button type="button" class="parent-rsvp-btn yes" data-leave-decide="accept" data-leave-id="${esc(r.id)}" aria-label="${esc(tt('coachLeaveAccept', 'Confirm leave'))}">✓</button>
+            <button type="button" class="parent-rsvp-btn no" data-leave-decide="decline" data-leave-id="${esc(r.id)}" aria-label="${esc(tt('coachLeaveDecline', 'Keep on team'))}">✕</button>
+          </div>
+        </div>`;
+      }).join('')}</div>`;
+  }
+  function onCoachLeaveDecide(btn){
+    const id = btn && btn.dataset.leaveId;
+    const decision = btn && btn.dataset.leaveDecide;
+    const store = global.CoachStore;
+    const session = store && store.getSession && store.getSession();
+    if(!id || !decision || !session || typeof store.resolveLeaveRequest !== 'function') return;
+    try{
+      const res = store.resolveLeaveRequest(session, id, decision);
+      if(decision === 'accept'){
+        toast(tt('coachLeaveAccepted', 'Player removed from the team. Parent link cleared.'));
+      }else{
+        toast(tt('coachLeaveDeclined', 'Leave declined. Player stays on the team.'));
+      }
+      if(typeof renderParentUi === 'function'){
+        try{ renderParentUi(); }catch(e){}
+      }
+      if(typeof syncPlayerLeaveUi === 'function'){
+        try{ syncPlayerLeaveUi(); }catch(e){}
+      }
+      renderCoachUi();
+      return res;
+    }catch(e){
+      toast(tt('coachErrGeneric', 'Something went wrong.'));
+    }
+  }
   function renderWorkspace(session){
     const store = global.CoachStore;
     const academy = store.myAcademy(session);
@@ -277,6 +334,8 @@
       if(teamPane) teamPane.hidden = true;
       const homeStatsOff = document.getElementById('coachHomeStats');
       if(homeStatsOff) homeStatsOff.hidden = true;
+      const leaveOff = document.getElementById('coachLeaveRequests');
+      if(leaveOff){ leaveOff.hidden = true; leaveOff.innerHTML = ''; }
       closeCoachSettings();
       closeTeamMenu();
       return;
@@ -322,6 +381,7 @@
       homeStats.hidden = false;
       homeStats.innerHTML = coachJumpStatsHtml(teams.length, players, matches, ratings);
     }
+    renderCoachLeaveRequests(session);
 
     let activeId = store.getActiveTeamId();
     if(teams.length && !teams.some(t => t.id === activeId)) activeId = teams[0].id;
@@ -3758,6 +3818,12 @@
     document.getElementById('coachHomeStats')?.addEventListener('click', e => {
       const btn = e.target.closest('[data-coach-jump]');
       if(btn) jumpCoachStat(btn.dataset.coachJump);
+    });
+    document.getElementById('coachLeaveRequests')?.addEventListener('click', e => {
+      const btn = e.target.closest('[data-leave-decide]');
+      if(!btn) return;
+      e.preventDefault();
+      onCoachLeaveDecide(btn);
     });
     document.getElementById('coachSettingsBack')?.addEventListener('click', () => closeCoachSettings());
     document.getElementById('coachSettingsCloseBtn')?.addEventListener('click', () => closeCoachSettings());

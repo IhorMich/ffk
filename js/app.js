@@ -2384,6 +2384,9 @@ function openPlayerEdit(){
   if(el) el.hidden = false;
   openSheet(document.getElementById('playerEditCard'));
   pushAppState('layer');
+  if(typeof syncPlayerLeaveUi === 'function'){
+    try{ syncPlayerLeaveUi(); }catch(e){}
+  }
 }
 function closePlayerEdit(revert){
   const el = document.getElementById('playerEdit');
@@ -2405,12 +2408,17 @@ function fillPlayerForm(){
   document.getElementById('p-season').value = seasonIsOpen() ? (player.season || currentSeason()) : nextSeasonLabel(player.season || currentSeason());
   document.getElementById('p-photo').value = '';
   document.getElementById('p-cover').value = '';
+  const clubChanged = document.getElementById('p-club-changed');
+  if(clubChanged) clubChanged.checked = false;
   setBadge(document.getElementById('pPhotoBox'), currentPhoto(), initials());
   setCoverPreview();
   renderExtraChips();
   syncDateShown();
   syncSeasonUi();
   renderRoster();
+  if(typeof syncPlayerLeaveUi === 'function'){
+    try{ syncPlayerLeaveUi(); }catch(e){}
+  }
 }
 function collectPlayer(){
   const primary = document.getElementById('p-primary').value;
@@ -4709,6 +4717,17 @@ document.getElementById('savePlayerBtn').addEventListener('click', () => {
 });
 document.getElementById('editPlayerBtn').addEventListener('click', openPlayerEdit);
 document.getElementById('editPlayerClose').addEventListener('click', () => closePlayerEdit(true));
+document.getElementById('playerLeaveBtn')?.addEventListener('click', () => {
+  if(typeof onPlayerLeaveRequest === 'function') onPlayerLeaveRequest();
+});
+document.getElementById('p-club-changed')?.addEventListener('change', () => {
+  if(typeof syncPlayerLeaveUi === 'function') syncPlayerLeaveUi();
+});
+['p-club', 'p-team', 'p-first', 'p-last'].forEach(id => {
+  document.getElementById(id)?.addEventListener('input', () => {
+    if(typeof syncPlayerLeaveUi === 'function') syncPlayerLeaveUi();
+  });
+});
 
 function wrapText(ctx, text, x, y, maxWidth, lineHeight){
   const words = String(text).split(' ');

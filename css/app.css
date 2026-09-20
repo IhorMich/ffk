@@ -1656,6 +1656,32 @@
   .parent-coach-block{margin:0 0 16px;}
   .parent-coach-block:last-child{margin-bottom:0;}
   #parentOpenCoachStatsBtn,#parentLinkOpenStatsBtn,#parentUnlinkBtn{width:100%;margin-top:10px;}
+  #parentAddLinkBtnBottom{width:100%;margin:16px 0 8px;}
+  .player-leave-block{
+    margin:16px 0;padding:14px;border-radius:14px;border:1px solid var(--card-line);
+    background:color-mix(in srgb, var(--card-paper) 92%, var(--card-accent));
+  }
+  .player-leave-check{
+    display:flex;align-items:flex-start;gap:10px;margin:10px 0 12px;
+    font-size:.92rem;font-weight:700;color:var(--card-ink);cursor:pointer;
+  }
+  .player-leave-check input{margin-top:3px;flex-shrink:0;}
+  #playerLeaveBtn{width:100%;}
+  #playerLeaveBtn:disabled{opacity:.45;cursor:not-allowed;}
+  .ghost-btn.danger-btn{border-color:color-mix(in srgb, #e25555 45%, var(--card-line));color:#e25555;}
+  .coach-leave-box{
+    margin:0 0 14px;padding:14px;border-radius:16px;border:1px solid var(--card-line);
+    background:color-mix(in srgb, var(--card-paper) 90%, #e25555);
+  }
+  .coach-leave-list{display:grid;gap:10px;margin-top:10px;}
+  .coach-leave-row{
+    display:grid;gap:10px;padding:12px;border-radius:14px;border:1px solid var(--card-line);
+    background:var(--card-paper);
+  }
+  .coach-leave-main{display:grid;gap:4px;}
+  .coach-leave-main b{font-size:1rem;color:var(--card-ink);}
+  .coach-leave-main span{font-size:.85rem;font-weight:650;color:var(--card-muted);}
+  .coach-leave-actions{margin:0;}
   #parentOpenCoachStatsBtn{margin:4px 0 10px;}
   .coach-rate-btn{
     margin:0;padding:8px 12px;width:auto;font-size:.78rem;border-radius:999px;

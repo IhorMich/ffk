@@ -605,15 +605,22 @@
     const box = document.getElementById('parentLinksList');
     const root = document.getElementById('parentLinksCard');
     const statsBtn = document.getElementById('parentOpenCoachStatsBtn');
+    const addBtn = document.getElementById('parentAddLinkBtn');
+    const addBottom = document.getElementById('parentAddLinkBtnBottom');
     if(!box || !root || !store) return;
     if(typeof isCoachPlan === 'function' && isCoachPlan()){
       root.hidden = true;
       if(statsBtn) statsBtn.hidden = true;
+      if(addBtn) addBtn.hidden = true;
+      if(addBottom) addBottom.hidden = true;
       return;
     }
     root.hidden = false;
     const links = store.listLinks();
     if(statsBtn) statsBtn.hidden = !links.length;
+    // Already linked → QR/add goes to the very bottom of the player screen.
+    if(addBtn) addBtn.hidden = !!links.length;
+    if(addBottom) addBottom.hidden = !links.length;
     if(!links.length){
       box.innerHTML = `<p class="hint">${esc(tt('parentLinksEmpty', 'No academy link yet. Ask the coach for a QR or invite link.'))}</p>`;
       return;
@@ -622,7 +629,10 @@
       const name = playerName(l.player);
       const meta = [
         parentTeamLine(l),
-        parentPlayerMetaLine(l)
+        parentPlayerMetaLine(l),
+        l.leave_status === 'pending'
+          ? tt('playerLeavePendingShort', 'Leave pending')
+          : (l.leave_status === 'declined' ? tt('playerLeaveDeclinedShort', 'Leave declined') : '')
       ].filter(Boolean).join(' · ');
       const avg = l.avg != null ? Number(l.avg).toFixed(1) : '—';
       return `<button type="button" class="parent-link-row" data-parent-link="${esc(l.id)}">
@@ -789,7 +799,13 @@
       ${parentCoachStatsBlockHtml(link)}
       <p class="hint">${esc(tt('parentPersonalNote', 'Your sideline Matchcard ratings stay in History / Stats as before.'))}</p>
       <button type="button" class="save-btn" id="parentLinkOpenStatsBtn">${esc(tt('parentCoachStatsBtn', 'Coach stats'))}</button>
-      <button type="button" class="ghost-btn" id="parentUnlinkBtn" data-unlink="${esc(link.id)}">${esc(tt('parentUnlink', 'Remove coach link'))}</button>
+      <p class="hint">${esc(
+        link.leave_status === 'pending'
+          ? tt('playerLeavePendingHint', 'Leave request sent. Waiting for the coach to confirm.')
+          : link.leave_status === 'declined'
+            ? tt('playerLeaveDeclinedHint', 'Coach declined the leave. Edit the card and request again if the club really changed.')
+            : tt('playerLeaveOnlyViaEdit', 'To unlink, open Edit card and mark that the club changed. The coach must confirm.')
+      )}</p>
     `;
     if(typeof presentSheetCard === 'function') presentSheetCard(card, back);
     else{
@@ -860,6 +876,7 @@
     if(global.__ffkParentBound) return;
     global.__ffkParentBound = true;
     document.getElementById('parentAddLinkBtn')?.addEventListener('click', () => openParentClaimSheet(''));
+    document.getElementById('parentAddLinkBtnBottom')?.addEventListener('click', () => openParentClaimSheet(''));
     document.getElementById('parentOpenCoachStatsBtn')?.addEventListener('click', () => openParentCoachStats());
     document.getElementById('parentClaimBack')?.addEventListener('click', () => closeParentClaimSheet());
     document.getElementById('parentClaimCancelBtn')?.addEventListener('click', () => closeParentClaimSheet());
@@ -899,18 +916,143 @@
         e.preventDefault();
         closeParentLinkSheet();
         openParentCoachStats();
-        return;
       }
-      const btn = e.target.closest('#parentUnlinkBtn') || e.target.closest('[data-unlink]');
-      if(!btn) return;
-      global.ParentStore.removeLink(btn.dataset.unlink);
-      closeParentLinkSheet();
-      renderParentUi();
-      toast(tt('parentUnlinked', 'Academy link removed.'));
     });
     checkLaunchParentInvite();
     syncInboxBellUi();
   }
+
+  function normClubPart(s){
+    return String(s || '').trim().toLowerCase().replace(/\s+/g, ' ');
+  }
+  function linksForCurrentPlayer(){
+    const store = global.ParentStore;
+    if(!store || typeof store.listLinks !== 'function') return [];
+    const links = store.listLinks();
+    if(!links.length) return [];
+    let first = '';
+    let last = '';
+    try{
+      first = document.getElementById('p-first')?.value || '';
+      last = document.getElementById('p-last')?.value || '';
+    }catch(e){}
+    if(!first && !last){
+      try{
+        const cur = JSON.parse(localStorage.getItem('ffk_player_v1') || 'null');
+        if(cur){
+          first = cur.firstName || '';
+          last = cur.lastName || '';
+        }
+      }catch(e){}
+    }
+    if(!first && !last) return links;
+    const soft = (aF, aL, bF, bL) => {
+      const af = normClubPart(aF), al = normClubPart(aL);
+      const bf = normClubPart(bF), bl = normClubPart(bL);
+      if(!af && !al) return false;
+      const aFull = [af, al].filter(Boolean).join(' ');
+      const bFull = [bf, bl].filter(Boolean).join(' ');
+      if(aFull && bFull && aFull === bFull) return true;
+      if(af && bf && af === bf && (!al || !bl || al === bl)) return true;
+      return false;
+    };
+    const matched = links.filter(l =>
+      l && l.player && soft(first, last, l.player.first_name, l.player.last_name)
+    );
+    return matched.length ? matched : links;
+  }
+  function clubChangedEnough(link, clubVal, teamVal){
+    if(!link) return false;
+    const club = normClubPart(clubVal);
+    const team = normClubPart(teamVal);
+    const linkedClub = normClubPart(link.academy && link.academy.name);
+    const linkedTeam = normClubPart(link.team && link.team.name);
+    if(club && linkedClub && club !== linkedClub) return true;
+    if(team && linkedTeam && team !== linkedTeam) return true;
+    return false;
+  }
+  function syncPlayerLeaveUi(){
+    const block = document.getElementById('playerLeaveBlock');
+    const meta = document.getElementById('playerLeaveMeta');
+    const statusEl = document.getElementById('playerLeaveStatus');
+    const btn = document.getElementById('playerLeaveBtn');
+    const check = document.getElementById('p-club-changed');
+    if(!block) return;
+    if(typeof isCoachPlan === 'function' && isCoachPlan()){
+      block.hidden = true;
+      return;
+    }
+    const links = linksForCurrentPlayer();
+    if(!links.length){
+      block.hidden = true;
+      return;
+    }
+    block.hidden = false;
+    const link = links[0];
+    if(meta){
+      meta.textContent = [
+        link.team && link.team.name ? `${tt('parentInboxTeam', 'Team')}: ${link.team.name}` : '',
+        link.coach && link.coach.name ? `${tt('parentCoachLabel', 'Coach')}: ${link.coach.name}` : '',
+        link.academy && link.academy.name ? link.academy.name : ''
+      ].filter(Boolean).join(' · ');
+    }
+    const pending = link.leave_status === 'pending';
+    const declined = link.leave_status === 'declined';
+    if(statusEl){
+      if(pending){
+        statusEl.hidden = false;
+        statusEl.textContent = tt('playerLeavePendingHint', 'Leave request sent. Waiting for the coach to confirm.');
+      }else if(declined){
+        statusEl.hidden = false;
+        statusEl.textContent = tt('playerLeaveDeclinedHint', 'Coach declined the leave. Edit the card and request again if the club really changed.');
+      }else{
+        statusEl.hidden = true;
+        statusEl.textContent = '';
+      }
+    }
+    const clubVal = document.getElementById('p-club')?.value || '';
+    const teamVal = document.getElementById('p-team')?.value || '';
+    const marked = !!(check && check.checked);
+    const canAsk = !pending && (marked || clubChangedEnough(link, clubVal, teamVal));
+    if(btn){
+      btn.disabled = !canAsk;
+      btn.dataset.linkId = link.id;
+    }
+  }
+  function onPlayerLeaveRequest(){
+    const btn = document.getElementById('playerLeaveBtn');
+    const linkId = btn && btn.dataset.linkId;
+    if(!linkId || (btn && btn.disabled)) return;
+    const clubVal = document.getElementById('p-club')?.value.trim() || '';
+    const teamVal = document.getElementById('p-team')?.value.trim() || '';
+    const check = document.getElementById('p-club-changed');
+    const link = global.ParentStore && global.ParentStore.getLink(linkId);
+    if(!link) return;
+    if(!(check && check.checked) && !clubChangedEnough(link, clubVal, teamVal)){
+      toast(tt('playerLeaveNeedClubChange', 'Mark club change or update club/team first.'));
+      return;
+    }
+    if(!confirm(tt('playerLeaveConfirm', 'Send a leave request to the coach? They must confirm before the link is removed.'))) return;
+    try{
+      const res = global.ParentStore.requestLeave(linkId, {new_club: clubVal, new_team: teamVal});
+      if(res && res.already){
+        toast(tt('playerLeavePendingHint', 'Leave request sent. Waiting for the coach to confirm.'));
+      }else{
+        toast(tt('playerLeaveSent', 'Leave request sent to the coach.'));
+      }
+      syncPlayerLeaveUi();
+      renderParentUi();
+      if(typeof renderCoachUi === 'function'){
+        try{ renderCoachUi(); }catch(e){}
+      }
+    }catch(e){
+      toast(tt('coachErrGeneric', 'Something went wrong.'));
+    }
+  }
+
+  global.syncPlayerLeaveUi = syncPlayerLeaveUi;
+  global.onPlayerLeaveRequest = onPlayerLeaveRequest;
+  global.linksForCurrentPlayer = linksForCurrentPlayer;
 
   global.renderParentUi = renderParentUi;
   global.bindParentUi = bindParentUi;

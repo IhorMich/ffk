@@ -15,7 +15,7 @@
   }
   function emptyDb(){
     return {
-      version: 3,
+      version: 4,
       accounts: {},
       academies: [],
       teams: [],
@@ -25,6 +25,7 @@
       ratings: [],
       match_invites: [],
       parent_invites: [],
+      leave_requests: [],
       device_tokens: [],
       activeTeamId: '',
       activeMatchId: ''
@@ -37,7 +38,7 @@
       const db = JSON.parse(raw);
       if(!db || typeof db !== 'object') return emptyDb();
       return {
-        version: 3,
+        version: 4,
         accounts: db.accounts && typeof db.accounts === 'object' ? db.accounts : {},
         academies: Array.isArray(db.academies) ? db.academies : [],
         teams: Array.isArray(db.teams) ? db.teams : [],
@@ -47,6 +48,7 @@
         ratings: Array.isArray(db.ratings) ? db.ratings : [],
         match_invites: Array.isArray(db.match_invites) ? db.match_invites : [],
         parent_invites: Array.isArray(db.parent_invites) ? db.parent_invites : [],
+        leave_requests: Array.isArray(db.leave_requests) ? db.leave_requests : [],
         device_tokens: Array.isArray(db.device_tokens) ? db.device_tokens : [],
         activeTeamId: String(db.activeTeamId || ''),
         activeMatchId: String(db.activeMatchId || '')
@@ -485,7 +487,99 @@
       db.ratings = db.ratings.filter(r => r.team_player_id !== playerId);
       db.match_invites = db.match_invites.filter(i => i.team_player_id !== playerId);
       db.parent_invites = db.parent_invites.filter(i => i.team_player_id !== playerId);
+      db.leave_requests = (db.leave_requests || []).filter(r => String(r.team_player_id) !== String(playerId));
       writeDb(db);
+      try{
+        if(global.ParentStore && typeof global.ParentStore.removeLinksForPlayer === 'function'){
+          global.ParentStore.removeLinksForPlayer(playerId);
+        }
+      }catch(e){}
+    },
+    /** Pending leave requests from parents/players who changed club. */
+    listLeaveRequests(session, opts){
+      const status = opts && opts.status ? String(opts.status) : 'pending';
+      const db = readDb();
+      return (db.leave_requests || [])
+        .filter(r => {
+          if(!r || !r.team_player_id) return false;
+          if(status !== 'all' && String(r.status || 'pending') !== status) return false;
+          return !!this.getPlayer(session, r.team_player_id);
+        })
+        .slice()
+        .sort((a, b) => String(b.created_at || '').localeCompare(String(a.created_at || '')));
+    },
+    requestPlayerLeave(payload){
+      const pid = String(payload && payload.team_player_id || '');
+      const linkId = String(payload && payload.parent_link_id || '');
+      if(!pid || !linkId) throw new Error('bad_leave');
+      const db = readDb();
+      const player = db.team_players.find(p => p.id === pid);
+      if(!player) throw new Error('no_player');
+      const existing = (db.leave_requests || []).find(r =>
+        String(r.team_player_id) === pid && String(r.status || 'pending') === 'pending'
+      );
+      const now = new Date().toISOString();
+      const row = {
+        id: existing ? existing.id : uid('leave'),
+        team_player_id: pid,
+        team_id: player.team_id,
+        parent_link_id: linkId,
+        player_name: String(payload.player_name || [player.first_name, player.last_name].filter(Boolean).join(' ')).slice(0, 80),
+        team_name: String(payload.team_name || '').slice(0, 60),
+        academy_name: String(payload.academy_name || '').slice(0, 80),
+        new_club: String(payload.new_club || '').slice(0, 60),
+        new_team: String(payload.new_team || '').slice(0, 60),
+        reason: String(payload.reason || 'club_change').slice(0, 40),
+        status: 'pending',
+        created_at: existing ? existing.created_at : now,
+        updated_at: now
+      };
+      if(existing){
+        db.leave_requests = db.leave_requests.map(r => r.id === existing.id ? row : r);
+      }else{
+        if(!Array.isArray(db.leave_requests)) db.leave_requests = [];
+        db.leave_requests.push(row);
+      }
+      writeDb(db);
+      return row;
+    },
+    /** Coach confirms leave (✓) or cancels request (✕). */
+    resolveLeaveRequest(session, requestId, decision){
+      const id = String(requestId || '');
+      const ok = decision === 'accept' || decision === 'decline';
+      if(!id || !ok) throw new Error('bad_decision');
+      const db = readDb();
+      const req = (db.leave_requests || []).find(r => r.id === id);
+      if(!req) throw new Error('not_found');
+      if(!this.getPlayer(session, req.team_player_id)) throw new Error('forbidden');
+      const now = new Date().toISOString();
+      if(decision === 'decline'){
+        db.leave_requests = db.leave_requests.map(r =>
+          r.id === id ? {...r, status: 'declined', updated_at: now} : r
+        );
+        writeDb(db);
+        try{
+          if(global.ParentStore && typeof global.ParentStore.setLeaveStatus === 'function'){
+            global.ParentStore.setLeaveStatus(req.parent_link_id, 'declined');
+          }
+        }catch(e){}
+        return {request: {...req, status: 'declined'}, removed: false};
+      }
+      // Accept: unlink parent + remove player from roster.
+      db.leave_requests = db.leave_requests.map(r =>
+        r.id === id ? {...r, status: 'accepted', updated_at: now} : r
+      );
+      writeDb(db);
+      const pid = req.team_player_id;
+      try{
+        if(global.ParentStore && typeof global.ParentStore.removeLink === 'function' && req.parent_link_id){
+          global.ParentStore.removeLink(req.parent_link_id);
+        }else if(global.ParentStore && typeof global.ParentStore.removeLinksForPlayer === 'function'){
+          global.ParentStore.removeLinksForPlayer(pid);
+        }
+      }catch(e){}
+      this.removePlayer(session, pid);
+      return {request: {...req, status: 'accepted'}, removed: true};
     },
     getActiveMatchId(){
       return readDb().activeMatchId || '';
