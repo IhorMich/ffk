@@ -1460,6 +1460,23 @@
   #coachSettingsSheet #coachProfileEmail{margin:0 0 10px;}
   #coachSettingsSheet #coachProfileStats{grid-template-columns:repeat(2,1fr);margin-top:12px;}
   #coachSettingsSheet #coachSignOutBtn{margin-top:8px;}
+  .coach-remove-player{
+    width:100%;margin:0 0 8px;color:#c0392b;border-color:color-mix(in srgb, #c0392b 35%, var(--card-line));
+  }
+  #coachOpenChildPageBtn,#coachAddParentBtn{width:100%;margin:8px 0;}
+  .coach-child-banner{
+    display:flex;align-items:flex-start;justify-content:space-between;gap:12px;
+    margin:0 0 14px;padding:14px 14px 14px 16px;border-radius:18px;
+    background:var(--card-paper);color:var(--card-ink);
+    border:1px solid var(--card-line);
+    box-shadow:var(--card-shadow), inset 3px 0 0 var(--card-accent);
+  }
+  .coach-child-banner-text{min-width:0;flex:1;}
+  .coach-child-banner b{display:block;font-size:1.05rem;font-weight:800;margin:2px 0;}
+  .coach-child-banner .hint{margin:0;}
+  #coachChildBackBtn{width:auto;margin:0;padding:8px 12px;flex-shrink:0;}
+  .coach-child-feed .pf-card{margin-bottom:14px;}
+  .app.coach-child-on .club-row-main{pointer-events:auto;}
   .coach-session-bar{display:none;}
   #coachProfileStats{grid-template-columns:repeat(4,1fr);}
   @media (max-width:380px){

@@ -1,4 +1,4 @@
-const CACHE = 'ffk_v198';
+const CACHE = 'ffk_v199';
 const ASSETS = [
   './',
   './index.html',
@@ -14,6 +14,7 @@ const ASSETS = [
   './js/coach-store.js',
   './js/inbox-store.js',
   './js/parent-store.js',
+  './js/parent-stats-store.js',
   './js/coach-ui.js',
   './js/parent-ui.js',
   './js/app.js',

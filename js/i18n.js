@@ -4384,7 +4384,16 @@ ru:{
       coachTeamsManageKicker:'Teams',
       coachAccountKicker:'Account',
       coachMatchAddress:'Match address',
-      coachMatchAddressPh:'Stadium / street, city'
+      coachMatchAddressPh:'Stadium / street, city',
+      coachOpenChildPage:'Open player page',
+      coachRemovePlayer:'Remove player',
+      coachConfirmRemovePlayer:'Remove {name} from the team?',
+      coachPlayerRemoved:'Player removed.',
+      coachChildViewKicker:'Player view',
+      coachChildBack:'← Roster',
+      coachChildFromParents:'From parents',
+      coachChildFromCoach:'From coach',
+      coachChildNoParentStats:'No sideline stats from parents yet. They appear when a linked parent saves a match on this phone (cloud sync later).'
     },
     ru:{
       coachPhase2Note:'Матчи, оценки, аналитика + QR-invite родителя. Дальше — Supabase.',
@@ -4451,7 +4460,16 @@ ru:{
       coachTeamsManageKicker:'Команды',
       coachAccountKicker:'Аккаунт',
       coachMatchAddress:'Адрес матча',
-      coachMatchAddressPh:'Стадион / улица, город'
+      coachMatchAddressPh:'Стадион / улица, город',
+      coachOpenChildPage:'Открыть страницу игрока',
+      coachRemovePlayer:'Убрать игрока',
+      coachConfirmRemovePlayer:'Убрать {name} из команды?',
+      coachPlayerRemoved:'Игрок убран.',
+      coachChildViewKicker:'Просмотр игрока',
+      coachChildBack:'← К составу',
+      coachChildFromParents:'От родителей',
+      coachChildFromCoach:'От тренера',
+      coachChildNoParentStats:'Пока нет статистики от родителей у бровки. Она появится, когда привязанный родитель сохранит матч на этом телефоне (облако — позже).'
     },
     uk:{
       coachPhase2Note:'Матчі, оцінки, аналітика + QR-invite батька. Далі — Supabase.',
@@ -4518,7 +4536,16 @@ ru:{
       coachTeamsManageKicker:'Команди',
       coachAccountKicker:'Акаунт',
       coachMatchAddress:'Адреса матчу',
-      coachMatchAddressPh:'Стадіон / вулиця, місто'
+      coachMatchAddressPh:'Стадіон / вулиця, місто',
+      coachOpenChildPage:'Відкрити сторінку гравця',
+      coachRemovePlayer:'Прибрати гравця',
+      coachConfirmRemovePlayer:'Прибрати {name} з команди?',
+      coachPlayerRemoved:'Гравця прибрано.',
+      coachChildViewKicker:'Перегляд гравця',
+      coachChildBack:'← До складу',
+      coachChildFromParents:'Від батьків',
+      coachChildFromCoach:'Від тренера',
+      coachChildNoParentStats:'Поки немає статистики від батьків біля бровки. Вона з’явиться, коли прив’язаний батько збереже матч на цьому телефоні (хмара — пізніше).'
     }
   };
   LANGS.forEach(lang => {

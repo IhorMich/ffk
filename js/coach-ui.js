@@ -241,7 +241,6 @@
           <b>${esc(label)}</b>
           ${meta ? `<span>${esc(meta)}</span>` : ''}
         </button>
-        <button type="button" class="roster-x" data-del-player="${esc(p.id)}" aria-label="remove">×</button>
       </div>`;
     }).join('');
   }
@@ -898,12 +897,64 @@
       </div>
       <div class="pro-kicker">${esc(tt('coachPlayerRatingsKicker', 'Recent ratings'))}</div>
       <div class="coach-player-list">${ratingsHtml}</div>
+      <button type="button" class="save-btn" id="coachOpenChildPageBtn">${esc(tt('coachOpenChildPage', 'Open player page'))}</button>
       <button type="button" class="save-btn" id="coachAddParentBtn">${esc(tt('coachAddParentBtn', 'Add parent / guardian'))}</button>
+      <button type="button" class="ghost-btn coach-remove-player" id="coachRemovePlayerBtn">${esc(tt('coachRemovePlayer', 'Remove player'))}</button>
       <button type="button" class="ghost-btn" id="coachPlayerCloseBtn">${esc(tt('previewCancel', 'Cancel'))}</button>
     `;
     sheet.hidden = false;
     if(back) back.hidden = false;
     if(typeof pushAppState === 'function') pushAppState('layer');
+  }
+
+  function openCoachChildPlayerPage(playerId){
+    const store = global.CoachStore;
+    const session = store && store.getSession();
+    const detail = session && store.playerDetail(session, playerId);
+    if(!detail){
+      toast(tt('coachErrGeneric', 'Something went wrong.'));
+      return;
+    }
+    const parentStats = global.ParentStatsStore
+      ? global.ParentStatsStore.listForPlayer(playerId)
+      : [];
+    const parentAvg = global.ParentStatsStore
+      ? global.ParentStatsStore.avgForPlayer(playerId)
+      : null;
+    global.coachChildView = {
+      playerId,
+      player: detail.player,
+      team: detail.team,
+      academy: detail.academy,
+      coachRatings: detail.ratings || [],
+      coachAvg: detail.avg,
+      coachGames: detail.games,
+      parentStats,
+      parentAvg
+    };
+    closeCoachPlayerSheet();
+    if(typeof showView === 'function') showView('player');
+  }
+
+  function removeCoachPlayerFromSheet(){
+    if(!detailPlayerId) return;
+    const store = global.CoachStore;
+    const session = store.getSession();
+    const detail = session && store.playerDetail(session, detailPlayerId);
+    const label = detail
+      ? [detail.player.first_name, detail.player.last_name].filter(Boolean).join(' ')
+      : '';
+    const msg = tt('coachConfirmRemovePlayer', 'Remove {name} from the team?')
+      .replace('{name}', label || tt('coachPlayerDetailKicker', 'Player'));
+    if(!confirm(msg)) return;
+    try{
+      store.removePlayer(session, detailPlayerId);
+      closeCoachPlayerSheet();
+      toast(tt('coachPlayerRemoved', 'Player removed.'));
+      renderCoachUi();
+    }catch(e){
+      toast(tt('coachErrGeneric', 'Something went wrong.'));
+    }
   }
 
   function drawInviteQr(text){
@@ -1146,14 +1197,6 @@
     pickTeam(document.getElementById('coachTeamList'), false);
     pickTeam(document.getElementById('coachSettingsTeamList'), true);
     document.getElementById('coachPlayerList')?.addEventListener('click', e => {
-      const del = e.target.closest('[data-del-player]');
-      if(del){
-        try{
-          global.CoachStore.removePlayer(global.CoachStore.getSession(), del.dataset.delPlayer);
-          renderCoachUi();
-        }catch(err){}
-        return;
-      }
       const open = e.target.closest('[data-open-player]');
       if(open){
         openCoachPlayerSheet(open.dataset.openPlayer);
@@ -1163,6 +1206,14 @@
     document.getElementById('coachPlayerBody')?.addEventListener('click', e => {
       if(e.target.closest('#coachPlayerCloseBtn')){
         closeCoachPlayerSheet();
+        return;
+      }
+      if(e.target.closest('#coachOpenChildPageBtn') && detailPlayerId){
+        openCoachChildPlayerPage(detailPlayerId);
+        return;
+      }
+      if(e.target.closest('#coachRemovePlayerBtn') && detailPlayerId){
+        removeCoachPlayerFromSheet();
         return;
       }
       if(e.target.closest('#coachAddParentBtn') && detailPlayerId){
@@ -1216,4 +1267,5 @@
   global.closeCoachParentInviteSheet = closeCoachParentInviteSheet;
   global.closeCoachSettings = closeCoachSettings;
   global.openCoachSettings = openCoachSettings;
+  global.openCoachChildPlayerPage = openCoachChildPlayerPage;
 })(window);

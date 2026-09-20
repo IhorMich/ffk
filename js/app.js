@@ -1903,7 +1903,158 @@ function renderPlayerFeed(){
     ${focus.length ? `<div class="pf-card"><h3>${escapeHtml(t('pfFocus'))}</h3>${focus.map(g => row(g, true)).join('')}</div>` : ''}
     ${note ? `<div class="pf-card pf-coach"><h3>${escapeHtml(t('pfCoach'))}</h3><p>${escapeHtml(note)}</p></div>` : ''}`;
 }
+function clearCoachChildView(){
+  window.coachChildView = null;
+  syncCoachChildPlayerUi();
+}
+function isCoachChildView(){
+  return !!(window.coachChildView && window.coachChildView.player);
+}
+function syncCoachChildPlayerUi(){
+  const on = isCoachChildView();
+  const banner = document.getElementById('coachChildBanner');
+  const childFeed = document.getElementById('coachChildFeed');
+  const personalFeed = document.getElementById('playerFeed');
+  const editBtn = document.getElementById('editPlayerBtn');
+  const addBtn = document.getElementById('addPlayerBtn');
+  const rosterList = document.getElementById('rosterList');
+  const rosterCard = rosterList ? rosterList.closest('.pf-card') : null;
+  if(banner) banner.hidden = !on;
+  if(childFeed) childFeed.hidden = !on;
+  if(personalFeed) personalFeed.hidden = on;
+  if(editBtn) editBtn.hidden = on;
+  if(addBtn){
+    // addPlayerBtn visibility also gated by pro — only force-hide in child view
+    if(on) addBtn.hidden = true;
+    else if(typeof syncProUi === 'function') syncProUi();
+    else addBtn.hidden = false;
+  }
+  if(rosterCard) rosterCard.hidden = on;
+  if(!on){
+    const inbox = document.getElementById('parentInboxCard');
+    const links = document.getElementById('parentLinksCard');
+    // parent cards restored by renderParentUi
+    if(typeof renderParentUi === 'function') renderParentUi();
+    else {
+      if(inbox) inbox.hidden = true;
+      if(links) links.hidden = false;
+    }
+    return;
+  }
+  const inbox = document.getElementById('parentInboxCard');
+  const links = document.getElementById('parentLinksCard');
+  if(inbox) inbox.hidden = true;
+  if(links) links.hidden = true;
+  const ctx = window.coachChildView;
+  if(ctx && ctx.playerId && window.ParentStatsStore){
+    ctx.parentStats = window.ParentStatsStore.listForPlayer(ctx.playerId);
+    ctx.parentAvg = window.ParentStatsStore.avgForPlayer(ctx.playerId);
+  }
+  const p = ctx.player;
+  const name = [p.first_name, p.last_name].filter(Boolean).join(' ') || '—';
+  const nameEl = document.getElementById('coachChildBannerName');
+  const metaEl = document.getElementById('coachChildBannerMeta');
+  if(nameEl) nameEl.textContent = name;
+  if(metaEl){
+    metaEl.textContent = [
+      p.number ? `#${p.number}` : '',
+      p.position || '',
+      ctx.team && ctx.team.name,
+      ctx.academy && ctx.academy.name
+    ].filter(Boolean).join(' · ');
+  }
+  // Header like player page for this child
+  const headName = document.getElementById('playerNameDisplay');
+  const headMeta = document.getElementById('playerMetaLine');
+  const headClub = document.getElementById('playerClubLine');
+  const avgEl = document.getElementById('playerSeasonAvg');
+  if(headName) headName.textContent = p.first_name || name;
+  if(headMeta){
+    headMeta.textContent = [
+      p.number ? ((langLatin() ? '#' : '№') + p.number) : '',
+      p.position || ''
+    ].filter(Boolean).join(' · ');
+  }
+  if(headClub){
+    headClub.textContent = [ctx.team && ctx.team.name, ctx.academy && ctx.academy.name].filter(Boolean).join(' · ');
+  }
+  const parentAvg = ctx.parentAvg;
+  if(avgEl){
+    if(parentAvg == null) avgEl.hidden = true;
+    else {
+      avgEl.hidden = false;
+      avgEl.textContent = '⭐ ' + fmtNum(parentAvg, 2);
+    }
+  }
+  const fbName = document.getElementById('fbName');
+  const fbMeta = document.getElementById('fbMeta');
+  if(fbName) fbName.textContent = name;
+  if(fbMeta) fbMeta.textContent = [ctx.team && ctx.team.name, ctx.academy && ctx.academy.name].filter(Boolean).join(' · ');
+  renderCoachChildFeed(ctx);
+}
+function renderCoachChildFeed(ctx){
+  const el = document.getElementById('coachChildFeed');
+  if(!el || !ctx) return;
+  const esc = (s) => String(s == null ? '' : s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  const parentStats = Array.isArray(ctx.parentStats) ? ctx.parentStats : [];
+  const coachRatings = Array.isArray(ctx.coachRatings) ? ctx.coachRatings : [];
+  const parentRows = parentStats.length
+    ? parentStats.map(r => {
+        const head = [r.date, r.opponent, r.score].filter(Boolean).join(' · ');
+        return `<div class="coach-player-row">
+          <div class="coach-player-main">
+            <b>${esc(head || '—')}</b>
+            ${r.comment ? `<span>${esc(r.comment)}</span>` : ''}
+          </div>
+          <b class="parent-rate-num">${esc(Number(r.rating).toFixed(1))}</b>
+        </div>`;
+      }).join('')
+    : `<p class="hint">${esc(t('coachChildNoParentStats') || 'No sideline stats from parents yet. They appear when a linked parent saves a match.')}</p>`;
+  const coachRows = coachRatings.length
+    ? coachRatings.slice(0, 20).map(r => {
+        const head = [r.date, r.opponent, r.score].filter(Boolean).join(' · ');
+        return `<div class="coach-player-row">
+          <div class="coach-player-main">
+            <b>${esc(head || '—')}</b>
+            ${r.comment ? `<span>${esc(r.comment)}</span>` : ''}
+          </div>
+          <b class="parent-rate-num">${esc(Number(r.rating).toFixed(1))}</b>
+        </div>`;
+      }).join('')
+    : `<p class="hint">${esc(t('coachPlayerNoRatings') || 'No coach ratings yet.')}</p>`;
+  el.innerHTML = `
+    <div class="pf-card">
+      <div class="parent-confirm-badge">${esc(t('coachChildFromParents') || 'From parents')}</div>
+      <div class="coach-analytics-sum">
+        <div><b>${parentStats.length}</b><span>${esc(t('coachGames') || 'games')}</span></div>
+        <div><b>${ctx.parentAvg != null ? fmtNum(ctx.parentAvg, 1) : '—'}</b><span>${esc(t('parentCoachAvg') || 'Avg')}</span></div>
+      </div>
+      <div class="coach-player-list">${parentRows}</div>
+    </div>
+    <div class="pf-card">
+      <div class="parent-confirm-badge">${esc(t('coachChildFromCoach') || 'From coach')}</div>
+      <div class="coach-analytics-sum">
+        <div><b>${ctx.coachGames || coachRatings.length || 0}</b><span>${esc(t('coachGames') || 'games')}</span></div>
+        <div><b>${ctx.coachAvg != null ? fmtNum(ctx.coachAvg, 1) : '—'}</b><span>${esc(t('coachStatAvg') || 'Avg')}</span></div>
+      </div>
+      <div class="coach-player-list">${coachRows}</div>
+    </div>`;
+}
+function exitCoachChildView(){
+  window.coachChildView = null;
+  syncCoachChildPlayerUi();
+  if(typeof showView === 'function') showView('coach');
+  if(typeof renderCoachUi === 'function') renderCoachUi();
+}
+window.exitCoachChildView = exitCoachChildView;
+window.isCoachChildView = isCoachChildView;
+
 function applyHeader(){
+  if(isCoachChildView()){
+    syncCoachChildPlayerUi();
+    return;
+  }
   if(isCoachPlan()){
     applyCoachHeader();
     return;
@@ -2623,6 +2774,11 @@ function saveCurrentMatch(){
   fillSeasonSelects();
   lastReportMatch = row;
   document.getElementById('reportCard').innerHTML = renderReportHtml(row);
+  try{
+    if(typeof ParentStatsStore !== 'undefined' && ParentStatsStore.publishFromPersonal){
+      ParentStatsStore.publishFromPersonal(row);
+    }
+  }catch(e){}
   showToast(editingId ? t('toastUpdated') : t('toastSaved'));
   resetForm();
   renderHistory();
@@ -2829,14 +2985,26 @@ function bindHeroPin(){
 function showView(name){
   const views = ['player','new','history','stats','settings','report','coach'];
   if(!views.includes(name)) name = 'new';
-  if(name === 'player' && isCoachPlan()) name = 'coach';
-  if(name !== 'player') closePlayerEdit();
+  if(name === 'player' && isCoachPlan() && !isCoachChildView()) name = 'coach';
+  if(name !== 'player'){
+    closePlayerEdit();
+    if(isCoachChildView() && name !== 'player') window.coachChildView = null;
+  }
   document.getElementById('app').classList.toggle('player-on', name === 'player');
-  document.getElementById('app').classList.toggle('coach-profile-on', isCoachPlan() && name === 'coach');
+  document.getElementById('app').classList.toggle('coach-profile-on', isCoachPlan() && name === 'coach' && !isCoachChildView());
+  document.getElementById('app').classList.toggle('coach-child-on', isCoachChildView() && name === 'player');
   document.querySelectorAll('.tabbtn').forEach(b => b.classList.toggle('active', b.dataset.view === name));
   document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id === 'view-'+name));
   document.querySelector('.topbar').classList.add('compact');
-  if(name === 'player') fillPlayerForm();
+  if(name === 'player'){
+    if(isCoachChildView()) syncCoachChildPlayerUi();
+    else {
+      syncCoachChildPlayerUi();
+      fillPlayerForm();
+    }
+  }else{
+    syncCoachChildPlayerUi();
+  }
   if(name === 'report' && lastReportMatch){
     document.getElementById('reportCard').innerHTML = renderReportHtml(lastReportMatch);
     document.getElementById('reportStory').innerHTML = matchStoryHtml(lastReportMatch);
@@ -2846,12 +3014,12 @@ function showView(name){
     renderStats();
     if(typeof renderParentUi === 'function') renderParentUi();
   }
-  if(name === 'player' && typeof renderParentUi === 'function') renderParentUi();
+  if(name === 'player' && typeof renderParentUi === 'function' && !isCoachChildView()) renderParentUi();
   if(name === 'coach' && typeof renderCoachUi === 'function') renderCoachUi();
   if(isCoachPlan() && (name === 'new' || name === 'history' || name === 'stats') && typeof renderCoachUi === 'function'){
     renderCoachUi();
   }
-  if(isCoachPlan()) applyHeader();
+  if(isCoachPlan() || isCoachChildView()) applyHeader();
   renderLiveClock();
   if(clockPhase() === 'run') startClockTick();
   try{
@@ -3769,6 +3937,10 @@ function handleAppBack(){
     if(typeof closeCoachSettings === 'function') closeCoachSettings();
     return true;
   }
+  if(isCoachChildView() && activeViewName() === 'player'){
+    exitCoachChildView();
+    return true;
+  }
   if(isElShown('coachPlayerSheet')){
     if(typeof closeCoachPlayerSheet === 'function') closeCoachPlayerSheet();
     return true;
@@ -4159,7 +4331,14 @@ document.getElementById('pOpenSeasonBtn').addEventListener('click', () => {
   if(openSeason(s)){ currentSeasonFilter = 'current'; saveFilters(); }
 });
 document.getElementById('pCloseSeasonBtn').addEventListener('click', () => closeSeason(false));
-document.getElementById('playerHeadBtn').addEventListener('click', () => showView(isCoachPlan() ? 'coach' : 'player'));
+document.getElementById('playerHeadBtn').addEventListener('click', () => {
+  if(isCoachChildView()){
+    exitCoachChildView();
+    return;
+  }
+  showView(isCoachPlan() ? 'coach' : 'player');
+});
+document.getElementById('coachChildBackBtn')?.addEventListener('click', () => exitCoachChildView());
 document.getElementById('addPlayerBtn').addEventListener('click', addPlayer);
 document.getElementById('statsCardBtn').addEventListener('click', () => {
   if(!requirePro('periodCard')) return;
