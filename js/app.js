@@ -274,6 +274,7 @@ function applyI18n(){
   if(isElShown('onboard')) renderOnboard();
   syncProUi();
   if(typeof syncCoachBillingUi === 'function') syncCoachBillingUi();
+  if(typeof syncPushSettingsUi === 'function') syncPushSettingsUi();
   if(typeof renderCoachUi === 'function') renderCoachUi();
   if(typeof renderParentUi === 'function') renderParentUi();
 }
@@ -390,6 +391,20 @@ function syncCoachBillingUi(){
 window.isCoachSub = isCoachSub;
 window.setCoachSub = setCoachSub;
 window.syncCoachBillingUi = syncCoachBillingUi;
+function syncPushSettingsUi(){
+  const on = !!(window.CoachPush && window.CoachPush.isEnabled && window.CoachPush.isEnabled());
+  const unlock = document.getElementById('appPushOnBtn');
+  const lock = document.getElementById('appPushOffBtn');
+  const st = document.getElementById('appPushStatus');
+  if(unlock) unlock.hidden = on;
+  if(lock) lock.hidden = !on;
+  if(st){
+    st.textContent = on
+      ? t('coachPushOn')
+      : t('coachPushHint');
+  }
+}
+window.syncPushSettingsUi = syncPushSettingsUi;
 function proTeaserHtml(titleKey){
   return `<div class="pro-lock">
     <div class="pro-lock-kicker">Matchcard Pro</div>
@@ -3180,6 +3195,14 @@ document.getElementById('proUnlockBtn')?.addEventListener('click', () => setPro(
 document.getElementById('proLockBtn')?.addEventListener('click', () => setPro(false));
 document.getElementById('coachSubUnlockBtn')?.addEventListener('click', () => setCoachSub(true));
 document.getElementById('coachSubLockBtn')?.addEventListener('click', () => setCoachSub(false));
+document.getElementById('appPushOnBtn')?.addEventListener('click', async () => {
+  if(window.CoachPush) await window.CoachPush.enable();
+  syncPushSettingsUi();
+});
+document.getElementById('appPushOffBtn')?.addEventListener('click', () => {
+  if(window.CoachPush) window.CoachPush.disable();
+  syncPushSettingsUi();
+});
 document.getElementById('openCoachBtn')?.addEventListener('click', () => {
   if(!isCoachSub()){
     setCoachSub(true);
@@ -5135,6 +5158,13 @@ async function shareCard(m){
     bindHeroPin();
     bindCameraRestore();
     syncScoreResultHint();
+    syncPushSettingsUi();
+    try{
+      if(window.CoachPush && typeof window.CoachPush.bootstrap === 'function'){
+        // Ask notification permission on first install / keep registration warm.
+        setTimeout(() => { window.CoachPush.bootstrap().catch(() => {}); }, 600);
+      }
+    }catch(e){}
     hydrateAllMedia().then(() => {
       applyHeader();
       if(document.getElementById('view-player')?.classList.contains('active')) fillPlayerForm();

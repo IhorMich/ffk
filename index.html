@@ -544,6 +544,11 @@ window.ffkIsNative = function () {
         <input type="file" id="importFile" accept="application/json" hidden>
       </div>
       <button class="backup-btn js-pro-btn" id="cloudSyncBtn" type="button" data-i18n="proCloudBtn" style="width:100%;margin-bottom:16px;">Облако и синхронизация</button>
+      <h3 class="period-head" data-i18n="coachPushKicker">Уведомления</h3>
+      <p class="hint" data-i18n="coachPushHint">Push для приглашений и карточек. Системные уведомления со звуком — даже если звонок беззвучный.</p>
+      <button class="save-btn" id="appPushOnBtn" type="button" data-i18n="coachPushEnable">Включить push</button>
+      <button class="ghost-btn" id="appPushOffBtn" type="button" data-i18n="coachPushDisable">Выключить</button>
+      <p class="hint" id="appPushStatus"></p>
       <h3 class="period-head" data-i18n="planPersonalHead">Personal</h3>
       <p class="hint" data-i18n="planPersonalHint">Личный Matchcard: один игрок или ваш состав на этом телефоне. Free и Pro не связаны с командой.</p>
       <div class="pro-card" id="proCard">
@@ -795,13 +800,6 @@ window.ffkIsNative = function () {
         <p class="hint" id="coachCloudStatus"></p>
         <button class="save-btn" id="coachCloudSyncBtn" type="button" data-i18n="coachCloudSyncBtn">Синхронизировать сейчас</button>
         <p class="hint" data-i18n="coachCloudHint">Впиши URL и anon key в js/coach-config.js и прогони supabase/schema.sql.</p>
-      </div>
-
-      <div class="coach-settings-block">
-        <div class="pro-kicker" data-i18n="coachPushKicker">Уведомления</div>
-        <p class="hint" data-i18n="coachPushHint">Push для приглашений и карточек матча. На телефоне — системные уведомления.</p>
-        <button class="save-btn" id="coachPushOnBtn" type="button" data-i18n="coachPushEnable">Включить push</button>
-        <button class="ghost-btn" id="coachPushOffBtn" type="button" data-i18n="coachPushDisable">Выключить</button>
       </div>
 
       <div class="coach-settings-block">

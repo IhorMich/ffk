@@ -196,11 +196,7 @@
         ? tt('coachCloudReady', 'Supabase connected — sync available.')
         : tt('coachCloudOffline', 'Local mode. Add Supabase URL + key to enable cloud.');
     }
-    const pushOn = document.getElementById('coachPushOnBtn');
-    const pushOff = document.getElementById('coachPushOffBtn');
-    const enabled = global.CoachPush && global.CoachPush.isEnabled && global.CoachPush.isEnabled();
-    if(pushOn) pushOn.hidden = !!enabled;
-    if(pushOff) pushOff.hidden = !enabled;
+    if(typeof syncPushSettingsUi === 'function') syncPushSettingsUi();
   }
 
   function coachJumpStatsHtml(teamsN, playersN, matchesN, ratingsN){
@@ -1733,14 +1729,6 @@
         ? tt('coachCloudSynced', 'Cloud sync done.')
         : tt('coachCloudSyncFail', 'Cloud sync failed. Check keys and schema.'));
       renderCoachUi();
-    });
-    document.getElementById('coachPushOnBtn')?.addEventListener('click', async () => {
-      if(global.CoachPush) await global.CoachPush.enable();
-      renderCloudPushStatus();
-    });
-    document.getElementById('coachPushOffBtn')?.addEventListener('click', () => {
-      if(global.CoachPush) global.CoachPush.disable();
-      renderCloudPushStatus();
     });
     document.addEventListener('click', e => {
       const delAst = e.target.closest('[data-del-assistant]');
