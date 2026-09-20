@@ -1814,6 +1814,7 @@
     margin:0;font-size:.9rem;font-weight:650;line-height:1.4;color:var(--card-ink);
   }
   .coach-hist-filters{margin:10px 0 12px;}
+  .coach-hist-filters .chip{font-size:.72rem;padding:7px 10px;}
   .coach-player-open-row{
     width:100%;text-align:left;cursor:pointer;
     appearance:none;border:1px solid var(--card-line);background:transparent;
