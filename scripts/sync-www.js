@@ -3,7 +3,7 @@ const path = require('path');
 
 const root = path.join(__dirname, '..');
 const dest = path.join(root, 'www');
-const files = ['index.html', 'manifest.webmanifest', 'sw.js', 'privacy.html'];
+const files = ['index.html', 'open.html', 'manifest.webmanifest', 'sw.js', 'privacy.html'];
 const dirs = ['css', 'js', 'fonts', 'icons'];
 
 function copyDir(src, dst){

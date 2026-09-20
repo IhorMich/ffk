@@ -182,6 +182,10 @@
       const value = String(code || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8);
       return value ? `ffk://parent?code=${value}` : '';
     },
+    buildCodeWebLink(code){
+      const value = String(code || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8);
+      return value ? `https://ihormich.github.io/ffk/open.html?code=${value}` : '';
+    },
     buildWebLink(payload){
       const data = this.encodePayload(payload);
       // Stable public URL: Capacitor's internal localhost URL is not shareable.

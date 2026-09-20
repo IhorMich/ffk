@@ -3812,7 +3812,7 @@
       : '';
     const subject = `${tt('coachParentEmailSubject', 'Matchcard invitation')}${child ? ` — ${child}` : ''}`;
     const link = global.ParentStore
-      ? global.ParentStore.buildCodeLink(parentInviteRow.code || full.code || '')
+      ? global.ParentStore.buildCodeWebLink(parentInviteRow.code || full.code || '')
       : '';
     const body = tt(
       'coachParentEmailBody',
