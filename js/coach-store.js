@@ -820,14 +820,17 @@
           return;
         }
         const linked = this.parentLinkedForPlayer(p.id);
-        if(global.InboxStore && typeof global.InboxStore.upsertMatchResult === 'function'){
+        if(linked && global.InboxStore && typeof global.InboxStore.upsertMatchResult === 'function'){
           global.InboxStore.upsertMatchResult({...payload, forceUnread});
         }
-        try{
-          if(global.CoachPush && typeof global.CoachPush.notifyResult === 'function'){
-            global.CoachPush.notifyResult(payload);
-          }
-        }catch(e){}
+        const coachIsActive = typeof isCoachPlan === 'function' && isCoachPlan();
+        if(linked && !coachIsActive){
+          try{
+            if(global.CoachPush && typeof global.CoachPush.notifyResult === 'function'){
+              global.CoachPush.notifyResult(payload);
+            }
+          }catch(e){}
+        }
         // Refresh parent invite snapshot + local parent link ratings
         try{
           this.createParentInvite(session, p.id);
@@ -913,7 +916,9 @@
         const payload = this.buildMatchInvitePayload(session, matchId, inv.team_player_id);
         if(!payload) return inv;
         const linked = this.parentLinkedForPlayer(inv.team_player_id);
-        if(global.InboxStore && typeof global.InboxStore.upsertMatchInvite === 'function'){
+        // Only put invites in the parent inbox when a parent is linked on this device.
+        // Always writing here made the coach see "incoming" messages on the same phone.
+        if(linked && global.InboxStore && typeof global.InboxStore.upsertMatchInvite === 'function'){
           global.InboxStore.upsertMatchInvite({...payload, forceUnread});
         }
         // Keep parent invite snapshot fresh so a new claim/QR also carries the match
@@ -935,6 +940,7 @@
               address: payload.address || '',
               venue: payload.venue,
               kind: payload.kind,
+              meetup: payload.meetup || '',
               kickoff: payload.kickoff || '',
               tournament: payload.tournament || ''
             });
@@ -944,11 +950,15 @@
         }catch(e){}
         if(linked){
           delivered += 1;
-          try{
-            if(global.CoachPush && typeof global.CoachPush.notifyInvite === 'function'){
-              global.CoachPush.notifyInvite(payload);
-            }
-          }catch(e){}
+          // Do not fire a local push while the coach is the active mode on this phone.
+          const coachIsActive = typeof isCoachPlan === 'function' && isCoachPlan();
+          if(!coachIsActive){
+            try{
+              if(global.CoachPush && typeof global.CoachPush.notifyInvite === 'function'){
+                global.CoachPush.notifyInvite(payload);
+              }
+            }catch(e){}
+          }
           return {
             ...inv,
             status: inv.rsvp === 'accepted' || inv.rsvp === 'declined' ? inv.status : 'delivered',

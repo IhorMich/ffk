@@ -73,13 +73,19 @@
     const btn = document.getElementById('inboxBtn');
     const badge = document.getElementById('inboxBadge');
     if(!btn) return;
+    // Coach mode has its own workflow — parent inbox stays in Free / parent mode.
+    if(typeof isCoachPlan === 'function' && isCoachPlan()){
+      btn.hidden = true;
+      btn.classList.remove('has-unread');
+      if(badge) badge.hidden = true;
+      return;
+    }
     const pushOn = !!(global.CoachPush && global.CoachPush.isEnabled && global.CoachPush.isEnabled());
     const msgs = inboxMessages();
     const unread = inboxUnread();
     const links = global.ParentStore && global.ParentStore.listLinks
       ? global.ParentStore.listLinks().length
       : 0;
-    // Top messages icon like other apps — independent of Coach / parent plan.
     const show = pushOn || unread > 0 || msgs.length > 0 || links > 0;
     btn.hidden = !show;
     btn.classList.toggle('has-unread', unread > 0);
@@ -111,37 +117,17 @@
   }
 
   function renderParentInbox(){
-    const store = global.ParentStore;
+    // Messages live only in the top inbox — not on the Player profile.
     const card = document.getElementById('parentInboxCard');
-    const list = document.getElementById('parentInboxList');
-    if(!card || !list || !store){
-      syncInboxBellUi();
-      return;
-    }
-    if(typeof isCoachPlan === 'function' && isCoachPlan()){
+    if(card){
       card.hidden = true;
-      syncInboxBellUi();
-      return;
+      card.innerHTML = '';
     }
-    const links = store.listLinks();
-    if(!links.length){
-      card.hidden = true;
-      list.innerHTML = '';
-      syncInboxBellUi();
-      return;
-    }
-    card.hidden = false;
-    const msgs = store.listInbox();
-    const unread = store.unreadInboxCount();
-    const title = card.querySelector('h3');
-    if(title){
-      const base = tt('parentInboxTitle', 'Messages');
-      title.textContent = unread ? `${base} (${unread})` : base;
-    }
-    list.innerHTML = inboxRowsHtml(msgs);
     const sheetList = document.getElementById('inboxSheetList');
     const sheet = document.getElementById('inboxSheet');
-    if(sheetList && sheet && !sheet.hidden) sheetList.innerHTML = inboxRowsHtml(msgs);
+    if(sheetList && sheet && !sheet.hidden){
+      sheetList.innerHTML = inboxRowsHtml(inboxMessages());
+    }
     syncInboxBellUi();
   }
 
@@ -548,11 +534,6 @@
     document.getElementById('inboxBtn')?.addEventListener('click', () => openInboxSheet());
     document.getElementById('inboxSheetBack')?.addEventListener('click', () => closeInboxSheet());
     document.getElementById('inboxSheetCloseBtn')?.addEventListener('click', () => closeInboxSheet());
-    document.getElementById('parentInboxList')?.addEventListener('click', e => {
-      const btn = e.target.closest('[data-parent-msg]');
-      if(!btn) return;
-      openParentMessage(btn.dataset.parentMsg);
-    });
     document.getElementById('inboxSheetList')?.addEventListener('click', e => {
       const btn = e.target.closest('[data-parent-msg]');
       if(!btn) return;
