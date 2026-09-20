@@ -4144,7 +4144,10 @@ ru:{
       coachErrSquad:'Select at least one player who plays.',
       coachPickTeamFirst:'Pick a team in the Coach tab first.',
       coachHistoryKicker:'Team history',
-      coachHistoryHint:'Matches of the active team and ratings for players who took part.'
+      coachHistoryHint:'Matches of the active team and ratings for players who took part.',
+      coachPhotoHint:'Tap the photo or cover to change it.',
+      coachPhotoAria:'Coach photo',
+      coachCoverAria:'Coach cover'
     },
     ru:{
       coachMatchKicker:'Матчи команды',
@@ -4189,7 +4192,10 @@ ru:{
       coachErrSquad:'Выбери хотя бы одного игрока.',
       coachPickTeamFirst:'Сначала выбери команду во вкладке Тренер.',
       coachHistoryKicker:'История команды',
-      coachHistoryHint:'Матчи активной команды и оценки игроков, которые принимали участие.'
+      coachHistoryHint:'Матчи активной команды и оценки игроков, которые принимали участие.',
+      coachPhotoHint:'Нажмите на фото или фон, чтобы сменить.',
+      coachPhotoAria:'Фото тренера',
+      coachCoverAria:'Фон профиля тренера'
     },
     uk:{
       coachMatchKicker:'Матчі команди',
@@ -4234,7 +4240,10 @@ ru:{
       coachErrSquad:'Вибери хоча б одного гравця.',
       coachPickTeamFirst:'Спочатку вибери команду у вкладці Тренер.',
       coachHistoryKicker:'Історія команди',
-      coachHistoryHint:'Матчі активної команди та оцінки гравців, які брали участь.'
+      coachHistoryHint:'Матчі активної команди та оцінки гравців, які брали участь.',
+      coachPhotoHint:'Натисніть на фото або фон, щоб змінити.',
+      coachPhotoAria:'Фото тренера',
+      coachCoverAria:'Фон профілю тренера'
     }
   };
   LANGS.forEach(lang => {

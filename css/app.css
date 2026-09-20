@@ -1289,6 +1289,9 @@
   .coach-hist-head b{font-size:.95rem;}
   .coach-hist-head span{font-size:.75rem;font-weight:700;color:var(--card-muted);}
   .coach-profile-hero{margin-bottom:12px;}
+  .coach-profile-hero .coach-media{
+    margin:0 -4px 14px;border-radius:18px;overflow:hidden;
+  }
   .coach-profile-hero .coach-title{margin-bottom:2px;}
   .coach-profile-hero #coachProfileEmail{margin:0 0 12px;}
   #coachProfileStats{grid-template-columns:repeat(4,1fr);}

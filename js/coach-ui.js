@@ -49,6 +49,7 @@
     const academy = store.myAcademy(session);
     if(academy && typeof setCoachPlan === 'function') setCoachPlan(true);
     else if(typeof applyHeader === 'function') applyHeader();
+    if(typeof refreshCoachMediaUi === 'function') refreshCoachMediaUi();
     renderWorkspace(session);
   }
 

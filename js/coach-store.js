@@ -86,6 +86,8 @@
         id,
         email,
         passHash: await hashPass(password),
+        photo: '',
+        cover: '',
         createdAt: new Date().toISOString()
       };
       writeDb(db);
@@ -103,6 +105,35 @@
       const session = {userId: acc.id, email: acc.email};
       writeSession(session);
       return session;
+    },
+    getAccount(session){
+      if(!session || !session.userId) return null;
+      const db = readDb();
+      const hit = Object.values(db.accounts || {}).find(a => a && a.id === session.userId);
+      return hit || null;
+    },
+    getProfile(session){
+      const acc = this.getAccount(session);
+      return {
+        email: (acc && acc.email) || (session && session.email) || '',
+        photo: acc && acc.photo ? String(acc.photo) : '',
+        cover: acc && acc.cover ? String(acc.cover) : ''
+      };
+    },
+    updateProfileMedia(session, patch){
+      if(!session) throw new Error('auth');
+      const db = readDb();
+      const email = Object.keys(db.accounts || {}).find(k => db.accounts[k] && db.accounts[k].id === session.userId);
+      if(!email) throw new Error('auth');
+      const acc = db.accounts[email];
+      if(Object.prototype.hasOwnProperty.call(patch, 'photo')){
+        acc.photo = patch.photo ? String(patch.photo) : '';
+      }
+      if(Object.prototype.hasOwnProperty.call(patch, 'cover')){
+        acc.cover = patch.cover ? String(patch.cover) : '';
+      }
+      writeDb(db);
+      return this.getProfile(session);
     },
     myAcademy(session){
       const db = readDb();

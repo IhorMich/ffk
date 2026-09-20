@@ -390,6 +390,7 @@ let extraSelected = [];
 let photoDraft;
 let coverDraft;
 let photoSheetTarget = 'photo';
+let photoMediaOwner = 'player'; // player | coach
 let lastReportMatch = null;
 let matches = [];
 let editingId = null;
@@ -1085,6 +1086,53 @@ function persistPlayerMedia(kind){
   applyHeader();
   renderRoster();
 }
+function coachProfileMedia(){
+  try{
+    const store = window.CoachStore;
+    const session = store && store.getSession();
+    if(!store || !session || typeof store.getProfile !== 'function') return {photo:'', cover:'', email:''};
+    return store.getProfile(session);
+  }catch(e){
+    return {photo:'', cover:'', email:''};
+  }
+}
+function persistCoachMedia(kind, dataUrl){
+  const store = window.CoachStore;
+  const session = store && store.getSession();
+  if(!store || !session || typeof store.updateProfileMedia !== 'function') return;
+  const patch = kind === 'cover' ? {cover: dataUrl || ''} : {photo: dataUrl || ''};
+  try{
+    store.updateProfileMedia(session, patch);
+  }catch(e){
+    showToast(t('coachErrGeneric') || 'Error');
+    return;
+  }
+  refreshCoachMediaUi();
+  applyHeader();
+}
+function refreshCoachMediaUi(){
+  const media = coachProfileMedia();
+  const img = document.getElementById('cCoverImg');
+  const blur = document.getElementById('cCoverBlur');
+  const btn = document.getElementById('cCoverBtn');
+  if(btn){
+    const cover = media.cover || '';
+    btn.classList.toggle('has-photo', !!cover);
+    btn.classList.remove('cover-tall');
+    btn.style.backgroundImage = cover ? 'url("' + cover.replace(/"/g, '') + '")' : '';
+    if(img){
+      if(cover){ img.hidden = false; img.src = cover; }
+      else { img.hidden = true; img.removeAttribute('src'); }
+    }
+    if(blur){ blur.hidden = true; blur.removeAttribute('src'); }
+  }
+  const box = document.getElementById('cPhotoBox');
+  if(box){
+    const letter = ((media.email || 'C').trim().slice(0, 1) || 'C').toUpperCase();
+    setBadge(box, media.photo || '', letter);
+  }
+}
+window.refreshCoachMediaUi = refreshCoachMediaUi;
 function setCoverPreview(){
   const img = document.getElementById('pCoverImg');
   const blur = document.getElementById('pCoverBlur');
@@ -1113,9 +1161,12 @@ function closePhotoSheet(){
 function cameraCaptureAvailable(){
   return isNativeApp();
 }
-function openPhotoSheet(target){
+function openPhotoSheet(target, owner){
   photoSheetTarget = target;
-  const has = target === 'cover' ? !!currentCover() : !!currentPhoto();
+  photoMediaOwner = owner === 'coach' ? 'coach' : 'player';
+  const has = photoMediaOwner === 'coach'
+    ? !!(target === 'cover' ? coachProfileMedia().cover : coachProfileMedia().photo)
+    : !!(target === 'cover' ? currentCover() : currentPhoto());
   const cam = document.getElementById('photoSheetCamera');
   cam.hidden = !cameraCaptureAvailable();
   cam.textContent = t(target === 'cover' ? 'pTakeCover' : 'pTakePhoto');
@@ -1126,7 +1177,11 @@ function openPhotoSheet(target){
   pushAppState('layer');
 }
 function pickPhotoFile(useCamera){
-  const el = document.getElementById(photoSheetTarget === 'cover' ? 'p-cover' : 'p-photo');
+  const id = photoMediaOwner === 'coach'
+    ? (photoSheetTarget === 'cover' ? 'c-cover' : 'c-photo')
+    : (photoSheetTarget === 'cover' ? 'p-cover' : 'p-photo');
+  const el = document.getElementById(id);
+  if(!el) return;
   el.value = '';
   if(useCamera) el.setAttribute('capture', 'environment');
   else el.removeAttribute('capture');
@@ -1877,6 +1932,7 @@ function applyCoachHeader(){
   const store = window.CoachStore;
   const session = store && store.getSession();
   const academy = session && store.myAcademy(session);
+  const profile = session && store.getProfile ? store.getProfile(session) : {photo:'', cover:'', email:''};
   const nameEl = document.getElementById('playerNameDisplay');
   const metaEl = document.getElementById('playerMetaLine');
   const clubEl = document.getElementById('playerClubLine');
@@ -1887,8 +1943,8 @@ function applyCoachHeader(){
     : (t('tabCoach') || 'Coach');
   if(nameEl) nameEl.textContent = title;
   if(metaEl){
-    metaEl.textContent = session && session.email
-      ? session.email
+    metaEl.textContent = (profile.email || (session && session.email))
+      ? (profile.email || session.email)
       : (t('coachProfileKicker') || 'Coach');
   }
   if(clubEl){
@@ -1905,9 +1961,10 @@ function applyCoachHeader(){
       clubEl.textContent = t('coachLead') || '';
     }
   }
-  const initials = (academy && academy.name ? academy.name : (session && session.email) || 'C')
+  const initials = (academy && academy.name ? academy.name : (profile.email || 'C'))
     .trim().slice(0, 1).toUpperCase() || 'C';
-  setBadge(document.getElementById('clubBadge'), '', initials);
+  setBadge(document.getElementById('clubBadge'), profile.photo || '', initials);
+  refreshCoachMediaUi();
 }
 function rosterAvatarHtml(p){
   if(p.photo) return `<span class="roster-av"><img alt="" src="${p.photo}"></span>`;
@@ -4081,12 +4138,18 @@ document.getElementById('pExtraChips').addEventListener('click', e => {
   extraSelected = extraSelected.includes(code) ? extraSelected.filter(x => x !== code) : extraSelected.concat(code);
   renderExtraChips();
 });
-document.getElementById('pPhotoWrap').addEventListener('click', () => openPhotoSheet('photo'));
-document.getElementById('pCoverBtn').addEventListener('click', () => openPhotoSheet('cover'));
+document.getElementById('pPhotoWrap').addEventListener('click', () => openPhotoSheet('photo', 'player'));
+document.getElementById('pCoverBtn').addEventListener('click', () => openPhotoSheet('cover', 'player'));
+document.getElementById('cPhotoWrap')?.addEventListener('click', () => openPhotoSheet('photo', 'coach'));
+document.getElementById('cCoverBtn')?.addEventListener('click', () => openPhotoSheet('cover', 'coach'));
 document.getElementById('photoSheetCamera').addEventListener('click', () => pickFromCamera());
 document.getElementById('photoSheetPick').addEventListener('click', () => pickFromGallery());
 document.getElementById('photoSheetClear').addEventListener('click', () => {
-  if(photoSheetTarget === 'cover'){
+  if(photoMediaOwner === 'coach'){
+    persistCoachMedia(photoSheetTarget === 'cover' ? 'cover' : 'photo', '');
+    if(photoSheetTarget === 'cover') document.getElementById('c-cover').value = '';
+    else document.getElementById('c-photo').value = '';
+  } else if(photoSheetTarget === 'cover'){
     coverDraft = '';
     document.getElementById('p-cover').value = '';
     setCoverPreview();
@@ -4112,11 +4175,25 @@ document.getElementById('p-cover').addEventListener('change', e => {
   e.target.value = '';
   beginCrop(file, 'cover');
 });
+document.getElementById('c-photo')?.addEventListener('change', e => {
+  const file = e.target.files[0];
+  e.target.value = '';
+  photoMediaOwner = 'coach';
+  beginCrop(file, 'photo');
+});
+document.getElementById('c-cover')?.addEventListener('change', e => {
+  const file = e.target.files[0];
+  e.target.value = '';
+  photoMediaOwner = 'coach';
+  beginCrop(file, 'cover');
+});
 document.getElementById('cropCancelBtn').addEventListener('click', closeCrop);
 document.getElementById('cropOkBtn').addEventListener('click', () => {
   if(!cropState) return;
   const data = exportCrop();
-  if(cropState.target === 'cover'){
+  if(photoMediaOwner === 'coach'){
+    persistCoachMedia(cropState.target === 'cover' ? 'cover' : 'photo', data);
+  } else if(cropState.target === 'cover'){
     coverDraft = data;
     setCoverPreview();
     persistPlayerMedia('cover');
