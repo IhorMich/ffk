@@ -1046,8 +1046,111 @@
     });
   }
 
-  let coachHistFilter = 'all';
   let coachHistoryMatchId = '';
+  let coachHistFilter = 'all';
+  let coachHistKindFilter = 'all';
+  let coachHistSeason = 'all';
+
+  function coachMatchSeason(m){
+    try{
+      if(typeof matchSeason === 'function') return matchSeason(m);
+    }catch(e){}
+    try{
+      if(typeof seasonFromDate === 'function') return seasonFromDate(m && m.date);
+    }catch(e){}
+    const iso = String(m && m.date || '');
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(iso)) return '';
+    const y = Number(iso.slice(0, 4));
+    const mo = Number(iso.slice(5, 7));
+    const start = mo >= 7 ? y : y - 1;
+    return start + '/' + String((start + 1) % 100).padStart(2, '0');
+  }
+
+  function fillHistoryKickoffSelects(){
+    const hSel = document.getElementById('coachHistoryKickoffH');
+    const mSel = document.getElementById('coachHistoryKickoffM');
+    if(!hSel || !mSel) return;
+    if(!hSel.options.length){
+      hSel.innerHTML = `<option value="">—</option>` + Array.from({length: 24}, (_, h) => {
+        const v = String(h).padStart(2, '0');
+        return `<option value="${v}">${v}</option>`;
+      }).join('');
+    }
+    if(!mSel.options.length){
+      mSel.innerHTML = `<option value="">—</option>` + [0,5,10,15,20,25,30,35,40,45,50,55].map(m => {
+        const v = String(m).padStart(2, '0');
+        return `<option value="${v}">${v}</option>`;
+      }).join('');
+    }
+  }
+  function syncHistoryKickoffHidden(){
+    const h = document.getElementById('coachHistoryKickoffH')?.value || '';
+    const m = document.getElementById('coachHistoryKickoffM')?.value || '';
+    const hidden = document.getElementById('coachHistoryKickoffValue');
+    if(hidden) hidden.value = (h !== '' && m !== '') ? `${h}:${m}` : '';
+  }
+  function setHistoryKickoff(kickoff){
+    fillHistoryKickoffSelects();
+    const raw = String(kickoff || '').trim();
+    const m = raw.match(/^(\d{1,2}):(\d{2})$/);
+    const hEl = document.getElementById('coachHistoryKickoffH');
+    const mEl = document.getElementById('coachHistoryKickoffM');
+    if(hEl) hEl.value = m ? String(Number(m[1])).padStart(2, '0') : '';
+    if(mEl){
+      if(m){
+        const mins = Number(m[2]);
+        const stepped = [0,5,10,15,20,25,30,35,40,45,50,55].reduce((best, cur) =>
+          Math.abs(cur - mins) < Math.abs(best - mins) ? cur : best, 0);
+        mEl.value = String(stepped).padStart(2, '0');
+      }else mEl.value = '';
+    }
+    syncHistoryKickoffHidden();
+  }
+  function readHistoryKickoff(){
+    syncHistoryKickoffHidden();
+    return String(document.getElementById('coachHistoryKickoffValue')?.value || '');
+  }
+  function syncHistoryCompetitionField(){
+    const kind = document.getElementById('coachHistoryKind')?.value || 'league';
+    const wrap = document.getElementById('coachHistoryCompWrap');
+    const label = document.getElementById('coachHistoryCompLabel');
+    const input = document.getElementById('coachHistoryTournament');
+    if(!wrap) return;
+    if(kind === 'friendly'){
+      wrap.hidden = true;
+      return;
+    }
+    wrap.hidden = false;
+    if(!label || !input) return;
+    if(kind === 'league'){
+      label.textContent = tt('labelCompLeague', 'League');
+      label.setAttribute('data-i18n', 'labelCompLeague');
+      input.placeholder = tt('phCompLeague', 'League name');
+      input.setAttribute('data-i18n-placeholder', 'phCompLeague');
+    }else if(kind === 'cup'){
+      label.textContent = tt('labelCompCup', 'Cup');
+      label.setAttribute('data-i18n', 'labelCompCup');
+      input.placeholder = tt('phCompCup', 'Cup name');
+      input.setAttribute('data-i18n-placeholder', 'phCompCup');
+    }else{
+      label.textContent = tt('labelCompTournament', 'Tournament');
+      label.setAttribute('data-i18n', 'labelCompTournament');
+      input.placeholder = tt('phTournament', 'Tournament name');
+      input.setAttribute('data-i18n-placeholder', 'phTournament');
+    }
+  }
+  function fillCoachHistorySeasonSelect(matches){
+    const sel = document.getElementById('coachHistorySeason');
+    if(!sel) return;
+    const seasons = [...new Set(matches.map(coachMatchSeason).filter(Boolean))].sort().reverse();
+    if(coachHistSeason !== 'all' && !seasons.includes(coachHistSeason)){
+      coachHistSeason = 'all';
+    }
+    const opts = [`<option value="all">${esc(tt('seasonAll', 'All seasons'))}</option>`]
+      .concat(seasons.map(s => `<option value="${esc(s)}">${esc(s)}</option>`));
+    sel.innerHTML = opts.join('');
+    sel.value = coachHistSeason;
+  }
 
   function openCoachMatch(matchId){
     if(!matchId || !global.CoachStore) return;
@@ -1295,6 +1398,26 @@
         <span class="coach-match-badge ${badgeCls}">${esc(badgeTxt)}</span>
       </div><span class="hint">${esc(bits.join(' · '))}</span>`;
     }
+    // Fill editable meta — skip fields the coach is typing in.
+    const active = document.activeElement;
+    const metaRoot = document.getElementById('coachHistoryMetaEdit');
+    const inMeta = metaRoot && active && metaRoot.contains(active);
+    if(!inMeta){
+      const oppEl = document.getElementById('coachHistoryOpponent');
+      const dateEl = document.getElementById('coachHistoryDate');
+      const venueEl = document.getElementById('coachHistoryVenue');
+      const kindEl = document.getElementById('coachHistoryKind');
+      const tourEl = document.getElementById('coachHistoryTournament');
+      const addrEl = document.getElementById('coachHistoryAddress');
+      if(oppEl) oppEl.value = match.opponent || '';
+      if(dateEl) dateEl.value = match.date || '';
+      if(venueEl) venueEl.value = match.venue === 'away' ? 'away' : 'home';
+      if(kindEl) kindEl.value = ['league','friendly','cup','tournament'].includes(match.kind) ? match.kind : 'league';
+      if(tourEl) tourEl.value = match.tournament || '';
+      if(addrEl) addrEl.value = match.address || '';
+      setHistoryKickoff(match.kickoff || '');
+      syncHistoryCompetitionField();
+    }
     fillCoachScoreFields(document.getElementById('coachHistoryScoreRow'), match.score || '');
     if(commentEl && document.activeElement !== commentEl){
       commentEl.value = match.comment || '';
@@ -1375,9 +1498,20 @@
     const store = global.CoachStore;
     // History = played matches only (upcoming live on Match/Games tab).
     let matches = store.listMatches(session, team.id).filter(m => matchIsPlayed(m));
+    fillCoachTourDatalist();
+    fillCoachHistorySeasonSelect(matches);
     document.querySelectorAll('#coachHistoryFilter [data-coach-hist]').forEach(btn => {
       btn.classList.toggle('active', btn.dataset.coachHist === coachHistFilter);
     });
+    document.querySelectorAll('#coachHistoryKindFilter [data-coach-hist-kind]').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.coachHistKind === coachHistKindFilter);
+    });
+    if(coachHistSeason && coachHistSeason !== 'all'){
+      matches = matches.filter(m => coachMatchSeason(m) === coachHistSeason);
+    }
+    if(coachHistKindFilter && coachHistKindFilter !== 'all'){
+      matches = matches.filter(m => (m.kind || 'league') === coachHistKindFilter);
+    }
     if(coachHistFilter === 'win' || coachHistFilter === 'draw' || coachHistFilter === 'loss'){
       matches = matches.filter(m => matchOutcome(m) === coachHistFilter);
     }else if(coachHistFilter === 'todo'){
@@ -1789,6 +1923,69 @@
     try{
       store.updateMatch(session, coachHistoryMatchId, {score, status: 'played'});
       toast(tt('coachMatchScoreSaved', 'Score saved. Rate players below.'));
+      renderCoachUi();
+    }catch(e){
+      toast(tt('coachErrGeneric', 'Something went wrong.'));
+    }
+  }
+  function onSaveHistoryMeta(){
+    const store = global.CoachStore;
+    const session = store.getSession();
+    if(!session || !coachHistoryMatchId) return;
+    const opponent = String(document.getElementById('coachHistoryOpponent')?.value || '').trim();
+    if(!opponent){
+      toast(tt('coachErrOpponent', 'Enter opponent.'));
+      return;
+    }
+    const date = String(document.getElementById('coachHistoryDate')?.value || '').trim();
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(date)){
+      toast(tt('coachErrGeneric', 'Something went wrong.'));
+      return;
+    }
+    const kindRaw = document.getElementById('coachHistoryKind')?.value || 'league';
+    const kind = ['league','friendly','cup','tournament'].includes(kindRaw) ? kindRaw : 'league';
+    const tournament = kind === 'friendly'
+      ? ''
+      : String(document.getElementById('coachHistoryTournament')?.value || '').trim();
+    try{
+      store.updateMatch(session, coachHistoryMatchId, {
+        opponent,
+        date,
+        kickoff: readHistoryKickoff(),
+        venue: document.getElementById('coachHistoryVenue')?.value === 'away' ? 'away' : 'home',
+        kind,
+        tournament,
+        address: document.getElementById('coachHistoryAddress')?.value || ''
+      });
+      toast(tt('coachHistoryMetaSaved', 'Match details saved.'));
+      const meta = document.getElementById('coachHistoryMeta');
+      if(meta) meta.open = false;
+      renderCoachUi();
+    }catch(e){
+      const map = {
+        opponent: tt('coachErrOpponent', 'Enter opponent.')
+      };
+      toast(map[e.message] || tt('coachErrGeneric', 'Something went wrong.'));
+    }
+  }
+  function onDeleteHistoryMatch(){
+    const store = global.CoachStore;
+    const session = store.getSession();
+    if(!session || !coachHistoryMatchId) return;
+    const match = store.getMatch(session, coachHistoryMatchId);
+    const label = match
+      ? `${match.date || ''} · ${match.opponent || ''}`.trim()
+      : '';
+    const ok = window.confirm(
+      tt('coachHistoryDeleteConfirm', 'Delete this played match? Score, ratings and parent cards for it will be removed.')
+        .replace('{m}', label)
+    );
+    if(!ok) return;
+    try{
+      store.removeMatch(session, coachHistoryMatchId, {force: true});
+      coachHistoryMatchId = '';
+      toast(tt('toastDeleted', 'Match deleted'));
+      if(typeof renderParentUi === 'function') renderParentUi();
       renderCoachUi();
     }catch(e){
       toast(tt('coachErrGeneric', 'Something went wrong.'));
@@ -2661,6 +2858,22 @@
     document.getElementById('coachHistorySaveScore')?.addEventListener('click', () => {
       onSaveHistoryScore();
     });
+    document.getElementById('coachHistorySaveMeta')?.addEventListener('click', () => {
+      onSaveHistoryMeta();
+    });
+    document.getElementById('coachHistoryDeleteBtn')?.addEventListener('click', () => {
+      onDeleteHistoryMatch();
+    });
+    document.getElementById('coachHistoryKind')?.addEventListener('change', () => {
+      syncHistoryCompetitionField();
+    });
+    document.getElementById('coachHistoryKickoffH')?.addEventListener('change', () => syncHistoryKickoffHidden());
+    document.getElementById('coachHistoryKickoffM')?.addEventListener('change', () => syncHistoryKickoffHidden());
+    document.getElementById('coachHistorySeason')?.addEventListener('change', e => {
+      coachHistSeason = e.target.value || 'all';
+      closeCoachHistoryMatch();
+      renderCoachUi();
+    });
     document.getElementById('coachHistorySendResults')?.addEventListener('click', () => {
       shareMatchResults(coachHistoryMatchId);
     });
@@ -2864,6 +3077,13 @@
       const histFilter = e.target.closest('#coachHistoryFilter [data-coach-hist]');
       if(histFilter){
         coachHistFilter = histFilter.dataset.coachHist || 'all';
+        closeCoachHistoryMatch();
+        renderCoachUi();
+        return;
+      }
+      const histKind = e.target.closest('#coachHistoryKindFilter [data-coach-hist-kind]');
+      if(histKind){
+        coachHistKindFilter = histKind.dataset.coachHistKind || 'all';
         closeCoachHistoryMatch();
         renderCoachUi();
         return;

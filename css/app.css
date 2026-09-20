@@ -914,6 +914,7 @@
   .coach-history-detail #coachHistorySendResults{width:100%;margin:8px 0 0;}
   .coach-history-detail #coachHistoryResultsStatus{margin:6px 0 0;}
   .coach-history-detail #coachHistoryBackBottom{width:100%;margin:12px 0 0;}
+  .coach-history-detail #coachHistoryDeleteBtn{width:100%;margin:14px 0 0;}
   .coach-history-card-actions{display:grid;gap:8px;margin:10px 0 14px;}
   .coach-history-rate-actions{display:flex;flex-direction:column;gap:6px;align-items:stretch;}
   .coach-history-rate-actions .coach-rate-btn{width:auto;min-width:96px;padding:8px 10px;}
@@ -1815,6 +1816,21 @@
   }
   .coach-hist-filters{margin:10px 0 12px;}
   .coach-hist-filters .chip{font-size:.72rem;padding:7px 10px;}
+  .coach-hist-season-field{margin:8px 0 4px;}
+  .coach-hist-kind-filters{margin:0 0 10px;}
+  .coach-history-meta{
+    margin:0 0 14px;padding:10px 12px;border-radius:14px;
+    border:1px solid var(--card-line);
+    background:color-mix(in srgb, var(--card-paper) 92%, var(--card-line));
+  }
+  .coach-history-meta > summary{
+    cursor:pointer;font-weight:800;font-size:.88rem;list-style:none;
+    color:var(--card-ink);
+  }
+  .coach-history-meta > summary::-webkit-details-marker{display:none;}
+  .coach-history-meta[open] > summary{margin-bottom:10px;}
+  .coach-history-meta #coachHistorySaveMeta{width:100%;margin:8px 0 0;}
+  .coach-history-detail #coachHistoryDeleteBtn{width:100%;margin:14px 0 0;}
   .coach-player-open-row{
     width:100%;text-align:left;cursor:pointer;
     appearance:none;border:1px solid var(--card-line);background:transparent;

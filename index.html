@@ -490,12 +490,23 @@ window.ffkIsNative = function () {
           <div id="coachHistoryListWrap">
             <div class="pro-kicker" data-i18n="coachHistoryKicker">Сыгранные</div>
             <h3 class="coach-team-heading" id="coachHistoryTeam">—</h3>
+            <div class="field coach-hist-season-field">
+              <label data-i18n="seasonFilter">Сезон</label>
+              <select id="coachHistorySeason"></select>
+            </div>
             <div class="period-chips coach-hist-filters" id="coachHistoryFilter">
               <button type="button" class="chip active" data-coach-hist="all" data-i18n="histKindAll">Все</button>
               <button type="button" class="chip" data-coach-hist="todo" data-i18n="coachHistTodo">Требуют внимания</button>
               <button type="button" class="chip" data-coach-hist="win" data-i18n="coachMatchWin">Победа</button>
               <button type="button" class="chip" data-coach-hist="draw" data-i18n="coachMatchDraw">Ничья</button>
               <button type="button" class="chip" data-coach-hist="loss" data-i18n="coachMatchLoss">Поражение</button>
+            </div>
+            <div class="period-chips coach-hist-filters coach-hist-kind-filters" id="coachHistoryKindFilter">
+              <button type="button" class="chip active" data-coach-hist-kind="all" data-i18n="coachHistKindAll">Все типы</button>
+              <button type="button" class="chip" data-coach-hist-kind="league" data-i18n="kindLeague">Чемпионат</button>
+              <button type="button" class="chip" data-coach-hist-kind="friendly" data-i18n="kindFriendly">Товарищеский</button>
+              <button type="button" class="chip" data-coach-hist-kind="cup" data-i18n="kindCup">Кубок</button>
+              <button type="button" class="chip" data-coach-hist-kind="tournament" data-i18n="kindTournament">Турнир</button>
             </div>
             <p class="hint" id="coachHistoryHint" data-i18n="coachHistoryHint">Сыгранные матчи — открой, чтобы править счёт и оценки.</p>
             <div id="coachHistoryList" class="coach-team-list"></div>
@@ -506,6 +517,54 @@ window.ffkIsNative = function () {
               <button type="button" class="ghost-btn coach-match-back" id="coachHistoryBackBtn" data-i18n="coachMatchBack">← К списку</button>
             </div>
             <div class="coach-match-summary" id="coachHistorySummary"></div>
+
+            <details class="coach-history-meta" id="coachHistoryMeta">
+              <summary data-i18n="coachHistoryEditMeta">Править детали матча</summary>
+              <div class="coach-match-create-grid" id="coachHistoryMetaEdit">
+                <div class="field">
+                  <label data-i18n="coachMatchOpponent">Соперник</label>
+                  <input class="js-ch-opponent" id="coachHistoryOpponent" type="text" maxlength="48">
+                </div>
+                <div class="field">
+                  <label data-i18n="labelDate">Дата</label>
+                  <input class="js-ch-date" id="coachHistoryDate" type="date">
+                </div>
+                <div class="field">
+                  <label data-i18n="coachMatchKickoff">Время начала</label>
+                  <div class="coach-kickoff-row">
+                    <select class="js-ch-kickoff-h" id="coachHistoryKickoffH" aria-label="hour"></select>
+                    <span class="coach-kickoff-colon" aria-hidden="true">:</span>
+                    <select class="js-ch-kickoff-m" id="coachHistoryKickoffM" aria-label="minute"></select>
+                  </div>
+                  <input type="hidden" class="js-ch-kickoff" id="coachHistoryKickoffValue" value="">
+                </div>
+                <div class="field">
+                  <label data-i18n="labelVenue">Где играете</label>
+                  <select class="js-ch-venue" id="coachHistoryVenue">
+                    <option value="home" data-i18n="venueHome">Дома</option>
+                    <option value="away" data-i18n="venueAway">На выезде</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label data-i18n="coachMatchKind">Тип матча</label>
+                  <select class="js-ch-kind" id="coachHistoryKind">
+                    <option value="league" data-i18n="kindLeague">Чемпионат</option>
+                    <option value="friendly" data-i18n="kindFriendly">Товарищеский</option>
+                    <option value="cup" data-i18n="kindCup">Кубок</option>
+                    <option value="tournament" data-i18n="kindTournament">Турнир</option>
+                  </select>
+                </div>
+                <div class="field" id="coachHistoryCompWrap">
+                  <label id="coachHistoryCompLabel" data-i18n="labelCompLeague">Лига</label>
+                  <input class="js-ch-tournament" id="coachHistoryTournament" type="text" maxlength="48" list="coachTourList" data-i18n-placeholder="phCompLeague" placeholder="Название лиги">
+                </div>
+                <div class="field coach-match-create-wide">
+                  <label data-i18n="coachMatchAddress">Адрес матча</label>
+                  <input class="js-ch-address" id="coachHistoryAddress" type="text" maxlength="120" data-i18n-placeholder="coachMatchAddressPh" placeholder="Стадион / улица, город">
+                </div>
+              </div>
+              <button class="save-btn" id="coachHistorySaveMeta" type="button" data-i18n="coachHistorySaveMeta">Сохранить детали</button>
+            </details>
 
             <div class="coach-score-row" id="coachHistoryScoreRow">
               <label data-i18n="labelScore">Счёт</label>
@@ -532,6 +591,7 @@ window.ffkIsNative = function () {
             <div id="coachHistoryRates" class="coach-player-list coach-rates-compact"></div>
             <button class="save-btn" id="coachHistorySendResults" type="button" data-i18n="coachSendResultsBtn">Отправить карточки родителям</button>
             <p class="hint" id="coachHistoryResultsStatus"></p>
+            <button class="del-btn" id="coachHistoryDeleteBtn" type="button" data-i18n="coachHistoryDeleteBtn">Удалить матч</button>
             <button class="ghost-btn" id="coachHistoryBackBottom" type="button" data-i18n="coachMatchBackList">К списку</button>
           </div>
         </div>

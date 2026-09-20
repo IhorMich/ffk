@@ -167,6 +167,15 @@
       writeDb(db);
       return this.get(id);
     },
+    removeForMatch(matchId){
+      const id = String(matchId || '');
+      if(!id) return 0;
+      const db = readDb();
+      const before = db.messages.length;
+      db.messages = db.messages.filter(m => String(m.match_id || '') !== id);
+      writeDb(db);
+      return before - db.messages.length;
+    },
     unreadCountForPlayers(playerIds){
       return this.listForPlayers(playerIds).filter(m => m.status !== 'read').length;
     }

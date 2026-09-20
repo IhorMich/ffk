@@ -638,13 +638,15 @@
       writeDb(db);
       return this.getMatch(session, matchId);
     },
-    removeMatch(session, matchId){
+    removeMatch(session, matchId, opts){
       const match = this.getMatch(session, matchId);
       if(!match) throw new Error('forbidden');
       const db = readDb();
       const ratings = db.ratings.filter(r => r.match_id === matchId);
       const played = match.status === 'played' || !!String(match.score || '').trim();
-      if(played || ratings.length){
+      const force = !!(opts && opts.force);
+      // Upcoming cancel stays safe; Results can force-delete played matches with scores/ratings.
+      if((played || ratings.length) && !force){
         throw new Error('has_results');
       }
       db.team_matches = db.team_matches.filter(m => m.id !== matchId);
@@ -652,6 +654,11 @@
       db.ratings = db.ratings.filter(r => r.match_id !== matchId);
       if(db.activeMatchId === matchId) db.activeMatchId = '';
       writeDb(db);
+      try{
+        if(global.InboxStore && typeof global.InboxStore.removeForMatch === 'function'){
+          global.InboxStore.removeForMatch(matchId);
+        }
+      }catch(e){}
       return true;
     },
     listCompetitionNames(session, teamId){
