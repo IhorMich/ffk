@@ -306,7 +306,7 @@ function syncCoachTabUi(){
     lab.textContent = t(on ? 'tabCoach' : 'tabPlayer');
   }
   syncCoachModeViews();
-  // Child player page reuses view-player while still in Coach plan — do not bounce to Coach.
+  // Child player page is a dedicated screen — do not bounce it to Coach home.
   if(on && activeViewName() === 'player' && !isCoachChildView()) showView('coach');
 }
 function syncCoachModeViews(){
@@ -1907,57 +1907,24 @@ function renderPlayerFeed(){
 }
 function clearCoachChildView(){
   window.coachChildView = null;
-  syncCoachChildPlayerUi();
 }
 function isCoachChildView(){
   return !!(window.coachChildView && window.coachChildView.player);
 }
+function isCoachChildScreen(){
+  return isCoachChildView() && activeViewName() === 'coach-child';
+}
 function syncCoachChildPlayerUi(){
   const on = isCoachChildView();
-  const banner = document.getElementById('coachChildBanner');
-  const childFeed = document.getElementById('coachChildFeed');
-  const personalFeed = document.getElementById('playerFeed');
-  const editBtn = document.getElementById('editPlayerBtn');
-  const addBtn = document.getElementById('addPlayerBtn');
-  const rosterList = document.getElementById('rosterList');
-  const rosterCard = rosterList ? rosterList.closest('.pf-card') : null;
-  if(banner) banner.hidden = !on;
-  if(childFeed) childFeed.hidden = !on;
-  if(personalFeed) personalFeed.hidden = on;
-  if(editBtn) editBtn.hidden = on;
-  if(addBtn){
-    // addPlayerBtn visibility also gated by pro — only force-hide in child view
-    if(on) addBtn.hidden = true;
-    else {
-      try{
-        if(roster.ids.length >= MAX_PLAYERS) addBtn.hidden = true;
-        else {
-          addBtn.hidden = false;
-          addBtn.textContent = (!isPro() && roster.ids.length >= FREE_MAX_PLAYERS)
-            ? t('proAddPlayer')
-            : t('addPlayer');
-        }
-      }catch(e){
-        addBtn.hidden = false;
-      }
-    }
-  }
-  if(rosterCard) rosterCard.hidden = on;
+  const nameEl = document.getElementById('coachChildBannerName');
+  const metaEl = document.getElementById('coachChildBannerMeta');
   if(!on){
-    const inbox = document.getElementById('parentInboxCard');
-    const links = document.getElementById('parentLinksCard');
-    // parent cards restored by renderParentUi — avoid syncProUi here (it can redirect Coach tabs)
-    if(typeof renderParentUi === 'function') renderParentUi();
-    else {
-      if(inbox) inbox.hidden = true;
-      if(links) links.hidden = false;
-    }
+    if(nameEl) nameEl.textContent = '—';
+    if(metaEl) metaEl.textContent = '';
+    const feed = document.getElementById('coachChildFeed');
+    if(feed) feed.innerHTML = '';
     return;
   }
-  const inbox = document.getElementById('parentInboxCard');
-  const links = document.getElementById('parentLinksCard');
-  if(inbox) inbox.hidden = true;
-  if(links) links.hidden = true;
   const ctx = window.coachChildView;
   if(ctx && ctx.playerId && window.ParentStatsStore){
     ctx.parentStats = window.ParentStatsStore.listForPlayer(ctx.playerId);
@@ -1965,8 +1932,6 @@ function syncCoachChildPlayerUi(){
   }
   const p = ctx.player;
   const name = [p.first_name, p.last_name].filter(Boolean).join(' ') || '—';
-  const nameEl = document.getElementById('coachChildBannerName');
-  const metaEl = document.getElementById('coachChildBannerMeta');
   if(nameEl) nameEl.textContent = name;
   if(metaEl){
     metaEl.textContent = [
@@ -1976,7 +1941,7 @@ function syncCoachChildPlayerUi(){
       ctx.academy && ctx.academy.name
     ].filter(Boolean).join(' · ');
   }
-  // Header like player page for this child
+  // Header shows this child, not the personal Free player / coach profile
   const headName = document.getElementById('playerNameDisplay');
   const headMeta = document.getElementById('playerMetaLine');
   const headClub = document.getElementById('playerClubLine');
@@ -1999,10 +1964,8 @@ function syncCoachChildPlayerUi(){
       avgEl.textContent = '⭐ ' + fmtNum(parentAvg, 2);
     }
   }
-  const fbName = document.getElementById('fbName');
-  const fbMeta = document.getElementById('fbMeta');
-  if(fbName) fbName.textContent = name;
-  if(fbMeta) fbMeta.textContent = [ctx.team && ctx.team.name, ctx.academy && ctx.academy.name].filter(Boolean).join(' · ');
+  const initials = (name || 'C').trim().slice(0, 1).toUpperCase() || 'C';
+  setBadge(document.getElementById('clubBadge'), '', initials);
   renderCoachChildFeed(ctx);
 }
 function renderCoachChildFeed(ctx){
@@ -2055,14 +2018,15 @@ function renderCoachChildFeed(ctx){
     </div>`;
 }
 function exitCoachChildView(){
-  window.coachChildView = null;
+  clearCoachChildView();
   if(typeof closeAllCoachOverlays === 'function') closeAllCoachOverlays();
-  syncCoachChildPlayerUi();
+  document.getElementById('app')?.classList.remove('coach-child-on');
   if(typeof showView === 'function') showView('coach');
   if(typeof renderCoachUi === 'function') renderCoachUi();
 }
 window.exitCoachChildView = exitCoachChildView;
 window.isCoachChildView = isCoachChildView;
+window.isCoachChildScreen = isCoachChildScreen;
 
 function applyHeader(){
   if(isCoachChildView()){
@@ -2997,28 +2961,30 @@ function bindHeroPin(){
   syncHeroPin();
 }
 function showView(name){
-  const views = ['player','new','history','stats','settings','report','coach'];
+  const views = ['player','new','history','stats','settings','report','coach','coach-child'];
   if(!views.includes(name)) name = 'new';
+  if(name === 'coach-child' && !isCoachChildView()) name = isCoachPlan() ? 'coach' : 'player';
   if(name === 'player' && isCoachPlan() && !isCoachChildView()) name = 'coach';
-  if(name !== 'player'){
-    closePlayerEdit();
-    if(isCoachChildView() && name !== 'player') window.coachChildView = null;
-  }
+  // Leaving the dedicated child screen clears child context (except explicit stay on coach-child)
+  if(name !== 'coach-child' && isCoachChildView()) clearCoachChildView();
+  if(name !== 'player') closePlayerEdit();
+  const childOn = name === 'coach-child' && isCoachChildView();
   document.getElementById('app').classList.toggle('player-on', name === 'player');
-  document.getElementById('app').classList.toggle('coach-profile-on', isCoachPlan() && name === 'coach' && !isCoachChildView());
-  document.getElementById('app').classList.toggle('coach-child-on', isCoachChildView() && name === 'player');
-  document.querySelectorAll('.tabbtn').forEach(b => b.classList.toggle('active', b.dataset.view === name));
+  document.getElementById('app').classList.toggle('coach-profile-on', isCoachPlan() && name === 'coach');
+  document.getElementById('app').classList.toggle('coach-child-on', childOn);
+  const tabbar = document.getElementById('tabbar');
+  if(tabbar) tabbar.hidden = childOn;
+  document.querySelectorAll('.tabbtn').forEach(b => {
+    const tab = b.dataset.view;
+    b.classList.toggle('active', !childOn && tab === name);
+  });
   document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id === 'view-'+name));
   document.querySelector('.topbar').classList.add('compact');
   if(name === 'player'){
-    if(isCoachChildView()) syncCoachChildPlayerUi();
-    else {
-      syncCoachChildPlayerUi();
-      fillPlayerForm();
-    }
-  }else{
-    syncCoachChildPlayerUi();
+    fillPlayerForm();
+    if(typeof renderParentUi === 'function') renderParentUi();
   }
+  if(name === 'coach-child') syncCoachChildPlayerUi();
   if(name === 'report' && lastReportMatch){
     document.getElementById('reportCard').innerHTML = renderReportHtml(lastReportMatch);
     document.getElementById('reportStory').innerHTML = matchStoryHtml(lastReportMatch);
@@ -3028,20 +2994,21 @@ function showView(name){
     renderStats();
     if(typeof renderParentUi === 'function') renderParentUi();
   }
-  if(name === 'player' && typeof renderParentUi === 'function' && !isCoachChildView()) renderParentUi();
   if(name === 'coach' && typeof renderCoachUi === 'function') renderCoachUi();
   if(isCoachPlan() && (name === 'new' || name === 'history' || name === 'stats') && typeof renderCoachUi === 'function'){
     renderCoachUi();
   }
-  if(isCoachPlan() || isCoachChildView()) applyHeader();
+  if(childOn) applyHeader();
+  else if(isCoachPlan()) applyHeader();
+  else if(name === 'player') applyHeader();
   renderLiveClock();
   if(clockPhase() === 'run') startClockTick();
   try{
     const persist = name === 'report' ? 'history'
-      : (name === 'coach' ? (isCoachPlan() ? 'coach' : 'settings') : name);
+      : (name === 'coach' || name === 'coach-child' ? (isCoachPlan() ? 'coach' : 'settings') : name);
     sessionStorage.setItem(VIEW_KEY, persist);
   }catch(e){}
-  if(!popping && name !== 'player') pushAppState('tab');
+  if(!popping && name !== 'player' && name !== 'coach-child') pushAppState('tab');
   syncHeroPin();
 }
 function restoreView(){
@@ -3954,7 +3921,7 @@ function handleAppBack(){
     if(typeof closeCoachSettings === 'function') closeCoachSettings();
     return true;
   }
-  if(isCoachChildView() && activeViewName() === 'player'){
+  if(isCoachChildView() && (activeViewName() === 'coach-child' || activeViewName() === 'player')){
     if(typeof closeAllCoachOverlays === 'function') closeAllCoachOverlays();
     exitCoachChildView();
     return true;
@@ -4330,7 +4297,10 @@ document.getElementById('saveSettingsBtn').addEventListener('click', () => {
 });
 
 document.querySelectorAll('.tabbtn').forEach(btn => {
-  btn.addEventListener('click', () => showView(btn.dataset.view));
+  btn.addEventListener('click', () => {
+    if(isCoachChildView()) clearCoachChildView();
+    showView(btn.dataset.view);
+  });
 });
 document.getElementById('reportDoneBtn').addEventListener('click', () => {
   showView('new');
@@ -4356,7 +4326,18 @@ document.getElementById('playerHeadBtn').addEventListener('click', () => {
   }
   showView(isCoachPlan() ? 'coach' : 'player');
 });
-document.getElementById('coachChildBackBtn')?.addEventListener('click', () => exitCoachChildView());
+document.getElementById('coachChildBackBtn')?.addEventListener('click', e => {
+  e.preventDefault();
+  e.stopPropagation();
+  exitCoachChildView();
+});
+document.getElementById('view-coach-child')?.addEventListener('click', e => {
+  if(e.target.closest('#coachChildBackBtn')){
+    e.preventDefault();
+    e.stopPropagation();
+    exitCoachChildView();
+  }
+});
 document.getElementById('addPlayerBtn').addEventListener('click', addPlayer);
 document.getElementById('statsCardBtn').addEventListener('click', () => {
   if(!requirePro('periodCard')) return;

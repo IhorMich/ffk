@@ -1028,8 +1028,7 @@
       parentAvg
     };
     closeAllCoachOverlays();
-    if(typeof showView === 'function') showView('player');
-    if(typeof syncCoachChildPlayerUi === 'function') syncCoachChildPlayerUi();
+    if(typeof showView === 'function') showView('coach-child');
     try{ window.scrollTo({top:0, behavior:'instant'}); }catch(e){ window.scrollTo(0, 0); }
   }
 

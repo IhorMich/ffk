@@ -108,16 +108,7 @@ window.ffkIsNative = function () {
         <div class="fb-name" id="fbName"></div>
         <div class="fb-meta" id="fbMeta"></div>
       </div>
-      <div id="coachChildBanner" class="coach-child-banner" hidden>
-        <div class="coach-child-banner-text">
-          <div class="pro-kicker" data-i18n="coachChildViewKicker">Просмотр игрока</div>
-          <b id="coachChildBannerName">—</b>
-          <p class="hint" id="coachChildBannerMeta"></p>
-        </div>
-        <button type="button" class="ghost-btn" id="coachChildBackBtn" data-i18n="coachChildBack">← К составу</button>
-      </div>
       <div id="playerFeed"></div>
-      <div id="coachChildFeed" class="coach-child-feed" hidden></div>
       <div class="pf-card" id="parentInboxCard" hidden>
         <h3 data-i18n="parentInboxTitle">Сообщения</h3>
         <p class="hint" data-i18n="parentInboxLead">Приглашения на матч от тренера — внутри Matchcard.</p>
@@ -694,6 +685,20 @@ window.ffkIsNative = function () {
             <p class="hint" data-i18n="coachPhase2Note">Phase 2: matches + ratings + team analytics. Parent invite and Supabase sync come next.</p>
           </div>
         </div>
+      </div>
+    </div>
+
+    <div class="view" id="view-coach-child">
+      <div class="coach-child-page">
+        <div class="coach-child-banner" id="coachChildBanner">
+          <div class="coach-child-banner-text">
+            <div class="pro-kicker" data-i18n="coachChildViewKicker">Просмотр игрока</div>
+            <b id="coachChildBannerName">—</b>
+            <p class="hint" id="coachChildBannerMeta"></p>
+          </div>
+          <button type="button" class="save-btn" id="coachChildBackBtn" data-i18n="coachChildBack">← К составу</button>
+        </div>
+        <div id="coachChildFeed" class="coach-child-feed"></div>
       </div>
     </div>
   </div>
