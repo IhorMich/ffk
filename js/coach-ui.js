@@ -719,7 +719,6 @@
       || document.getElementById('coachMatchAddress')?.value
       || '').trim();
     const date = root.querySelector('.js-cm-date')?.value || today();
-    const score = root.querySelector('.js-cm-score')?.value || '';
     let squad = selectedSquadFrom(root);
     const picker = root.querySelector('.js-cm-squad');
     if(!squad.length && picker?.dataset.dirty !== '1'){
@@ -735,13 +734,12 @@
         opponent,
         address,
         date,
-        score,
+        score: '',
         squad,
         status: 'upcoming'
       });
       root.querySelectorAll('.js-cm-opponent').forEach(el => { el.value = ''; });
       root.querySelectorAll('.js-cm-address').forEach(el => { el.value = ''; });
-      root.querySelectorAll('.js-cm-score').forEach(el => { el.value = ''; });
       document.querySelectorAll('.js-cm-squad').forEach(el => { el.dataset.dirty = ''; });
       toast(tt('coachMatchCreated', 'Match created.'));
       renderCoachUi();
@@ -902,9 +900,6 @@
     if(!sheet || !body) return;
     const p = detail.player;
     const label = [p.first_name, p.last_name].filter(Boolean).join(' ');
-    const pos = p.position && typeof pitchPosLabelShort === 'function'
-      ? pitchPosLabelShort(p.position)
-      : (p.position || '');
     const ratingsHtml = detail.ratings.length
       ? detail.ratings.slice(0, 12).map(r => {
           const head = [r.date, r.opponent, r.score].filter(Boolean).join(' · ');
@@ -918,15 +913,22 @@
         }).join('')
       : `<p class="hint">${esc(tt('coachPlayerNoRatings', 'No ratings for this player yet.'))}</p>`;
     body.innerHTML = `
+      <div class="sheet-grab" aria-hidden="true"><span></span></div>
       <div class="pro-kicker">${esc(tt('coachPlayerDetailKicker', 'Player'))}</div>
-      <h3 class="coach-rate-name">${esc(label)}</h3>
+      <h3 class="coach-rate-name" id="coachPlayerSheetTitle">${esc(label)}</h3>
       <p class="hint">${esc([
-        p.number ? `#${p.number}` : '',
-        pos,
         detail.team && detail.team.name,
         detail.academy && detail.academy.name
       ].filter(Boolean).join(' · '))}</p>
-      ${p.contact ? `<p class="hint"><b>${esc(tt('coachContactLabel', 'Contact'))}:</b> ${esc(p.contact)}</p>` : ''}
+      <div class="pro-kicker">${esc(tt('coachEditPlayerKicker', 'Edit player'))}</div>
+      <div class="coach-player-form coach-player-edit">
+        <input id="coachEditFirst" type="text" maxlength="40" value="${esc(p.first_name || '')}" data-i18n-placeholder="coachFirstPh" placeholder="First name">
+        <input id="coachEditLast" type="text" maxlength="40" value="${esc(p.last_name || '')}" data-i18n-placeholder="coachLastPh" placeholder="Last name">
+        <input id="coachEditNumber" type="text" maxlength="4" inputmode="numeric" value="${esc(p.number || '')}" placeholder="#">
+        <input id="coachEditContact" type="text" maxlength="80" value="${esc(p.contact || '')}" data-i18n-placeholder="coachContactPh" placeholder="Parent phone or email">
+        <select id="coachEditPos" class="coach-pos-select" aria-label="position"></select>
+      </div>
+      <button type="button" class="save-btn" id="coachSavePlayerBtn">${esc(tt('coachSavePlayer', 'Save player'))}</button>
       <div class="coach-analytics-sum">
         <div><b>${esc(detail.games)}</b><span>${esc(tt('coachGames', 'games'))}</span></div>
         <div><b>${esc(detail.avg != null ? detail.avg.toFixed(1) : '—')}</b><span>${esc(tt('coachStatAvg', 'Team avg'))}</span></div>
@@ -938,9 +940,46 @@
       <button type="button" class="ghost-btn coach-remove-player" id="coachRemovePlayerBtn">${esc(tt('coachRemovePlayer', 'Remove player'))}</button>
       <button type="button" class="ghost-btn" id="coachPlayerCloseBtn">${esc(tt('previewCancel', 'Cancel'))}</button>
     `;
+    const posSel = document.getElementById('coachEditPos');
+    if(posSel && typeof fillPitchSelect === 'function'){
+      fillPitchSelect(posSel, p.position || 'RW', true);
+    }
     sheet.hidden = false;
     if(back) back.hidden = false;
     if(typeof pushAppState === 'function') pushAppState('layer');
+  }
+
+  function saveCoachPlayerFromSheet(){
+    if(!detailPlayerId) return;
+    const store = global.CoachStore;
+    const session = store.getSession();
+    if(!session) return;
+    const first = document.getElementById('coachEditFirst')?.value || '';
+    const last = document.getElementById('coachEditLast')?.value || '';
+    const number = document.getElementById('coachEditNumber')?.value || '';
+    const contact = document.getElementById('coachEditContact')?.value || '';
+    const position = document.getElementById('coachEditPos')?.value || '';
+    try{
+      const player = store.updatePlayer(session, detailPlayerId, {
+        first_name: first,
+        last_name: last,
+        number,
+        contact,
+        position
+      });
+      const title = document.getElementById('coachPlayerSheetTitle');
+      if(title){
+        title.textContent = [player.first_name, player.last_name].filter(Boolean).join(' ');
+      }
+      toast(tt('coachPlayerSaved', 'Player saved.'));
+      renderCoachUi();
+    }catch(e){
+      const map = {
+        name: tt('coachErrPlayerName', 'Enter first name.'),
+        forbidden: tt('coachErrGeneric', 'Something went wrong.')
+      };
+      toast(map[e.message] || tt('coachErrGeneric', 'Something went wrong.'));
+    }
   }
 
   function openCoachChildPlayerPage(playerId){
@@ -1247,6 +1286,10 @@
     document.getElementById('coachPlayerBody')?.addEventListener('click', e => {
       if(e.target.closest('#coachPlayerCloseBtn')){
         closeCoachPlayerSheet();
+        return;
+      }
+      if(e.target.closest('#coachSavePlayerBtn') && detailPlayerId){
+        saveCoachPlayerFromSheet();
         return;
       }
       if(e.target.closest('#coachOpenChildPageBtn') && detailPlayerId){

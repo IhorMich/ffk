@@ -259,6 +259,23 @@
       const db = readDb();
       const player = db.team_players.find(p => p.id === playerId);
       if(!player || !this.getTeam(session, player.team_id)) throw new Error('forbidden');
+      if(Object.prototype.hasOwnProperty.call(fields, 'first_name')){
+        const first = String(fields.first_name || '').trim().slice(0, 40);
+        if(!first) throw new Error('name');
+        player.first_name = first;
+      }
+      if(Object.prototype.hasOwnProperty.call(fields, 'last_name')){
+        player.last_name = String(fields.last_name || '').trim().slice(0, 40);
+      }
+      if(Object.prototype.hasOwnProperty.call(fields, 'number')){
+        player.number = String(fields.number || '').replace(/\D/g, '').slice(0, 4);
+      }
+      if(Object.prototype.hasOwnProperty.call(fields, 'position')){
+        player.position = String(fields.position || '').trim().toUpperCase().slice(0, 8);
+      }
+      if(Object.prototype.hasOwnProperty.call(fields, 'birth_date')){
+        player.birth_date = String(fields.birth_date || '').trim().slice(0, 10);
+      }
       if(Object.prototype.hasOwnProperty.call(fields, 'contact')){
         player.contact = String(fields.contact || '').trim().slice(0, 80);
       }

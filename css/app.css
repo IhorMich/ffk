@@ -1253,6 +1253,8 @@
   }
   .coach-player-form select.coach-pos-select{grid-column:1 / -1;}
   .coach-player-form #coachPlayerContact{grid-column:1 / -1;}
+  .coach-player-edit #coachEditContact{grid-column:1 / -1;}
+  #coachSavePlayerBtn{width:100%;margin:0 0 12px;}
   .coach-invite-box{margin:0 0 12px;}
   .coach-invite-card{
     padding:12px 14px;border-radius:14px;border:1px solid var(--card-line);
