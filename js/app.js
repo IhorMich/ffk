@@ -3351,8 +3351,10 @@ function endCurrentPeriod(){
 function toggleMatchClock(){
   const phase = clockPhase();
   if(phase === 'done') return;
-  if(phase === 'idle' || phase === 'break') startMatchClock();
-  else if(phase === 'run') endCurrentPeriod();
+  if(phase === 'idle' || phase === 'break'){
+    startMatchClock();
+    openLive();
+  } else if(phase === 'run') endCurrentPeriod();
 }
 function openLive(){
   fillPitchSelect(document.getElementById('live-position'), currentPitch());
@@ -3376,6 +3378,10 @@ document.getElementById('liveStartBtn').addEventListener('click', openLive);
 document.getElementById('liveUndoBtn').addEventListener('click', () => undoLastLive());
 document.querySelectorAll('.js-match-clock-btn').forEach(btn => {
   btn.addEventListener('click', toggleMatchClock);
+});
+document.getElementById('heroBlock')?.addEventListener('click', e => {
+  if(e.target.closest('.hero-kick, .js-match-clock-btn')) return;
+  openLive();
 });
 document.getElementById('liveDoneBtn').addEventListener('click', () => {
   closeLive();
