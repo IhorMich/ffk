@@ -94,6 +94,7 @@
     return msgs.map(m => {
       const unreadCls = m.status === 'read' ? '' : ' unread';
       const isResult = m.type === 'match_result';
+      const notice = !isResult ? (m.invite_notice || '') : '';
       const head = [m.date, m.opponent].filter(Boolean).join(' · ');
       const meta = [
         m.player_name,
@@ -103,11 +104,23 @@
       ].filter(Boolean).join(' · ');
       const title = isResult
         ? (head || tt('parentInboxResult', 'Match card'))
-        : (head || tt('parentInboxMatch', 'Match invite'));
-      const rsvpMark = !isResult && m.rsvp === 'accepted'
+        : (notice === 'cancelled'
+          ? (head
+            ? `${tt('parentInboxMatchCancelled', 'Match cancelled')} · ${head}`
+            : tt('parentInboxMatchCancelled', 'Match cancelled'))
+          : notice === 'recalled'
+            ? (head
+              ? `${tt('parentInboxMatchRecalled', 'Not called up')} · ${head}`
+              : tt('parentInboxMatchRecalled', 'Not called up'))
+            : notice === 'updated'
+              ? (head
+                ? `${tt('parentInboxMatchUpdated', 'Match updated')} · ${head}`
+                : tt('parentInboxMatchUpdated', 'Match updated'))
+              : (head || tt('parentInboxMatch', 'Match invite')));
+      const rsvpMark = !isResult && !notice && m.rsvp === 'accepted'
         ? ' ✓'
-        : (!isResult && m.rsvp === 'declined' ? ' ✕' : '');
-      return `<button type="button" class="parent-msg-row${unreadCls}${isResult ? ' result' : ''}${m.rsvp === 'accepted' ? ' rsvp-yes' : ''}${m.rsvp === 'declined' ? ' rsvp-no' : ''}" data-parent-msg="${esc(m.id)}">
+        : (!isResult && !notice && m.rsvp === 'declined' ? ' ✕' : '');
+      return `<button type="button" class="parent-msg-row${unreadCls}${isResult ? ' result' : ''}${notice ? ` notice-${notice}` : ''}${m.rsvp === 'accepted' ? ' rsvp-yes' : ''}${m.rsvp === 'declined' ? ' rsvp-no' : ''}" data-parent-msg="${esc(m.id)}">
         <span class="parent-link-main">
           <b>${esc(title)}${esc(rsvpMark)}</b>
           <span>${esc(meta || '—')}</span>
@@ -238,11 +251,27 @@
       return `<div class="parent-msg-comments">${parts.join('')}</div>`;
     })();
 
+    const notice = !isResult ? (msg.invite_notice || '') : '';
+    const noticeBanner = !isResult && notice
+      ? `<div class="parent-confirm-badge parent-invite-notice is-${esc(notice)}">${esc(
+          notice === 'cancelled'
+            ? tt('parentInboxMatchCancelledLead', 'This match was cancelled by the coach. No need to come.')
+            : notice === 'recalled'
+              ? tt('parentInboxMatchRecalledLead', '{name} is no longer called up for this match. Please do not stress — plans changed.')
+                  .replace('{name}', msg.player_name || tt('parentInboxChild', 'Child'))
+              : tt('parentInboxMatchUpdatedLead', 'Match details changed. Please confirm again if you can still play.')
+        )}</div>`
+      : '';
     const rsvp = msg.rsvp === 'accepted' || msg.rsvp === 'declined' ? msg.rsvp : '';
-    const rsvpBlock = !isResult
+    const canRsvp = !isResult && notice !== 'cancelled' && notice !== 'recalled';
+    const rsvpBlock = canRsvp
       ? `<div class="parent-rsvp parent-rsvp-footer" data-msg-id="${esc(msg.id)}">
-          <p class="parent-rsvp-lead">${esc(tt('parentRsvpLead', '{name} is called up for this match. Can they play?')
-            .replace('{name}', msg.player_name || tt('parentInboxChild', 'Child')))}</p>
+          <p class="parent-rsvp-lead">${esc(
+            (notice === 'updated'
+              ? tt('parentRsvpLeadUpdated', '{name}: details changed. Can they still play?')
+              : tt('parentRsvpLead', '{name} is called up for this match. Can they play?')
+            ).replace('{name}', msg.player_name || tt('parentInboxChild', 'Child'))
+          )}</p>
           <div class="parent-rsvp-actions">
             <button type="button" class="parent-rsvp-btn yes${rsvp === 'accepted' ? ' on' : ''}" data-rsvp="accepted" aria-label="${esc(tt('parentRsvpYes', 'Will play'))}">✓</button>
             <button type="button" class="parent-rsvp-btn no${rsvp === 'declined' ? ' on' : ''}" data-rsvp="declined" aria-label="${esc(tt('parentRsvpNo', 'Cannot play'))}">✕</button>
@@ -260,7 +289,14 @@
     body.innerHTML = `
       <div class="parent-confirm-badge">${esc(isResult
         ? tt('parentInboxResultFromCoach', 'Match card from coach')
-        : tt('parentInboxMatch', 'Match invite'))}</div>
+        : notice === 'cancelled'
+          ? tt('parentInboxMatchCancelled', 'Match cancelled')
+          : notice === 'recalled'
+            ? tt('parentInboxMatchRecalled', 'Not called up')
+            : notice === 'updated'
+              ? tt('parentInboxMatchUpdated', 'Match updated')
+              : tt('parentInboxMatch', 'Match invite'))}</div>
+      ${noticeBanner}
       <h3 class="coach-rate-name">${esc(msg.opponent || '—')}</h3>
       <div class="parent-msg-details">
         ${detailRow(tt('labelDate', 'Date'), msg.date || '')}

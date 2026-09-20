@@ -918,12 +918,107 @@
     list.innerHTML = names.map(n => `<option value="${esc(n)}"></option>`).join('');
   }
   let squadEditOpen = false;
+  let upcomingMetaOpen = false;
   function setSquadEditOpen(on){
     squadEditOpen = !!on;
     const edit = document.getElementById('coachMatchSquadEdit');
     const view = document.querySelector('#coachMatchUpcomingBox .js-cm-squad-view');
     if(edit) edit.hidden = !squadEditOpen;
     if(view) view.hidden = squadEditOpen ? true : view.hidden;
+  }
+  function setUpcomingMetaOpen(on){
+    upcomingMetaOpen = !!on;
+    const body = document.getElementById('coachUpcomingMetaBody');
+    const btn = document.getElementById('coachUpcomingMetaToggle');
+    if(body) body.hidden = !upcomingMetaOpen;
+    if(btn){
+      btn.setAttribute('aria-expanded', upcomingMetaOpen ? 'true' : 'false');
+      btn.textContent = upcomingMetaOpen
+        ? tt('coachUpcomingHideMeta', 'Hide match details')
+        : tt('coachUpcomingEditMeta', 'Edit match details');
+    }
+  }
+  function fillUpcomingKickoffSelects(){
+    fillHourMinuteSelects(
+      document.getElementById('coachUpcomingKickoffH'),
+      document.getElementById('coachUpcomingKickoffM')
+    );
+  }
+  function syncUpcomingKickoffHidden(){
+    const h = document.getElementById('coachUpcomingKickoffH')?.value || '';
+    const m = document.getElementById('coachUpcomingKickoffM')?.value || '';
+    const hidden = document.getElementById('coachUpcomingKickoffValue');
+    if(hidden) hidden.value = (h !== '' && m !== '') ? `${h}:${m}` : '';
+  }
+  function setUpcomingKickoff(kickoff){
+    fillUpcomingKickoffSelects();
+    const raw = String(kickoff || '').trim();
+    const m = raw.match(/^(\d{1,2}):(\d{2})$/);
+    const hEl = document.getElementById('coachUpcomingKickoffH');
+    const mEl = document.getElementById('coachUpcomingKickoffM');
+    if(hEl) hEl.value = m ? String(Number(m[1])).padStart(2, '0') : '';
+    if(mEl){
+      if(m){
+        const mins = Number(m[2]);
+        const stepped = [0,5,10,15,20,25,30,35,40,45,50,55].reduce((best, cur) =>
+          Math.abs(cur - mins) < Math.abs(best - mins) ? cur : best, 0);
+        mEl.value = String(stepped).padStart(2, '0');
+      }else mEl.value = '';
+    }
+    syncUpcomingKickoffHidden();
+  }
+  function readUpcomingKickoff(){
+    syncUpcomingKickoffHidden();
+    return String(document.getElementById('coachUpcomingKickoffValue')?.value || '');
+  }
+  function fillUpcomingMeetupSelects(){
+    fillHourMinuteSelects(
+      document.getElementById('coachUpcomingMeetupH'),
+      document.getElementById('coachUpcomingMeetupM')
+    );
+  }
+  function syncUpcomingMeetupHidden(){
+    const h = document.getElementById('coachUpcomingMeetupH')?.value || '';
+    const m = document.getElementById('coachUpcomingMeetupM')?.value || '';
+    const hidden = document.getElementById('coachUpcomingMeetupValue');
+    if(hidden) hidden.value = (h !== '' && m !== '') ? `${h}:${m}` : '';
+  }
+  function setUpcomingMeetup(meetup){
+    fillUpcomingMeetupSelects();
+    const raw = String(meetup || '').trim();
+    const m = raw.match(/^(\d{1,2}):(\d{2})$/);
+    const hEl = document.getElementById('coachUpcomingMeetupH');
+    const mEl = document.getElementById('coachUpcomingMeetupM');
+    if(hEl) hEl.value = m ? String(Number(m[1])).padStart(2, '0') : '';
+    if(mEl){
+      if(m){
+        const mins = Number(m[2]);
+        const stepped = [0,5,10,15,20,25,30,35,40,45,50,55].reduce((best, cur) =>
+          Math.abs(cur - mins) < Math.abs(best - mins) ? cur : best, 0);
+        mEl.value = String(stepped).padStart(2, '0');
+      }else mEl.value = '';
+    }
+    syncUpcomingMeetupHidden();
+  }
+  function readUpcomingMeetup(){
+    syncUpcomingMeetupHidden();
+    return String(document.getElementById('coachUpcomingMeetupValue')?.value || '');
+  }
+  function fillUpcomingMetaForm(match){
+    if(!match) return;
+    const active = document.activeElement;
+    const root = document.getElementById('coachUpcomingMetaEdit');
+    if(root && active && root.contains(active)) return;
+    const oppEl = document.getElementById('coachUpcomingOpponent');
+    const dateEl = document.getElementById('coachUpcomingDate');
+    const venueEl = document.getElementById('coachUpcomingVenue');
+    const addrEl = document.getElementById('coachUpcomingAddress');
+    if(oppEl) oppEl.value = match.opponent || '';
+    if(dateEl) dateEl.value = match.date || '';
+    if(venueEl) venueEl.value = match.venue === 'away' ? 'away' : 'home';
+    if(addrEl) addrEl.value = match.address || '';
+    setUpcomingMeetup(match.meetup || '');
+    setUpcomingKickoff(match.kickoff || '');
   }
   function renderMatchPane(session, team){
     const store = global.CoachStore;
@@ -985,6 +1080,8 @@
       if(listEl) listEl.hidden = false;
       if(newBtn) newBtn.hidden = false;
       squadEditOpen = false;
+      upcomingMetaOpen = false;
+      setUpcomingMetaOpen(false);
       return;
     }
 
@@ -992,7 +1089,11 @@
     const played = matchIsPlayed(activeMatch);
     if(upcomingBox) upcomingBox.hidden = played;
     if(playedBox) playedBox.hidden = !played;
-    if(played) squadEditOpen = false;
+    if(played){
+      squadEditOpen = false;
+      upcomingMetaOpen = false;
+      setUpcomingMetaOpen(false);
+    }
 
     if(summary){
       const outcome = matchOutcome(activeMatch);
@@ -1040,6 +1141,8 @@
     }
 
     if(!played){
+      fillUpcomingMetaForm(activeMatch);
+      setUpcomingMetaOpen(upcomingMetaOpen);
       renderUpcomingSquad(session, activeMatch);
       const editBox = document.getElementById('coachMatchSquadEdit');
       if(squadEditOpen){
@@ -2539,12 +2642,14 @@
     const session = store.getSession();
     const matchId = store.getActiveMatchId();
     if(!session || !matchId) return;
-    const ok = window.confirm(tt('coachMatchCancelConfirm', 'Cancel this upcoming match? Parents will not get a result card.'));
+    const ok = window.confirm(tt('coachMatchCancelConfirm', 'Cancel this upcoming match? Parents will get a calm notice that it is off.'));
     if(!ok) return;
     try{
       store.removeMatch(session, matchId);
       squadEditOpen = false;
-      toast(tt('coachMatchCancelled', 'Match cancelled.'));
+      upcomingMetaOpen = false;
+      toast(tt('coachMatchCancelled', 'Match cancelled. Parents were notified.'));
+      if(typeof renderParentUi === 'function') renderParentUi();
       renderCoachUi();
     }catch(e){
       const map = {
@@ -2559,7 +2664,7 @@
     const matchId = store.getActiveMatchId();
     if(!session || !matchId) return;
     const match = store.getMatch(session, matchId);
-    const prev = new Set(store.matchSquadIds(session, match));
+    const prev = new Set(store.matchSquadIds(session, match).map(String));
     const picker = document.querySelector('#coachMatchSquadEdit .js-cm-squad-edit');
     const squad = selectedSquadFrom(picker || document);
     if(!squad.length){
@@ -2567,17 +2672,79 @@
       return;
     }
     try{
-      store.setMatchSquad(session, matchId, squad);
+      const res = store.setMatchSquad(session, matchId, squad);
+      const added = (res && res.added) || squad.filter(id => !prev.has(String(id)));
+      const removed = (res && res.removed) || [...prev].filter(id => !squad.map(String).includes(String(id)));
       squadEditOpen = false;
-      toast(tt('coachSquadSaved', 'Squad updated.'));
-      const added = squad.filter(id => !prev.has(String(id)));
-      if(added.length){
-        store.deliverMatchInvites(session, matchId, {playerIds: added, forceUnread: true});
-        if(typeof renderParentUi === 'function') renderParentUi();
+      if(removed.length && typeof store.recallMatchPlayers === 'function'){
+        store.recallMatchPlayers(session, matchId, removed);
       }
+      if(added.length){
+        store.deliverMatchInvites(session, matchId, {
+          playerIds: added,
+          forceUnread: true
+        });
+      }
+      const bits = [];
+      if(added.length) bits.push(tt('coachSquadAddedN', '{n} invited').replace('{n}', String(added.length)));
+      if(removed.length) bits.push(tt('coachSquadRemovedN', '{n} released').replace('{n}', String(removed.length)));
+      toast(bits.length
+        ? `${tt('coachSquadSaved', 'Squad updated.')} ${bits.join(' · ')}`
+        : tt('coachSquadSaved', 'Squad updated.'));
+      if(typeof renderParentUi === 'function') renderParentUi();
       renderCoachUi();
     }catch(e){
       toast(tt('coachErrGeneric', 'Something went wrong.'));
+    }
+  }
+  function onSaveUpcomingMeta(){
+    const store = global.CoachStore;
+    const session = store.getSession();
+    const matchId = store.getActiveMatchId();
+    if(!session || !matchId) return;
+    const match = store.getMatch(session, matchId);
+    if(!match || matchIsPlayed(match)) return;
+    const opponent = String(document.getElementById('coachUpcomingOpponent')?.value || '').trim();
+    if(!opponent){
+      toast(tt('coachErrOpponent', 'Enter opponent.'));
+      return;
+    }
+    const date = String(document.getElementById('coachUpcomingDate')?.value || '').trim();
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(date)){
+      toast(tt('coachErrGeneric', 'Something went wrong.'));
+      return;
+    }
+    const next = {
+      opponent,
+      date,
+      meetup: readUpcomingMeetup(),
+      kickoff: readUpcomingKickoff(),
+      venue: document.getElementById('coachUpcomingVenue')?.value === 'away' ? 'away' : 'home',
+      address: document.getElementById('coachUpcomingAddress')?.value || ''
+    };
+    const changed = ['opponent','date','meetup','kickoff','venue','address'].some(k =>
+      String(match[k] || '') !== String(next[k] || '')
+    );
+    try{
+      store.updateMatch(session, matchId, next);
+      if(changed){
+        store.deliverMatchInvites(session, matchId, {
+          forceUnread: true,
+          resetRsvp: true,
+          invite_notice: 'updated'
+        });
+        toast(tt('coachUpcomingMetaSavedNotify', 'Details saved. Parents were asked to confirm again.'));
+      }else{
+        toast(tt('coachUpcomingMetaSaved', 'Match details saved.'));
+      }
+      setUpcomingMetaOpen(false);
+      if(typeof renderParentUi === 'function') renderParentUi();
+      renderCoachUi();
+    }catch(e){
+      const map = {
+        opponent: tt('coachErrOpponent', 'Enter opponent.')
+      };
+      toast(map[e.message] || tt('coachErrGeneric', 'Something went wrong.'));
     }
   }
   function onLinkSuggestedGroup(btn){
@@ -2712,6 +2879,8 @@
     if(store && store.setActiveMatchId) store.setActiveMatchId('');
     setCoachMatchCreateOpen(false);
     squadEditOpen = false;
+    upcomingMetaOpen = false;
+    setUpcomingMetaOpen(false);
     renderCoachUi();
   }
   function onSaveMatchScore(fromEl){
@@ -3664,6 +3833,17 @@
     document.getElementById('coachMatchBackBtn')?.addEventListener('click', () => {
       closeCoachMatchDetail();
     });
+    document.getElementById('coachUpcomingMetaToggle')?.addEventListener('click', () => {
+      const body = document.getElementById('coachUpcomingMetaBody');
+      setUpcomingMetaOpen(!!(body && body.hidden));
+    });
+    document.getElementById('coachUpcomingSaveMeta')?.addEventListener('click', () => {
+      onSaveUpcomingMeta();
+    });
+    document.getElementById('coachUpcomingKickoffH')?.addEventListener('change', () => syncUpcomingKickoffHidden());
+    document.getElementById('coachUpcomingKickoffM')?.addEventListener('change', () => syncUpcomingKickoffHidden());
+    document.getElementById('coachUpcomingMeetupH')?.addEventListener('change', () => syncUpcomingMeetupHidden());
+    document.getElementById('coachUpcomingMeetupM')?.addEventListener('change', () => syncUpcomingMeetupHidden());
     document.getElementById('coachInviteAssistantBtn')?.addEventListener('click', () => {
       const session = global.CoachStore.getSession();
       if(!session) return;
@@ -3743,6 +3923,11 @@
       const cancelMatchBtn = e.target.closest('.js-cm-cancel-match');
       if(cancelMatchBtn){
         onCancelMatch();
+        return;
+      }
+      const closeMatchBtn = e.target.closest('.js-cm-close-match');
+      if(closeMatchBtn){
+        closeCoachMatchDetail();
         return;
       }
       const playedBackBtn = e.target.closest('.js-cm-played-back');

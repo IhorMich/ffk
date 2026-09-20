@@ -425,6 +425,52 @@ window.ffkIsNative = function () {
             <div class="coach-match-summary" id="coachMatchSummary"></div>
 
             <div id="coachMatchUpcomingBox" hidden>
+              <div class="coach-history-meta" id="coachUpcomingMeta">
+                <button type="button" class="ghost-btn coach-history-meta-toggle" id="coachUpcomingMetaToggle" aria-expanded="false" data-i18n="coachUpcomingEditMeta">Править детали матча</button>
+                <div class="coach-history-meta-body" id="coachUpcomingMetaBody" hidden>
+                  <div class="coach-match-create-grid" id="coachUpcomingMetaEdit">
+                    <div class="field">
+                      <label data-i18n="coachMatchOpponent">Соперник</label>
+                      <input class="js-cu-opponent" id="coachUpcomingOpponent" type="text" maxlength="48">
+                    </div>
+                    <div class="field">
+                      <label data-i18n="labelDate">Дата</label>
+                      <input class="js-cu-date" id="coachUpcomingDate" type="date">
+                    </div>
+                    <div class="field">
+                      <label data-i18n="coachMatchMeetup">Время сбора</label>
+                      <div class="coach-kickoff-row">
+                        <select class="js-cu-meetup-h" id="coachUpcomingMeetupH" aria-label="meetup hour"></select>
+                        <span class="coach-kickoff-colon" aria-hidden="true">:</span>
+                        <select class="js-cu-meetup-m" id="coachUpcomingMeetupM" aria-label="meetup minute"></select>
+                      </div>
+                      <input type="hidden" class="js-cu-meetup" id="coachUpcomingMeetupValue" value="">
+                    </div>
+                    <div class="field">
+                      <label data-i18n="coachMatchKickoff">Время начала</label>
+                      <div class="coach-kickoff-row">
+                        <select class="js-cu-kickoff-h" id="coachUpcomingKickoffH" aria-label="hour"></select>
+                        <span class="coach-kickoff-colon" aria-hidden="true">:</span>
+                        <select class="js-cu-kickoff-m" id="coachUpcomingKickoffM" aria-label="minute"></select>
+                      </div>
+                      <input type="hidden" class="js-cu-kickoff" id="coachUpcomingKickoffValue" value="">
+                    </div>
+                    <div class="field">
+                      <label data-i18n="labelVenue">Где играете</label>
+                      <select class="js-cu-venue" id="coachUpcomingVenue">
+                        <option value="home" data-i18n="venueHome">Дома</option>
+                        <option value="away" data-i18n="venueAway">На выезде</option>
+                      </select>
+                    </div>
+                    <div class="field coach-match-create-wide">
+                      <label data-i18n="coachMatchAddress">Адрес матча</label>
+                      <input class="js-cu-address" id="coachUpcomingAddress" type="text" maxlength="120" data-i18n-placeholder="coachMatchAddressPh" placeholder="Стадион / улица, город">
+                    </div>
+                  </div>
+                  <p class="hint" data-i18n="coachUpcomingEditMetaHint">После сохранения родители получат обновление и снова подтвердят участие.</p>
+                  <button class="save-btn" id="coachUpcomingSaveMeta" type="button" data-i18n="coachUpcomingSaveMeta">Сохранить и уведомить</button>
+                </div>
+              </div>
               <div class="js-cm-squad-view coach-squad-view" hidden></div>
               <div id="coachMatchSquadEdit" class="coach-match-squad-edit" hidden>
                 <div class="coach-squad-head">
@@ -445,6 +491,7 @@ window.ffkIsNative = function () {
                 <button class="save-btn js-cm-finish" type="button" data-i18n="coachMatchFinishBtn">Сыгран → счёт</button>
               </div>
               <button class="ghost-btn coach-match-cancel-btn js-cm-cancel-match" type="button" data-i18n="coachMatchCancelBtn">Отменить матч</button>
+              <button class="ghost-btn js-cm-close-match" type="button" data-i18n="btnClose">Закрыть</button>
             </div>
 
             <div id="coachMatchPlayedBox" hidden>

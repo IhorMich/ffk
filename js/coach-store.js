@@ -682,7 +682,11 @@
         return false;
       });
       writeDb(db);
-      return this.getMatch(session, matchId);
+      return {
+        match: this.getMatch(session, matchId),
+        added: squad.filter(id => !prev.has(String(id))),
+        removed: [...prev].filter(id => !nextSet.has(String(id)))
+      };
     },
     removeMatch(session, matchId, opts){
       const match = this.getMatch(session, matchId);
@@ -695,16 +699,31 @@
       if((played || ratings.length) && !force){
         throw new Error('has_results');
       }
+      // Calm notice for parents before wiping coach-side invites (upcoming cancel).
+      if(!played && !force){
+        try{
+          if(global.InboxStore && typeof global.InboxStore.markMatchCancelled === 'function'){
+            global.InboxStore.markMatchCancelled(matchId, {
+              date: match.date,
+              opponent: match.opponent,
+              address: match.address,
+              meetup: match.meetup,
+              kickoff: match.kickoff
+            });
+          }
+        }catch(e){}
+      }else{
+        try{
+          if(global.InboxStore && typeof global.InboxStore.removeForMatch === 'function'){
+            global.InboxStore.removeForMatch(matchId);
+          }
+        }catch(e){}
+      }
       db.team_matches = db.team_matches.filter(m => m.id !== matchId);
       db.match_invites = db.match_invites.filter(i => i.match_id !== matchId);
       db.ratings = db.ratings.filter(r => r.match_id !== matchId);
       if(db.activeMatchId === matchId) db.activeMatchId = '';
       writeDb(db);
-      try{
-        if(global.InboxStore && typeof global.InboxStore.removeForMatch === 'function'){
-          global.InboxStore.removeForMatch(matchId);
-        }
-      }catch(e){}
       return true;
     },
     listCompetitionNames(session, teamId){
@@ -953,6 +972,10 @@
       const match = this.getMatch(session, matchId);
       if(!match) throw new Error('forbidden');
       const forceUnread = !!(opts && opts.forceUnread);
+      const resetRsvp = !!(opts && opts.resetRsvp);
+      const notice = opts && Object.prototype.hasOwnProperty.call(opts, 'invite_notice')
+        ? (['updated', 'recalled', 'cancelled'].includes(opts.invite_notice) ? opts.invite_notice : '')
+        : (resetRsvp ? 'updated' : '');
       const onlyIds = opts && Array.isArray(opts.playerIds) ? new Set(opts.playerIds.map(String)) : null;
       const db = readDb();
       const now = new Date().toISOString();
@@ -967,7 +990,13 @@
         // Only put invites in the parent inbox when a parent is linked on this device.
         // Always writing here made the coach see "incoming" messages on the same phone.
         if(linked && global.InboxStore && typeof global.InboxStore.upsertMatchInvite === 'function'){
-          global.InboxStore.upsertMatchInvite({...payload, forceUnread});
+          global.InboxStore.upsertMatchInvite({
+            ...payload,
+            forceUnread,
+            resetRsvp,
+            invite_notice: notice,
+            clearNotice: !notice
+          });
         }
         // Keep parent invite snapshot fresh so a new claim/QR also carries the match
         try{
@@ -998,6 +1027,8 @@
             pinv.updated_at = now;
           }
         }catch(e){}
+        const clearedRsvp = resetRsvp ? '' : (inv.rsvp || '');
+        const clearedRsvpAt = resetRsvp ? '' : (inv.rsvp_at || '');
         if(linked){
           delivered += 1;
           // Do not fire a local push while the coach is the active mode on this phone.
@@ -1011,25 +1042,48 @@
           }
           return {
             ...inv,
-            status: inv.rsvp === 'accepted' || inv.rsvp === 'declined' ? inv.status : 'delivered',
+            status: clearedRsvp === 'accepted' || clearedRsvp === 'declined' ? inv.status : 'delivered',
             sent_at: now,
             channel: 'app',
-            rsvp: inv.rsvp || '',
-            rsvp_at: inv.rsvp_at || ''
+            rsvp: clearedRsvp,
+            rsvp_at: clearedRsvpAt
           };
         }
         waiting += 1;
         return {
           ...inv,
-          status: inv.rsvp === 'accepted' || inv.rsvp === 'declined' ? inv.status : 'waiting_parent',
+          status: clearedRsvp === 'accepted' || clearedRsvp === 'declined' ? inv.status : 'waiting_parent',
           sent_at: now,
           channel: 'app',
-          rsvp: inv.rsvp || '',
-          rsvp_at: inv.rsvp_at || ''
+          rsvp: clearedRsvp,
+          rsvp_at: clearedRsvpAt
         };
       });
       writeDb(db);
       return {delivered, waiting, invites: this.listInvites(session, matchId)};
+    },
+    /** Tell parents a child is no longer called up for this match. */
+    recallMatchPlayers(session, matchId, playerIds){
+      const match = this.getMatch(session, matchId);
+      if(!match) throw new Error('forbidden');
+      const ids = Array.isArray(playerIds) ? playerIds.map(String).filter(Boolean) : [];
+      if(!ids.length) return {delivered: 0};
+      let delivered = 0;
+      ids.forEach(pid => {
+        const payload = this.buildMatchInvitePayload(session, matchId, pid);
+        if(!payload) return;
+        if(!this.parentLinkedForPlayer(pid)) return;
+        if(global.InboxStore && typeof global.InboxStore.upsertMatchInvite === 'function'){
+          global.InboxStore.upsertMatchInvite({
+            ...payload,
+            forceUnread: true,
+            resetRsvp: true,
+            invite_notice: 'recalled'
+          });
+          delivered += 1;
+        }
+      });
+      return {delivered};
     },
     applyInviteRsvp(matchId, teamPlayerId, response){
       const rsvp = response === 'accepted' ? 'accepted' : response === 'declined' ? 'declined' : '';
@@ -1131,35 +1185,6 @@
         writeDb(db);
       }
       return n;
-    },
-    setMatchSquad(session, matchId, squadIds){
-      const match = this.getMatch(session, matchId);
-      if(!match) throw new Error('forbidden');
-      const rosterIds = new Set(this.listPlayers(session, match.team_id).map(p => p.id));
-      const squad = [...new Set((Array.isArray(squadIds) ? squadIds : []).map(String).filter(id => rosterIds.has(id)))];
-      if(!squad.length) throw new Error('squad');
-      const db = readDb();
-      db.team_matches = db.team_matches.map(m => m.id === matchId ? {...m, squad} : m);
-      // Sync invites with squad
-      const existing = db.match_invites.filter(i => i.match_id === matchId);
-      const have = new Set(existing.map(i => i.team_player_id));
-      squad.forEach(pid => {
-        if(have.has(pid)) return;
-        db.match_invites.push({
-          id: uid('inv'),
-          match_id: matchId,
-          team_id: match.team_id,
-          team_player_id: pid,
-          status: 'pending',
-          rsvp: '',
-          rsvp_at: '',
-          sent_at: '',
-          created_at: new Date().toISOString()
-        });
-      });
-      db.match_invites = db.match_invites.filter(i => i.match_id !== matchId || squad.includes(i.team_player_id));
-      writeDb(db);
-      return this.getMatch(session, matchId);
     },
     matchSquadIds(session, match){
       if(!match) return [];

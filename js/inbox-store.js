@@ -62,6 +62,13 @@
         m.type === 'match_invite' && m.match_id === matchId && m.team_player_id === playerId
       );
       const now = new Date().toISOString();
+      const notice = ['updated', 'recalled', 'cancelled'].includes(payload.invite_notice)
+        ? payload.invite_notice
+        : '';
+      const resetRsvp = !!(payload.resetRsvp || notice === 'updated' || notice === 'recalled' || notice === 'cancelled');
+      const keepRsvp = !resetRsvp
+        && existing
+        && (existing.rsvp === 'accepted' || existing.rsvp === 'declined');
       const row = {
         id: existing ? existing.id : uid('msg'),
         type: 'match_invite',
@@ -85,17 +92,14 @@
         tournament: String(payload.tournament || '').slice(0, 48),
         // Never persist other children's names on parent messages.
         squad_names: [],
+        invite_notice: notice || (existing && existing.invite_notice === 'recalled' && !payload.clearNotice
+          ? 'recalled'
+          : ''),
         status: existing && existing.status === 'read' && !payload.forceUnread
           ? 'read'
           : 'delivered',
-        rsvp: (payload.rsvp === 'accepted' || payload.rsvp === 'declined')
-          ? payload.rsvp
-          : (existing && (existing.rsvp === 'accepted' || existing.rsvp === 'declined')
-            ? existing.rsvp
-            : ''),
-        rsvp_at: (payload.rsvp === 'accepted' || payload.rsvp === 'declined')
-          ? (payload.rsvp_at || now)
-          : (existing && existing.rsvp_at ? existing.rsvp_at : ''),
+        rsvp: keepRsvp ? existing.rsvp : '',
+        rsvp_at: keepRsvp ? (existing.rsvp_at || '') : '',
         created_at: existing ? existing.created_at : now,
         updated_at: now,
         read_at: existing && existing.status === 'read' && !payload.forceUnread
@@ -110,6 +114,37 @@
       }
       writeDb(db);
       return row;
+    },
+    /** Turn open invites for a match into calm cancelled notices (keep history, no silent delete). */
+    markMatchCancelled(matchId, extra){
+      const id = String(matchId || '');
+      if(!id) return 0;
+      const db = readDb();
+      const now = new Date().toISOString();
+      let n = 0;
+      db.messages = db.messages.map(m => {
+        if(m.type !== 'match_invite' || String(m.match_id || '') !== id) return m;
+        if(m.invite_notice === 'cancelled') return m;
+        n += 1;
+        return {
+          ...m,
+          ...(extra && typeof extra === 'object' ? {
+            date: extra.date != null ? String(extra.date).slice(0, 10) : m.date,
+            opponent: extra.opponent != null ? String(extra.opponent).slice(0, 48) : m.opponent,
+            address: extra.address != null ? String(extra.address).slice(0, 120) : m.address,
+            meetup: extra.meetup != null ? String(extra.meetup).slice(0, 8) : m.meetup,
+            kickoff: extra.kickoff != null ? String(extra.kickoff).slice(0, 8) : m.kickoff
+          } : {}),
+          invite_notice: 'cancelled',
+          rsvp: '',
+          rsvp_at: '',
+          status: 'delivered',
+          read_at: '',
+          updated_at: now
+        };
+      });
+      writeDb(db);
+      return n;
     },
     upsertMatchResult(payload){
       const db = readDb();
@@ -199,6 +234,7 @@
         ...msg,
         rsvp,
         rsvp_at: now,
+        invite_notice: msg.invite_notice === 'updated' ? '' : (msg.invite_notice || ''),
         status: 'read',
         read_at: msg.read_at || now,
         updated_at: now
