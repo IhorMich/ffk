@@ -239,6 +239,22 @@ function listPersonalPlayersWithMedia(){
   });
   return out;
 }
+/** Personal profiles plus full match history for parent → coach synchronization. */
+function listPersonalPlayerHistories(){
+  const profiles = listPersonalPlayersWithMedia();
+  return profiles.map(profile => {
+    let list = [];
+    try{
+      if(typeof roster !== 'undefined' && String(roster.currentId || '') === String(profile.id)
+        && typeof matches !== 'undefined' && Array.isArray(matches)){
+        list = matches.slice();
+      }else{
+        list = parseMatchList(localStorage.getItem(kidMatchesKey(profile.id))).list;
+      }
+    }catch(e){}
+    return {...profile, matches: list};
+  });
+}
 function parseMatchList(raw){
   const parsed = raw ? JSON.parse(raw) : [];
   const list = Array.isArray(parsed) ? parsed : (Array.isArray(parsed.matches) ? parsed.matches : []);

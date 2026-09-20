@@ -853,6 +853,9 @@
       if(typeof syncCoachPlayerPhotosFromPersonal === 'function'){
         try{ syncCoachPlayerPhotosFromPersonal(); }catch(e){}
       }
+      if(global.ParentStatsStore && typeof global.ParentStatsStore.syncAllPersonalHistory === 'function'){
+        try{ global.ParentStatsStore.syncAllPersonalHistory(); }catch(e){}
+      }
       if(typeof renderCoachUi === 'function' && typeof isCoachPlan === 'function' && isCoachPlan()){
         try{ renderCoachUi(); }catch(e){}
       }

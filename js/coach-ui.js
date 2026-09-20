@@ -119,6 +119,9 @@
     if(typeof applyHeader === 'function') applyHeader();
     if(typeof refreshCoachMediaUi === 'function') refreshCoachMediaUi();
     syncCoachPlayerPhotosFromPersonal();
+    if(global.ParentStatsStore && typeof global.ParentStatsStore.syncAllPersonalHistory === 'function'){
+      try{ global.ParentStatsStore.syncAllPersonalHistory(); }catch(e){}
+    }
     renderWorkspace(session);
     syncPlanModeButtons();
   }
@@ -3612,6 +3615,9 @@
     const parentAvg = global.ParentStatsStore
       ? global.ParentStatsStore.avgForPlayer(playerId)
       : null;
+    const parentSummary = global.ParentStatsStore && typeof global.ParentStatsStore.summaryForPlayer === 'function'
+      ? global.ParentStatsStore.summaryForPlayer(playerId)
+      : null;
     // Attach resolved photo so header / cards always see it.
     const player = {
       ...detail.player,
@@ -3627,6 +3633,7 @@
       coachGames: detail.games,
       parentStats,
       parentAvg,
+      parentSummary,
       returnTo
     };
     closeAllCoachOverlays();

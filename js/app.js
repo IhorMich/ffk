@@ -2002,6 +2002,9 @@ function syncCoachChildPlayerUi(){
   if(ctx && ctx.playerId && window.ParentStatsStore){
     ctx.parentStats = window.ParentStatsStore.listForPlayer(ctx.playerId);
     ctx.parentAvg = window.ParentStatsStore.avgForPlayer(ctx.playerId);
+    if(typeof window.ParentStatsStore.summaryForPlayer === 'function'){
+      ctx.parentSummary = window.ParentStatsStore.summaryForPlayer(ctx.playerId);
+    }
   }
   const p = ctx.player;
   const name = [p.first_name, p.last_name].filter(Boolean).join(' ') || '—';
@@ -2079,47 +2082,127 @@ function renderCoachChildFeed(ctx){
     }
     return bits.join(' · ') || '—';
   };
+  const summaryOf = (rows) => {
+    const scores = [];
+    const moments = {};
+    const behaviors = {};
+    const behaviorN = {};
+    let minutes = 0, starts = 0, subs = 0, win = 0, draw = 0, loss = 0;
+    (rows || []).forEach(r => {
+      const score = Number(r.rating) || 0;
+      if(score > 0) scores.push(score);
+      minutes += Number(r.minutes) || 0;
+      if(r.role === 'sub') subs += 1;
+      else starts += 1;
+      Object.entries(r.counts || {}).forEach(([key, raw]) => {
+        const n = Number(raw) || 0;
+        if(n) moments[key] = (moments[key] || 0) + n;
+      });
+      Object.entries(r.behaviors || {}).forEach(([key, raw]) => {
+        const n = Number(raw) || 0;
+        if(!n) return;
+        behaviors[key] = (behaviors[key] || 0) + n;
+        behaviorN[key] = (behaviorN[key] || 0) + 1;
+      });
+      const nums = String(r.score || '').match(/\d+/g);
+      if(nums && nums.length >= 2){
+        const a = Number(nums[0]), b = Number(nums[1]);
+        if(a > b) win += 1;
+        else if(a < b) loss += 1;
+        else draw += 1;
+      }
+    });
+    Object.keys(behaviors).forEach(key => {
+      behaviors[key] = behaviors[key] / behaviorN[key];
+    });
+    return {
+      games: (rows || []).length,
+      avg: scores.length ? scores.reduce((a,b) => a + b, 0) / scores.length : null,
+      best: scores.length ? Math.max(...scores) : null,
+      worst: scores.length ? Math.min(...scores) : null,
+      minutes, starts, subs, win, draw, loss, moments, behaviors
+    };
+  };
+  const fullMomentsHtml = (summary) => {
+    const rows = Object.entries(summary.moments || {})
+      .filter(([,n]) => Number(n) > 0)
+      .sort((a,b) => Number(b[1]) - Number(a[1]) || a[0].localeCompare(b[0]));
+    if(!rows.length) return '';
+    return `<div class="coach-stat-section">
+      <div class="pro-kicker">${esc(t('coachPlayerMomentsKicker') || 'Key moments')}</div>
+      <div class="coach-moment-chips">${rows.map(([key,n]) => `<span class="coach-moment-chip">
+        ${typeof metricIconSvg === 'function' ? metricIconSvg(key) : ''}<b>${esc(typeof metricLabel === 'function' ? metricLabel(key) : key)}</b> ${esc(n)}
+      </span>`).join('')}</div>
+    </div>`;
+  };
+  const behaviorsHtml = (summary) => {
+    const rows = Object.entries(summary.behaviors || {});
+    if(!rows.length) return '';
+    return `<div class="coach-stat-section">
+      <div class="pro-kicker">${esc(t('secBehavior') || 'How they played')}</div>
+      <div class="coach-moment-chips">${rows.map(([key,n]) => `<span class="coach-moment-chip">
+        <b>${esc(typeof behaviorLabel === 'function' ? behaviorLabel(key) : key)}</b> ${esc(fmtNum(n, 1))}
+      </span>`).join('')}</div>
+    </div>`;
+  };
+  const matchRowsHtml = (rows, emptyText) => (rows || []).length
+    ? rows.map(r => {
+        const actions = Object.entries(r.counts || {})
+          .filter(([,n]) => Number(n) > 0)
+          .sort((a,b) => Number(b[1]) - Number(a[1]))
+          .map(([key,n]) => `${typeof metricLabel === 'function' ? metricLabel(key) : key}: ${n}`)
+          .join(' · ');
+        const meta = [
+          r.pitchPos || '',
+          Number(r.minutes) ? `${Number(r.minutes)} ${t('labelMin') || 'min'}` : '',
+          r.role === 'sub' ? (t('roleSub') || 'Sub') : (t('roleStart') || 'Start'),
+          r.format || ''
+        ].filter(Boolean).join(' · ');
+        return `<div class="coach-player-row">
+          <div class="coach-player-main">
+            <b>${headHtml(r)}</b>
+            ${meta ? `<span>${esc(meta)}</span>` : ''}
+            ${actions ? `<span>${esc(actions)}</span>` : ''}
+            ${r.comment ? `<span>${esc(r.comment)}</span>` : ''}
+          </div>
+          <b class="parent-rate-num">${esc(Number(r.rating).toFixed(1))}</b>
+        </div>`;
+      }).join('')
+    : `<p class="hint">${esc(emptyText)}</p>`;
+  const sourceCard = (title, rows, emptyText) => {
+    const summary = summaryOf(rows);
+    return `<div class="pf-card">
+      <div class="parent-confirm-badge">${esc(title)}</div>
+      <div class="coach-analytics-sum coach-analytics-sum-4">
+        <div><b>${summary.games}</b><span>${esc(t('coachGames') || 'games')}</span></div>
+        <div><b>${summary.avg != null ? fmtNum(summary.avg, 1) : '—'}</b><span>${esc(t('coachStatAvgShort') || 'avg')}</span></div>
+        <div><b>${summary.best != null ? fmtNum(summary.best, 1) : '—'}</b><span>${esc(t('coachStatBest') || 'Best')}</span></div>
+        <div><b>${summary.minutes}</b><span>${esc(t('coachStatMinutes') || 'Minutes')}</span></div>
+      </div>
+      <div class="coach-analytics-sum">
+        <div><b>${summary.worst != null ? fmtNum(summary.worst, 1) : '—'}</b><span>${esc(t('coachStatWorst') || 'Worst')}</span></div>
+        <div><b>${summary.starts} / ${summary.subs}</b><span>${esc(`${t('coachStatStarts') || 'Starts'} / ${t('coachStatSubs') || 'Subs'}`)}</span></div>
+        <div><b>${summary.win} / ${summary.draw} / ${summary.loss}</b><span>${esc(`${t('coachMatchWin') || 'W'} / ${t('coachMatchDraw') || 'D'} / ${t('coachMatchLoss') || 'L'}`)}</span></div>
+      </div>
+      ${fullMomentsHtml(summary)}
+      ${behaviorsHtml(summary)}
+      <div class="pro-kicker">${esc(t('coachPlayerRatingsKicker') || 'Matches')}</div>
+      <div class="coach-player-list">${matchRowsHtml(rows, emptyText)}</div>
+    </div>`;
+  };
   const parentStats = Array.isArray(ctx.parentStats) ? ctx.parentStats : [];
   const coachRatings = Array.isArray(ctx.coachRatings) ? ctx.coachRatings : [];
-  const parentRows = parentStats.length
-    ? parentStats.map(r => {
-        return `<div class="coach-player-row">
-          <div class="coach-player-main">
-            <b>${headHtml(r)}</b>
-            ${r.comment ? `<span>${esc(r.comment)}</span>` : ''}
-          </div>
-          <b class="parent-rate-num">${esc(Number(r.rating).toFixed(1))}</b>
-        </div>`;
-      }).join('')
-    : `<p class="hint">${esc(t('coachChildNoParentStats') || 'No sideline stats from parents yet. They appear when a linked parent saves a match.')}</p>`;
-  const coachRows = coachRatings.length
-    ? coachRatings.slice(0, 20).map(r => {
-        return `<div class="coach-player-row">
-          <div class="coach-player-main">
-            <b>${headHtml(r)}</b>
-            ${r.comment ? `<span>${esc(r.comment)}</span>` : ''}
-          </div>
-          <b class="parent-rate-num">${esc(Number(r.rating).toFixed(1))}</b>
-        </div>`;
-      }).join('')
-    : `<p class="hint">${esc(t('coachPlayerNoRatings') || 'No coach ratings yet.')}</p>`;
   el.innerHTML = `
-    <div class="pf-card">
-      <div class="parent-confirm-badge">${esc(t('coachChildFromParents') || 'From parents')}</div>
-      <div class="coach-analytics-sum">
-        <div><b>${parentStats.length}</b><span>${esc(t('coachGames') || 'games')}</span></div>
-        <div><b>${ctx.parentAvg != null ? fmtNum(ctx.parentAvg, 1) : '—'}</b><span>${esc(t('parentCoachAvg') || 'Avg')}</span></div>
-      </div>
-      <div class="coach-player-list">${parentRows}</div>
-    </div>
-    <div class="pf-card">
-      <div class="parent-confirm-badge">${esc(t('coachChildFromCoach') || 'From coach')}</div>
-      <div class="coach-analytics-sum">
-        <div><b>${ctx.coachGames || coachRatings.length || 0}</b><span>${esc(t('coachGames') || 'games')}</span></div>
-        <div><b>${ctx.coachAvg != null ? fmtNum(ctx.coachAvg, 1) : '—'}</b><span>${esc(t('coachStatAvg') || 'Avg')}</span></div>
-      </div>
-      <div class="coach-player-list">${coachRows}</div>
-    </div>`;
+    ${sourceCard(
+      t('coachChildFromParents') || 'From parents',
+      parentStats,
+      t('coachChildNoParentStats') || 'No sideline stats from parents yet.'
+    )}
+    ${sourceCard(
+      t('coachChildFromCoach') || 'From coach',
+      coachRatings,
+      t('coachPlayerNoRatings') || 'No coach ratings yet.'
+    )}`;
 }
 function exitCoachChildView(){
   const returnTo = (window.coachChildView && window.coachChildView.returnTo === 'stats')
@@ -2900,7 +2983,7 @@ function saveCurrentMatch(){
   document.getElementById('reportCard').innerHTML = renderReportHtml(row);
   try{
     if(typeof ParentStatsStore !== 'undefined' && ParentStatsStore.publishFromPersonal){
-      ParentStatsStore.publishFromPersonal(row);
+      ParentStatsStore.publishFromPersonal(row, player && player.id);
     }
   }catch(e){}
   showToast(editingId ? t('toastUpdated') : t('toastSaved'));
@@ -5372,6 +5455,9 @@ async function shareCard(m){
       applyHeader();
       if(typeof syncCoachPlayerPhotosFromPersonal === 'function'){
         try{ syncCoachPlayerPhotosFromPersonal(); }catch(e){}
+      }
+      if(window.ParentStatsStore && typeof window.ParentStatsStore.syncAllPersonalHistory === 'function'){
+        try{ window.ParentStatsStore.syncAllPersonalHistory(); }catch(e){}
       }
       if(typeof renderCoachUi === 'function' && typeof isCoachPlan === 'function' && isCoachPlan()){
         try{ renderCoachUi(); }catch(e){}
