@@ -257,7 +257,7 @@
           notice === 'cancelled'
             ? tt('parentInboxMatchCancelledLead', 'This match was cancelled by the coach. No need to come.')
             : notice === 'recalled'
-              ? tt('parentInboxMatchRecalledLead', '{name} is no longer called up for this match. Please do not stress — plans changed.')
+              ? tt('parentInboxMatchRecalledLead', 'The coach changed the squad — {name} is not called up for this match.')
                   .replace('{name}', msg.player_name || tt('parentInboxChild', 'Child'))
               : tt('parentInboxMatchUpdatedLead', 'Match details changed. Please confirm again if you can still play.')
         )}</div>`
