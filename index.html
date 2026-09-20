@@ -440,15 +440,34 @@ window.ffkIsNative = function () {
       </div>
       <div id="coachHistoryTab" class="coach-tab-panel" hidden>
         <div class="coach-hero">
-          <div class="pro-kicker" data-i18n="coachHistoryKicker">Сыгранные</div>
-          <h3 class="coach-team-heading" id="coachHistoryTeam">—</h3>
-          <div class="period-chips coach-hist-filters" id="coachHistoryFilter">
-            <button type="button" class="chip active" data-coach-hist="all" data-i18n="histKindAll">Все</button>
-            <button type="button" class="chip" data-coach-hist="win" data-i18n="coachMatchWin">Победа</button>
-            <button type="button" class="chip" data-coach-hist="draw" data-i18n="coachMatchDraw">Ничья</button>
-            <button type="button" class="chip" data-coach-hist="loss" data-i18n="coachMatchLoss">Поражение</button>
+          <div id="coachHistoryListWrap">
+            <div class="pro-kicker" data-i18n="coachHistoryKicker">Сыгранные</div>
+            <h3 class="coach-team-heading" id="coachHistoryTeam">—</h3>
+            <div class="period-chips coach-hist-filters" id="coachHistoryFilter">
+              <button type="button" class="chip active" data-coach-hist="all" data-i18n="histKindAll">Все</button>
+              <button type="button" class="chip" data-coach-hist="win" data-i18n="coachMatchWin">Победа</button>
+              <button type="button" class="chip" data-coach-hist="draw" data-i18n="coachMatchDraw">Ничья</button>
+              <button type="button" class="chip" data-coach-hist="loss" data-i18n="coachMatchLoss">Поражение</button>
+            </div>
+            <div id="coachHistoryList" class="coach-team-list"></div>
           </div>
-          <div id="coachHistoryList" class="coach-team-list"></div>
+
+          <div id="coachHistoryDetail" class="coach-history-detail" hidden>
+            <div class="coach-match-detail-bar">
+              <button type="button" class="ghost-btn coach-match-back" id="coachHistoryBackBtn" data-i18n="coachMatchBack">← К списку</button>
+            </div>
+            <div class="coach-match-summary" id="coachHistorySummary"></div>
+            <div class="field">
+              <label data-i18n="coachMatchComment">Комментарий к матчу</label>
+              <textarea id="coachHistoryComment" rows="3" maxlength="400" data-i18n-placeholder="coachMatchCommentPh" placeholder="Как прошла игра…"></textarea>
+            </div>
+            <button type="button" class="ghost-btn" id="coachHistoryCommentSave" data-i18n="coachMatchCommentSave">Сохранить комментарий</button>
+            <div class="coach-history-card-actions">
+              <button type="button" class="save-btn" id="coachHistoryShareMatchBtn" data-i18n="coachShareMatchCard">Карточка матча</button>
+            </div>
+            <div class="pro-kicker" data-i18n="coachMatchRatePhase">Оценки игроков</div>
+            <div id="coachHistoryRates" class="coach-player-list coach-rates-compact"></div>
+          </div>
         </div>
       </div>
     </div>

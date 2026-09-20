@@ -800,6 +800,7 @@
   }
 
   let coachHistFilter = 'all';
+  let coachHistoryMatchId = '';
 
   function openCoachMatch(matchId){
     if(!matchId || !global.CoachStore) return;
@@ -810,6 +811,222 @@
     try{
       document.getElementById('coachMatchDetail')?.scrollIntoView({behavior:'smooth', block:'start'});
     }catch(e){}
+  }
+
+  function closeCoachHistoryMatch(){
+    coachHistoryMatchId = '';
+    syncCoachHistoryDetailUi();
+  }
+
+  function openCoachHistoryMatch(matchId){
+    if(!matchId || !global.CoachStore) return;
+    coachHistoryMatchId = String(matchId);
+    if(typeof showView === 'function') showView('history');
+    renderCoachUi();
+    try{
+      document.getElementById('coachHistoryDetail')?.scrollIntoView({behavior:'smooth', block:'start'});
+    }catch(e){}
+  }
+
+  function syncCoachHistoryDetailUi(){
+    const listWrap = document.getElementById('coachHistoryListWrap');
+    const detail = document.getElementById('coachHistoryDetail');
+    const open = !!coachHistoryMatchId;
+    if(listWrap) listWrap.hidden = open;
+    if(detail) detail.hidden = !open;
+  }
+
+  function coachPlayerCardMatch(match, player, rating){
+    const name = playerLabel(player);
+    return {
+      date: match.date,
+      opponent: match.opponent,
+      score: match.score,
+      venue: match.venue,
+      kind: match.kind,
+      cardName: name,
+      player: name,
+      position: rating.position || player.position || 'fwd',
+      pitchPos: rating.pitchPos || player.position || 'RW',
+      rating: Number(rating.rating) || 6,
+      actionRating: Number(rating.actionRating) || Number(rating.rating) || 6,
+      effortRating: Number(rating.effortRating) || Number(rating.rating) || 6,
+      counts: rating.counts && typeof rating.counts === 'object' ? rating.counts : {},
+      behaviors: rating.behaviors && typeof rating.behaviors === 'object' ? rating.behaviors : {},
+      minutes: Number(rating.minutes) || 60,
+      matchLen: Number(rating.matchLen) || 60,
+      comment: rating.comment || '',
+      format: rating.format || '2x30',
+      role: rating.role || 'start',
+      kickoffClock: rating.kickoffClock || ''
+    };
+  }
+
+  async function shareCoachPlayerCard(matchId, playerId){
+    const store = global.CoachStore;
+    const session = store.getSession();
+    const match = store.getMatch(session, matchId);
+    const player = store.listPlayers(session, match && match.team_id).find(p => p.id === playerId);
+    const rating = store.getRatingForPlayer(session, matchId, playerId);
+    if(!match || !player || !rating){
+      toast(tt('coachErrRateFirst', 'Rate the player first.'));
+      return;
+    }
+    const fake = coachPlayerCardMatch(match, player, rating);
+    if(typeof openCardPreview === 'function' && typeof drawMatchCardCanvas === 'function'){
+      await openCardPreview({
+        filename: `matchcard_${String(player.first_name || 'player').slice(0, 16)}_${match.date || 'match'}.png`,
+        build: mode => drawMatchCardCanvas(fake, mode)
+      });
+      return;
+    }
+    toast(tt('coachErrGeneric', 'Something went wrong.'));
+  }
+
+  async function shareCoachTeamMatchCard(matchId){
+    const store = global.CoachStore;
+    const session = store.getSession();
+    const match = store.getMatch(session, matchId || coachHistoryMatchId);
+    if(!match) return;
+    const team = store.getTeam(session, match.team_id);
+    const ratings = store.listRatings(session, match.id)
+      .slice()
+      .sort((a, b) => (Number(b.rating) || 0) - (Number(a.rating) || 0));
+    const outcome = matchOutcome(match);
+    const outcomeLab = matchOutcomeLabel(outcome);
+    if(typeof openCardPreview !== 'function' || typeof makeHiCanvas !== 'function'){
+      toast(tt('coachErrGeneric', 'Something went wrong.'));
+      return;
+    }
+    const build = async (mode) => {
+      const theme = typeof futTheme === 'function'
+        ? futTheme(Math.round(Math.min(99, Math.max(45, (ratings[0] ? Number(ratings[0].rating) : 6) * 10))), mode)
+        : {paper:['#151a28','#0b0f1a'], foil:'#c9a227', muted:'#8D9AB5', ink: mode==='light'?'#12141C':'#EDF1F7', glow:'rgba(201,162,39,.25)'};
+      const w = 1080;
+      const rows = Math.min(8, ratings.length);
+      const h = 520 + rows * 56 + (match.comment ? 90 : 0);
+      const {canvas, ctx} = makeHiCanvas(w, h);
+      ctx.fillStyle = mode === 'light' ? '#FFF8D6' : '#070B14';
+      ctx.fillRect(0, 0, w, h);
+      const bg = ctx.createLinearGradient(0, 0, w, h);
+      bg.addColorStop(0, theme.paper[0]);
+      bg.addColorStop(1, theme.paper[1] || theme.paper[0]);
+      if(typeof pathRoundRect === 'function'){
+        pathRoundRect(ctx, 24, 24, w - 48, h - 48, 28);
+        ctx.fillStyle = bg;
+        ctx.fill();
+        ctx.strokeStyle = theme.foil || '#c9a227';
+        ctx.lineWidth = 5;
+        ctx.stroke();
+      }else{
+        ctx.fillStyle = bg;
+        ctx.fillRect(24, 24, w - 48, h - 48);
+      }
+      const ink = theme.ink || (mode === 'light' ? '#12141C' : '#EDF1F7');
+      const muted = theme.muted || '#8D9AB5';
+      const fit = typeof fitText === 'function'
+        ? fitText
+        : (c, text, x, y) => { c.fillText(text, x, y); };
+      ctx.fillStyle = muted;
+      ctx.font = '700 22px sans-serif';
+      fit(ctx, team && team.name ? team.name : 'Matchcard Coach', 64, 90, w - 128, '700', 22, 16);
+      ctx.fillStyle = ink;
+      ctx.font = '900 48px sans-serif';
+      fit(ctx, match.opponent || '—', 64, 150, w - 128, '900', 48, 28);
+      ctx.fillStyle = muted;
+      ctx.font = '700 24px sans-serif';
+      const meta = [match.date, match.score, outcomeLab, match.address].filter(Boolean).join(' · ');
+      fit(ctx, meta, 64, 198, w - 128, '700', 24, 16);
+      let y = 260;
+      if(match.comment){
+        ctx.fillStyle = ink;
+        ctx.font = '600 26px sans-serif';
+        const comment = String(match.comment).slice(0, 180);
+        fit(ctx, comment, 64, y, w - 128, '600', 26, 18);
+        y += 70;
+      }
+      ctx.fillStyle = muted;
+      ctx.font = '800 20px sans-serif';
+      fit(ctx, tt('coachMatchRatePhase', 'Player ratings'), 64, y, w - 128, '800', 20, 14);
+      y += 40;
+      ratings.slice(0, rows).forEach(r => {
+        ctx.fillStyle = ink;
+        ctx.font = '800 28px sans-serif';
+        fit(ctx, r.player_name || '—', 64, y, w - 280, '800', 28, 18);
+        ctx.fillStyle = theme.foil || '#c9a227';
+        fit(ctx, Number(r.rating).toFixed(1), w - 200, y, 120, '900', 32, 22);
+        y += 52;
+      });
+      if(!ratings.length){
+        ctx.fillStyle = muted;
+        fit(ctx, tt('coachNoPlayers', 'No players'), 64, y, w - 128, '700', 24, 16);
+      }
+      return canvas;
+    };
+    await openCardPreview({
+      filename: `team_match_${String(match.opponent || 'match').replace(/\s+/g,'_').slice(0,18)}_${match.date || ''}.png`,
+      build
+    });
+  }
+
+  function renderCoachHistoryDetail(session, team){
+    syncCoachHistoryDetailUi();
+    if(!coachHistoryMatchId) return;
+    const store = global.CoachStore;
+    const match = store.getMatch(session, coachHistoryMatchId);
+    if(!match || match.team_id !== team.id || !matchIsPlayed(match)){
+      coachHistoryMatchId = '';
+      syncCoachHistoryDetailUi();
+      return;
+    }
+    const summary = document.getElementById('coachHistorySummary');
+    const commentEl = document.getElementById('coachHistoryComment');
+    const ratesEl = document.getElementById('coachHistoryRates');
+    const outcome = matchOutcome(match);
+    const outcomeLab = matchOutcomeLabel(outcome);
+    const badgeCls = outcome ? `is-${outcome}` : 'is-played';
+    const badgeTxt = outcomeLab
+      ? `${outcomeLab}${match.score ? ` · ${match.score}` : ''}`
+      : (match.score || tt('coachMatchPlayed', 'played'));
+    if(summary){
+      summary.innerHTML = `<div class="coach-match-row-top">
+        <b>${esc(match.opponent)}</b>
+        <span class="coach-match-badge ${badgeCls}">${esc(badgeTxt)}</span>
+      </div><span class="hint">${esc([match.date, match.address].filter(Boolean).join(' · '))}</span>`;
+    }
+    if(commentEl && document.activeElement !== commentEl){
+      commentEl.value = match.comment || '';
+    }
+    const squadPlayers = store.listMatchPlayers(session, match);
+    if(ratesEl){
+      if(!squadPlayers.length){
+        ratesEl.innerHTML = `<div class="inbox-empty coach-tab-empty">${esc(tt('coachNoPlayers', 'No players'))}</div>`;
+      }else{
+        ratesEl.innerHTML = squadPlayers.map(p => {
+          const label = playerLabel(p);
+          const rating = store.getRatingForPlayer(session, match.id, p.id);
+          const rateBtn = rating
+            ? `${tt('coachEditRating', 'Edit')} ${Number(rating.rating).toFixed(1)}`
+            : tt('coachRatePlayer', 'Rate');
+          const note = rating
+            ? (rating.comment ? esc(String(rating.comment).slice(0, 80)) : esc(tt('coachRated', 'Rated')))
+            : esc(tt('coachNotRated', 'Not rated'));
+          const cardBtn = rating
+            ? `<button type="button" class="ghost-btn coach-rate-btn" data-share-player-card="${esc(p.id)}" data-match="${esc(match.id)}">${esc(tt('coachSharePlayerCard', 'Card'))}</button>`
+            : '';
+          return `<div class="coach-player-row">
+            <div class="coach-player-main">
+              <b>${esc(label)}</b>
+              <span>${note}</span>
+            </div>
+            <div class="coach-history-rate-actions">
+              <button type="button" class="save-btn coach-rate-btn" data-rate-player="${esc(p.id)}" data-match="${esc(match.id)}">${esc(rateBtn)}</button>
+              ${cardBtn}
+            </div>
+          </div>`;
+        }).join('');
+      }
+    }
   }
 
   function resultsSentForMatch(session, match){
@@ -844,13 +1061,14 @@
     }
     if(!matches.length){
       el.innerHTML = `<div class="inbox-empty coach-tab-empty">${esc(tt('coachHistoryEmpty', 'No played matches yet'))}</div>`;
-      return;
+    }else{
+      const sorted = sortMatchesForList(matches);
+      el.innerHTML = sorted.map(m => matchListRowHtml(m, {
+        openAttr: 'data-open-match',
+        showAddress: true
+      })).join('');
     }
-    const sorted = sortMatchesForList(matches);
-    el.innerHTML = sorted.map(m => matchListRowHtml(m, {
-      openAttr: 'data-open-match',
-      showAddress: true
-    })).join('');
+    renderCoachHistoryDetail(session, team);
   }
 
   function renderAnalyticsPane(session, team){
@@ -1924,6 +2142,27 @@
       if(typeof refreshBackupBanner === 'function') refreshBackupBanner();
       if(typeof showView === 'function') showView('settings');
     });
+    document.getElementById('coachHistoryBackBtn')?.addEventListener('click', () => {
+      closeCoachHistoryMatch();
+      renderCoachUi();
+    });
+    document.getElementById('coachHistoryCommentSave')?.addEventListener('click', () => {
+      const store = global.CoachStore;
+      const session = store.getSession();
+      if(!session || !coachHistoryMatchId) return;
+      try{
+        store.updateMatch(session, coachHistoryMatchId, {
+          comment: document.getElementById('coachHistoryComment')?.value || ''
+        });
+        toast(tt('coachMatchCommentSaved', 'Comment saved.'));
+        renderCoachUi();
+      }catch(e){
+        toast(tt('coachErrGeneric', 'Something went wrong.'));
+      }
+    });
+    document.getElementById('coachHistoryShareMatchBtn')?.addEventListener('click', () => {
+      shareCoachTeamMatchCard(coachHistoryMatchId);
+    });
     document.getElementById('coachMatchNewBtn')?.addEventListener('click', () => {
       setCoachMatchCreateOpen(true);
       document.querySelectorAll('#coachMatchCreate .js-cm-squad').forEach(el => { el.dataset.dirty = ''; });
@@ -2057,13 +2296,19 @@
       }
       const histMatch = e.target.closest('#coachHistoryList [data-open-match]');
       if(histMatch){
-        openCoachMatch(histMatch.dataset.openMatch);
+        openCoachHistoryMatch(histMatch.dataset.openMatch);
         return;
       }
       const histFilter = e.target.closest('#coachHistoryFilter [data-coach-hist]');
       if(histFilter){
         coachHistFilter = histFilter.dataset.coachHist || 'all';
+        closeCoachHistoryMatch();
         renderCoachUi();
+        return;
+      }
+      const sharePlayerCard = e.target.closest('[data-share-player-card]');
+      if(sharePlayerCard){
+        shareCoachPlayerCard(sharePlayerCard.dataset.match, sharePlayerCard.dataset.sharePlayerCard);
         return;
       }
       const statsPlayer = e.target.closest('#coachStatsBoard [data-open-player]');
@@ -2187,5 +2432,6 @@
   global.closeCoachSettings = closeCoachSettings;
   global.openCoachSettings = openCoachSettings;
   global.closeTeamMenu = closeTeamMenu;
+  global.closeCoachHistoryMatch = closeCoachHistoryMatch;
   global.openCoachChildPlayerPage = openCoachChildPlayerPage;
 })(window);

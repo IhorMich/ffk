@@ -896,6 +896,7 @@ function reportLines(m){
   return lines;
 }
 function reportPlayerName(m){
+  if(m && m.cardName) return String(m.cardName).trim() || '—';
   return (player.firstName || String(m.player || '').trim().split(/\s+/)[0] || '—');
 }
 function matchMinsLabel(m){
@@ -3999,6 +4000,13 @@ function handleAppBack(){
   }
   if(isElShown('coachParentInviteSheet')){
     if(typeof closeCoachParentInviteSheet === 'function') closeCoachParentInviteSheet();
+    return true;
+  }
+  if(isElShown('coachHistoryDetail') && !document.getElementById('coachHistoryDetail')?.hidden){
+    if(typeof closeCoachHistoryMatch === 'function'){
+      closeCoachHistoryMatch();
+      if(typeof renderCoachUi === 'function') renderCoachUi();
+    }
     return true;
   }
   if(isElShown('coachTeamMenuSheet') || isElShown('coachTeamMenuBack')){

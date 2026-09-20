@@ -498,6 +498,9 @@
       if(fields && Object.prototype.hasOwnProperty.call(fields, 'address')){
         next.address = String(fields.address || '').trim().slice(0, 120);
       }
+      if(fields && Object.prototype.hasOwnProperty.call(fields, 'comment')){
+        next.comment = String(fields.comment || '').trim().slice(0, 400);
+      }
       if(fields && fields.status === 'played') next.status = 'played';
       if(fields && fields.status === 'upcoming') next.status = 'upcoming';
       if(next.score && next.status !== 'upcoming') next.status = 'played';
