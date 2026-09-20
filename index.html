@@ -844,29 +844,34 @@ window.ffkIsNative = function () {
   <div class="toast" id="toast"></div>
   <button class="coach-rate-back" id="coachRateBack" type="button" hidden></button>
   <div class="coach-rate-sheet" id="coachRateSheet" hidden>
-    <div class="coach-rate-card">
+    <div class="coach-rate-card coach-rate-card-quick">
       <div class="sheet-grab" aria-hidden="true"><span></span></div>
-      <div class="pro-kicker" data-i18n="coachQuickKicker">Быстрая оценка</div>
-      <h3 class="coach-rate-name" id="coachRateName">—</h3>
-      <p class="hint" id="coachRateMeta"></p>
-      <div class="coach-rate-score-block">
-        <span class="hint" data-i18n="coachQuickScore">Оценка</span>
-        <div class="coach-rate-score-row">
+      <div class="coach-rate-quick-head">
+        <div>
+          <div class="pro-kicker" data-i18n="coachQuickKicker">Быстрая оценка</div>
+          <h3 class="coach-rate-name" id="coachRateName">—</h3>
+          <p class="hint" id="coachRateMeta"></p>
+        </div>
+        <div class="coach-rate-score-row coach-rate-score-inline" aria-label="score">
           <button type="button" class="coach-step" id="coachRateMinus" aria-label="-">−</button>
           <div class="coach-rate-score" id="coachRateScore">6.0</div>
           <button type="button" class="coach-step" id="coachRatePlus" aria-label="+">+</button>
         </div>
       </div>
-      <div class="coach-rate-moments">
-        <div class="pro-kicker" data-i18n="coachQuickMoments">Ключевые моменты</div>
-        <div id="coachRateMoments" class="coach-moment-grid"></div>
+      <div class="coach-rate-quick-scroll">
+        <div class="coach-rate-moments">
+          <div class="pro-kicker" data-i18n="coachQuickMoments">Ключевые моменты</div>
+          <div id="coachRateMoments" class="coach-moment-grid"></div>
+        </div>
+        <div class="field coach-rate-comment-field">
+          <label data-i18n="coachQuickComment">Комментарий</label>
+          <textarea id="coachRateComment" rows="2" maxlength="400" data-i18n-placeholder="coachQuickCommentPh" placeholder="Что запомнить по игроку"></textarea>
+        </div>
       </div>
-      <div class="field">
-        <label data-i18n="coachQuickComment">Комментарий</label>
-        <textarea id="coachRateComment" rows="3" maxlength="400" data-i18n-placeholder="coachQuickCommentPh" placeholder="Что запомнить по игроку"></textarea>
+      <div class="coach-rate-sticky-actions">
+        <button class="save-btn" id="coachRateSaveBtn" type="button" data-i18n="coachQuickSave">Сохранить оценку</button>
+        <button class="ghost-btn" id="coachRateCancelBtn" type="button" data-i18n="previewCancel">Отмена</button>
       </div>
-      <button class="save-btn" id="coachRateSaveBtn" type="button" data-i18n="coachQuickSave">Сохранить оценку</button>
-      <button class="ghost-btn" id="coachRateCancelBtn" type="button" data-i18n="previewCancel">Отмена</button>
     </div>
   </div>
 
