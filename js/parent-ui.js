@@ -181,8 +181,6 @@
       <p class="hint"><b>${esc(tt('parentInboxChild', 'Child'))}:</b> ${esc(msg.player_name || '—')}</p>
       <p class="hint"><b>${esc(tt('parentCoachLabel', 'Coach'))}:</b> ${esc(msg.coach_name || '—')}</p>
       <p class="hint"><b>${esc(tt('parentInboxTeam', 'Team'))}:</b> ${esc([msg.academy_name, msg.team_name].filter(Boolean).join(' · ') || '—')}</p>
-      ${!isResult ? `<div class="coach-parent-code">${esc(msg.team_code || '—')}</div>
-      <p class="hint">${esc(tt('parentInboxCodeHint', 'Team invite code from the academy'))}</p>` : ''}
       ${resultBlock}
       <button type="button" class="ghost-btn" id="parentMsgCloseBtn">${esc(tt('previewCancel', 'Close'))}</button>
     `;

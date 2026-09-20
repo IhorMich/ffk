@@ -754,9 +754,7 @@
     }
 
     if(!played){
-      if(store.syncInviteReadStatuses) store.syncInviteReadStatuses(session, activeMatch.id);
-      renderInviteBox(session, activeMatch);
-      document.querySelectorAll('.js-cm-squad-save').forEach(btn => { btn.hidden = true; });
+      renderUpcomingSquad(session, activeMatch);
     }else{
       fillCoachScoreFields(document.getElementById('coachMatchPlayedBox'), activeMatch.score || '');
       const squadPlayers = store.listMatchPlayers(session, activeMatch);
@@ -807,41 +805,33 @@
     }
   }
 
-  function renderInviteBox(session, match){
-    document.querySelectorAll('.js-cm-invite-box').forEach(box => {
+  function renderUpcomingSquad(session, match){
+    document.querySelectorAll('.js-cm-squad-view').forEach(box => {
       if(!match){
         box.hidden = true;
         box.innerHTML = '';
         return;
       }
       const store = global.CoachStore;
-      const invites = store.listInvites(session, match.id);
       const players = store.listMatchPlayers(session, match);
-      const delivered = invites.filter(i => i.status === 'delivered' || i.status === 'read' || i.status === 'sent').length;
-      const waiting = invites.filter(i => i.status === 'waiting_parent').length;
-      const read = invites.filter(i => i.status === 'read').length;
+      if(!players.length){
+        box.hidden = false;
+        box.innerHTML = `<p class="hint">${esc(tt('coachSquadEmpty', 'Select who plays in this match.'))}</p>`;
+        return;
+      }
       const rows = players.map(p => {
-        const inv = invites.find(i => i.team_player_id === p.id);
-        let st = tt('coachInvitePending', 'Invite pending');
-        let cls = 'pending';
-        if(inv){
-          if(inv.status === 'read'){ st = tt('coachInviteRead', 'Read in app'); cls = 'read'; }
-          else if(inv.status === 'delivered' || inv.status === 'sent'){ st = tt('coachInviteInApp', 'In app'); cls = 'ok'; }
-          else if(inv.status === 'waiting_parent'){ st = tt('coachInviteWaitingParent', 'Waiting for parent'); cls = 'wait'; }
-        }
-        return `<div class="coach-invite-row">
-          <span>${esc(playerLabel(p))}</span>
-          <b class="coach-invite-st ${cls}">${esc(st)}</b>
-        </div>`;
+        const bits = [
+          p.number ? `#${p.number}` : '',
+          playerLabel(p),
+          p.position && typeof pitchPosLabelShort === 'function' ? pitchPosLabelShort(p.position) : (p.position || '')
+        ].filter(Boolean);
+        return `<div class="coach-invite-row"><span>${esc(bits.join(' · '))}</span></div>`;
       }).join('');
       box.hidden = false;
       box.innerHTML = `<div class="coach-invite-card">
-        <b>${esc(tt('coachInviteTitle', 'Match invitations'))}</b>
-        <p class="hint">${esc(tt('coachInviteStatusApp', '{inApp} in app · {waiting} waiting for parent · {read} read')
-          .replace('{inApp}', String(delivered))
-          .replace('{waiting}', String(waiting))
-          .replace('{read}', String(read)))}</p>
+        <b>${esc(tt('coachSquadLabel', 'Who plays'))}</b>
         ${match.address ? `<p class="hint">${esc(match.address)}</p>` : ''}
+        <p class="hint">${esc(tt('coachMatchParentsNotified', 'Parents of selected players get a match notice in the app.'))}</p>
         <div class="coach-invite-rows">${rows}</div>
       </div>`;
     });
@@ -1565,31 +1555,31 @@
       return false;
     }
   }
-  async function shareMatchInvites(matchId){
+  async function notifyMatchParents(matchId, opts){
     const store = global.CoachStore;
     const session = store.getSession();
-    if(!session || !matchId) return false;
+    if(!session || !matchId) return {delivered: 0, waiting: 0};
+    opts = opts || {};
     try{
       const result = store.deliverMatchInvites(session, matchId, {forceUnread: true});
-      const delivered = result.delivered || 0;
-      const waiting = result.waiting || 0;
-      if(delivered && waiting){
-        toast(tt('coachInvitesMixed', '{n} in app, {w} waiting for parent link')
-          .replace('{n}', String(delivered))
-          .replace('{w}', String(waiting)));
-      }else if(delivered){
-        toast(tt('coachInvitesInApp', 'Invitations delivered in the app.'));
-      }else if(waiting){
-        toast(tt('coachInvitesWaiting', 'Invites queued. Link a parent to each player to deliver in-app.'));
-      }else{
-        toast(tt('coachInvitesInApp', 'Invitations delivered in the app.'));
+      if(!opts.silent){
+        const delivered = result.delivered || 0;
+        const waiting = result.waiting || 0;
+        if(delivered && waiting){
+          toast(tt('coachInvitesMixed', '{n} in app, {w} waiting for parent link')
+            .replace('{n}', String(delivered))
+            .replace('{w}', String(waiting)));
+        }else if(delivered){
+          toast(tt('coachMatchParentsNotifiedOk', 'Parents notified in the app.'));
+        }else if(waiting){
+          toast(tt('coachInvitesWaiting', 'Invites queued. Link a parent to each player to deliver in-app.'));
+        }
       }
-      renderCoachUi();
       if(typeof renderParentUi === 'function') renderParentUi();
-      return true;
+      return result || {delivered: 0, waiting: 0};
     }catch(e){
-      toast(tt('coachErrGeneric', 'Something went wrong.'));
-      return false;
+      if(!opts.silent) toast(tt('coachErrGeneric', 'Something went wrong.'));
+      return {delivered: 0, waiting: 0};
     }
   }
   async function onCreateMatch(fromEl){
@@ -1629,11 +1619,23 @@
       root.querySelectorAll('.js-cm-opponent').forEach(el => { el.value = ''; });
       root.querySelectorAll('.js-cm-address').forEach(el => { el.value = ''; });
       document.querySelectorAll('.js-cm-squad').forEach(el => { el.dataset.dirty = ''; });
-      toast(tt('coachMatchCreated', 'Match created.'));
       setCoachMatchCreateOpen(false);
+      const notify = await notifyMatchParents(match.id, {silent: true});
+      const delivered = notify.delivered || 0;
+      const waiting = notify.waiting || 0;
+      if(delivered && waiting){
+        toast(tt('coachMatchCreatedMixed', 'Match created. {n} parents notified, {w} need a parent link.')
+          .replace('{n}', String(delivered))
+          .replace('{w}', String(waiting)));
+      }else if(delivered){
+        toast(tt('coachMatchCreatedNotified', 'Match created. Parents notified.'));
+      }else if(waiting){
+        toast(tt('coachMatchCreatedWaiting', 'Match created. Link parents to deliver notices.'));
+      }else{
+        toast(tt('coachMatchCreated', 'Match created.'));
+      }
       renderCoachUi();
       if(typeof showView === 'function') showView('new');
-      await shareMatchInvites(match.id);
       try{
         document.getElementById('coachMatchDetail')?.scrollIntoView({behavior:'smooth', block:'start'});
       }catch(e){}
@@ -1643,26 +1645,6 @@
         squad: tt('coachErrSquad', 'Select at least one player who plays.')
       };
       toast(map[e.message] || tt('coachErrGeneric', 'Could not create match.'));
-    }
-  }
-  function onSaveSquad(fromEl){
-    const session = global.CoachStore.getSession();
-    const root = fromEl?.closest('.coach-hero') || fromEl?.closest('#coachMatchTab') || document;
-    const picker = root.querySelector('.js-cm-squad');
-    const matchId = picker?.dataset.match || global.CoachStore.getActiveMatchId();
-    if(!matchId){
-      toast(tt('coachPickMatch', 'Create or pick a match, then rate players.'));
-      return;
-    }
-    try{
-      global.CoachStore.setMatchSquad(session, matchId, selectedSquadFrom(picker || root));
-      if(picker) picker.dataset.dirty = '';
-      toast(tt('coachSquadSaved', 'Squad saved.'));
-      renderCoachUi();
-    }catch(e){
-      toast(e.message === 'squad'
-        ? tt('coachErrSquad', 'Select at least one player who plays.')
-        : tt('coachErrGeneric', 'Could not update squad.'));
     }
   }
   function markSquadDirty(picker){
@@ -2321,17 +2303,6 @@
       const createBtn = e.target.closest('.js-cm-create');
       if(createBtn){
         onCreateMatch(createBtn);
-        return;
-      }
-      const saveSquadBtn = e.target.closest('.js-cm-squad-save');
-      if(saveSquadBtn){
-        onSaveSquad(saveSquadBtn);
-        return;
-      }
-      const inviteAgain = e.target.closest('.js-cm-invite-again');
-      if(inviteAgain){
-        const matchId = global.CoachStore.getActiveMatchId();
-        shareMatchInvites(matchId);
         return;
       }
       const finishBtn = e.target.closest('.js-cm-finish');
