@@ -393,6 +393,8 @@ window.FFK_COACH_I18N.pl = {
   coachLeaveNewClub:'Nowy klub',
   coachLeaveAccept:'Potwierdź odejście',
   coachLeaveDecline:'Pozostaw w drużynie',
+  coachLeaveAcceptedShort:'Zaakceptowano',
+  coachLeaveDeclinedShort:'Odrzucono',
   coachLeaveAccepted:'Zawodnik został usunięty z drużyny. Połączenie z rodzicem zostało usunięte.',
   coachLeaveDeclined:'Prośba o odejście została odrzucona. Zawodnik pozostaje w drużynie.',
   coachLeavePushTitle:'Odejście zawodnika',

@@ -383,6 +383,8 @@ window.FFK_COACH_I18N.pt = {
   coachLeaveNewClub: "Novo clube",
   coachLeaveAccept: "Confirmar saída",
   coachLeaveDecline: "Manter na equipa",
+  coachLeaveAcceptedShort: "Aceite",
+  coachLeaveDeclinedShort: "Recusado",
   coachLeaveAccepted: "Jogador removido da equipa. Associação aos pais eliminada.",
   coachLeaveDeclined: "Saída recusada. O jogador permanece na equipa.",
   coachLeavePushTitle: "Saída do jogador",

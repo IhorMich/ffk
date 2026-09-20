@@ -383,6 +383,8 @@ window.FFK_COACH_I18N.it = {
   coachLeaveNewClub: 'Nuova società',
   coachLeaveAccept: 'Conferma uscita',
   coachLeaveDecline: 'Mantieni in squadra',
+  coachLeaveAcceptedShort: 'Accettata',
+  coachLeaveDeclinedShort: 'Rifiutata',
   coachLeaveAccepted: 'Giocatore rimosso dalla squadra. Collegamento con il genitore eliminato.',
   coachLeaveDeclined: 'Uscita rifiutata. Il giocatore resta in squadra.',
   coachLeavePushTitle: 'Uscita del giocatore',
