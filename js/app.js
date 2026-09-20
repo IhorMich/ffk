@@ -3574,8 +3574,8 @@ function startIntroScore(){
   const root = document.getElementById('intro');
   if(root) root.classList.remove('ok');
   paintIntroScore(6);
-  const delay = 420;
-  const dur = 1800;
+  const delay = 800;
+  const dur = 4400;
   const t0 = performance.now();
   const tick = now => {
     const t = now - t0 - delay;
@@ -3584,7 +3584,8 @@ function startIntroScore(){
       return;
     }
     const p = Math.min(1, t / dur);
-    paintIntroScore(6 + 4 * p);
+    const tenths = Math.round(p * 40);
+    paintIntroScore(6 + tenths * 0.1);
     if(p < 1) introScoreTimer = requestAnimationFrame(tick);
     else{
       paintIntroScore(10);
@@ -3635,7 +3636,7 @@ function playIntro(){
   startIntroScore();
   requestAnimationFrame(() => requestAnimationFrame(hideNativeSplash));
   el.addEventListener('click', finishIntro, {once:true});
-  window.setTimeout(finishIntro, 5200);
+  window.setTimeout(finishIntro, 8200);
   return true;
 }
 function finishOnboard(){
