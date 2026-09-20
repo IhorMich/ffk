@@ -67,7 +67,14 @@
   /** Any academy/coach link on this phone → personal profile counts as verified. */
   function hasAnyCoachLink(){
     const store = global.ParentStore;
-    return !!(store && typeof store.listLinks === 'function' && store.listLinks().length);
+    if(!store || typeof store.listLinks !== 'function') return false;
+    const personalId = typeof store.currentPersonalPlayerId === 'function'
+      ? store.currentPersonalPlayerId()
+      : '';
+    if(personalId && typeof store.linksForPersonalPlayer === 'function'){
+      return store.linksForPersonalPlayer(personalId).length > 0;
+    }
+    return store.listLinks().length > 0;
   }
 
   function inboxMessages(){
@@ -77,10 +84,13 @@
         : [];
     }
     const store = global.ParentStore;
+    const personalId = store && typeof store.currentPersonalPlayerId === 'function'
+      ? store.currentPersonalPlayerId()
+      : '';
     // Always scope to linked children — never dump the whole on-device inbox.
-    if(store && typeof store.listInbox === 'function') return store.listInbox();
+    if(store && typeof store.listInbox === 'function') return store.listInbox(personalId);
     if(store && typeof store.linkedPlayerIds === 'function' && global.InboxStore){
-      return global.InboxStore.listForPlayers(store.linkedPlayerIds());
+      return global.InboxStore.listForPlayers(store.linkedPlayerIds(personalId));
     }
     return [];
   }
@@ -91,9 +101,12 @@
         : 0;
     }
     const store = global.ParentStore;
-    if(store && typeof store.unreadInboxCount === 'function') return store.unreadInboxCount();
+    const personalId = store && typeof store.currentPersonalPlayerId === 'function'
+      ? store.currentPersonalPlayerId()
+      : '';
+    if(store && typeof store.unreadInboxCount === 'function') return store.unreadInboxCount(personalId);
     if(store && typeof store.linkedPlayerIds === 'function' && global.InboxStore){
-      return global.InboxStore.unreadCountForPlayers(store.linkedPlayerIds());
+      return global.InboxStore.unreadCountForPlayers(store.linkedPlayerIds(personalId));
     }
     return 0;
   }
@@ -1033,6 +1046,13 @@
   function linksForCurrentPlayer(){
     const store = global.ParentStore;
     if(!store || typeof store.listLinks !== 'function') return [];
+    const personalId = typeof store.currentPersonalPlayerId === 'function'
+      ? store.currentPersonalPlayerId()
+      : '';
+    if(personalId && typeof store.linksForPersonalPlayer === 'function'){
+      const linked = store.linksForPersonalPlayer(personalId);
+      if(linked.length) return linked;
+    }
     const links = store.listLinks();
     if(!links.length) return [];
     let first = '';
@@ -1064,7 +1084,7 @@
     const matched = links.filter(l =>
       l && l.player && soft(first, last, l.player.first_name, l.player.last_name)
     );
-    return matched.length ? matched : links;
+    return matched.length ? matched : (links.length === 1 ? links : []);
   }
   function clubChangedEnough(link, clubVal, teamVal){
     if(!link) return false;

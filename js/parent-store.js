@@ -39,6 +39,22 @@
     }catch(e){}
     return '';
   }
+  function normName(s){
+    return String(s || '').trim().toLowerCase().replace(/\s+/g, ' ');
+  }
+  function personalProfile(id){
+    const pid = String(id || '');
+    if(!pid) return null;
+    try{
+      const raw = localStorage.getItem('ffk_kid_' + pid);
+      if(raw) return JSON.parse(raw);
+    }catch(e){}
+    try{
+      const raw = JSON.parse(localStorage.getItem('ffk_player_v1') || 'null');
+      if(raw && String(raw.id || '') === pid) return raw;
+    }catch(e){}
+    return null;
+  }
 
   function normalizePayload(raw){
     if(!raw || typeof raw !== 'object') throw new Error('bad_payload');
@@ -106,6 +122,41 @@
     },
     getLink(id){
       return readDb().links.find(l => l.id === id) || null;
+    },
+    currentPersonalPlayerId(){
+      return currentPersonalPlayerId();
+    },
+    linksForPersonalPlayer(personalPlayerId){
+      const pid = String(personalPlayerId || '');
+      if(!pid) return [];
+      const links = this.listLinks();
+      const exact = links.filter(l => String(l && l.personal_player_id || '') === pid);
+      if(exact.length) return exact;
+
+      // One-time migration for links created before personal_player_id existed.
+      const profile = personalProfile(pid);
+      const first = normName(profile && profile.firstName);
+      const last = normName(profile && profile.lastName);
+      const byName = links.filter(link => {
+        if(!link || link.personal_player_id || !link.player) return false;
+        const lf = normName(link.player.first_name);
+        const ll = normName(link.player.last_name);
+        return first && first === lf && (!last || !ll || last === ll);
+      });
+      if(byName.length === 1){
+        this.bindPersonalPlayer(byName[0].id, pid);
+        return [{...byName[0], personal_player_id: pid}];
+      }
+      try{
+        const roster = JSON.parse(localStorage.getItem('ffk_roster_v1') || 'null');
+        const ids = roster && Array.isArray(roster.ids) ? roster.ids : [];
+        const unbound = links.filter(l => l && !l.personal_player_id);
+        if(ids.length === 1 && unbound.length === 1){
+          this.bindPersonalPlayer(unbound[0].id, pid);
+          return [{...unbound[0], personal_player_id: pid}];
+        }
+      }catch(e){}
+      return [];
     },
     bindPersonalPlayer(linkId, personalPlayerId){
       const lid = String(linkId || '');
@@ -263,16 +314,19 @@
       }catch(e){}
       return row;
     },
-    linkedPlayerIds(){
-      return this.listLinks().map(l => l.player && l.player.id).filter(Boolean);
+    linkedPlayerIds(personalPlayerId){
+      const links = personalPlayerId
+        ? this.linksForPersonalPlayer(personalPlayerId)
+        : this.listLinks();
+      return links.map(l => l.player && l.player.id).filter(Boolean);
     },
-    listInbox(){
+    listInbox(personalPlayerId){
       if(!global.InboxStore) return [];
-      return global.InboxStore.listForPlayers(this.linkedPlayerIds());
+      return global.InboxStore.listForPlayers(this.linkedPlayerIds(personalPlayerId));
     },
-    unreadInboxCount(){
+    unreadInboxCount(personalPlayerId){
       if(!global.InboxStore) return 0;
-      return global.InboxStore.unreadCountForPlayers(this.linkedPlayerIds());
+      return global.InboxStore.unreadCountForPlayers(this.linkedPlayerIds(personalPlayerId));
     },
     syncCoachRatings(playerId, data){
       const pid = String(playerId || '');
