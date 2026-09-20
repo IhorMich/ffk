@@ -341,6 +341,7 @@ window.FFK_COACH_I18N.it = {
   coachParentEmailBtn: 'Prepara email',
   coachParentEmailInvalid: 'Inserisci un’email valida.',
   coachParentEmailSubject: 'Invito Matchcard',
+  coachParentEmailBody: '[MODALITÀ TEST] Conferma {name} in Matchcard: {link}',
   coachParentShareBtn: 'Condividi',
   coachParentCopyBtn: 'Copia link',
   coachParentShareTitle: 'Invito per il genitore',

@@ -174,15 +174,8 @@
     },
     buildWebLink(payload){
       const data = this.encodePayload(payload);
-      try{
-        const base = (location.origin && location.origin !== 'null')
-          ? (location.href.split('#')[0].split('?')[0])
-          : 'https://matchcard.app/';
-        const sep = base.indexOf('?') >= 0 ? '&' : '?';
-        return `${base}${sep}ffk_parent=${data}`;
-      }catch(e){
-        return `https://matchcard.app/?ffk_parent=${data}`;
-      }
+      // Stable public URL: Capacitor's internal localhost URL is not shareable.
+      return `https://ihormich.github.io/ffk/?ffk_parent=${data}`;
     },
     claim(payload){
       const norm = normalizePayload(payload);

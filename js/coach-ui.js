@@ -3801,23 +3801,24 @@
     if(!store || !session) return;
     const full = parentInviteRow.payload || {};
     const compact = {
-      ...full,
-      r: [],
-      mi: [],
-      mr: [],
-      form: [],
-      topMoments: []
+      v: 1,
+      t: full.t || parentInviteRow.token || '',
+      code: full.code || parentInviteRow.code || '',
+      a: full.a || {},
+      tm: full.tm || {},
+      c: full.c || {},
+      player: full.player || {},
+      iat: full.iat || new Date().toISOString()
     };
-    const invite = {...parentInviteRow, payload: compact};
     const child = compact.player
       ? [compact.player.fn, compact.player.ln].filter(Boolean).join(' ')
       : '';
     const subject = `${tt('coachParentEmailSubject', 'Matchcard invitation')}${child ? ` — ${child}` : ''}`;
-    const testNote = `[${tt('coachParentEmailTestBadge', 'TEST MODE')}]\n${tt(
-      'coachParentEmailTestHint',
-      'Your email app opens with a prepared message. You must confirm sending manually.'
-    )}`;
-    const body = `${testNote}\n\n${store.parentInviteMessage(session, invite)}`;
+    const link = global.ParentStore ? global.ParentStore.buildWebLink(compact) : '';
+    const body = tt(
+      'coachParentEmailBody',
+      '[TEST MODE] Confirm the player in Matchcard: {link}'
+    ).replace('{name}', child).replace('{link}', link);
     const href = `mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     const a = document.createElement('a');
     a.href = href;

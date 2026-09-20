@@ -351,6 +351,7 @@ window.FFK_COACH_I18N.pl = {
   coachParentEmailBtn:'Przygotuj email',
   coachParentEmailInvalid:'Wpisz prawidłowy email.',
   coachParentEmailSubject:'Zaproszenie Matchcard',
+  coachParentEmailBody:'[TRYB TESTOWY] Potwierdź {name} w Matchcard: {link}',
   coachParentShareBtn:'Udostępnij',
   coachParentCopyBtn:'Kopiuj link',
   coachParentShareTitle:'Zaproszenie dla rodzica',
