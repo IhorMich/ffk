@@ -3557,113 +3557,6 @@ function onboardPages(){
   ];
 }
 let introBusy = false;
-let introScoreTimer = 0;
-let introCheckTimer = 0;
-function paintIntroScore(score){
-  const el = document.getElementById('introScore');
-  const v = Math.max(6, Math.min(10, Number(score) || 6));
-  if(el) el.textContent = fmtNum(Math.round(v * 10) / 10, 1);
-}
-function paintIntroChart(p){
-  const t = Math.max(0, Math.min(1, Number(p) || 0));
-  document.querySelectorAll('.intro-chart-draw').forEach(line => {
-    const len = Number(line.dataset.len);
-    if(!len) return;
-    line.style.strokeDashoffset = String(len * (1 - t));
-  });
-  const clip = document.getElementById('introChartClipRect');
-  if(clip) clip.setAttribute('width', String(240 * t));
-  const line = document.getElementById('introChartLine');
-  const dot = document.getElementById('introChartDot');
-  const len = line && Number(line.dataset.len);
-  if(line && dot && len){
-    const pt = line.getPointAtLength(len * t);
-    dot.setAttribute('cx', String(pt.x));
-    dot.setAttribute('cy', String(pt.y));
-  }
-}
-function prepareIntroChart(){
-  document.querySelectorAll('.intro-chart-draw').forEach(line => {
-    const len = line.getTotalLength();
-    line.dataset.len = String(len);
-    line.style.strokeDasharray = String(len);
-    line.style.strokeDashoffset = String(len);
-  });
-  const check = document.getElementById('introCheckPath');
-  if(check){
-    const len = check.getTotalLength();
-    check.style.strokeDasharray = String(len);
-    check.style.strokeDashoffset = String(len);
-  }
-  const clip = document.getElementById('introChartClipRect');
-  if(clip) clip.setAttribute('width', '0');
-  paintIntroChart(0);
-}
-function stopIntroScore(){
-  if(introScoreTimer){
-    cancelAnimationFrame(introScoreTimer);
-    introScoreTimer = 0;
-  }
-  if(introCheckTimer){
-    cancelAnimationFrame(introCheckTimer);
-    introCheckTimer = 0;
-  }
-}
-function drawIntroCheck(){
-  const check = document.getElementById('introCheckPath');
-  const root = document.getElementById('intro');
-  if(root) root.classList.add('ok');
-  if(!check) return;
-  const len = check.getTotalLength();
-  check.style.strokeDasharray = String(len);
-  check.style.strokeDashoffset = String(len);
-  const delay = 70;
-  const dur = 560;
-  const t0 = performance.now();
-  const tick = now => {
-    const t = now - t0 - delay;
-    if(t < 0){
-      introCheckTimer = requestAnimationFrame(tick);
-      return;
-    }
-    const p = Math.min(1, t / dur);
-    const e = 1 - Math.pow(1 - p, 3);
-    check.style.strokeDashoffset = String(len * (1 - e));
-    if(p < 1) introCheckTimer = requestAnimationFrame(tick);
-    else introCheckTimer = 0;
-  };
-  introCheckTimer = requestAnimationFrame(tick);
-}
-function startIntroScore(){
-  stopIntroScore();
-  const root = document.getElementById('intro');
-  if(root) root.classList.remove('ok');
-  prepareIntroChart();
-  paintIntroScore(6);
-  paintIntroChart(0);
-  const delay = 420;
-  const dur = 2800;
-  const t0 = performance.now();
-  const tick = now => {
-    const t = now - t0 - delay;
-    if(t < 0){
-      introScoreTimer = requestAnimationFrame(tick);
-      return;
-    }
-    const p = Math.min(1, t / dur);
-    const tenths = Math.round(p * 40);
-    paintIntroScore(6 + tenths * 0.1);
-    paintIntroChart(p);
-    if(p < 1) introScoreTimer = requestAnimationFrame(tick);
-    else{
-      paintIntroScore(10);
-      paintIntroChart(1);
-      introScoreTimer = 0;
-      drawIntroCheck();
-    }
-  };
-  introScoreTimer = requestAnimationFrame(tick);
-}
 function afterIntro(){
   if(!maybeTransfer()) maybeOnboard();
 }
@@ -3671,11 +3564,10 @@ function finishIntro(){
   const el = document.getElementById('intro');
   if(!el || el.hidden || introBusy) return;
   introBusy = true;
-  stopIntroScore();
   el.classList.add('out');
   window.setTimeout(() => {
     el.hidden = true;
-    el.classList.remove('out', 'play', 'ok');
+    el.classList.remove('out', 'play');
     document.documentElement.classList.remove('intro-on');
     introBusy = false;
     applyNativeChrome();
@@ -3698,14 +3590,12 @@ function playIntro(){
   introBusy = false;
   document.documentElement.classList.add('intro-on');
   el.hidden = false;
-  el.classList.remove('out', 'play', 'ok');
-  paintIntroScore(6);
+  el.classList.remove('out', 'play');
   void el.offsetWidth;
   el.classList.add('play');
-  startIntroScore();
   requestAnimationFrame(() => requestAnimationFrame(hideNativeSplash));
   el.addEventListener('click', finishIntro, {once:true});
-  window.setTimeout(finishIntro, 7200);
+  window.setTimeout(finishIntro, 4800);
   return true;
 }
 function finishOnboard(){
