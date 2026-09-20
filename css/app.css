@@ -1839,12 +1839,11 @@
     border:1px solid var(--card-line);
     background:color-mix(in srgb, var(--card-paper) 92%, var(--card-line));
   }
-  .coach-history-meta > summary{
-    cursor:pointer;font-weight:800;font-size:.88rem;list-style:none;
-    color:var(--card-ink);
+  .coach-history-meta-toggle{
+    width:100%;margin:0;padding:8px 4px;font-weight:800;font-size:.88rem;
+    text-align:left;justify-content:flex-start;
   }
-  .coach-history-meta > summary::-webkit-details-marker{display:none;}
-  .coach-history-meta[open] > summary{margin-bottom:10px;}
+  .coach-history-meta-body{margin-top:10px;}
   .coach-history-meta #coachHistorySaveMeta{width:100%;margin:8px 0 0;}
   .coach-history-detail #coachHistoryDeleteBtn{width:100%;margin:14px 0 0;}
   .coach-player-open-row{

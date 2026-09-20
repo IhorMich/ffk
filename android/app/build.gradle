@@ -7,8 +7,8 @@ android {
         applicationId "app.ffk.rating"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 240
-        versionName "1.2.167"
+        versionCode 241
+        versionName "1.2.168"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.

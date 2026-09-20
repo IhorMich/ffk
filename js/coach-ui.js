@@ -1164,14 +1164,30 @@
     }catch(e){}
   }
 
+  function setCoachHistoryMetaOpen(on){
+    const body = document.getElementById('coachHistoryMetaBody');
+    const btn = document.getElementById('coachHistoryMetaToggle');
+    const open = !!on;
+    if(body) body.hidden = !open;
+    if(btn){
+      btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      btn.textContent = open
+        ? tt('coachHistoryHideMeta', 'Hide match details')
+        : tt('coachHistoryEditMeta', 'Edit match details');
+    }
+  }
+
   function closeCoachHistoryMatch(){
     coachHistoryMatchId = '';
+    setCoachHistoryMetaOpen(false);
     syncCoachHistoryDetailUi();
   }
 
   function openCoachHistoryMatch(matchId){
     if(!matchId || !global.CoachStore) return;
+    const switched = String(matchId) !== String(coachHistoryMatchId || '');
     coachHistoryMatchId = String(matchId);
+    if(switched) setCoachHistoryMetaOpen(false);
     if(typeof showView === 'function') showView('history');
     renderCoachUi();
     try{
@@ -1402,7 +1418,10 @@
     // Fill editable meta — skip fields the coach is typing in.
     const active = document.activeElement;
     const metaRoot = document.getElementById('coachHistoryMetaEdit');
+    const metaBody = document.getElementById('coachHistoryMetaBody');
     const inMeta = metaRoot && active && metaRoot.contains(active);
+    // Keep current open/closed state; only refresh the toggle label.
+    setCoachHistoryMetaOpen(metaBody ? !metaBody.hidden : false);
     if(!inMeta){
       const oppEl = document.getElementById('coachHistoryOpponent');
       const dateEl = document.getElementById('coachHistoryDate');
@@ -2018,8 +2037,7 @@
         address: document.getElementById('coachHistoryAddress')?.value || ''
       });
       toast(tt('coachHistoryMetaSaved', 'Match details saved.'));
-      const meta = document.getElementById('coachHistoryMeta');
-      if(meta) meta.open = false;
+      setCoachHistoryMetaOpen(false);
       renderCoachUi();
     }catch(e){
       const map = {
@@ -2920,6 +2938,10 @@
     });
     document.getElementById('coachHistorySaveMeta')?.addEventListener('click', () => {
       onSaveHistoryMeta();
+    });
+    document.getElementById('coachHistoryMetaToggle')?.addEventListener('click', () => {
+      const body = document.getElementById('coachHistoryMetaBody');
+      setCoachHistoryMetaOpen(!!(body && body.hidden));
     });
     document.getElementById('coachHistoryDeleteBtn')?.addEventListener('click', () => {
       onDeleteHistoryMatch();
