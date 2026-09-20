@@ -216,7 +216,7 @@
       </div>
       ${resultBlock}
       ${rsvpBlock}
-      <button type="button" class="ghost-btn" id="parentMsgCloseBtn">${esc(tt('previewCancel', 'Close'))}</button>
+      <button type="button" class="ghost-btn" id="parentMsgCloseBtn">${esc(tt('btnClose', 'Close'))}</button>
     `;
   }
 

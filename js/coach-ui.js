@@ -3098,7 +3098,7 @@
         <button type="button" class="ghost-btn" id="coachToggleEditPlayerBtn">${esc(detailEditOpen ? tt('coachHideEditPlayer', 'Hide edit') : tt('coachEditPlayerBtn', 'Edit player'))}</button>
         <button type="button" class="ghost-btn" id="coachAddParentBtn">${esc(tt('coachAddParentBtn', 'Add parent / guardian'))}</button>
         <button type="button" class="ghost-btn coach-remove-player" id="coachRemovePlayerBtn">${esc(tt('coachRemovePlayer', 'Remove player'))}</button>
-        <button type="button" class="ghost-btn" id="coachPlayerCloseBtn">${esc(tt('previewCancel', 'Close'))}</button>
+        <button type="button" class="ghost-btn" id="coachPlayerCloseBtn">${esc(tt('btnClose', 'Close'))}</button>
       </div>
       ${editBlock}
     `;
