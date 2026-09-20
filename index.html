@@ -312,6 +312,13 @@ window.ffkIsNative = function () {
       </div>
 
       <div id="coachMatchTab" class="coach-tab-panel" hidden>
+        <div class="coach-tab-head" id="coachMatchTabHead">
+          <button type="button" class="coach-tab-av" id="coachMatchTabAv" aria-label="coach"></button>
+          <div class="coach-tab-who">
+            <b id="coachMatchTabWho">—</b>
+            <span id="coachMatchTabMeta"></span>
+          </div>
+        </div>
         <div class="coach-hero">
           <div class="pro-kicker" data-i18n="coachMatchKicker">Team matches</div>
           <h3 class="coach-team-heading" id="coachMatchTabTeam">—</h3>
@@ -332,10 +339,11 @@ window.ffkIsNative = function () {
                 <button type="button" class="ghost-btn js-cm-squad-none" data-i18n="coachSquadNone">Снять</button>
               </div>
             </div>
-            <p class="hint" data-i18n="coachSquadHint">Отметь игроков состава, которые выходят на этот матч.</p>
+            <p class="hint" data-i18n="coachSquadHint">Отметь или сними галочки вручную — кто выходит на матч.</p>
             <div class="js-cm-squad coach-squad-picker"></div>
           </div>
           <button class="save-btn js-cm-create" type="button" data-i18n="coachCreateMatchBtn">Create match</button>
+          <button class="ghost-btn js-cm-squad-save" type="button" data-i18n="coachSquadSave" hidden>Сохранить заявку</button>
           <div class="js-cm-matches coach-team-list"></div>
           <div class="js-cm-rates coach-player-list"></div>
         </div>
@@ -643,10 +651,11 @@ window.ffkIsNative = function () {
                   <button type="button" class="ghost-btn js-cm-squad-none" data-i18n="coachSquadNone">Снять</button>
                 </div>
               </div>
-              <p class="hint" data-i18n="coachSquadHint">Отметь игроков состава, которые выходят на этот матч.</p>
+              <p class="hint" data-i18n="coachSquadHint">Отметь или сними галочки вручную — кто выходит на матч.</p>
               <div id="coachSquadPicker" class="js-cm-squad coach-squad-picker"></div>
             </div>
             <button class="save-btn js-cm-create" id="coachCreateMatchBtn" type="button" data-i18n="coachCreateMatchBtn">Create match</button>
+            <button class="ghost-btn js-cm-squad-save" type="button" data-i18n="coachSquadSave" hidden>Сохранить заявку</button>
             <div id="coachMatchList" class="js-cm-matches coach-team-list"></div>
             <div id="coachRateList" class="js-cm-rates coach-player-list"></div>
           </div>

@@ -2803,7 +2803,7 @@ function syncHeroPin(){
   const matchOn = document.getElementById('view-new')?.classList.contains('active');
   const liveOn = document.getElementById('app')?.classList.contains('live-on');
   const introOn = document.documentElement.classList.contains('intro-on');
-  if(!matchOn || liveOn || introOn){
+  if(!matchOn || liveOn || introOn || isCoachPlan()){
     pin.classList.remove('on');
     pin.setAttribute('aria-hidden', 'true');
     return;
@@ -2827,6 +2827,7 @@ function showView(name){
   if(name === 'player' && isCoachPlan()) name = 'coach';
   if(name !== 'player') closePlayerEdit();
   document.getElementById('app').classList.toggle('player-on', name === 'player');
+  document.getElementById('app').classList.toggle('coach-profile-on', isCoachPlan() && name === 'coach');
   document.querySelectorAll('.tabbtn').forEach(b => b.classList.toggle('active', b.dataset.view === name));
   document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id === 'view-'+name));
   document.querySelector('.topbar').classList.add('compact');
@@ -2841,6 +2842,7 @@ function showView(name){
   if(isCoachPlan() && (name === 'new' || name === 'history' || name === 'stats') && typeof renderCoachUi === 'function'){
     renderCoachUi();
   }
+  if(isCoachPlan()) applyHeader();
   renderLiveClock();
   if(clockPhase() === 'run') startClockTick();
   try{
