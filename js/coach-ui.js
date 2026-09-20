@@ -115,6 +115,7 @@
     if(back) back.hidden = true;
     if(typeof applyHeader === 'function') applyHeader();
     if(typeof refreshCoachMediaUi === 'function') refreshCoachMediaUi();
+    syncCoachPlayerPhotosFromPersonal();
     renderWorkspace(session);
     syncPlanModeButtons();
   }
@@ -477,10 +478,17 @@
         p.contact ? p.contact : ''
       ].filter(Boolean).join(' · ');
       const hasNotes = !!String(p.coach_notes || '').trim();
+      const verified = isCoachPlayerVerified(p);
+      const nameHtml = verified && typeof nameWithVerifiedHtml === 'function'
+        ? nameWithVerifiedHtml(label, true)
+        : esc(label);
       return `<div class="coach-player-row">
-        <button type="button" class="coach-player-main coach-player-open" data-open-player="${esc(p.id)}">
-          <b>${esc(label)}${hasNotes ? '<span class="coach-note-dot" title="'+esc(tt('coachPrivateNotesKicker', 'Private notes'))+'" aria-hidden="true"></span>' : ''}</b>
-          ${meta ? `<span>${esc(meta)}</span>` : ''}
+        <button type="button" class="coach-player-open" data-open-player="${esc(p.id)}">
+          ${coachPlayerAvatarHtml(p)}
+          <span class="coach-player-text">
+            <b>${nameHtml}${hasNotes ? '<span class="coach-note-dot" title="'+esc(tt('coachPrivateNotesKicker', 'Private notes'))+'" aria-hidden="true"></span>' : ''}</b>
+            ${meta ? `<span>${esc(meta)}</span>` : ''}
+          </span>
         </button>
       </div>`;
     }).join('');
@@ -489,28 +497,105 @@
   function playerLabel(p){
     return [p.first_name, p.last_name].filter(Boolean).join(' ');
   }
+  function normNamePart(s){
+    return String(s || '').trim().toLowerCase().replace(/\s+/g, ' ');
+  }
   function normPersonName(a, b){
-    return [a, b].filter(Boolean).join(' ').trim().toLowerCase().replace(/\s+/g, ' ');
+    return [normNamePart(a), normNamePart(b)].filter(Boolean).join(' ');
+  }
+  function namesSoftMatch(aFirst, aLast, bFirst, bLast){
+    const af = normNamePart(aFirst);
+    const al = normNamePart(aLast);
+    const bf = normNamePart(bFirst);
+    const bl = normNamePart(bLast);
+    if(!af && !al) return false;
+    const aFull = [af, al].filter(Boolean).join(' ');
+    const bFull = [bf, bl].filter(Boolean).join(' ');
+    if(aFull && bFull && aFull === bFull) return true;
+    if(af && bf && af === bf && (!al || !bl || al === bl)) return true;
+    return false;
+  }
+  function personalPhotoByName(first, last){
+    try{
+      if(typeof roster === 'undefined' || !roster || !Array.isArray(roster.ids)) return '';
+      for(const id of roster.ids){
+        const p = (typeof player !== 'undefined' && player && String(player.id) === String(id))
+          ? player
+          : (typeof readPlayerRecord === 'function' ? readPlayerRecord(id) : null);
+        if(!p || !p.photo) continue;
+        if(namesSoftMatch(first, last, p.firstName, p.lastName)) return String(p.photo);
+      }
+    }catch(e){}
+    return '';
   }
   /** Photo for a coach roster child: stored on player, else matching Free/Pro profile on this phone. */
   function resolveCoachPlayerPhoto(tp){
     if(!tp) return '';
     if(tp.photo) return String(tp.photo);
-    const key = normPersonName(tp.first_name, tp.last_name);
-    if(!key) return '';
+    const fromPersonal = personalPhotoByName(tp.first_name, tp.last_name);
+    if(fromPersonal) return fromPersonal;
+    // Same-device parent link: Free profile may use a slightly different name spelling.
     try{
-      if(typeof roster !== 'undefined' && roster && Array.isArray(roster.ids)){
-        for(const id of roster.ids){
-          const p = (typeof player !== 'undefined' && player && String(player.id) === String(id))
-            ? player
-            : (typeof readPlayerRecord === 'function' ? readPlayerRecord(id) : null);
-          if(!p) continue;
-          const n = normPersonName(p.firstName, p.lastName);
-          if(n === key && p.photo) return String(p.photo);
-        }
+      const links = global.ParentStore && typeof global.ParentStore.listLinks === 'function'
+        ? global.ParentStore.listLinks()
+        : [];
+      const link = links.find(l => l && l.player && String(l.player.id) === String(tp.id));
+      if(link && link.player){
+        const viaLink = personalPhotoByName(link.player.first_name, link.player.last_name);
+        if(viaLink) return viaLink;
       }
     }catch(e){}
     return '';
+  }
+  function coachPlayerAvatarHtml(tp){
+    const photo = resolveCoachPlayerPhoto(tp);
+    const label = playerLabel(tp) || '?';
+    const letter = (label.trim().slice(0, 1) || '?').toUpperCase();
+    if(photo){
+      return `<span class="coach-player-av"><img alt="" src="${esc(photo)}"></span>`;
+    }
+    return `<span class="coach-player-av" aria-hidden="true">${esc(letter)}</span>`;
+  }
+  function isCoachPlayerVerified(tp){
+    if(!tp) return false;
+    try{
+      const store = global.CoachStore;
+      const session = store && store.getSession && store.getSession();
+      if(session && typeof store.parentLinkedForPlayer === 'function'
+        && store.parentLinkedForPlayer(tp.id)) return true;
+    }catch(e){}
+    if(typeof isCoachVerifiedPerson === 'function'){
+      return isCoachVerifiedPerson(tp.first_name, tp.last_name);
+    }
+    return false;
+  }
+  /** Copy Free/Pro profile photos onto matching coach roster players on this phone. */
+  function syncCoachPlayerPhotosFromPersonal(){
+    const store = global.CoachStore;
+    const session = store && store.getSession && store.getSession();
+    if(!store || !session || typeof store.updatePlayer !== 'function') return 0;
+    let n = 0;
+    try{
+      const teamId = store.getActiveTeamId && store.getActiveTeamId();
+      const teams = teamId
+        ? [store.getTeam(session, teamId)].filter(Boolean)
+        : (store.myAcademy(session)
+          ? store.listTeams(session, store.myAcademy(session).id)
+          : []);
+      teams.forEach(team => {
+        store.listPlayers(session, team.id).forEach(tp => {
+          // Ignore stored photo so we always prefer a fresher Free/Pro match when present.
+          const photo = resolveCoachPlayerPhoto({...tp, photo: ''}) || tp.photo || '';
+          if(!photo) return;
+          if(String(tp.photo || '') === photo) return;
+          try{
+            store.updatePlayer(session, tp.id, {photo});
+            n += 1;
+          }catch(e){}
+        });
+      });
+    }catch(e){}
+    return n;
   }
   function selectedSquadFrom(scope){
     // Prefer an explicit squad picker node.
@@ -2340,12 +2425,14 @@
     const contact = document.getElementById('coachPlayerContact')?.value || '';
     const position = document.getElementById('coachPlayerPos')?.value || '';
     try{
+      const photo = resolveCoachPlayerPhoto({first_name: first, last_name: last, photo: ''});
       global.CoachStore.addPlayer(session, teamId, {
         first_name: first,
         last_name: last,
         number,
         contact,
-        position
+        position,
+        photo: photo || ''
       });
       ['coachPlayerFirst','coachPlayerLast','coachPlayerNumber','coachPlayerContact'].forEach(id => {
         const el = document.getElementById(id);
@@ -3011,14 +3098,17 @@
     if(!sheet || !body) return;
     const p = detail.player;
     const label = [p.first_name, p.last_name].filter(Boolean).join(' ');
+    const verified = isCoachPlayerVerified(p);
+    const nameHtml = verified && typeof nameWithVerifiedHtml === 'function'
+      ? nameWithVerifiedHtml(label, true)
+      : esc(label);
     const posLab = p.position && typeof pitchPosLabelShort === 'function'
       ? pitchPosLabelShort(p.position)
       : (p.position || '');
     const metaBits = [
       p.number ? `#${p.number}` : '',
       posLab,
-      detail.team && detail.team.name,
-      detail.academy && detail.academy.name
+      detail.team && detail.team.name
     ].filter(Boolean).join(' · ');
     const ratingsHtml = detail.ratings.length
       ? detail.ratings.slice(0, 12).map(r => {
@@ -3075,8 +3165,13 @@
     </div>`;
     body.innerHTML = `
       <div class="pro-kicker">${esc(tt('coachPlayerDetailKicker', 'Player'))}</div>
-      <h3 class="coach-rate-name" id="coachPlayerSheetTitle">${esc(label)}</h3>
-      <p class="hint">${esc(metaBits)}</p>
+      <div class="coach-player-sheet-head">
+        ${coachPlayerAvatarHtml(p)}
+        <div>
+          <h3 class="coach-rate-name" id="coachPlayerSheetTitle">${nameHtml}</h3>
+          <p class="hint">${esc(metaBits)}</p>
+        </div>
+      </div>
       <div class="coach-analytics-sum coach-analytics-sum-4">
         <div><b>${esc(detail.games)}</b><span>${esc(tt('coachGames', 'games'))}</span></div>
         <div><b>${esc(fmtScore(detail.avg))}</b><span>${esc(tt('coachStatAvgShort', 'avg'))}</span></div>
@@ -3890,4 +3985,6 @@
   global.closeTeamMenu = closeTeamMenu;
   global.closeCoachHistoryMatch = closeCoachHistoryMatch;
   global.openCoachChildPlayerPage = openCoachChildPlayerPage;
+  global.resolveCoachPlayerPhoto = resolveCoachPlayerPhoto;
+  global.syncCoachPlayerPhotosFromPersonal = syncCoachPlayerPhotosFromPersonal;
 })(window);

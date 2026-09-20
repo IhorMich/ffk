@@ -1155,6 +1155,12 @@ function persistPlayerMedia(kind){
   savePlayer();
   applyHeader();
   renderRoster();
+  if(typeof syncCoachPlayerPhotosFromPersonal === 'function'){
+    try{ syncCoachPlayerPhotosFromPersonal(); }catch(e){}
+  }
+  if(typeof renderCoachUi === 'function' && typeof isCoachPlan === 'function' && isCoachPlan()){
+    try{ renderCoachUi(); }catch(e){}
+  }
 }
 function coachProfileMedia(){
   try{
@@ -1999,13 +2005,22 @@ function syncCoachChildPlayerUi(){
   }
   const p = ctx.player;
   const name = [p.first_name, p.last_name].filter(Boolean).join(' ') || '—';
-  if(nameEl) nameEl.textContent = name;
+  const verified = (typeof isCoachVerifiedPerson === 'function'
+    && isCoachVerifiedPerson(p.first_name, p.last_name))
+    || (window.CoachStore && typeof window.CoachStore.parentLinkedForPlayer === 'function'
+      && window.CoachStore.parentLinkedForPlayer(p.id));
+  if(nameEl){
+    if(verified && typeof nameWithVerifiedHtml === 'function'){
+      nameEl.innerHTML = nameWithVerifiedHtml(name, true);
+    }else{
+      nameEl.textContent = name;
+    }
+  }
   if(metaEl){
     metaEl.textContent = [
       p.number ? `#${p.number}` : '',
       p.position || '',
-      ctx.team && ctx.team.name,
-      ctx.academy && ctx.academy.name
+      ctx.team && ctx.team.name
     ].filter(Boolean).join(' · ');
   }
   // Header shows this child, not the personal Free player / coach profile
@@ -2013,7 +2028,13 @@ function syncCoachChildPlayerUi(){
   const headMeta = document.getElementById('playerMetaLine');
   const headClub = document.getElementById('playerClubLine');
   const avgEl = document.getElementById('playerSeasonAvg');
-  if(headName) headName.textContent = p.first_name || name;
+  if(headName){
+    if(verified && typeof nameWithVerifiedHtml === 'function'){
+      headName.innerHTML = nameWithVerifiedHtml(p.first_name || name, true);
+    }else{
+      headName.textContent = p.first_name || name;
+    }
+  }
   if(headMeta){
     headMeta.textContent = [
       p.number ? ((langLatin() ? '#' : '№') + p.number) : '',
@@ -2021,7 +2042,7 @@ function syncCoachChildPlayerUi(){
     ].filter(Boolean).join(' · ');
   }
   if(headClub){
-    headClub.textContent = [ctx.team && ctx.team.name, ctx.academy && ctx.academy.name].filter(Boolean).join(' · ');
+    headClub.textContent = [ctx.team && ctx.team.name].filter(Boolean).join(' · ');
   }
   const parentAvg = ctx.parentAvg;
   if(avgEl){
@@ -2032,7 +2053,10 @@ function syncCoachChildPlayerUi(){
     }
   }
   const initials = (name || 'C').trim().slice(0, 1).toUpperCase() || 'C';
-  setBadge(document.getElementById('clubBadge'), '', initials);
+  const photo = typeof resolveCoachPlayerPhoto === 'function'
+    ? resolveCoachPlayerPhoto(p)
+    : (p.photo || '');
+  setBadge(document.getElementById('clubBadge'), photo || '', initials);
   const backBtn = document.getElementById('coachChildBackBtn');
   if(backBtn){
     const backKey = ctx.returnTo === 'stats' ? 'coachChildBackStats' : 'coachChildBack';
@@ -2129,8 +2153,9 @@ function applyHeader(){
   setBadge(document.getElementById('clubBadge'), player.photo, initials());
   const fbName = document.getElementById('fbName');
   const fbMeta = document.getElementById('fbMeta');
-  const verified = typeof isCoachVerifiedPerson === 'function'
-    && isCoachVerifiedPerson(player.firstName, player.lastName);
+  const verified = (typeof isCoachVerifiedPerson === 'function'
+      && isCoachVerifiedPerson(player.firstName, player.lastName))
+    || (typeof hasAnyCoachLink === 'function' && hasAnyCoachLink());
   const fullName = displayName();
   if(fbName){
     if(verified && typeof nameWithVerifiedHtml === 'function'){
@@ -2205,8 +2230,10 @@ function renderRoster(){
     const del = roster.ids.length > 1
       ? `<button class="roster-x" type="button" data-del="${escapeHtml(id)}" aria-label="${escapeHtml(t('deletePlayer'))}">×</button>`
       : '';
-    const verified = typeof isCoachVerifiedPerson === 'function'
-      && isCoachVerifiedPerson(p.firstName, p.lastName);
+    const verified = (typeof isCoachVerifiedPerson === 'function'
+        && isCoachVerifiedPerson(p.firstName, p.lastName))
+      || (typeof hasAnyCoachLink === 'function' && hasAnyCoachLink()
+        && id === roster.currentId);
     const label = verified && typeof nameWithVerifiedHtml === 'function'
       ? nameWithVerifiedHtml(playerLabel(p), true)
       : escapeHtml(playerLabel(p));

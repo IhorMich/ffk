@@ -284,7 +284,13 @@
   }
   .photo-box img{width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;}
   .fb-id{text-align:center;margin:0 0 12px;}
-  .fb-name{font-size:1.45rem;font-weight:800;line-height:1.15;overflow-wrap:anywhere;}
+  .fb-name{
+    font-size:1.45rem;font-weight:800;line-height:1.15;overflow-wrap:anywhere;
+    display:flex;align-items:center;flex-wrap:wrap;gap:.2rem .35rem;
+  }
+  #playerNameDisplay{
+    display:inline-flex;align-items:center;gap:.35rem;max-width:100%;
+  }
   .fb-meta{margin-top:6px;font-size:.82rem;color:var(--text-soft);font-weight:600;line-height:1.4;overflow-wrap:anywhere;}
   .pf-card{
     position:relative;overflow:hidden;
@@ -388,7 +394,14 @@
     font-size:.72rem;font-weight:900;color:#08121C;
   }
   .roster-av img{width:100%;height:100%;object-fit:cover;display:block;}
-  .roster-item span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .roster-item span{
+    min-width:0;overflow:hidden;
+    display:inline-flex;align-items:center;gap:.28em;max-width:100%;
+  }
+  .roster-item .name-with-verified{max-width:100%;}
+  .roster-item .name-with-verified-text{
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  }
   .roster-x{
     width:44px;flex-shrink:0;border-radius:14px;border:1px solid var(--border);
     background:var(--surface-2);color:var(--danger);font-size:1.25rem;cursor:pointer;
@@ -1555,26 +1568,58 @@
     background:color-mix(in srgb, var(--card-accent) 18%, transparent);color:var(--card-accent);
   }
   .name-with-verified{
-    display:inline-flex;align-items:center;gap:.28em;max-width:100%;
+    display:inline-flex;align-items:center;gap:.34em;max-width:100%;
+    vertical-align:middle;
   }
   .name-with-verified-text{
-    min-width:0;overflow:hidden;text-overflow:ellipsis;
+    min-width:0;
   }
   .verified-badge{
     display:inline-flex;align-items:center;justify-content:center;
-    width:1.05em;height:1.05em;min-width:1.05em;border-radius:50%;
+    width:1.15rem;height:1.15rem;min-width:1.15rem;border-radius:50%;
     background:#1d9bf0;color:#fff;flex-shrink:0;vertical-align:middle;
-    box-shadow:0 0 0 1.5px color-mix(in srgb, #1d9bf0 35%, transparent);
+    box-shadow:0 0 0 2px color-mix(in srgb, #1d9bf0 28%, transparent);
   }
-  .verified-badge svg{width:62%;height:62%;display:block;}
+  .verified-badge svg{width:68%;height:68%;display:block;}
   .fb-name .verified-badge,
-  #playerNameDisplay .verified-badge{
-    width:1.15rem;height:1.15rem;min-width:1.15rem;
+  #playerNameDisplay .verified-badge,
+  .coach-rate-name .verified-badge,
+  .coach-team-heading .verified-badge,
+  .parent-link-main .verified-badge,
+  .coach-player-text .verified-badge,
+  .roster-item .verified-badge{
+    width:1.25rem;height:1.25rem;min-width:1.25rem;
   }
   .coach-rate-name .name-with-verified,
   .coach-team-heading .name-with-verified,
-  .parent-link-main b .name-with-verified{
+  .parent-link-main b .name-with-verified,
+  .coach-player-main b .name-with-verified,
+  .coach-player-text b .name-with-verified{
     vertical-align:baseline;
+  }
+  .coach-player-av{
+    width:36px;height:36px;min-width:36px;border-radius:50%;overflow:hidden;
+    display:inline-flex;align-items:center;justify-content:center;
+    background:color-mix(in srgb, var(--card-accent) 18%, var(--card-paper));
+    color:var(--card-ink);font-size:.78rem;font-weight:800;
+    border:1.5px solid color-mix(in srgb, var(--card-accent) 35%, var(--card-line));
+  }
+  .coach-player-av img{width:100%;height:100%;object-fit:cover;display:block;}
+  .coach-player-sheet-head{
+    display:flex;align-items:center;gap:12px;margin:0 0 14px;
+  }
+  .coach-player-sheet-head .coach-player-av{
+    width:56px;height:56px;min-width:56px;font-size:1.05rem;
+  }
+  .coach-player-sheet-head .coach-rate-name{margin:0 0 2px;}
+  .coach-player-sheet-head .hint{margin:0;}
+  .coach-player-open{
+    display:flex;flex-direction:row;align-items:center;gap:10px;width:100%;
+    text-align:left;background:transparent;border:0;padding:0;color:inherit;font:inherit;cursor:pointer;
+  }
+  .coach-player-open .coach-player-text{display:flex;flex-direction:column;gap:2px;min-width:0;}
+  .coach-player-open .coach-player-text b{
+    display:inline-flex;align-items:center;flex-wrap:wrap;gap:.28em;
   }
   .parent-confirm-card{
     margin:10px 0 12px;padding:12px 14px;border-radius:14px;border:1px solid var(--card-line);

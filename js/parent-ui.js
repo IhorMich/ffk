@@ -32,17 +32,29 @@
     if(!on) return text;
     return `<span class="name-with-verified"><span class="name-with-verified-text">${text}</span>${verifiedBadgeHtml()}</span>`;
   }
+  function normNamePart(s){
+    return String(s || '').trim().toLowerCase().replace(/\s+/g, ' ');
+  }
   function isCoachVerifiedPerson(first, last){
     const store = global.ParentStore;
     if(!store || typeof store.listLinks !== 'function') return false;
-    const f = String(first || '').trim().toLowerCase();
-    const l = String(last || '').trim().toLowerCase();
+    const links = store.listLinks();
+    if(!links.length) return false;
+    const f = normNamePart(first);
+    const l = normNamePart(last);
     if(!f && !l) return false;
-    return store.listLinks().some(link => {
+    const full = [f, l].filter(Boolean).join(' ');
+    return links.some(link => {
       const p = link && link.player;
       if(!p) return false;
-      return String(p.first_name || '').trim().toLowerCase() === f
-        && String(p.last_name || '').trim().toLowerCase() === l;
+      const pf = normNamePart(p.first_name);
+      const pl = normNamePart(p.last_name);
+      const pfull = [pf, pl].filter(Boolean).join(' ');
+      if(full && pfull && full === pfull) return true;
+      if(f && l && pf === f && pl === l) return true;
+      // Soft match: same first name when last is empty on one side
+      if(f && pf === f && (!l || !pl || pl === l)) return true;
+      return false;
     });
   }
   function isCoachVerifiedPlayer(p){
@@ -51,6 +63,11 @@
       p.first_name || p.firstName,
       p.last_name || p.lastName
     );
+  }
+  /** Any academy/coach link on this phone → personal profile counts as verified. */
+  function hasAnyCoachLink(){
+    const store = global.ParentStore;
+    return !!(store && typeof store.listLinks === 'function' && store.listLinks().length);
   }
 
   function inboxMessages(){
@@ -571,6 +588,15 @@
     try{
       store.claim(payload);
       closeParentClaimSheet();
+      if(typeof syncCoachPlayerPhotosFromPersonal === 'function'){
+        try{ syncCoachPlayerPhotosFromPersonal(); }catch(e){}
+      }
+      if(typeof renderCoachUi === 'function' && typeof isCoachPlan === 'function' && isCoachPlan()){
+        try{ renderCoachUi(); }catch(e){}
+      }
+      if(typeof applyHeader === 'function'){
+        try{ applyHeader(); }catch(e){}
+      }
       renderParentUi();
       toast(tt('parentClaimed', 'Child linked. Academy info and coach stats are ready.'));
       if(typeof showView === 'function') showView('player');
@@ -756,6 +782,7 @@
   global.closeParentMsgSheet = closeParentMsgSheet;
   global.isCoachVerifiedPerson = isCoachVerifiedPerson;
   global.isCoachVerifiedPlayer = isCoachVerifiedPlayer;
+  global.hasAnyCoachLink = hasAnyCoachLink;
   global.nameWithVerifiedHtml = nameWithVerified;
   global.coachVerifiedBadgeHtml = verifiedBadgeHtml;
 })(window);
