@@ -168,7 +168,10 @@
             <div><b>${esc(msg.score || '—')}</b><span>${esc(tt('labelScore', 'Score'))}</span></div>
             <div><b>${esc(msg.rating ? Number(msg.rating).toFixed(1) : '—')}</b><span>${esc(tt('coachQuickScore', 'Rating'))}</span></div>
           </div>
-          ${msg.comment ? `<p class="hint"><b>${esc(tt('coachQuickComment', 'Comment'))}:</b> ${esc(msg.comment)}</p>` : ''}
+          ${msg.comment ? `<div class="parent-msg-comment">
+            <span class="parent-msg-comment-kicker">${esc(tt('parentMsgCommentKicker', 'Coach comment'))}</span>
+            <p class="parent-msg-comment-text">${esc(msg.comment)}</p>
+          </div>` : ''}
         </div>`
       : '';
     body.innerHTML = `

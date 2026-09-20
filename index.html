@@ -919,9 +919,10 @@ window.ffkIsNative = function () {
           <div class="pro-kicker" data-i18n="coachQuickMoments">Ключевые моменты</div>
           <div id="coachRateMoments" class="coach-moment-grid"></div>
         </div>
-        <div class="field coach-rate-comment-field">
+        <div class="field coach-rate-comment-field coach-rate-parent-comment">
           <label data-i18n="coachQuickComment">Комментарий</label>
-          <textarea id="coachRateComment" rows="2" maxlength="400" data-i18n-placeholder="coachQuickCommentPh" placeholder="Что запомнить по игроку"></textarea>
+          <p class="hint coach-rate-comment-hint" data-i18n="coachQuickCommentHint">Для родителя — уйдёт вместе с карточкой матча</p>
+          <textarea id="coachRateComment" rows="2" maxlength="400" data-i18n-placeholder="coachQuickCommentPh" placeholder="Комментарий родителю об игре"></textarea>
         </div>
       </div>
       <div class="coach-rate-sticky-actions">

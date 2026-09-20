@@ -5118,7 +5118,9 @@ async function drawMatchCardCanvas(m, mode){
   const listTop = headBottom + 86;
   const rows = Math.max(1, Math.ceil(lines.length / 2));
   const sumY = listTop + (rows - 1) * 50 + 96;
-  const h = Math.round(sumY + 104);
+  const commentText = String(m.comment || '').trim().slice(0, 220);
+  const commentBlock = commentText ? 110 : 0;
+  const h = Math.round(sumY + 104 + commentBlock);
   const {canvas, ctx} = makeHiCanvas(w, h);
 
   ctx.fillStyle = mode === 'light' ? '#FFF8D6' : '#070B14';
@@ -5206,6 +5208,22 @@ async function drawMatchCardCanvas(m, mode){
   fitText(ctx, split.minus ? '−' + fmtNum(Math.abs(split.minus), 2) : fmtNum(0, 2), col2, sumY, colW, '800', 46, 30);
   ctx.fillStyle = theme.muted;
   fitText(ctx, t('actMinus'), col2, sumY + 36, colW, '700', 22, 15);
+
+  if(commentText){
+    const cy = sumY + 78;
+    ctx.strokeStyle = theme.foil2;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(left, cy);
+    ctx.lineTo(right, cy);
+    ctx.stroke();
+    ctx.fillStyle = theme.muted;
+    fitText(ctx, String(t('parentMsgCommentKicker') || t('labelComment') || 'Comment').toUpperCase(), left, cy + 34, right - left, '800', 22, 15);
+    ctx.fillStyle = theme.plate;
+    ctx.font = '700 28px system-ui,-apple-system,Segoe UI,sans-serif';
+    ctx.textAlign = 'left';
+    wrapText(ctx, commentText, left, cy + 72, right - left, 34);
+  }
   return canvas;
 }
 async function shareCard(m){

@@ -115,6 +115,7 @@
         position: p.position || '',
         birth_date: p.birth_date || '',
         contact: p.contact || '',
+        coach_notes: String(p.coach_notes || '').slice(0, 2000),
         created_at: p.created_at || new Date().toISOString()
       }, {onConflict: 'id'});
     }
@@ -211,7 +212,11 @@
       accounts: raw.accounts || {},
       academies: academies || [],
       teams: teams || [],
-      team_players: (players || []).map(p => ({...p, contact: p.contact || ''})),
+      team_players: (players || []).map(p => ({
+        ...p,
+        contact: p.contact || '',
+        coach_notes: String(p.coach_notes || '').slice(0, 2000)
+      })),
       memberships: mems || [],
       team_matches: (matches || []).map(m => ({
         ...m,

@@ -478,9 +478,10 @@
         pos,
         p.contact ? p.contact : ''
       ].filter(Boolean).join(' · ');
+      const hasNotes = !!String(p.coach_notes || '').trim();
       return `<div class="coach-player-row">
         <button type="button" class="coach-player-main coach-player-open" data-open-player="${esc(p.id)}">
-          <b>${esc(label)}</b>
+          <b>${esc(label)}${hasNotes ? '<span class="coach-note-dot" title="'+esc(tt('coachPrivateNotesKicker', 'Private notes'))+'" aria-hidden="true"></span>' : ''}</b>
           ${meta ? `<span>${esc(meta)}</span>` : ''}
         </button>
       </div>`;
@@ -1830,6 +1831,26 @@
           <button type="button" class="ghost-btn" id="coachCancelEditPlayerBtn">${esc(tt('previewCancel', 'Cancel'))}</button>
         </div>`
       : '';
+    const notesVal = String(p.coach_notes || '');
+    const notesBlock = `<div class="coach-private-notes" id="coachPrivateNotesBlock">
+      <div class="coach-private-notes-head">
+        <div>
+          <div class="pro-kicker coach-private-notes-kicker">
+            <span class="coach-lock-ico" aria-hidden="true">🔒</span>
+            ${esc(tt('coachPrivateNotesKicker', 'Private notes'))}
+          </div>
+          <p class="hint coach-private-notes-hint">${esc(tt('coachPrivateNotesHint', 'Only coach and assistants. Parents never see this.'))}</p>
+        </div>
+        ${notesVal.trim()
+          ? `<span class="coach-private-notes-badge">${esc(tt('coachPrivateNotesSaved', 'Saved'))}</span>`
+          : `<span class="coach-private-notes-badge coach-private-notes-badge-empty">${esc(tt('coachPrivateNotesEmpty', 'Empty'))}</span>`}
+      </div>
+      <textarea id="coachPrivateNotes" maxlength="2000" rows="4" data-i18n-placeholder="coachPrivateNotesPh" placeholder="${esc(tt('coachPrivateNotesPh', 'Strengths, focus for next match, injuries, character…'))}">${esc(notesVal)}</textarea>
+      <div class="coach-private-notes-actions">
+        <button type="button" class="save-btn" id="coachSavePrivateNotesBtn">${esc(tt('coachPrivateNotesSave', 'Save notes'))}</button>
+        <span class="hint" id="coachPrivateNotesStatus" hidden></span>
+      </div>
+    </div>`;
     body.innerHTML = `
       <div class="pro-kicker">${esc(tt('coachPlayerDetailKicker', 'Player'))}</div>
       <h3 class="coach-rate-name" id="coachPlayerSheetTitle">${esc(label)}</h3>
@@ -1846,6 +1867,7 @@
         <div><b>${esc(detail.minutes || 0)}</b><span>${esc(tt('coachStatMinutes', 'Minutes'))}</span></div>
       </div>
       ${detail.form && detail.form.length ? `<p class="hint coach-form-line"><b>${esc(tt('coachStatForm', 'Form'))}:</b> ${esc(formSpark(detail.form))}</p>` : ''}
+      ${notesBlock}
       ${detail.topMoments && detail.topMoments.length ? `<div class="coach-stat-section"><div class="pro-kicker">${esc(tt('coachPlayerMomentsKicker', 'Key moments'))}</div>${momentsHtml(detail.topMoments)}</div>` : ''}
       <div class="pro-kicker">${esc(tt('coachPlayerRatingsKicker', 'Recent ratings'))}</div>
       <div class="coach-player-list">${ratingsHtml}</div>
@@ -1871,6 +1893,23 @@
       if(back) back.hidden = false;
     }
     if(typeof pushAppState === 'function') pushAppState('layer');
+  }
+
+  function saveCoachPrivateNotes(){
+    if(!detailPlayerId) return;
+    const store = global.CoachStore;
+    const session = store && store.getSession();
+    if(!session) return;
+    const ta = document.getElementById('coachPrivateNotes');
+    const notes = ta ? String(ta.value || '') : '';
+    try{
+      store.updatePlayer(session, detailPlayerId, {coach_notes: notes});
+      toast(tt('coachPrivateNotesToast', 'Private notes saved.'));
+      openCoachPlayerSheet(detailPlayerId, {editOpen: detailEditOpen});
+      renderCoachUi();
+    }catch(e){
+      toast(tt('coachErrGeneric', 'Something went wrong.'));
+    }
   }
 
   function saveCoachPlayerFromSheet(){
@@ -2443,6 +2482,10 @@
       }
       if(e.target.closest('#coachSavePlayerBtn') && detailPlayerId){
         saveCoachPlayerFromSheet();
+        return;
+      }
+      if(e.target.closest('#coachSavePrivateNotesBtn') && detailPlayerId){
+        saveCoachPrivateNotes();
         return;
       }
       if(e.target.closest('#coachOpenChildPageBtn') && detailPlayerId){

@@ -29,8 +29,18 @@ create table if not exists public.team_players (
   position text not null default '' check (char_length(position) <= 8),
   birth_date text not null default '' check (char_length(birth_date) <= 10),
   contact text not null default '' check (char_length(contact) <= 80),
+  -- Private staff notes: visible only to owner/assistant via RLS (never sent to parents).
+  coach_notes text not null default '' check (char_length(coach_notes) <= 2000),
   created_at timestamptz not null default now()
 );
+
+-- Existing projects: run once
+-- alter table public.team_players
+--   add column if not exists coach_notes text not null default '';
+-- alter table public.team_players
+--   drop constraint if exists team_players_coach_notes_check;
+-- alter table public.team_players
+--   add constraint team_players_coach_notes_check check (char_length(coach_notes) <= 2000);
 
 -- role: owner | assistant | parent
 create table if not exists public.memberships (
