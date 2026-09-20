@@ -498,6 +498,74 @@
     if(!m) return {us: '', them: ''};
     return {us: m[1], them: m[2]};
   }
+  /** @returns {'win'|'draw'|'loss'|null} */
+  function matchOutcome(m){
+    if(!m || !matchIsPlayed(m)) return null;
+    const p = scoreParts(m.score);
+    if(p.us === '' || p.them === '') return null;
+    const us = Number(p.us);
+    const them = Number(p.them);
+    if(!Number.isFinite(us) || !Number.isFinite(them)) return null;
+    if(us > them) return 'win';
+    if(us < them) return 'loss';
+    return 'draw';
+  }
+  function matchOutcomeLabel(outcome){
+    if(outcome === 'win') return tt('coachMatchWin', 'Win');
+    if(outcome === 'draw') return tt('coachMatchDraw', 'Draw');
+    if(outcome === 'loss') return tt('coachMatchLoss', 'Loss');
+    return '';
+  }
+  function matchListRowHtml(m, opts){
+    opts = opts || {};
+    const store = global.CoachStore;
+    const session = store.getSession();
+    const on = opts.activeId && m.id === opts.activeId ? ' on' : '';
+    const rated = session ? store.listRatings(session, m.id).length : 0;
+    const squadN = session ? store.matchSquadIds(session, m).length : 0;
+    const played = matchIsPlayed(m);
+    const outcome = matchOutcome(m);
+    const scoreTxt = String(m.score || '').trim();
+    const phaseLab = played
+      ? tt('coachMatchPlayed', 'played')
+      : tt('coachMatchUpcoming', 'upcoming');
+    const resultLab = outcome ? matchOutcomeLabel(outcome) : '';
+    const badgeCls = played
+      ? (outcome ? `is-${outcome}` : 'is-played')
+      : 'is-upcoming';
+    const badgeInner = played
+      ? (scoreTxt
+        ? `${esc(resultLab || phaseLab)} · ${esc(scoreTxt)}`
+        : esc(phaseLab))
+      : esc(phaseLab);
+    const meta = played
+      ? `${squadN} ${tt('coachSquadShort', 'played')} · ${rated}/${squadN} ${tt('coachRatedShort', 'rated')}`
+      : [
+          `${squadN} ${tt('coachSquadShort', 'played')}`,
+          opts.showAddress && m.address ? m.address : ''
+        ].filter(Boolean).join(' · ');
+    const attr = opts.openAttr || 'data-match';
+    return `<button type="button" class="coach-team-item coach-match-item ${badgeCls}${on}" ${attr}="${esc(m.id)}">
+      <span class="coach-match-row-top">
+        <span class="coach-team-name">${esc(m.date)} · ${esc(m.opponent)}</span>
+        <span class="coach-match-badge ${badgeCls}">${badgeInner}</span>
+      </span>
+      <span class="coach-team-meta">${esc(meta)}</span>
+    </button>`;
+  }
+  function sortMatchesForList(matches){
+    const list = (matches || []).slice();
+    list.sort((a, b) => {
+      const ap = matchIsPlayed(a) ? 1 : 0;
+      const bp = matchIsPlayed(b) ? 1 : 0;
+      if(ap !== bp) return ap - bp; // upcoming first
+      const ad = String(a.date || '');
+      const bd = String(b.date || '');
+      if(ap === 0) return ad.localeCompare(bd); // upcoming: soonest first
+      return bd.localeCompare(ad); // played: newest first
+    });
+    return list;
+  }
   function scoreFromCoachFields(root){
     const scope = root || document;
     const us = String(scope.querySelector('.js-cm-score-us')?.value || '').trim();
@@ -546,22 +614,21 @@
 
     const matchListHtml = !matches.length
       ? `<p class="hint">${esc(tt('coachNoMatches', 'No team matches yet.'))}</p>`
-      : matches.map(m => {
-          const on = m.id === activeMatchId ? ' on' : '';
-          const rated = store.listRatings(session, m.id).length;
-          const squadN = store.matchSquadIds(session, m).length;
-          const played = matchIsPlayed(m);
-          const st = played
-            ? (m.score ? m.score : tt('coachMatchPlayed', 'played'))
-            : tt('coachMatchUpcoming', 'upcoming');
-          const meta = played
-            ? `${squadN} ${tt('coachSquadShort', 'played')} · ${rated}/${squadN} ${tt('coachRatedShort', 'rated')}`
-            : `${squadN} ${tt('coachSquadShort', 'played')}`;
-          return `<button type="button" class="coach-team-item${on}" data-match="${esc(m.id)}">
-            <span class="coach-team-name">${esc(m.date)} · ${esc(m.opponent)}</span>
-            <span class="coach-team-meta">${esc(st)} · ${esc(meta)}</span>
-          </button>`;
-        }).join('');
+      : (() => {
+          const sorted = sortMatchesForList(matches);
+          const upcoming = sorted.filter(m => !matchIsPlayed(m));
+          const played = sorted.filter(m => matchIsPlayed(m));
+          const parts = [];
+          if(upcoming.length){
+            parts.push(`<div class="coach-match-section-lab">${esc(tt('coachHistUpcoming', 'Upcoming'))}</div>`);
+            parts.push(upcoming.map(m => matchListRowHtml(m, {activeId: activeMatchId})).join(''));
+          }
+          if(played.length){
+            parts.push(`<div class="coach-match-section-lab">${esc(tt('coachHistPlayed', 'Played'))}</div>`);
+            parts.push(played.map(m => matchListRowHtml(m, {activeId: activeMatchId})).join(''));
+          }
+          return parts.join('');
+        })();
     document.querySelectorAll('.js-cm-matches').forEach(el => { el.innerHTML = matchListHtml; });
 
     const listEl = document.querySelector('#coachMatchTab .js-cm-matches');
@@ -591,14 +658,29 @@
     if(playedBox) playedBox.hidden = !played;
 
     if(summary){
+      const outcome = matchOutcome(activeMatch);
+      const outcomeLab = matchOutcomeLabel(outcome);
       const bits = [
         activeMatch.date,
         activeMatch.address || '',
         played
-          ? (activeMatch.score ? `${tt('labelScore', 'Score')} ${activeMatch.score}` : tt('coachMatchPlayed', 'played'))
+          ? (activeMatch.score
+            ? `${tt('labelScore', 'Score')} ${activeMatch.score}${outcomeLab ? ` · ${outcomeLab}` : ''}`
+            : tt('coachMatchPlayed', 'played'))
           : tt('coachMatchUpcoming', 'upcoming')
       ].filter(Boolean);
-      summary.innerHTML = `<b>${esc(activeMatch.opponent)}</b><span class="hint">${esc(bits.join(' · '))}</span>`;
+      const badgeCls = played
+        ? (outcome ? `is-${outcome}` : 'is-played')
+        : 'is-upcoming';
+      const badgeTxt = played
+        ? (outcomeLab
+          ? `${outcomeLab}${activeMatch.score ? ` · ${activeMatch.score}` : ''}`
+          : (activeMatch.score || tt('coachMatchPlayed', 'played')))
+        : tt('coachMatchUpcoming', 'upcoming');
+      summary.innerHTML = `<div class="coach-match-row-top">
+        <b>${esc(activeMatch.opponent)}</b>
+        <span class="coach-match-badge ${badgeCls}">${esc(badgeTxt)}</span>
+      </div><span class="hint">${esc(bits.join(' · '))}</span>`;
     }
 
     if(!played){
@@ -743,21 +825,11 @@
       el.innerHTML = `<p class="hint">${esc(tt('coachNoMatches', 'No team matches yet.'))}</p>`;
       return;
     }
-    el.innerHTML = matches.map(m => {
-      const squadN = store.matchSquadIds(session, m).length;
-      const rated = store.listRatings(session, m.id).length;
-      const played = matchIsPlayed(m);
-      const st = played
-        ? (m.score ? m.score : tt('coachMatchPlayed', 'played'))
-        : tt('coachMatchUpcoming', 'upcoming');
-      const meta = played
-        ? `${squadN} ${tt('coachSquadShort', 'played')} · ${rated}/${squadN} ${tt('coachRatedShort', 'rated')}`
-        : `${squadN} ${tt('coachSquadShort', 'played')}${m.address ? ` · ${m.address}` : ''}`;
-      return `<button type="button" class="coach-team-item" data-open-match="${esc(m.id)}">
-        <span class="coach-team-name">${esc(m.date)} · ${esc(m.opponent)}</span>
-        <span class="coach-team-meta">${esc(st)} · ${esc(meta)}</span>
-      </button>`;
-    }).join('');
+    const sorted = sortMatchesForList(matches);
+    el.innerHTML = sorted.map(m => matchListRowHtml(m, {
+      openAttr: 'data-open-match',
+      showAddress: true
+    })).join('');
   }
 
   function renderAnalyticsPane(session, team){
