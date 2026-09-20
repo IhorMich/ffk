@@ -1187,6 +1187,13 @@ window.ffkIsNative = function () {
         <label data-i18n="coachParentLinkLabel">Ссылка-приглашение</label>
         <textarea id="coachParentInviteLink" rows="3" readonly></textarea>
       </div>
+      <div class="parent-confirm-badge" data-i18n="coachParentEmailTestBadge">ТЕСТОВЫЙ РЕЖИМ</div>
+      <p class="hint" data-i18n="coachParentEmailTestHint">Откроется почтовое приложение с готовым письмом. Отправку нужно подтвердить вручную.</p>
+      <div class="field">
+        <label data-i18n="coachParentEmailLabel">Email игрока / родителя</label>
+        <input id="coachParentInviteEmail" type="email" maxlength="120" autocomplete="email" placeholder="name@example.com">
+      </div>
+      <button class="save-btn" id="coachParentInviteEmailBtn" type="button" data-i18n="coachParentEmailBtn">Подготовить письмо</button>
       <button class="save-btn" id="coachParentInviteShareBtn" type="button" data-i18n="coachParentShareBtn">Поделиться</button>
       <button class="ghost-btn" id="coachParentInviteCopyBtn" type="button" data-i18n="coachParentCopyBtn">Копировать ссылку</button>
       <button class="ghost-btn" id="coachParentInviteCloseBtn" type="button" data-i18n="previewCancel">Отмена</button>

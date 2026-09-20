@@ -1,6 +1,9 @@
 /* Matchcard Coach UI — Phase 1+2: academy, teams, roster, matches, analytics.
    Separate from Personal Free/Pro. */
 (function(global){
+  // TEST MODE: email invitations only open a local mail composer; no server sends mail.
+  const TEST_EMAIL_INVITES = true;
+
   function esc(s){
     return String(s == null ? '' : s)
       .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
@@ -3716,6 +3719,7 @@
     const metaEl = document.getElementById('coachParentInviteMeta');
     const linkEl = document.getElementById('coachParentInviteLink');
     const codeEl = document.getElementById('coachParentInviteCode');
+    const emailEl = document.getElementById('coachParentInviteEmail');
     const p = invite.payload;
     const child = [p.player.fn, p.player.ln].filter(Boolean).join(' ');
     if(nameEl) nameEl.textContent = child;
@@ -3728,6 +3732,11 @@
     const deep = global.ParentStore ? global.ParentStore.buildLink(p) : '';
     if(linkEl) linkEl.value = deep;
     if(codeEl) codeEl.textContent = `MC-${invite.code}`;
+    if(emailEl){
+      const player = store.getPlayer(session, playerId);
+      const contact = String(player && player.contact || '').trim();
+      emailEl.value = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact) ? contact : '';
+    }
     // Smaller payload for QR capacity; full snapshot stays in the shareable link.
     let qrPayload = p;
     try{
@@ -3776,6 +3785,46 @@
     }catch(e){
       toast(tt('coachErrGeneric', 'Something went wrong.'));
     }
+  }
+
+  function sendParentInviteEmailTest(){
+    if(!TEST_EMAIL_INVITES || !parentInviteRow) return;
+    const emailEl = document.getElementById('coachParentInviteEmail');
+    const email = String(emailEl && emailEl.value || '').trim();
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
+      toast(tt('coachParentEmailInvalid', 'Enter a valid email.'));
+      if(emailEl) emailEl.focus();
+      return;
+    }
+    const store = global.CoachStore;
+    const session = store && store.getSession && store.getSession();
+    if(!store || !session) return;
+    const full = parentInviteRow.payload || {};
+    const compact = {
+      ...full,
+      r: [],
+      mi: [],
+      mr: [],
+      form: [],
+      topMoments: []
+    };
+    const invite = {...parentInviteRow, payload: compact};
+    const child = compact.player
+      ? [compact.player.fn, compact.player.ln].filter(Boolean).join(' ')
+      : '';
+    const subject = `${tt('coachParentEmailSubject', 'Matchcard invitation')}${child ? ` — ${child}` : ''}`;
+    const testNote = `[${tt('coachParentEmailTestBadge', 'TEST MODE')}]\n${tt(
+      'coachParentEmailTestHint',
+      'Your email app opens with a prepared message. You must confirm sending manually.'
+    )}`;
+    const body = `${testNote}\n\n${store.parentInviteMessage(session, invite)}`;
+    const href = `mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    const a = document.createElement('a');
+    a.href = href;
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
   }
 
   function saveCoachQuickRate(){
@@ -4288,6 +4337,7 @@
     });
     document.getElementById('coachParentInviteBack')?.addEventListener('click', () => closeCoachParentInviteSheet());
     document.getElementById('coachParentInviteCloseBtn')?.addEventListener('click', () => closeCoachParentInviteSheet());
+    document.getElementById('coachParentInviteEmailBtn')?.addEventListener('click', () => sendParentInviteEmailTest());
     document.getElementById('coachParentInviteShareBtn')?.addEventListener('click', () => { shareParentInvite(); });
     document.getElementById('coachParentInviteCopyBtn')?.addEventListener('click', async () => {
       const linkEl = document.getElementById('coachParentInviteLink');
