@@ -3699,7 +3699,6 @@ document.getElementById('previewPeriod').addEventListener('click', e => {
 document.getElementById('previewTheme').addEventListener('click', e => {
   const chip = e.target.closest('.chip');
   if(!chip || !previewState) return;
-  if(chip.dataset.card === 'light' && !requirePro('cardTheme')) return;
   previewState.mode = chip.dataset.card === 'light' ? 'light' : 'dark';
   refreshCardPreview().catch(() => {});
 });
