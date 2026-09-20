@@ -2157,7 +2157,14 @@ function applyHeader(){
   }
   document.getElementById('playerMetaLine').textContent = meta;
   document.getElementById('playerClubLine').textContent = clubBits;
-  setBadge(document.getElementById('clubBadge'), player.photo, initials());
+  let headPhoto = player.photo || '';
+  try{
+    if((!headPhoto || (typeof isUsablePhoto === 'function' && !isUsablePhoto(headPhoto)))
+      && player.id && typeof mediaCache !== 'undefined' && mediaCache[player.id]){
+      headPhoto = mediaCache[player.id].photo || '';
+    }
+  }catch(e){}
+  setBadge(document.getElementById('clubBadge'), headPhoto, initials());
   const fbName = document.getElementById('fbName');
   const fbMeta = document.getElementById('fbMeta');
   const verified = (typeof isCoachVerifiedPerson === 'function'
@@ -5362,6 +5369,11 @@ async function shareCard(m){
       }
     }catch(e){}
     hydrateAllMedia().then(() => {
+      const afterCoach = (typeof hydrateCoachMedia === 'function')
+        ? hydrateCoachMedia()
+        : Promise.resolve();
+      return afterCoach;
+    }).then(() => {
       applyHeader();
       if(typeof syncCoachPlayerPhotosFromPersonal === 'function'){
         try{ syncCoachPlayerPhotosFromPersonal(); }catch(e){}
@@ -5374,6 +5386,9 @@ async function shareCard(m){
         setBadge(document.getElementById('pPhotoBox'), currentPhoto(), initials());
         setCoverPreview();
         renderRoster();
+      }
+      if(typeof isCoachChildView === 'function' && isCoachChildView()){
+        try{ syncCoachChildPlayerUi(); }catch(e){}
       }
     }).catch(() => {});
   }catch(err){

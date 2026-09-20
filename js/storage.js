@@ -59,8 +59,39 @@ function idbDeleteMedia(id){
 function playerRecordForLs(p){
   return {...p, photo: '', cover: ''};
 }
+function isUsablePhoto(src){
+  const p = String(src || '');
+  if(p.startsWith('data:image/') && p.length > 64) return true;
+  if(p.startsWith('blob:') && p.length > 8) return true;
+  if(/^https?:\/\//i.test(p)) return true;
+  return false;
+}
+function coachMediaKey(id){
+  return 'coach:' + String(id || '');
+}
+function getCoachMediaPhoto(id){
+  const key = coachMediaKey(id);
+  const cached = mediaCache[key] && mediaCache[key].photo;
+  return isUsablePhoto(cached) ? String(cached) : '';
+}
+function setCoachMediaPhoto(id, photo){
+  const key = coachMediaKey(id);
+  const prev = mediaCache[key] || {photo: '', cover: ''};
+  const nextPhoto = isUsablePhoto(photo) ? String(photo) : '';
+  mediaCache[key] = {photo: nextPhoto, cover: prev.cover || ''};
+  return idbPutMedia(key, nextPhoto, prev.cover || '');
+}
 async function hydrateAllMedia(){
   const ids = roster.ids.length ? roster.ids : (player && player.id ? [player.id] : []);
+  // Also pick up orphan kid records if roster was incomplete.
+  try{
+    for(let i = 0; i < localStorage.length; i++){
+      const k = localStorage.key(i);
+      if(!k || !k.startsWith('ffk_kid_') || k.startsWith('ffk_kid_m_')) continue;
+      const id = k.slice('ffk_kid_'.length);
+      if(id && !ids.includes(id)) ids.push(id);
+    }
+  }catch(e){}
   for(const id of ids){
     const fromLs = readPlayerRecord(id, true);
     const rec = await idbGetMedia(id);
@@ -80,6 +111,32 @@ async function hydrateAllMedia(){
     player.cover = cur.cover;
     try{ localStorage.setItem(PLAYER_KEY, JSON.stringify(playerRecordForLs(player))); }catch(e){}
   }
+}
+async function hydrateCoachMedia(){
+  try{
+    const store = typeof CoachStore !== 'undefined' ? CoachStore : (window.CoachStore || null);
+    const session = store && store.getSession && store.getSession();
+    if(!store || !session || typeof store.myAcademy !== 'function') return;
+    const academy = store.myAcademy(session);
+    if(!academy || typeof store.listTeams !== 'function') return;
+    const teams = store.listTeams(session, academy.id) || [];
+    for(const team of teams){
+      if(!team) continue;
+      const players = store.listPlayers(session, team.id) || [];
+      for(const tp of players){
+        if(!tp || !tp.id) continue;
+        const key = coachMediaKey(tp.id);
+        const rec = await idbGetMedia(key);
+        if(rec && (rec.photo || rec.cover)){
+          mediaCache[key] = {photo: rec.photo || '', cover: rec.cover || ''};
+        }else if(isUsablePhoto(tp.photo)){
+          // Migrate legacy LS-embedded photos into IDB, then drop from coach DB later.
+          mediaCache[key] = {photo: String(tp.photo), cover: ''};
+          await idbPutMedia(key, String(tp.photo), '');
+        }
+      }
+    }
+  }catch(e){}
 }
 
 function loadSettings(){
@@ -157,6 +214,14 @@ function listPersonalPlayersWithMedia(){
       if(!ids.includes(cid)) ids.unshift(cid);
     }
   }catch(e){}
+  try{
+    for(let i = 0; i < localStorage.length; i++){
+      const k = localStorage.key(i);
+      if(!k || !k.startsWith('ffk_kid_') || k.startsWith('ffk_kid_m_')) continue;
+      const id = k.slice('ffk_kid_'.length);
+      if(id && !ids.includes(id)) ids.push(id);
+    }
+  }catch(e){}
   ids.forEach(id => {
     const sid = String(id);
     if(seen.has(sid)) return;
@@ -164,11 +229,12 @@ function listPersonalPlayersWithMedia(){
     const p = readPlayerRecord(sid);
     if(!p) return;
     const photo = (mediaCache[sid] && mediaCache[sid].photo) || p.photo || '';
+    if(!isUsablePhoto(photo) && !(p.firstName || p.lastName)) return;
     out.push({
       id: sid,
       firstName: p.firstName || '',
       lastName: p.lastName || '',
-      photo
+      photo: isUsablePhoto(photo) ? photo : ''
     });
   });
   return out;

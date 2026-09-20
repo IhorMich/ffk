@@ -587,10 +587,23 @@
     }catch(e){}
     return '';
   }
-  /** Photo for a coach roster player: stored on player, else matching Free/Pro profile on this phone. */
+  function usablePhoto(src){
+    try{
+      if(typeof isUsablePhoto === 'function') return isUsablePhoto(src);
+    }catch(e){}
+    const p = String(src || '');
+    return p.startsWith('data:image/') && p.length > 64;
+  }
+  /** Photo for a coach roster player: IDB cache, stored field, else matching Free/Pro profile. */
   function resolveCoachPlayerPhoto(tp){
     if(!tp) return '';
-    if(tp.photo) return String(tp.photo);
+    if(usablePhoto(tp.photo)) return String(tp.photo);
+    try{
+      if(tp.id && typeof getCoachMediaPhoto === 'function'){
+        const cached = getCoachMediaPhoto(tp.id);
+        if(cached) return cached;
+      }
+    }catch(e){}
     const fromPersonal = personalPhotoByName(tp.first_name, tp.last_name);
     if(fromPersonal) return fromPersonal;
     // Same-device parent link: Free profile may use a slightly different name spelling.
@@ -628,29 +641,58 @@
     }
     return false;
   }
-  /** Copy Free/Pro profile photos onto matching coach roster players on this phone. */
+  /** Copy Free/Pro profile photos onto matching coach roster players (IndexedDB — not coach LS). */
   function syncCoachPlayerPhotosFromPersonal(){
     const store = global.CoachStore;
     const session = store && store.getSession && store.getSession();
-    if(!store || !session || typeof store.updatePlayer !== 'function') return 0;
+    if(!store || !session) return 0;
     let n = 0;
     try{
       const academy = store.myAcademy && store.myAcademy(session);
       const teams = academy && store.listTeams
         ? store.listTeams(session, academy.id)
         : [];
-      // Always walk every team — active-team-only left other rosters without photos.
       teams.forEach(team => {
         if(!team) return;
         store.listPlayers(session, team.id).forEach(tp => {
-          // Ignore stored photo so we always prefer a fresher Free/Pro match when present.
-          const photo = resolveCoachPlayerPhoto({...tp, photo: ''}) || tp.photo || '';
+          if(!tp || !tp.id) return;
+          let photo = personalPhotoByName(tp.first_name, tp.last_name);
+          if(!photo){
+            try{
+              const links = global.ParentStore && typeof global.ParentStore.listLinks === 'function'
+                ? global.ParentStore.listLinks()
+                : [];
+              const link = links.find(l => l && l.player && String(l.player.id) === String(tp.id));
+              if(link && link.player){
+                photo = personalPhotoByName(link.player.first_name, link.player.last_name);
+              }
+            }catch(e){}
+          }
+          if(!photo && usablePhoto(tp.photo)) photo = String(tp.photo);
+          if(!photo){
+            try{
+              if(typeof getCoachMediaPhoto === 'function') photo = getCoachMediaPhoto(tp.id) || '';
+            }catch(e){}
+          }
           if(!photo) return;
-          if(String(tp.photo || '') === photo) return;
+          let changed = false;
           try{
-            store.updatePlayer(session, tp.id, {photo});
-            n += 1;
+            if(typeof setCoachMediaPhoto === 'function'){
+              const prev = typeof getCoachMediaPhoto === 'function' ? getCoachMediaPhoto(tp.id) : '';
+              if(prev !== photo){
+                setCoachMediaPhoto(tp.id, photo);
+                changed = true;
+              }
+            }
           }catch(e){}
+          // Drop bulky data URLs from coach localStorage — they blow the quota.
+          if(String(tp.photo || '') && typeof store.updatePlayer === 'function'){
+            try{
+              store.updatePlayer(session, tp.id, {photo: ''});
+              changed = true;
+            }catch(e){}
+          }
+          if(changed) n += 1;
         });
       });
     }catch(e){}
@@ -2607,14 +2649,17 @@
     const position = document.getElementById('coachPlayerPos')?.value || '';
     try{
       const photo = resolveCoachPlayerPhoto({first_name: first, last_name: last, photo: ''});
-      global.CoachStore.addPlayer(session, teamId, {
+      const created = global.CoachStore.addPlayer(session, teamId, {
         first_name: first,
         last_name: last,
         number,
         contact,
         position,
-        photo: photo || ''
+        photo: ''
       });
+      if(photo && created && created.id && typeof setCoachMediaPhoto === 'function'){
+        try{ setCoachMediaPhoto(created.id, photo); }catch(e){}
+      }
       ['coachPlayerFirst','coachPlayerLast','coachPlayerNumber','coachPlayerContact'].forEach(id => {
         const el = document.getElementById(id);
         if(el) el.value = '';
@@ -3518,6 +3563,9 @@
   function openCoachChildPlayerPage(playerId, opts){
     const store = global.CoachStore;
     const session = store && store.getSession();
+    try{
+      if(typeof syncCoachPlayerPhotosFromPersonal === 'function') syncCoachPlayerPhotosFromPersonal();
+    }catch(e){}
     const detail = session && store.playerDetail(session, playerId);
     if(!detail){
       toast(tt('coachErrGeneric', 'Something went wrong.'));
@@ -3531,9 +3579,14 @@
     const parentAvg = global.ParentStatsStore
       ? global.ParentStatsStore.avgForPlayer(playerId)
       : null;
+    // Attach resolved photo so header / cards always see it.
+    const player = {
+      ...detail.player,
+      photo: resolveCoachPlayerPhoto(detail.player) || detail.player.photo || ''
+    };
     global.coachChildView = {
       playerId,
-      player: detail.player,
+      player,
       team: detail.team,
       academy: detail.academy,
       coachRatings: detail.ratings || [],
