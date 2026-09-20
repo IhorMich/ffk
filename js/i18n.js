@@ -3911,7 +3911,7 @@ ru:{
       coachBack:'← Réglages',
       coachTitle:'Matchcard for Teams',
       coachLead:'Gère ton équipe. Suis chaque joueur. Analyse la perf. Partage les progrès avec les parents.',
-      coachBullet1:'Academy → Team → jusqu’à 30 joueurs',
+      coachBullet1:'Academy → Team → jusqu’à 50 joueurs',
       coachBullet2:'Matchs d’équipe, notes et analyse',
       coachBullet3:'Invite parent uniquement vers son enfant',
       coachBullet4:'Cloud séparé du Free/Pro personnel',
