@@ -540,6 +540,8 @@
           team_id: teamId,
           team_player_id: pid,
           status: 'pending',
+          rsvp: '',
+          rsvp_at: '',
           sent_at: '',
           created_at: new Date().toISOString()
         });
@@ -621,6 +623,8 @@
           team_id: match.team_id,
           team_player_id: pid,
           status: 'pending',
+          rsvp: '',
+          rsvp_at: '',
           sent_at: '',
           created_at: new Date().toISOString()
         });
@@ -927,13 +931,62 @@
               global.CoachPush.notifyInvite(payload);
             }
           }catch(e){}
-          return {...inv, status: 'delivered', sent_at: now, channel: 'app'};
+          return {
+            ...inv,
+            status: inv.rsvp === 'accepted' || inv.rsvp === 'declined' ? inv.status : 'delivered',
+            sent_at: now,
+            channel: 'app',
+            rsvp: inv.rsvp || '',
+            rsvp_at: inv.rsvp_at || ''
+          };
         }
         waiting += 1;
-        return {...inv, status: 'waiting_parent', sent_at: now, channel: 'app'};
+        return {
+          ...inv,
+          status: inv.rsvp === 'accepted' || inv.rsvp === 'declined' ? inv.status : 'waiting_parent',
+          sent_at: now,
+          channel: 'app',
+          rsvp: inv.rsvp || '',
+          rsvp_at: inv.rsvp_at || ''
+        };
       });
       writeDb(db);
       return {delivered, waiting, invites: this.listInvites(session, matchId)};
+    },
+    applyInviteRsvp(matchId, teamPlayerId, response){
+      const rsvp = response === 'accepted' ? 'accepted' : response === 'declined' ? 'declined' : '';
+      if(!rsvp) throw new Error('rsvp');
+      const mid = String(matchId || '');
+      const pid = String(teamPlayerId || '');
+      if(!mid || !pid) throw new Error('forbidden');
+      const db = readDb();
+      const now = new Date().toISOString();
+      let found = false;
+      db.match_invites = db.match_invites.map(inv => {
+        if(inv.match_id !== mid || String(inv.team_player_id) !== pid) return inv;
+        found = true;
+        return {...inv, rsvp, rsvp_at: now, status: inv.status === 'pending' ? 'delivered' : inv.status};
+      });
+      if(!found){
+        const match = db.team_matches.find(m => m.id === mid);
+        if(match){
+          db.match_invites.push({
+            id: uid('inv'),
+            match_id: mid,
+            team_id: match.team_id,
+            team_player_id: pid,
+            status: 'delivered',
+            rsvp,
+            rsvp_at: now,
+            sent_at: now,
+            created_at: now
+          });
+          found = true;
+        }
+      }
+      if(!found) throw new Error('forbidden');
+      writeDb(db);
+      return db.match_invites.find(i => i.match_id === mid && String(i.team_player_id) === pid) || null;
     },
     syncInviteReadStatuses(session, matchId){
       const match = this.getMatch(session, matchId);
@@ -943,11 +996,17 @@
       db.match_invites = db.match_invites.map(inv => {
         if(inv.match_id !== matchId) return inv;
         const msg = global.InboxStore.findMatchInvite(matchId, inv.team_player_id);
-        if(msg && msg.status === 'read' && inv.status !== 'read'){
+        if(!msg) return inv;
+        let next = inv;
+        if(msg.status === 'read' && inv.status !== 'read' && inv.rsvp !== 'accepted' && inv.rsvp !== 'declined'){
           changed = true;
-          return {...inv, status: 'read', read_at: msg.read_at || new Date().toISOString()};
+          next = {...next, status: 'read', read_at: msg.read_at || new Date().toISOString()};
         }
-        return inv;
+        if((msg.rsvp === 'accepted' || msg.rsvp === 'declined') && msg.rsvp !== inv.rsvp){
+          changed = true;
+          next = {...next, rsvp: msg.rsvp, rsvp_at: msg.rsvp_at || new Date().toISOString()};
+        }
+        return next;
       });
       if(changed) writeDb(db);
       return this.listInvites(session, matchId);
@@ -1014,6 +1073,8 @@
           team_id: match.team_id,
           team_player_id: pid,
           status: 'pending',
+          rsvp: '',
+          rsvp_at: '',
           sent_at: '',
           created_at: new Date().toISOString()
         });

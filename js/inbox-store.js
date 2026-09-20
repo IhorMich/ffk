@@ -78,11 +78,21 @@
         address: String(payload.address || '').slice(0, 120),
         venue: payload.venue === 'away' ? 'away' : 'home',
         kind: String(payload.kind || 'league').slice(0, 16),
+        kickoff: String(payload.kickoff || '').slice(0, 8),
+        tournament: String(payload.tournament || '').slice(0, 48),
         // Never persist other children's names on parent messages.
         squad_names: [],
         status: existing && existing.status === 'read' && !payload.forceUnread
           ? 'read'
           : 'delivered',
+        rsvp: (payload.rsvp === 'accepted' || payload.rsvp === 'declined')
+          ? payload.rsvp
+          : (existing && (existing.rsvp === 'accepted' || existing.rsvp === 'declined')
+            ? existing.rsvp
+            : ''),
+        rsvp_at: (payload.rsvp === 'accepted' || payload.rsvp === 'declined')
+          ? (payload.rsvp_at || now)
+          : (existing && existing.rsvp_at ? existing.rsvp_at : ''),
         created_at: existing ? existing.created_at : now,
         updated_at: now,
         read_at: existing && existing.status === 'read' && !payload.forceUnread
@@ -166,6 +176,30 @@
       });
       writeDb(db);
       return this.get(id);
+    },
+    setMatchInviteRsvp(messageId, response){
+      const rsvp = response === 'accepted' ? 'accepted' : response === 'declined' ? 'declined' : '';
+      if(!rsvp) throw new Error('rsvp');
+      const db = readDb();
+      const msg = db.messages.find(m => m.id === messageId);
+      if(!msg || msg.type !== 'match_invite') throw new Error('forbidden');
+      const now = new Date().toISOString();
+      const row = {
+        ...msg,
+        rsvp,
+        rsvp_at: now,
+        status: 'read',
+        read_at: msg.read_at || now,
+        updated_at: now
+      };
+      db.messages = db.messages.map(m => m.id === messageId ? row : m);
+      writeDb(db);
+      try{
+        if(global.CoachStore && typeof global.CoachStore.applyInviteRsvp === 'function'){
+          global.CoachStore.applyInviteRsvp(row.match_id, row.team_player_id, rsvp);
+        }
+      }catch(e){}
+      return this.get(messageId);
     },
     removeForMatch(matchId){
       const id = String(matchId || '');

@@ -57,9 +57,12 @@
       const title = isResult
         ? (head || tt('parentInboxResult', 'Match card'))
         : (head || tt('parentInboxMatch', 'Match invite'));
-      return `<button type="button" class="parent-msg-row${unreadCls}${isResult ? ' result' : ''}" data-parent-msg="${esc(m.id)}">
+      const rsvpMark = !isResult && m.rsvp === 'accepted'
+        ? ' ✓'
+        : (!isResult && m.rsvp === 'declined' ? ' ✕' : '');
+      return `<button type="button" class="parent-msg-row${unreadCls}${isResult ? ' result' : ''}${m.rsvp === 'accepted' ? ' rsvp-yes' : ''}${m.rsvp === 'declined' ? ' rsvp-no' : ''}" data-parent-msg="${esc(m.id)}">
         <span class="parent-link-main">
-          <b>${esc(title)}</b>
+          <b>${esc(title)}${esc(rsvpMark)}</b>
           <span>${esc(meta || '—')}</span>
         </span>
         <span class="parent-msg-dot" aria-hidden="true"></span>
@@ -174,16 +177,37 @@
           </div>` : ''}
         </div>`
       : '';
+    const rsvp = msg.rsvp === 'accepted' || msg.rsvp === 'declined' ? msg.rsvp : '';
+    const rsvpBlock = !isResult
+      ? `<div class="parent-rsvp" data-msg-id="${esc(msg.id)}">
+          <p class="parent-rsvp-lead">${esc(tt('parentRsvpLead', '{name} is called up for this match. Can they play?')
+            .replace('{name}', msg.player_name || tt('parentInboxChild', 'Child')))}</p>
+          <div class="parent-rsvp-actions">
+            <button type="button" class="parent-rsvp-btn yes${rsvp === 'accepted' ? ' on' : ''}" data-rsvp="accepted" aria-label="${esc(tt('parentRsvpYes', 'Will play'))}">✓</button>
+            <button type="button" class="parent-rsvp-btn no${rsvp === 'declined' ? ' on' : ''}" data-rsvp="declined" aria-label="${esc(tt('parentRsvpNo', 'Cannot play'))}">✕</button>
+          </div>
+          <p class="hint parent-rsvp-status" ${rsvp ? '' : 'hidden'}>${esc(
+            rsvp === 'accepted'
+              ? tt('parentRsvpYesDone', 'Confirmed — will play.')
+              : rsvp === 'declined'
+                ? tt('parentRsvpNoDone', 'Declined — cannot play.')
+                : ''
+          )}</p>
+        </div>`
+      : '';
+    const whenBits = [msg.date, msg.kickoff || '', venue, msg.kind].filter(Boolean);
     body.innerHTML = `
       <div class="parent-confirm-badge">${esc(isResult
         ? tt('parentInboxResultFromCoach', 'Match card from coach')
         : tt('parentInboxFromCoach', 'From coach'))}</div>
       <h3 class="coach-rate-name">${esc(msg.opponent || '—')}</h3>
-      <p class="hint">${esc([msg.date, venue, msg.kind].filter(Boolean).join(' · '))}</p>
+      <p class="hint">${esc(whenBits.join(' · '))}</p>
+      ${msg.tournament && !isResult ? `<p class="hint"><b>${esc(tt('labelCompTournament', 'Tournament'))}:</b> ${esc(msg.tournament)}</p>` : ''}
       ${msg.address && !isResult ? `<p class="hint"><b>${esc(tt('coachMatchAddress', 'Match address'))}:</b> ${esc(msg.address)}</p>` : ''}
       <p class="hint"><b>${esc(tt('parentInboxChild', 'Child'))}:</b> ${esc(msg.player_name || '—')}</p>
       <p class="hint"><b>${esc(tt('parentCoachLabel', 'Coach'))}:</b> ${esc(msg.coach_name || '—')}</p>
       <p class="hint"><b>${esc(tt('parentInboxTeam', 'Team'))}:</b> ${esc([msg.academy_name, msg.team_name].filter(Boolean).join(' · ') || '—')}</p>
+      ${rsvpBlock}
       ${resultBlock}
       <button type="button" class="ghost-btn" id="parentMsgCloseBtn">${esc(tt('previewCancel', 'Close'))}</button>
     `;
@@ -197,6 +221,23 @@
     renderParentInbox();
     if(typeof renderCoachUi === 'function') renderCoachUi();
     syncInboxBellUi();
+  }
+
+  function onParentRsvp(btn){
+    const wrap = btn.closest('.parent-rsvp');
+    const msgId = wrap && wrap.dataset.msgId;
+    const response = btn.dataset.rsvp;
+    if(!msgId || !response || !global.InboxStore) return;
+    try{
+      const row = global.InboxStore.setMatchInviteRsvp(msgId, response);
+      toast(response === 'accepted'
+        ? tt('parentRsvpYesDone', 'Confirmed — will play.')
+        : tt('parentRsvpNoDone', 'Declined — cannot play.'));
+      openParentMessage(row.id);
+      if(typeof renderCoachUi === 'function') renderCoachUi();
+    }catch(e){
+      toast(tt('coachErrGeneric', 'Something went wrong.'));
+    }
   }
   function closeParentMsgSheet(){
     const card = document.getElementById('parentMsgCard');
@@ -488,7 +529,14 @@
       openParentMessage(btn.dataset.parentMsg);
     });
     document.getElementById('parentMsgBody')?.addEventListener('click', e => {
-      if(e.target.closest('#parentMsgCloseBtn')) closeParentMsgSheet();
+      if(e.target.closest('#parentMsgCloseBtn')){
+        closeParentMsgSheet();
+        return;
+      }
+      const rsvpBtn = e.target.closest('[data-rsvp]');
+      if(rsvpBtn){
+        onParentRsvp(rsvpBtn);
+      }
     });
     document.getElementById('parentLinksList')?.addEventListener('click', e => {
       const btn = e.target.closest('[data-parent-link]');

@@ -1026,22 +1026,49 @@
         box.innerHTML = `<p class="hint">${esc(tt('coachSquadEmpty', 'Select who plays in this match.'))}</p>`;
         return;
       }
+      // Pull latest RSVP answers from parent inbox on this device
+      try{
+        if(typeof store.syncInviteReadStatuses === 'function'){
+          store.syncInviteReadStatuses(session, match.id);
+        }
+      }catch(e){}
+      const invites = store.listInvites(session, match.id);
+      const byPlayer = {};
+      invites.forEach(inv => { byPlayer[String(inv.team_player_id)] = inv; });
+      let accepted = 0, declined = 0, pending = 0;
       const rows = players.map(p => {
+        const inv = byPlayer[String(p.id)];
+        const rsvp = inv && (inv.rsvp === 'accepted' || inv.rsvp === 'declined') ? inv.rsvp : '';
+        if(rsvp === 'accepted') accepted += 1;
+        else if(rsvp === 'declined') declined += 1;
+        else pending += 1;
+        const mark = rsvp === 'accepted'
+          ? `<span class="coach-rsvp-mark is-accepted" title="${esc(tt('coachRsvpAccepted', 'Confirmed'))}">✓</span>`
+          : rsvp === 'declined'
+            ? `<span class="coach-rsvp-mark is-declined" title="${esc(tt('coachRsvpDeclined', 'Declined'))}">✕</span>`
+            : `<span class="coach-rsvp-mark is-pending" title="${esc(tt('coachRsvpPending', 'No reply'))}">☐</span>`;
         const bits = [
           p.number ? `#${p.number}` : '',
           playerLabel(p),
           p.position && typeof pitchPosLabelShort === 'function' ? pitchPosLabelShort(p.position) : (p.position || '')
         ].filter(Boolean);
         return `<button type="button" class="coach-invite-row coach-invite-player" data-open-player="${esc(p.id)}">
-          <span>${esc(bits.join(' · '))}</span>
+          ${mark}
+          <span class="coach-invite-player-name">${esc(bits.join(' · '))}</span>
           <span class="coach-invite-open-hint" aria-hidden="true">›</span>
         </button>`;
       }).join('');
+      const sum = [
+        accepted ? `${accepted} ✓` : '',
+        declined ? `${declined} ✕` : '',
+        pending ? `${pending} ☐` : ''
+      ].filter(Boolean).join(' · ');
       box.hidden = false;
       box.innerHTML = `<div class="coach-invite-card">
         <b>${esc(tt('coachSquadLabel', 'Who plays'))}</b>
         ${match.address ? `<p class="hint">${esc(match.address)}</p>` : ''}
         <p class="hint">${esc(tt('coachMatchParentsNotified', 'Parents of selected players get a match notice in the app.'))}</p>
+        ${sum ? `<p class="hint coach-rsvp-sum">${esc(tt('coachRsvpSummary', 'Replies'))}: ${esc(sum)}</p>` : ''}
         <div class="coach-invite-rows">${rows}</div>
       </div>`;
     });
