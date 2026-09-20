@@ -2187,6 +2187,8 @@ function updateHero(){
   if(heroScore) heroScore.innerHTML = overall;
   const liveScore = document.getElementById('liveScore');
   if(liveScore) liveScore.innerHTML = overall;
+  const pinScore = document.getElementById('pinScore');
+  if(pinScore) pinScore.innerHTML = overall;
   const setNum = (id, n) => {
     const el = document.getElementById(id);
     if(el) el.textContent = fmtNum(n, 2);
@@ -2195,6 +2197,8 @@ function updateHero(){
   setNum('heroEffort', s.effort);
   setNum('liveAction', s.action);
   setNum('liveEffort', s.effort);
+  setNum('pinAction', s.action);
+  setNum('pinEffort', s.effort);
   const setBar = (id, n) => {
     const el = document.getElementById(id);
     if(el) el.style.setProperty('--p', String(Math.max(0, Math.min(1, Number(n) / 10))));
@@ -2203,14 +2207,17 @@ function updateHero(){
   setBar('heroEffortBar', s.effort);
   setBar('liveActionBar', s.action);
   setBar('liveEffortBar', s.effort);
+  setBar('pinActionBar', s.action);
+  setBar('pinEffortBar', s.effort);
+  const labelText = isShortOuting(s.minutes, s.matchLen)
+    ? t('ratingForMins', {n: s.minutes})
+    : t('heroOverall');
   const label = document.getElementById('heroLabel');
-  if(label){
-    label.textContent = isShortOuting(s.minutes, s.matchLen)
-      ? t('ratingForMins', {n: s.minutes})
-      : t('heroOverall');
-  }
+  if(label) label.textContent = labelText;
+  const pinLabel = document.getElementById('pinLabel');
+  if(pinLabel) pinLabel.textContent = labelText;
   const pitch = String(currentPitch() || 'ST').toUpperCase();
-  ['heroPosTag','livePosTag'].forEach(id => {
+  ['heroPosTag','livePosTag','pinPosTag'].forEach(id => {
     const el = document.getElementById(id);
     if(el) el.textContent = pitch;
   });
@@ -2225,6 +2232,7 @@ function updateHero(){
     meta.hidden = !bits.length;
   }
   syncLiveUndo();
+  syncHeroPin();
 }
 
 function setEditUi(on){
@@ -2525,6 +2533,30 @@ function scrollMainToTop(){
   if(main) main.scrollTop = 0;
   window.scrollTo({top:0, behavior:'instant'});
 }
+function syncHeroPin(){
+  const pin = document.getElementById('heroPin');
+  if(!pin) return;
+  const matchOn = document.getElementById('view-new')?.classList.contains('active');
+  const liveOn = document.getElementById('app')?.classList.contains('live-on');
+  const introOn = document.documentElement.classList.contains('intro-on');
+  if(!matchOn || liveOn || introOn){
+    pin.classList.remove('on');
+    pin.setAttribute('aria-hidden', 'true');
+    return;
+  }
+  const mark = document.getElementById('heroMain');
+  const top = mark ? mark.getBoundingClientRect().bottom : 0;
+  const on = top < 72;
+  pin.classList.toggle('on', on);
+  pin.setAttribute('aria-hidden', on ? 'false' : 'true');
+}
+function bindHeroPin(){
+  if(window.__ffkHeroPin) return;
+  window.__ffkHeroPin = true;
+  window.addEventListener('scroll', syncHeroPin, {passive:true});
+  window.addEventListener('resize', syncHeroPin);
+  syncHeroPin();
+}
 function showView(name){
   const views = ['player','new','history','stats','settings','report'];
   if(!views.includes(name)) name = 'new';
@@ -2544,6 +2576,7 @@ function showView(name){
   if(clockPhase() === 'run') startClockTick();
   try{ sessionStorage.setItem(VIEW_KEY, name === 'report' ? 'history' : name); }catch(e){}
   if(!popping && name !== 'player') pushAppState('tab');
+  syncHeroPin();
 }
 function restoreView(){
   let name = 'new';
@@ -3608,6 +3641,7 @@ function skipIntroNow(){
   document.documentElement.classList.remove('intro-on');
   hideNativeSplash();
   applyNativeChrome();
+  syncHeroPin();
 }
 function afterIntro(){
   if(!maybeTransfer()) maybeOnboard();
@@ -3624,6 +3658,7 @@ function finishIntro(){
     introBusy = false;
     applyNativeChrome();
     afterIntro();
+    syncHeroPin();
   }, 420);
 }
 function hideNativeSplash(){
@@ -4465,6 +4500,7 @@ async function shareCard(m){
     bindTapHaptics();
     bindBehaviorSlider();
     bindSheets();
+    bindHeroPin();
     bindCameraRestore();
     syncScoreResultHint();
     hydrateAllMedia().then(() => {

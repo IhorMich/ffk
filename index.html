@@ -68,6 +68,28 @@ window.ffkIsNative = function () {
     </div>
   </div>
 
+  <div class="hero-pin" id="heroPin" aria-hidden="true">
+    <div class="hero-pin-inner">
+      <div>
+        <div class="hero-score" id="pinScore">6.0<small>/10</small></div>
+        <div class="hero-caption" id="pinLabel" data-i18n="heroOverall">общая оценка</div>
+      </div>
+      <div class="hero-bars">
+        <span>
+          <em data-i18n="heroAction">вклад</em>
+          <i id="pinActionBar" style="--p:.6"></i>
+          <b id="pinAction">6.0</b>
+        </span>
+        <span>
+          <em data-i18n="heroEffort">старание</em>
+          <i id="pinEffortBar" style="--p:.6"></i>
+          <b id="pinEffort">6.0</b>
+        </span>
+      </div>
+      <span class="hero-pos" id="pinPosTag">ST</span>
+    </div>
+  </div>
+
   <div class="content">
     <div class="view" id="view-player">
       <div class="profile-hero">
@@ -152,8 +174,14 @@ window.ffkIsNative = function () {
       </div>
     </div>
     <div class="view active" id="view-new">
-      <div class="hero-dock" id="heroDock">
-        <div class="hero-dock-inner">
+      <div class="match-col match-col-ctx">
+      <div class="hero" id="heroBlock">
+        <div class="hero-top">
+          <span>MATCHCARD</span>
+          <span class="hero-pos" id="heroPosTag">ST</span>
+        </div>
+        <div class="hero-meta" id="heroMeta" hidden></div>
+        <div class="hero-main" id="heroMain">
           <div>
             <div class="hero-score" id="heroScore">6.0<small>/10</small></div>
             <div class="hero-caption" id="heroLabel" data-i18n="heroOverall">общая оценка</div>
@@ -170,14 +198,6 @@ window.ffkIsNative = function () {
               <b id="heroEffort">6.0</b>
             </span>
           </div>
-          <span class="hero-pos" id="heroPosTag">ST</span>
-        </div>
-      </div>
-      <div class="match-col match-col-ctx">
-      <div class="hero" id="heroBlock">
-        <div class="hero-top">
-          <span>MATCHCARD</span>
-          <span class="hero-meta" id="heroMeta" hidden></span>
         </div>
         <div class="hero-kick">
           <div class="live-clock" id="formClock"></div>
