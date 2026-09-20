@@ -1487,7 +1487,7 @@
     display:grid;place-items:center;padding:0;cursor:pointer;
   }
   .coach-settings-btn svg{
-    width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;
+    width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.7;
     stroke-linecap:round;stroke-linejoin:round;
   }
   .coach-home-teams{margin-bottom:14px;}
