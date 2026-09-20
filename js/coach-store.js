@@ -344,19 +344,112 @@
       if(!match) return [];
       return readDb().match_invites.filter(i => i.match_id === matchId);
     },
-    markInvitesSent(session, matchId, playerIds){
+    parentLinkedForPlayer(teamPlayerId){
+      const pid = String(teamPlayerId || '');
+      if(!pid || !global.ParentStore || typeof global.ParentStore.listLinks !== 'function') return false;
+      return global.ParentStore.listLinks().some(l => l && l.player && String(l.player.id) === pid);
+    },
+    buildMatchInvitePayload(session, matchId, teamPlayerId){
+      const match = this.getMatch(session, matchId);
+      if(!match) return null;
+      const team = this.getTeam(session, match.team_id);
+      const academy = this.myAcademy(session);
+      const profile = this.getProfile(session);
+      const players = this.listMatchPlayers(session, match);
+      const tp = this.getPlayer(session, teamPlayerId);
+      if(!tp) return null;
+      const coachName = [profile.first_name, profile.last_name].filter(Boolean).join(' ') || profile.email || 'Coach';
+      return {
+        match_id: match.id,
+        team_id: match.team_id,
+        team_player_id: tp.id,
+        player_name: [tp.first_name, tp.last_name].filter(Boolean).join(' '),
+        academy_name: academy ? academy.name : '',
+        team_name: team ? team.name : '',
+        team_code: team ? team.invite_code : '',
+        coach_name: coachName,
+        date: match.date,
+        opponent: match.opponent,
+        venue: match.venue,
+        kind: match.kind,
+        squad_names: players.map(p => {
+          const n = [p.first_name, p.last_name].filter(Boolean).join(' ');
+          return p.number ? `#${p.number} ${n}` : n;
+        })
+      };
+    },
+    deliverMatchInvites(session, matchId, opts){
       const match = this.getMatch(session, matchId);
       if(!match) throw new Error('forbidden');
-      const want = new Set((playerIds || []).map(String));
+      const forceUnread = !!(opts && opts.forceUnread);
+      const onlyIds = opts && Array.isArray(opts.playerIds) ? new Set(opts.playerIds.map(String)) : null;
       const db = readDb();
       const now = new Date().toISOString();
-      db.match_invites = db.match_invites.map(i => {
-        if(i.match_id !== matchId) return i;
-        if(want.size && !want.has(i.team_player_id)) return i;
-        return {...i, status: 'sent', sent_at: now};
+      let delivered = 0;
+      let waiting = 0;
+      db.match_invites = db.match_invites.map(inv => {
+        if(inv.match_id !== matchId) return inv;
+        if(onlyIds && !onlyIds.has(String(inv.team_player_id))) return inv;
+        const payload = this.buildMatchInvitePayload(session, matchId, inv.team_player_id);
+        if(!payload) return inv;
+        const linked = this.parentLinkedForPlayer(inv.team_player_id);
+        if(global.InboxStore && typeof global.InboxStore.upsertMatchInvite === 'function'){
+          global.InboxStore.upsertMatchInvite({...payload, forceUnread});
+        }
+        // Keep parent invite snapshot fresh so a new claim/QR also carries the match
+        try{
+          const pinv = db.parent_invites.find(i => i.team_player_id === inv.team_player_id && i.status !== 'revoked');
+          if(pinv && pinv.payload){
+            const mi = Array.isArray(pinv.payload.mi) ? pinv.payload.mi.filter(x => x && x.match_id !== matchId) : [];
+            mi.unshift({
+              match_id: payload.match_id,
+              team_id: payload.team_id,
+              team_player_id: payload.team_player_id,
+              player_name: payload.player_name,
+              academy_name: payload.academy_name,
+              team_name: payload.team_name,
+              team_code: payload.team_code,
+              coach_name: payload.coach_name,
+              date: payload.date,
+              opponent: payload.opponent,
+              venue: payload.venue,
+              kind: payload.kind,
+              squad_names: payload.squad_names
+            });
+            pinv.payload = {...pinv.payload, mi: mi.slice(0, 8)};
+            pinv.updated_at = now;
+          }
+        }catch(e){}
+        if(linked){
+          delivered += 1;
+          return {...inv, status: 'delivered', sent_at: now, channel: 'app'};
+        }
+        waiting += 1;
+        return {...inv, status: 'waiting_parent', sent_at: now, channel: 'app'};
       });
       writeDb(db);
+      return {delivered, waiting, invites: this.listInvites(session, matchId)};
+    },
+    syncInviteReadStatuses(session, matchId){
+      const match = this.getMatch(session, matchId);
+      if(!match || !global.InboxStore) return this.listInvites(session, matchId);
+      const db = readDb();
+      let changed = false;
+      db.match_invites = db.match_invites.map(inv => {
+        if(inv.match_id !== matchId) return inv;
+        const msg = global.InboxStore.findMatchInvite(matchId, inv.team_player_id);
+        if(msg && msg.status === 'read' && inv.status !== 'read'){
+          changed = true;
+          return {...inv, status: 'read', read_at: msg.read_at || new Date().toISOString()};
+        }
+        return inv;
+      });
+      if(changed) writeDb(db);
       return this.listInvites(session, matchId);
+    },
+    markInvitesSent(session, matchId, playerIds){
+      // Back-compat: route through in-app delivery
+      return this.deliverMatchInvites(session, matchId, {playerIds, forceUnread: true}).invites;
     },
     inviteMessage(session, matchId){
       const match = this.getMatch(session, matchId);
@@ -379,6 +472,30 @@
         `Coach: ${coachName}`,
         `Please confirm you can play.`
       ].filter(Boolean).join('\n');
+    },
+    deliverPendingForPlayer(session, teamPlayerId){
+      // When a parent links on this device, push existing upcoming invites into inbox
+      const db = readDb();
+      const invites = db.match_invites.filter(i => i.team_player_id === teamPlayerId);
+      let n = 0;
+      invites.forEach(inv => {
+        const match = db.team_matches.find(m => m.id === inv.match_id);
+        if(!match) return;
+        const payload = this.buildMatchInvitePayload(session, inv.match_id, teamPlayerId);
+        if(!payload || !global.InboxStore) return;
+        global.InboxStore.upsertMatchInvite(payload);
+        n += 1;
+      });
+      if(n){
+        const now = new Date().toISOString();
+        db.match_invites = db.match_invites.map(i => {
+          if(i.team_player_id !== teamPlayerId) return i;
+          if(i.status === 'read') return i;
+          return {...i, status: 'delivered', sent_at: i.sent_at || now, channel: 'app'};
+        });
+        writeDb(db);
+      }
+      return n;
     },
     setMatchSquad(session, matchId, squadIds){
       const match = this.getMatch(session, matchId);
@@ -557,6 +674,12 @@
         c: String(r.comment || '').slice(0, 120),
         p: r.pitchPos || ''
       }));
+      const db = readDb();
+      const mi = db.match_invites
+        .filter(i => i.team_player_id === playerId)
+        .map(i => this.buildMatchInvitePayload(session, i.match_id, playerId))
+        .filter(Boolean)
+        .slice(0, 6);
       return {
         v: 1,
         t: opts && opts.token ? opts.token : uid('ptk').slice(0, 24),
@@ -577,6 +700,7 @@
           pos: detail.player.position
         },
         r: ratings,
+        mi,
         avg: detail.avg,
         g: detail.games,
         iat: new Date().toISOString()

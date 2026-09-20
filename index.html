@@ -109,6 +109,11 @@ window.ffkIsNative = function () {
         <div class="fb-meta" id="fbMeta"></div>
       </div>
       <div id="playerFeed"></div>
+      <div class="pf-card" id="parentInboxCard" hidden>
+        <h3 data-i18n="parentInboxTitle">Сообщения</h3>
+        <p class="hint" data-i18n="parentInboxLead">Приглашения на матч от тренера — внутри Matchcard.</p>
+        <div id="parentInboxList"></div>
+      </div>
       <div class="pf-card" id="parentLinksCard">
         <h3 data-i18n="parentLinksTitle">От академии</h3>
         <p class="hint" data-i18n="parentLinksLead">Подтверждённый ребёнок из академии тренера. Личная статистика у бровки — как раньше, отдельно.</p>
@@ -792,6 +797,11 @@ window.ffkIsNative = function () {
     <div class="coach-rate-card" id="parentLinkBody"></div>
   </div>
 
+  <button class="coach-rate-back" id="parentMsgBack" type="button" hidden></button>
+  <div class="coach-rate-sheet" id="parentMsgSheet" hidden>
+    <div class="coach-rate-card" id="parentMsgBody"></div>
+  </div>
+
   <button class="photo-sheet-back" id="photoSheetBack" type="button" hidden></button>
   <div class="photo-sheet" id="photoSheet" hidden>
     <button type="button" id="photoSheetCamera" data-i18n="pTakePhoto">Снять фото</button>
@@ -1048,6 +1058,7 @@ window.ffkIsNative = function () {
 <script src="js/qrcode-lite.js"></script>
 <script src="js/coach-config.js"></script>
 <script src="js/coach-store.js"></script>
+<script src="js/inbox-store.js"></script>
 <script src="js/parent-store.js"></script>
 <script src="js/coach-ui.js"></script>
 <script src="js/parent-ui.js"></script>

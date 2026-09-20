@@ -23,6 +23,98 @@
     return [p.first_name, p.last_name].filter(Boolean).join(' ') || '—';
   }
 
+  function renderParentInbox(){
+    const store = global.ParentStore;
+    const card = document.getElementById('parentInboxCard');
+    const list = document.getElementById('parentInboxList');
+    if(!card || !list || !store) return;
+    if(typeof isCoachPlan === 'function' && isCoachPlan()){
+      card.hidden = true;
+      return;
+    }
+    const links = store.listLinks();
+    if(!links.length){
+      card.hidden = true;
+      list.innerHTML = '';
+      return;
+    }
+    card.hidden = false;
+    const msgs = store.listInbox();
+    const unread = store.unreadInboxCount();
+    const title = card.querySelector('h3');
+    if(title){
+      const base = tt('parentInboxTitle', 'Messages');
+      title.textContent = unread ? `${base} (${unread})` : base;
+    }
+    if(!msgs.length){
+      list.innerHTML = `<p class="hint">${esc(tt('parentInboxEmpty', 'No match invites yet. When the coach picks the squad, the invite appears here.'))}</p>`;
+      return;
+    }
+    list.innerHTML = msgs.map(m => {
+      const unreadCls = m.status === 'read' ? '' : ' unread';
+      const head = [m.date, m.opponent].filter(Boolean).join(' · ');
+      const meta = [
+        m.player_name,
+        m.team_name,
+        m.team_code ? `${tt('parentTeamCode', 'Code')}: ${m.team_code}` : ''
+      ].filter(Boolean).join(' · ');
+      return `<button type="button" class="parent-msg-row${unreadCls}" data-parent-msg="${esc(m.id)}">
+        <span class="parent-link-main">
+          <b>${esc(head || tt('parentInboxMatch', 'Match invite'))}</b>
+          <span>${esc(meta)}</span>
+        </span>
+        <span class="parent-msg-dot" aria-hidden="true"></span>
+      </button>`;
+    }).join('');
+  }
+
+  function openParentMessage(id){
+    const msg = global.InboxStore && global.InboxStore.get(id);
+    if(!msg) return;
+    if(global.InboxStore) global.InboxStore.markRead(id);
+    // Reflect read status back to coach invites on this device
+    try{
+      const coach = global.CoachStore;
+      const session = coach && coach.getSession && coach.getSession();
+      if(session && msg.match_id && typeof coach.syncInviteReadStatuses === 'function'){
+        coach.syncInviteReadStatuses(session, msg.match_id);
+      }
+    }catch(e){}
+    const sheet = document.getElementById('parentMsgSheet');
+    const back = document.getElementById('parentMsgBack');
+    const body = document.getElementById('parentMsgBody');
+    if(!sheet || !body) return;
+    const venue = msg.venue === 'away'
+      ? tt('venueAway', 'Away')
+      : tt('venueHome', 'Home');
+    const squad = (msg.squad_names || []).length
+      ? `<div class="parent-msg-squad"><b>${esc(tt('parentInboxSquad', 'Squad'))}</b><p class="hint">${esc(msg.squad_names.join(', '))}</p></div>`
+      : '';
+    body.innerHTML = `
+      <div class="parent-confirm-badge">${esc(tt('parentInboxFromCoach', 'From coach'))}</div>
+      <h3 class="coach-rate-name">${esc(msg.opponent || '—')}</h3>
+      <p class="hint">${esc([msg.date, venue, msg.kind].filter(Boolean).join(' · '))}</p>
+      <p class="hint"><b>${esc(tt('parentInboxChild', 'Child'))}:</b> ${esc(msg.player_name || '—')}</p>
+      <p class="hint"><b>${esc(tt('parentCoachLabel', 'Coach'))}:</b> ${esc(msg.coach_name || '—')}</p>
+      <p class="hint"><b>${esc(tt('parentInboxTeam', 'Team'))}:</b> ${esc([msg.academy_name, msg.team_name].filter(Boolean).join(' · ') || '—')}</p>
+      <div class="coach-parent-code">${esc(msg.team_code || '—')}</div>
+      <p class="hint">${esc(tt('parentInboxCodeHint', 'Team invite code from the academy'))}</p>
+      ${squad}
+      <button type="button" class="ghost-btn" id="parentMsgCloseBtn">${esc(tt('previewCancel', 'Close'))}</button>
+    `;
+    sheet.hidden = false;
+    if(back) back.hidden = false;
+    if(typeof pushAppState === 'function') pushAppState('layer');
+    renderParentInbox();
+    if(typeof renderCoachUi === 'function') renderCoachUi();
+  }
+  function closeParentMsgSheet(){
+    const sheet = document.getElementById('parentMsgSheet');
+    const back = document.getElementById('parentMsgBack');
+    if(sheet) sheet.hidden = true;
+    if(back) back.hidden = true;
+  }
+
   function renderParentLinks(){
     const store = global.ParentStore;
     const box = document.getElementById('parentLinksList');
@@ -255,6 +347,7 @@
   }
 
   function renderParentUi(){
+    renderParentInbox();
     renderParentLinks();
     renderParentCoachStats();
   }
@@ -268,6 +361,15 @@
     document.getElementById('parentClaimPreviewBtn')?.addEventListener('click', () => previewClaim());
     document.getElementById('parentClaimConfirmBtn')?.addEventListener('click', () => confirmClaim());
     document.getElementById('parentLinkBack')?.addEventListener('click', () => closeParentLinkSheet());
+    document.getElementById('parentMsgBack')?.addEventListener('click', () => closeParentMsgSheet());
+    document.getElementById('parentInboxList')?.addEventListener('click', e => {
+      const btn = e.target.closest('[data-parent-msg]');
+      if(!btn) return;
+      openParentMessage(btn.dataset.parentMsg);
+    });
+    document.getElementById('parentMsgBody')?.addEventListener('click', e => {
+      if(e.target.closest('#parentMsgCloseBtn')) closeParentMsgSheet();
+    });
     document.getElementById('parentLinksList')?.addEventListener('click', e => {
       const btn = e.target.closest('[data-parent-link]');
       if(!btn) return;
@@ -288,4 +390,5 @@
   global.bindParentUi = bindParentUi;
   global.openParentClaimSheet = openParentClaimSheet;
   global.ingestParentDeepLink = ingestDeepLink;
+  global.closeParentMsgSheet = closeParentMsgSheet;
 })(window);

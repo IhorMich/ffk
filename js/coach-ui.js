@@ -287,6 +287,9 @@
     document.querySelectorAll('.js-cm-invite-again').forEach(btn => {
       btn.hidden = !activeMatch;
     });
+    if(activeMatch && store.syncInviteReadStatuses){
+      store.syncInviteReadStatuses(session, activeMatch.id);
+    }
     renderInviteBox(session, activeMatch);
 
     const matchListHtml = !matches.length
@@ -296,7 +299,7 @@
           const rated = store.listRatings(session, m.id).length;
           const squadN = store.matchSquadIds(session, m).length;
           const invites = store.listInvites ? store.listInvites(session, m.id) : [];
-          const sent = invites.filter(i => i.status === 'sent').length;
+          const sent = invites.filter(i => i.status === 'delivered' || i.status === 'read' || i.status === 'sent' || i.status === 'waiting_parent').length;
           const st = m.status === 'upcoming' || (!m.score && m.status !== 'played')
             ? tt('coachMatchUpcoming', 'upcoming')
             : tt('coachMatchPlayed', 'played');
@@ -322,8 +325,13 @@
             const label = playerLabel(p);
             const rating = store.getRatingForPlayer(session, activeMatch.id, p.id);
             const inv = invBy[p.id];
-            const invLab = !inv ? tt('coachInviteNone', 'No invite')
-              : (inv.status === 'sent' ? tt('coachInviteSent', 'Invite sent') : tt('coachInvitePending', 'Invite pending'));
+            let invLab = tt('coachInviteNone', 'No invite');
+            if(inv){
+              if(inv.status === 'read') invLab = tt('coachInviteRead', 'Read in app');
+              else if(inv.status === 'delivered' || inv.status === 'sent') invLab = tt('coachInviteInApp', 'In app');
+              else if(inv.status === 'waiting_parent') invLab = tt('coachInviteWaitingParent', 'Waiting for parent');
+              else invLab = tt('coachInvitePending', 'Invite pending');
+            }
             const btnLabel = rating
               ? `${tt('coachEditRating', 'Edit')} ${Number(rating.rating).toFixed(1)}`
               : tt('coachRatePlayer', 'Rate');
@@ -350,12 +358,32 @@
       const store = global.CoachStore;
       const invites = store.listInvites(session, match.id);
       const players = store.listMatchPlayers(session, match);
-      const sent = invites.filter(i => i.status === 'sent').length;
+      const delivered = invites.filter(i => i.status === 'delivered' || i.status === 'read' || i.status === 'sent').length;
+      const waiting = invites.filter(i => i.status === 'waiting_parent').length;
+      const read = invites.filter(i => i.status === 'read').length;
+      const rows = players.map(p => {
+        const inv = invites.find(i => i.team_player_id === p.id);
+        let st = tt('coachInvitePending', 'Invite pending');
+        let cls = 'pending';
+        if(inv){
+          if(inv.status === 'read'){ st = tt('coachInviteRead', 'Read in app'); cls = 'read'; }
+          else if(inv.status === 'delivered' || inv.status === 'sent'){ st = tt('coachInviteInApp', 'In app'); cls = 'ok'; }
+          else if(inv.status === 'waiting_parent'){ st = tt('coachInviteWaitingParent', 'Waiting for parent'); cls = 'wait'; }
+        }
+        return `<div class="coach-invite-row">
+          <span>${esc(playerLabel(p))}</span>
+          <b class="coach-invite-st ${cls}">${esc(st)}</b>
+        </div>`;
+      }).join('');
       box.hidden = false;
       box.innerHTML = `<div class="coach-invite-card">
         <b>${esc(tt('coachInviteTitle', 'Match invitations'))}</b>
-        <p class="hint">${esc(tt('coachInviteStatus', '{sent} of {total} sent').replace('{sent}', String(sent)).replace('{total}', String(players.length)))}</p>
-        <p class="hint">${esc(tt('coachInviteExplain', 'Share the invite so players/parents get the match details and team code.'))}</p>
+        <p class="hint">${esc(tt('coachInviteStatusApp', '{inApp} in app · {waiting} waiting for parent · {read} read')
+          .replace('{inApp}', String(delivered))
+          .replace('{waiting}', String(waiting))
+          .replace('{read}', String(read)))}</p>
+        <p class="hint">${esc(tt('coachInviteExplainApp', 'Invites go to parents/guardians inside Matchcard — not WhatsApp or SMS. Link a parent to the player first.'))}</p>
+        <div class="coach-invite-rows">${rows}</div>
       </div>`;
     });
   }
@@ -579,44 +607,28 @@
     const store = global.CoachStore;
     const session = store.getSession();
     if(!session || !matchId) return false;
-    const text = store.inviteMessage(session, matchId);
-    const title = tt('coachInviteShareTitle', 'Matchcard invite');
-    let shared = false;
     try{
-      const C = window.Capacitor;
-      const Share = C && C.Plugins && C.Plugins.Share;
-      if(Share && typeof Share.share === 'function'){
-        await Share.share({title, text, dialogTitle: title});
-        shared = true;
-      }else if(navigator.share){
-        await navigator.share({title, text});
-        shared = true;
-      }else if(navigator.clipboard && navigator.clipboard.writeText){
-        await navigator.clipboard.writeText(text);
-        toast(tt('coachInviteCopied', 'Invite text copied.'));
-        shared = true;
+      const result = store.deliverMatchInvites(session, matchId, {forceUnread: true});
+      const delivered = result.delivered || 0;
+      const waiting = result.waiting || 0;
+      if(delivered && waiting){
+        toast(tt('coachInvitesMixed', '{n} in app, {w} waiting for parent link')
+          .replace('{n}', String(delivered))
+          .replace('{w}', String(waiting)));
+      }else if(delivered){
+        toast(tt('coachInvitesInApp', 'Invitations delivered in the app.'));
+      }else if(waiting){
+        toast(tt('coachInvitesWaiting', 'Invites queued. Link a parent to each player to deliver in-app.'));
+      }else{
+        toast(tt('coachInvitesInApp', 'Invitations delivered in the app.'));
       }
-    }catch(e){
-      // user cancelled share — still mark as attempted only if shared
-      shared = false;
-    }
-    if(shared){
-      store.markInvitesSent(session, matchId);
-      toast(tt('coachInvitesSent', 'Invitations sent.'));
       renderCoachUi();
-    }else{
-      // Fallback: show text so coach can copy manually
-      try{
-        if(navigator.clipboard && navigator.clipboard.writeText){
-          await navigator.clipboard.writeText(text);
-          store.markInvitesSent(session, matchId);
-          toast(tt('coachInviteCopied', 'Invite text copied.'));
-          renderCoachUi();
-          shared = true;
-        }
-      }catch(err){}
+      if(typeof renderParentUi === 'function') renderParentUi();
+      return true;
+    }catch(e){
+      toast(tt('coachErrGeneric', 'Something went wrong.'));
+      return false;
     }
-    return shared;
   }
   async function onCreateMatch(fromEl){
     const session = global.CoachStore.getSession();

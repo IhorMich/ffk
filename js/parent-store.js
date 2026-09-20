@@ -70,7 +70,8 @@
       })),
       avg: raw.avg != null ? Number(raw.avg) : null,
       games: Number(raw.g != null ? raw.g : raw.games) || 0,
-      issued_at: String(raw.iat || raw.issued_at || new Date().toISOString())
+      issued_at: String(raw.iat || raw.issued_at || new Date().toISOString()),
+      mi: Array.isArray(raw.mi || raw.match_invites) ? (raw.mi || raw.match_invites) : []
     };
   }
 
@@ -174,7 +175,37 @@
       }
       db.pendingPayload = null;
       writeDb(db);
+      // Import match invites packed in parent QR/link
+      try{
+        const rawMi = (payload && (payload.mi || payload.match_invites)) || (norm && norm.mi) || [];
+        if(global.InboxStore && Array.isArray(rawMi) && rawMi.length){
+          global.InboxStore.importMessages(rawMi.map(m => ({
+            ...m,
+            team_player_id: m.team_player_id || norm.player.id,
+            player_name: m.player_name || [norm.player.first_name, norm.player.last_name].filter(Boolean).join(' ')
+          })));
+        }
+      }catch(e){}
+      // Same-device: pull coach invites for this player into inbox
+      try{
+        const coach = global.CoachStore;
+        const session = coach && coach.getSession && coach.getSession();
+        if(session && norm.player.id && typeof coach.deliverPendingForPlayer === 'function'){
+          coach.deliverPendingForPlayer(session, norm.player.id);
+        }
+      }catch(e){}
       return row;
+    },
+    linkedPlayerIds(){
+      return this.listLinks().map(l => l.player && l.player.id).filter(Boolean);
+    },
+    listInbox(){
+      if(!global.InboxStore) return [];
+      return global.InboxStore.listForPlayers(this.linkedPlayerIds());
+    },
+    unreadInboxCount(){
+      if(!global.InboxStore) return 0;
+      return global.InboxStore.unreadCountForPlayers(this.linkedPlayerIds());
     },
     removeLink(id){
       const db = readDb();

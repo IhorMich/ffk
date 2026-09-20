@@ -1,0 +1,118 @@
+/* In-app inbox for parents/guardians (match invites etc.).
+   Shared on-device bus — not WhatsApp/SMS. Cloud sync later via Supabase. */
+(function(global){
+  const KEY = 'ffk_inbox_v1';
+
+  function uid(prefix){
+    return `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+  }
+  function emptyDb(){
+    return {version: 1, messages: []};
+  }
+  function readDb(){
+    try{
+      const raw = localStorage.getItem(KEY);
+      if(!raw) return emptyDb();
+      const db = JSON.parse(raw);
+      if(!db || typeof db !== 'object') return emptyDb();
+      return {
+        version: 1,
+        messages: Array.isArray(db.messages) ? db.messages : []
+      };
+    }catch(e){
+      return emptyDb();
+    }
+  }
+  function writeDb(db){
+    localStorage.setItem(KEY, JSON.stringify(db));
+  }
+
+  const InboxStore = {
+    listAll(){
+      return readDb().messages.slice().sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)));
+    },
+    listForPlayers(playerIds){
+      const want = new Set((playerIds || []).map(String).filter(Boolean));
+      if(!want.size) return [];
+      return this.listAll().filter(m => want.has(String(m.team_player_id || '')));
+    },
+    get(id){
+      return readDb().messages.find(m => m.id === id) || null;
+    },
+    findMatchInvite(matchId, teamPlayerId){
+      return readDb().messages.find(m =>
+        m.type === 'match_invite' &&
+        m.match_id === matchId &&
+        m.team_player_id === teamPlayerId
+      ) || null;
+    },
+    upsertMatchInvite(payload){
+      const db = readDb();
+      const matchId = String(payload.match_id || '');
+      const playerId = String(payload.team_player_id || '');
+      if(!matchId || !playerId) throw new Error('bad_message');
+      const existing = db.messages.find(m =>
+        m.type === 'match_invite' && m.match_id === matchId && m.team_player_id === playerId
+      );
+      const now = new Date().toISOString();
+      const row = {
+        id: existing ? existing.id : uid('msg'),
+        type: 'match_invite',
+        match_id: matchId,
+        team_id: String(payload.team_id || ''),
+        team_player_id: playerId,
+        player_name: String(payload.player_name || '').slice(0, 80),
+        academy_name: String(payload.academy_name || '').slice(0, 80),
+        team_name: String(payload.team_name || '').slice(0, 60),
+        team_code: String(payload.team_code || '').slice(0, 12),
+        coach_name: String(payload.coach_name || '').slice(0, 80),
+        date: String(payload.date || '').slice(0, 10),
+        opponent: String(payload.opponent || '').slice(0, 48),
+        venue: payload.venue === 'away' ? 'away' : 'home',
+        kind: String(payload.kind || 'league').slice(0, 16),
+        squad_names: Array.isArray(payload.squad_names)
+          ? payload.squad_names.map(s => String(s).slice(0, 60)).slice(0, 40)
+          : [],
+        status: existing && existing.status === 'read' && !payload.forceUnread
+          ? 'read'
+          : 'delivered',
+        created_at: existing ? existing.created_at : now,
+        updated_at: now,
+        read_at: existing && existing.status === 'read' && !payload.forceUnread
+          ? (existing.read_at || '')
+          : '',
+        sent_count: (existing ? (Number(existing.sent_count) || 1) : 0) + 1
+      };
+      if(existing){
+        db.messages = db.messages.map(m => m.id === existing.id ? row : m);
+      }else{
+        db.messages.push(row);
+      }
+      writeDb(db);
+      return row;
+    },
+    importMessages(list){
+      const out = [];
+      (list || []).forEach(raw => {
+        if(!raw || !raw.match_id || !raw.team_player_id) return;
+        out.push(this.upsertMatchInvite({...raw, forceUnread: false}));
+      });
+      return out;
+    },
+    markRead(id){
+      const db = readDb();
+      const now = new Date().toISOString();
+      db.messages = db.messages.map(m => {
+        if(m.id !== id) return m;
+        return {...m, status: 'read', read_at: m.read_at || now, updated_at: now};
+      });
+      writeDb(db);
+      return this.get(id);
+    },
+    unreadCountForPlayers(playerIds){
+      return this.listForPlayers(playerIds).filter(m => m.status !== 'read').length;
+    }
+  };
+
+  global.InboxStore = InboxStore;
+})(window);

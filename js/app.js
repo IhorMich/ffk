@@ -3781,6 +3781,15 @@ function handleAppBack(){
     if(b) b.hidden = true;
     return true;
   }
+  if(isElShown('parentMsgSheet')){
+    if(typeof closeParentMsgSheet === 'function') closeParentMsgSheet();
+    else {
+      document.getElementById('parentMsgSheet').hidden = true;
+      const b = document.getElementById('parentMsgBack');
+      if(b) b.hidden = true;
+    }
+    return true;
+  }
   if(isElShown('previewModal')){ closeCardPreview(); return true; }
   if(isElShown('playerEdit')){ closePlayerEdit(true); return true; }
   if(document.getElementById('app')?.classList.contains('live-on')){ closeLive(); return true; }
