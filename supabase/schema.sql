@@ -194,7 +194,10 @@ create table if not exists public.team_matches (
   kind text not null default 'league' check (kind in ('league','friendly','cup','tournament')),
   status text not null default 'upcoming' check (status in ('upcoming','played')),
   squad jsonb not null default '[]'::jsonb,
+  meetup text not null default '' check (char_length(meetup) <= 8),
   kickoff text not null default '' check (char_length(kickoff) <= 8),
+  fee_type text not null default 'free' check (fee_type in ('free','paid')),
+  fee text not null default '' check (char_length(fee) <= 24),
   tournament text not null default '' check (char_length(tournament) <= 48),
   event_id text not null default '' check (char_length(event_id) <= 40),
   comment text not null default '' check (char_length(comment) <= 400),
@@ -202,7 +205,10 @@ create table if not exists public.team_matches (
 );
 
 -- Existing projects: run once
+-- alter table public.team_matches add column if not exists meetup text not null default '';
 -- alter table public.team_matches add column if not exists kickoff text not null default '';
+-- alter table public.team_matches add column if not exists fee_type text not null default 'free';
+-- alter table public.team_matches add column if not exists fee text not null default '';
 -- alter table public.team_matches add column if not exists tournament text not null default '';
 -- alter table public.team_matches add column if not exists event_id text not null default '';
 -- alter table public.team_matches add column if not exists comment text not null default '';

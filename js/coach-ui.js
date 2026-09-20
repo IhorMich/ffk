@@ -618,6 +618,9 @@
       : [
           m.meetup ? m.meetup : '',
           m.kickoff ? m.kickoff : '',
+          m.fee_type === 'paid'
+            ? (m.fee ? m.fee : tt('coachMatchFeePaidShort', 'Entry'))
+            : '',
           m.tournament || '',
           `${squadN} ${tt('coachSquadShort', 'played')}`,
           opts.showAddress && m.address ? m.address : ''
@@ -672,6 +675,7 @@
       fillCoachTourDatalist();
       ensureCoachKickoffSelects();
       ensureCoachMeetupSelects();
+      syncCoachFeeAmountWrap();
     }
   }
   function fillHourMinuteSelects(hSel, mSel){
@@ -749,6 +753,44 @@
     if(h) h.value = '';
     if(m) m.value = '';
     if(hidden) hidden.value = '';
+  }
+  function syncCoachFeeAmountWrap(){
+    const type = document.getElementById('coachFeeType')?.value || 'free';
+    const wrap = document.getElementById('coachFeeAmountWrap');
+    if(wrap) wrap.hidden = type !== 'paid';
+    if(type !== 'paid'){
+      const amount = document.getElementById('coachFeeAmount');
+      if(amount) amount.value = '';
+    }
+  }
+  function readCoachFee(root){
+    const scope = root || document;
+    const type = scope.querySelector?.('.js-cm-fee-type')?.value
+      || document.getElementById('coachFeeType')?.value
+      || 'free';
+    if(type !== 'paid') return {fee_type: 'free', fee: ''};
+    const fee = String(
+      scope.querySelector?.('.js-cm-fee')?.value
+      || document.getElementById('coachFeeAmount')?.value
+      || ''
+    ).trim().slice(0, 24);
+    return {fee_type: 'paid', fee};
+  }
+  function clearCoachFee(){
+    const typeEl = document.getElementById('coachFeeType');
+    const amount = document.getElementById('coachFeeAmount');
+    if(typeEl) typeEl.value = 'free';
+    if(amount) amount.value = '';
+    syncCoachFeeAmountWrap();
+  }
+  function formatMatchFee(match){
+    if(!match || match.fee_type !== 'paid'){
+      return tt('coachMatchFeeFree', 'Free');
+    }
+    const amount = String(match.fee || '').trim();
+    return amount
+      ? `${tt('coachMatchFeePaidShort', 'Entry')} ${amount}`
+      : tt('coachMatchFeePaid', 'Paid entry');
   }
   function syncCoachCompetitionField(){
     const kind = document.getElementById('coachMatchKindSelect')?.value
@@ -887,6 +929,7 @@
         activeMatch.kickoff
           ? `${tt('coachMatchKickoff', 'Kick-off')} ${activeMatch.kickoff}`
           : '',
+        formatMatchFee(activeMatch),
         venueLab,
         kindLab,
         activeMatch.tournament || '',
@@ -1198,6 +1241,31 @@
     syncHistoryMeetupHidden();
     return String(document.getElementById('coachHistoryMeetupValue')?.value || '');
   }
+  function syncHistoryFeeAmountWrap(){
+    const type = document.getElementById('coachHistoryFeeType')?.value || 'free';
+    const wrap = document.getElementById('coachHistoryFeeAmountWrap');
+    if(wrap) wrap.hidden = type !== 'paid';
+    if(type !== 'paid'){
+      const amount = document.getElementById('coachHistoryFeeAmount');
+      if(amount) amount.value = '';
+    }
+  }
+  function setHistoryFee(match){
+    const typeEl = document.getElementById('coachHistoryFeeType');
+    const amount = document.getElementById('coachHistoryFeeAmount');
+    const paid = match && match.fee_type === 'paid';
+    if(typeEl) typeEl.value = paid ? 'paid' : 'free';
+    if(amount) amount.value = paid ? String(match.fee || '') : '';
+    syncHistoryFeeAmountWrap();
+  }
+  function readHistoryFee(){
+    const type = document.getElementById('coachHistoryFeeType')?.value || 'free';
+    if(type !== 'paid') return {fee_type: 'free', fee: ''};
+    return {
+      fee_type: 'paid',
+      fee: String(document.getElementById('coachHistoryFeeAmount')?.value || '').trim().slice(0, 24)
+    };
+  }
   function syncHistoryCompetitionField(){
     const kind = document.getElementById('coachHistoryKind')?.value || 'league';
     const wrap = document.getElementById('coachHistoryCompWrap');
@@ -1497,6 +1565,7 @@
         match.kickoff
           ? `${tt('coachMatchKickoff', 'Kick-off')} ${match.kickoff}`
           : '',
+        formatMatchFee(match),
         venueLab,
         kindLab,
         match.tournament || '',
@@ -1529,6 +1598,7 @@
       if(addrEl) addrEl.value = match.address || '';
       setHistoryMeetup(match.meetup || '');
       setHistoryKickoff(match.kickoff || '');
+      setHistoryFee(match);
       syncHistoryCompetitionField();
     }
     fillCoachScoreFields(document.getElementById('coachHistoryScoreRow'), match.score || '');
@@ -2499,12 +2569,19 @@
     const tournament = kind === 'friendly'
       ? ''
       : String(document.getElementById('coachHistoryTournament')?.value || '').trim();
+    const feeInfo = readHistoryFee();
+    if(feeInfo.fee_type === 'paid' && !feeInfo.fee){
+      toast(tt('coachErrFeeAmount', 'Enter the entry fee amount.'));
+      return;
+    }
     try{
       store.updateMatch(session, coachHistoryMatchId, {
         opponent,
         date,
         meetup: readHistoryMeetup(),
         kickoff: readHistoryKickoff(),
+        fee_type: feeInfo.fee_type,
+        fee: feeInfo.fee,
         venue: document.getElementById('coachHistoryVenue')?.value === 'away' ? 'away' : 'home',
         kind,
         tournament,
@@ -2672,6 +2749,7 @@
     const kind = ['league','friendly','cup','tournament'].includes(kindRaw) ? kindRaw : 'league';
     const kickoff = readCoachKickoff(root);
     const meetup = readCoachMeetup(root);
+    const feeInfo = readCoachFee(root);
     const tournament = kind === 'friendly'
       ? ''
       : String(root.querySelector('.js-cm-tournament')?.value || '').trim();
@@ -2686,6 +2764,10 @@
       toast(tt('coachErrSquad', 'Select at least one player who plays.'));
       return;
     }
+    if(feeInfo.fee_type === 'paid' && !feeInfo.fee){
+      toast(tt('coachErrFeeAmount', 'Enter the entry fee amount.'));
+      return;
+    }
     try{
       const match = global.CoachStore.createMatch(session, teamId, {
         opponent,
@@ -2695,6 +2777,8 @@
         kind,
         meetup,
         kickoff,
+        fee_type: feeInfo.fee_type,
+        fee: feeInfo.fee,
         tournament,
         score: '',
         squad,
@@ -2704,6 +2788,7 @@
       root.querySelectorAll('.js-cm-address').forEach(el => { el.value = ''; });
       clearCoachMeetup();
       clearCoachKickoff();
+      clearCoachFee();
       root.querySelectorAll('.js-cm-tournament').forEach(el => { el.value = ''; });
       document.querySelectorAll('#coachMatchCreate .js-cm-squad').forEach(el => { el.dataset.dirty = ''; });
       setCoachMatchCreateOpen(false);
@@ -3423,6 +3508,7 @@
     document.getElementById('coachHistoryKickoffM')?.addEventListener('change', () => syncHistoryKickoffHidden());
     document.getElementById('coachHistoryMeetupH')?.addEventListener('change', () => syncHistoryMeetupHidden());
     document.getElementById('coachHistoryMeetupM')?.addEventListener('change', () => syncHistoryMeetupHidden());
+    document.getElementById('coachHistoryFeeType')?.addEventListener('change', () => syncHistoryFeeAmountWrap());
     document.getElementById('coachHistorySeason')?.addEventListener('change', e => {
       coachHistSeason = e.target.value || 'all';
       closeCoachHistoryMatch();
@@ -3480,6 +3566,7 @@
     document.getElementById('coachKickoffM')?.addEventListener('change', () => syncCoachKickoffHidden());
     document.getElementById('coachMeetupH')?.addEventListener('change', () => syncCoachMeetupHidden());
     document.getElementById('coachMeetupM')?.addEventListener('change', () => syncCoachMeetupHidden());
+    document.getElementById('coachFeeType')?.addEventListener('change', () => syncCoachFeeAmountWrap());
     document.getElementById('coachMatchBackBtn')?.addEventListener('click', () => {
       closeCoachMatchDetail();
     });

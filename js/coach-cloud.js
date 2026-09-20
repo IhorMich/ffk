@@ -133,6 +133,8 @@
         squad: m.squad || [],
         meetup: m.meetup || '',
         kickoff: m.kickoff || '',
+        fee_type: m.fee_type === 'paid' ? 'paid' : 'free',
+        fee: m.fee_type === 'paid' ? (m.fee || '') : '',
         tournament: m.tournament || '',
         event_id: m.event_id || '',
         comment: m.comment || '',
@@ -228,6 +230,8 @@
         squad: Array.isArray(m.squad) ? m.squad : (m.squad || []),
         meetup: m.meetup || '',
         kickoff: m.kickoff || '',
+        fee_type: m.fee_type === 'paid' ? 'paid' : 'free',
+        fee: m.fee_type === 'paid' ? (m.fee || '') : '',
         tournament: m.tournament || '',
         event_id: m.event_id || '',
         comment: m.comment || ''

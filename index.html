@@ -361,6 +361,17 @@ window.ffkIsNative = function () {
                 <input type="hidden" class="js-cm-kickoff" id="coachKickoffValue" value="">
               </div>
               <div class="field">
+                <label data-i18n="coachMatchFee">Плата за вход</label>
+                <select class="js-cm-fee-type" id="coachFeeType">
+                  <option value="free" data-i18n="coachMatchFeeFree">Бесплатно</option>
+                  <option value="paid" data-i18n="coachMatchFeePaid">Платный вход</option>
+                </select>
+              </div>
+              <div class="field" id="coachFeeAmountWrap" hidden>
+                <label data-i18n="coachMatchFeeAmount">Стоимость</label>
+                <input class="js-cm-fee" id="coachFeeAmount" type="text" maxlength="24" inputmode="decimal" data-i18n-placeholder="coachMatchFeeAmountPh" placeholder="50 zł">
+              </div>
+              <div class="field">
                 <label data-i18n="labelVenue">Где играете</label>
                 <select class="js-cm-venue">
                   <option value="home" data-i18n="venueHome">Дома</option>
@@ -552,6 +563,17 @@ window.ffkIsNative = function () {
                       <select class="js-ch-kickoff-m" id="coachHistoryKickoffM" aria-label="minute"></select>
                     </div>
                     <input type="hidden" class="js-ch-kickoff" id="coachHistoryKickoffValue" value="">
+                  </div>
+                  <div class="field">
+                    <label data-i18n="coachMatchFee">Плата за вход</label>
+                    <select class="js-ch-fee-type" id="coachHistoryFeeType">
+                      <option value="free" data-i18n="coachMatchFeeFree">Бесплатно</option>
+                      <option value="paid" data-i18n="coachMatchFeePaid">Платный вход</option>
+                    </select>
+                  </div>
+                  <div class="field" id="coachHistoryFeeAmountWrap" hidden>
+                    <label data-i18n="coachMatchFeeAmount">Стоимость</label>
+                    <input class="js-ch-fee" id="coachHistoryFeeAmount" type="text" maxlength="24" inputmode="decimal" data-i18n-placeholder="coachMatchFeeAmountPh" placeholder="50 zł">
                   </div>
                   <div class="field">
                     <label data-i18n="labelVenue">Где играете</label>

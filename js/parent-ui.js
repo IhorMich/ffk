@@ -191,6 +191,14 @@
         ${detailRow(tt('labelDate', 'Date'), msg.date || '')}
         ${detailRow(tt('coachMatchMeetup', 'Meetup time'), msg.meetup || '')}
         ${detailRow(tt('coachMatchKickoff', 'Kick-off'), msg.kickoff || '')}
+        ${detailRow(
+          tt('coachMatchFee', 'Entry fee'),
+          msg.fee_type === 'paid'
+            ? (msg.fee
+              ? msg.fee
+              : tt('coachMatchFeePaid', 'Paid entry'))
+            : tt('coachMatchFeeFree', 'Free')
+        )}
         ${detailRow(tt('labelVenue', 'Venue'), venue)}
         ${detailRow(tt('coachMatchKind', 'Match type'), kindLab)}
         ${!isResult && msg.tournament
