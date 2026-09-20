@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="ru" class="intro-on">
 <head>
 <meta charset="UTF-8">
 <script>
@@ -40,14 +40,6 @@ window.ffkIsNative = function () {
 <title>Matchcard — Оценка матча</title>
 <link rel="stylesheet" href="css/app.css">
 <script src="js/version.js"></script>
-<script>
-(function () {
-  try {
-    var s = JSON.parse(localStorage.getItem('ffk_settings') || '{}');
-    if (!s.introMark) document.documentElement.classList.add('intro-on');
-  } catch (e) {}
-})();
-</script>
 </head>
 <body>
 <div class="app" id="app">
@@ -439,7 +431,7 @@ window.ffkIsNative = function () {
     </div>
   </div>
 
-  <div class="intro" id="intro" hidden>
+  <div class="intro" id="intro">
     <div class="intro-ambience" aria-hidden="true"></div>
     <div class="intro-col">
       <div class="intro-stack" aria-hidden="true">
@@ -542,17 +534,6 @@ window.ffkIsNative = function () {
       </div>
     </div>
   </div>
-  <script>
-  (function () {
-    try {
-      var s = JSON.parse(localStorage.getItem('ffk_settings') || '{}');
-      if (!s.introMark) {
-        var el = document.getElementById('intro');
-        if (el) el.hidden = false;
-      }
-    } catch (e) {}
-  })();
-  </script>
   <div class="onboard" id="transfer" hidden>
     <div class="onboard-card">
       <div class="brand-fan" aria-hidden="true"><i></i><i></i><i></i><i></i></div>

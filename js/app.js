@@ -3559,14 +3559,6 @@ function onboardPages(){
   ];
 }
 let introBusy = false;
-function introAlreadySeen(){
-  return !!(settings && settings.introMark);
-}
-function markIntroSeen(){
-  if(settings.introMark) return;
-  settings.introMark = 'seen';
-  saveSettings();
-}
 function skipIntroNow(){
   const el = document.getElementById('intro');
   if(el){
@@ -3584,7 +3576,6 @@ function finishIntro(){
   const el = document.getElementById('intro');
   if(!el || el.hidden || introBusy) return;
   introBusy = true;
-  markIntroSeen();
   el.classList.add('out');
   window.setTimeout(() => {
     el.hidden = true;
@@ -3602,11 +3593,10 @@ function hideNativeSplash(){
 }
 function playIntro(){
   const el = document.getElementById('intro');
-  if(!el || introAlreadySeen()){
+  if(!el){
     skipIntroNow();
     return false;
   }
-  markIntroSeen();
   introBusy = false;
   document.documentElement.classList.add('intro-on');
   el.hidden = false;
