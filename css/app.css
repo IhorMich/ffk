@@ -1831,11 +1831,17 @@
     background:var(--card-paper);color:var(--card-ink);
     border:1px solid var(--card-line);border-bottom:0;
     box-shadow:0 -12px 40px rgba(0,0,0,.35), inset 3px 0 0 var(--card-accent);
+    transition:max-height .26s ease, border-radius .26s ease;
+    will-change:transform;
+  }
+  .coach-rate-card.sheet-full{
+    max-height:100dvh;border-radius:0;
   }
   .coach-rate-card-quick{
     display:flex;flex-direction:column;max-height:min(92dvh,92vh);
     overflow:hidden;padding:8px 14px 10px;gap:0;
   }
+  .coach-rate-card-quick.sheet-full{max-height:100dvh;border-radius:0;}
   .coach-rate-card-quick .sheet-grab{margin-bottom:2px;}
   .coach-rate-quick-head{
     display:flex;align-items:flex-start;justify-content:space-between;gap:10px;

@@ -401,38 +401,21 @@
     const session = store && store.getSession();
     if(session) renderWorkspace(session);
     if(typeof refreshCoachMediaUi === 'function') refreshCoachMediaUi();
-    sheet.hidden = false;
-    sheet.classList.remove('sheet-hiding');
-    if(back){
-      back.hidden = false;
-      back.classList.remove('sheet-hiding');
-    }
-    if(card){
-      card.__sheetOverlay = back || sheet;
-      if(typeof openSheet === 'function') openSheet(card);
-      else{
-        card.classList.remove('sheet-full', 'sheet-dragging');
-        card.style.transform = '';
-      }
+    if(typeof presentSheetCard === 'function') presentSheetCard(card, back);
+    else{
+      sheet.hidden = false;
+      if(back) back.hidden = false;
     }
     if(typeof pushAppState === 'function') pushAppState('layer');
   }
-  function closeCoachSettings(fromDrag){
-    const sheet = document.getElementById('coachSettingsSheet');
+  function closeCoachSettings(){
     const back = document.getElementById('coachSettingsBack');
     const card = document.getElementById('coachSettingsCard');
-    if(card && typeof resetSheet === 'function') resetSheet(card);
-    else if(card){
-      card.classList.remove('sheet-full', 'sheet-dragging');
-      card.style.transform = '';
-    }
-    if(sheet){
-      sheet.hidden = true;
-      sheet.classList.remove('sheet-hiding');
-    }
-    if(back){
-      back.hidden = true;
-      back.classList.remove('sheet-hiding');
+    if(typeof hideSheetCard === 'function') hideSheetCard(card, back);
+    else{
+      const sheet = document.getElementById('coachSettingsSheet');
+      if(sheet) sheet.hidden = true;
+      if(back) back.hidden = true;
     }
   }
 
@@ -1355,18 +1338,26 @@
     const ageEl = document.getElementById('coachTeamRenameAgeInput');
     if(nameEl) nameEl.value = team.name || '';
     if(ageEl) ageEl.value = team.age_group || '';
-    const sheet = document.getElementById('coachTeamMenuSheet');
+    const card = document.getElementById('coachTeamMenuCard');
     const back = document.getElementById('coachTeamMenuBack');
-    if(sheet) sheet.hidden = false;
-    if(back) back.hidden = false;
+    if(typeof presentSheetCard === 'function') presentSheetCard(card, back);
+    else{
+      const sheet = document.getElementById('coachTeamMenuSheet');
+      if(sheet) sheet.hidden = false;
+      if(back) back.hidden = false;
+    }
     if(typeof pushAppState === 'function') pushAppState('layer');
   }
   function closeTeamMenu(){
     teamMenuId = '';
-    const sheet = document.getElementById('coachTeamMenuSheet');
+    const card = document.getElementById('coachTeamMenuCard');
     const back = document.getElementById('coachTeamMenuBack');
-    if(sheet) sheet.hidden = true;
-    if(back) back.hidden = true;
+    if(typeof hideSheetCard === 'function') hideSheetCard(card, back);
+    else{
+      const sheet = document.getElementById('coachTeamMenuSheet');
+      if(sheet) sheet.hidden = true;
+      if(back) back.hidden = true;
+    }
   }
   function onSaveTeamRename(){
     if(!teamMenuId) return;
@@ -1681,8 +1672,7 @@
     };
     const sheet = document.getElementById('coachRateSheet');
     const back = document.getElementById('coachRateBack');
-    if(sheet) sheet.hidden = false;
-    if(back) back.hidden = false;
+    const card = document.getElementById('coachRateCard');
     const nameEl = document.getElementById('coachRateName');
     const metaEl = document.getElementById('coachRateMeta');
     const commentEl = document.getElementById('coachRateComment');
@@ -1694,14 +1684,23 @@
     if(commentEl) commentEl.value = quickRate.comment;
     syncQuickScoreUi();
     renderQuickMoments();
+    if(typeof presentSheetCard === 'function') presentSheetCard(card, back);
+    else{
+      if(sheet) sheet.hidden = false;
+      if(back) back.hidden = false;
+    }
     if(typeof pushAppState === 'function') pushAppState('layer');
   }
   function closeCoachQuickRate(){
     quickRate = null;
-    const sheet = document.getElementById('coachRateSheet');
+    const card = document.getElementById('coachRateCard');
     const back = document.getElementById('coachRateBack');
-    if(sheet) sheet.hidden = true;
-    if(back) back.hidden = true;
+    if(typeof hideSheetCard === 'function') hideSheetCard(card, back);
+    else{
+      const sheet = document.getElementById('coachRateSheet');
+      if(sheet) sheet.hidden = true;
+      if(back) back.hidden = true;
+    }
   }
 
   let detailPlayerId = '';
@@ -1711,10 +1710,14 @@
   function closeCoachPlayerSheet(){
     detailPlayerId = '';
     detailEditOpen = false;
-    const sheet = document.getElementById('coachPlayerSheet');
+    const card = document.getElementById('coachPlayerCard');
     const back = document.getElementById('coachPlayerBack');
-    if(sheet) sheet.hidden = true;
-    if(back) back.hidden = true;
+    if(typeof hideSheetCard === 'function') hideSheetCard(card, back);
+    else{
+      const sheet = document.getElementById('coachPlayerSheet');
+      if(sheet) sheet.hidden = true;
+      if(back) back.hidden = true;
+    }
   }
   function closeAllCoachOverlays(){
     closeCoachPlayerSheet();
@@ -1802,7 +1805,6 @@
         </div>`
       : '';
     body.innerHTML = `
-      <div class="sheet-grab" aria-hidden="true"><span></span></div>
       <div class="pro-kicker">${esc(tt('coachPlayerDetailKicker', 'Player'))}</div>
       <h3 class="coach-rate-name" id="coachPlayerSheetTitle">${esc(label)}</h3>
       <p class="hint">${esc(metaBits)}</p>
@@ -1836,8 +1838,12 @@
         fillPitchSelect(posSel, p.position || 'RW', true);
       }
     }
-    sheet.hidden = false;
-    if(back) back.hidden = false;
+    const card = document.getElementById('coachPlayerCard');
+    if(typeof presentSheetCard === 'function') presentSheetCard(card, back);
+    else{
+      sheet.hidden = false;
+      if(back) back.hidden = false;
+    }
     if(typeof pushAppState === 'function') pushAppState('layer');
   }
 
@@ -1968,10 +1974,14 @@
 
   function closeCoachParentInviteSheet(){
     parentInviteRow = null;
-    const sheet = document.getElementById('coachParentInviteSheet');
+    const card = document.getElementById('coachParentInviteCard');
     const back = document.getElementById('coachParentInviteBack');
-    if(sheet) sheet.hidden = true;
-    if(back) back.hidden = true;
+    if(typeof hideSheetCard === 'function') hideSheetCard(card, back);
+    else{
+      const sheet = document.getElementById('coachParentInviteSheet');
+      if(sheet) sheet.hidden = true;
+      if(back) back.hidden = true;
+    }
   }
   function openCoachParentInviteSheet(playerId){
     const store = global.CoachStore;
@@ -2015,8 +2025,12 @@
     }catch(e){}
     const qrLink = global.ParentStore ? global.ParentStore.buildLink(qrPayload) : deep;
     drawInviteQr(qrLink.length < 1800 ? qrLink : `FFKP1:${global.ParentStore.encodePayload(qrPayload)}`);
-    if(sheet) sheet.hidden = false;
-    if(back) back.hidden = false;
+    const card = document.getElementById('coachParentInviteCard');
+    if(typeof presentSheetCard === 'function') presentSheetCard(card, back);
+    else{
+      if(sheet) sheet.hidden = false;
+      if(back) back.hidden = false;
+    }
     if(typeof pushAppState === 'function') pushAppState('layer');
   }
 
@@ -2055,6 +2069,8 @@
     const store = global.CoachStore;
     const session = store.getSession();
     if(!session) return;
+    const matchId = quickRate.matchId;
+    const playerId = quickRate.teamPlayerId;
     const comment = document.getElementById('coachRateComment')?.value || '';
     const minutes = 60;
     const matchLen = 60;
@@ -2064,8 +2080,8 @@
       ? actionScore(quickRate.counts, quickRate.position, minutes, matchLen)
       : quickRate.rating;
     store.upsertRating(session, {
-      match_id: quickRate.matchId,
-      team_player_id: quickRate.teamPlayerId,
+      match_id: matchId,
+      team_player_id: playerId,
       player_name: quickRate.playerName,
       pitchPos: quickRate.pitchPos,
       position: quickRate.position,
@@ -2082,18 +2098,46 @@
       actionRating: action,
       effortRating: 6,
       rating: clampQuickScore(quickRate.rating),
-      score: quickRate.score || store.getMatch(session, quickRate.matchId)?.score || ''
+      score: quickRate.score || store.getMatch(session, matchId)?.score || ''
     });
     // Ensure match is in played state once ratings start
     try{
-      const m = store.getMatch(session, quickRate.matchId);
+      const m = store.getMatch(session, matchId);
       if(m && !matchIsPlayed(m)){
-        store.finishMatch(session, quickRate.matchId, m.score || '');
+        store.finishMatch(session, matchId, m.score || '');
       }
     }catch(e){}
     closeCoachQuickRate();
-    toast(tt('coachRatingSaved', 'Player rating saved to Coach.'));
+    // Auto-send this player's card to their parent/guardian only.
+    let delivered = 0;
+    let waiting = 0;
+    try{
+      const result = store.deliverMatchResults(session, matchId, {
+        playerIds: [playerId],
+        forceUnread: true
+      });
+      delivered = result.delivered || 0;
+      waiting = result.waiting || 0;
+    }catch(e){
+      if(e && e.message === 'not_finished'){
+        toast(tt('coachRatingSavedNeedScore', 'Rating saved. Save the match score to send the card to the parent.'));
+        renderCoachUi();
+        if(typeof renderParentUi === 'function') renderParentUi();
+        return;
+      }
+      toast(tt('coachRatingSaved', 'Player rating saved to Coach.'));
+      renderCoachUi();
+      return;
+    }
+    if(delivered){
+      toast(tt('coachRatingSavedSent', 'Saved and sent to the parent.'));
+    }else if(waiting){
+      toast(tt('coachRatingSavedWaiting', 'Saved. Card queued — link a parent to deliver it.'));
+    }else{
+      toast(tt('coachRatingSaved', 'Player rating saved to Coach.'));
+    }
     renderCoachUi();
+    if(typeof renderParentUi === 'function') renderParentUi();
   }
 
   function bindCoachUi(){

@@ -184,18 +184,26 @@
       ${resultBlock}
       <button type="button" class="ghost-btn" id="parentMsgCloseBtn">${esc(tt('previewCancel', 'Close'))}</button>
     `;
-    sheet.hidden = false;
-    if(back) back.hidden = false;
+    const card = document.getElementById('parentMsgCard');
+    if(typeof presentSheetCard === 'function') presentSheetCard(card, back);
+    else{
+      sheet.hidden = false;
+      if(back) back.hidden = false;
+    }
     if(typeof pushAppState === 'function') pushAppState('layer');
     renderParentInbox();
     if(typeof renderCoachUi === 'function') renderCoachUi();
     syncInboxBellUi();
   }
   function closeParentMsgSheet(){
-    const sheet = document.getElementById('parentMsgSheet');
+    const card = document.getElementById('parentMsgCard');
     const back = document.getElementById('parentMsgBack');
-    if(sheet) sheet.hidden = true;
-    if(back) back.hidden = true;
+    if(typeof hideSheetCard === 'function') hideSheetCard(card, back);
+    else{
+      const sheet = document.getElementById('parentMsgSheet');
+      if(sheet) sheet.hidden = true;
+      if(back) back.hidden = true;
+    }
     syncInboxBellUi();
   }
 
@@ -286,22 +294,30 @@
       toast(tt('parentNotInCoach', 'Switch off Coach plan to add a child as a parent.'));
       return;
     }
-    const sheet = document.getElementById('parentClaimSheet');
     const back = document.getElementById('parentClaimBack');
+    const card = document.getElementById('parentClaimCard');
     const input = document.getElementById('parentClaimInput');
     const preview = document.getElementById('parentClaimPreview');
     if(input) input.value = prefill || '';
     if(preview) preview.innerHTML = '';
-    if(sheet) sheet.hidden = false;
-    if(back) back.hidden = false;
+    if(typeof presentSheetCard === 'function') presentSheetCard(card, back);
+    else{
+      const sheet = document.getElementById('parentClaimSheet');
+      if(sheet) sheet.hidden = false;
+      if(back) back.hidden = false;
+    }
     if(prefill) previewClaim();
     if(typeof pushAppState === 'function') pushAppState('layer');
   }
   function closeParentClaimSheet(){
-    const sheet = document.getElementById('parentClaimSheet');
+    const card = document.getElementById('parentClaimCard');
     const back = document.getElementById('parentClaimBack');
-    if(sheet) sheet.hidden = true;
-    if(back) back.hidden = true;
+    if(typeof hideSheetCard === 'function') hideSheetCard(card, back);
+    else{
+      const sheet = document.getElementById('parentClaimSheet');
+      if(sheet) sheet.hidden = true;
+      if(back) back.hidden = true;
+    }
   }
   function previewClaim(){
     const store = global.ParentStore;
@@ -360,6 +376,7 @@
     const sheet = document.getElementById('parentLinkSheet');
     const back = document.getElementById('parentLinkBack');
     const body = document.getElementById('parentLinkBody');
+    const card = document.getElementById('parentLinkCard');
     if(!sheet || !body) return;
     const name = playerName(link.player);
     body.innerHTML = `
@@ -380,15 +397,22 @@
       <p class="hint">${esc(tt('parentPersonalNote', 'Your sideline Matchcard ratings stay in History / Stats as before.'))}</p>
       <button type="button" class="ghost-btn" id="parentUnlinkBtn" data-unlink="${esc(link.id)}">${esc(tt('parentUnlink', 'Remove academy link'))}</button>
     `;
-    sheet.hidden = false;
-    if(back) back.hidden = false;
+    if(typeof presentSheetCard === 'function') presentSheetCard(card, back);
+    else{
+      sheet.hidden = false;
+      if(back) back.hidden = false;
+    }
     if(typeof pushAppState === 'function') pushAppState('layer');
   }
   function closeParentLinkSheet(){
-    const sheet = document.getElementById('parentLinkSheet');
+    const card = document.getElementById('parentLinkCard');
     const back = document.getElementById('parentLinkBack');
-    if(sheet) sheet.hidden = true;
-    if(back) back.hidden = true;
+    if(typeof hideSheetCard === 'function') hideSheetCard(card, back);
+    else{
+      const sheet = document.getElementById('parentLinkSheet');
+      if(sheet) sheet.hidden = true;
+      if(back) back.hidden = true;
+    }
   }
 
   function ingestDeepLink(url){
@@ -486,6 +510,8 @@
   global.openInboxSheet = openInboxSheet;
   global.closeInboxSheet = closeInboxSheet;
   global.openParentClaimSheet = openParentClaimSheet;
+  global.closeParentClaimSheet = closeParentClaimSheet;
+  global.closeParentLinkSheet = closeParentLinkSheet;
   global.ingestParentDeepLink = ingestDeepLink;
   global.closeParentMsgSheet = closeParentMsgSheet;
 })(window);

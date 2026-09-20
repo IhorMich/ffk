@@ -768,8 +768,8 @@ window.ffkIsNative = function () {
 
   <button class="coach-rate-back" id="coachTeamMenuBack" type="button" hidden></button>
   <div class="coach-rate-sheet" id="coachTeamMenuSheet" hidden>
-    <div class="coach-rate-card">
-      <div class="sheet-grab" aria-hidden="true"><span></span></div>
+    <div class="coach-rate-card" id="coachTeamMenuCard">
+      <div class="sheet-grab" id="coachTeamMenuGrab" aria-hidden="true"><span></span></div>
       <div class="coach-settings-head">
         <div class="pro-kicker" data-i18n="coachTeamMenuKicker">Команда</div>
         <button type="button" class="ghost-btn coach-settings-close" id="coachTeamMenuCloseBtn" data-i18n="previewCancel">Закрыть</button>
@@ -900,8 +900,8 @@ window.ffkIsNative = function () {
   <div class="toast" id="toast"></div>
   <button class="coach-rate-back" id="coachRateBack" type="button" hidden></button>
   <div class="coach-rate-sheet" id="coachRateSheet" hidden>
-    <div class="coach-rate-card coach-rate-card-quick">
-      <div class="sheet-grab" aria-hidden="true"><span></span></div>
+    <div class="coach-rate-card coach-rate-card-quick" id="coachRateCard">
+      <div class="sheet-grab" id="coachRateGrab" aria-hidden="true"><span></span></div>
       <div class="coach-rate-quick-head">
         <div>
           <div class="pro-kicker" data-i18n="coachQuickKicker">Быстрая оценка</div>
@@ -925,7 +925,7 @@ window.ffkIsNative = function () {
         </div>
       </div>
       <div class="coach-rate-sticky-actions">
-        <button class="save-btn" id="coachRateSaveBtn" type="button" data-i18n="coachQuickSave">Сохранить оценку</button>
+        <button class="save-btn" id="coachRateSaveBtn" type="button" data-i18n="coachQuickSaveSend">Сохранить и отправить родителю</button>
         <button class="ghost-btn" id="coachRateCancelBtn" type="button" data-i18n="previewCancel">Отмена</button>
       </div>
     </div>
@@ -933,13 +933,16 @@ window.ffkIsNative = function () {
 
   <button class="coach-rate-back" id="coachPlayerBack" type="button" hidden></button>
   <div class="coach-rate-sheet" id="coachPlayerSheet" hidden>
-    <div class="coach-rate-card" id="coachPlayerBody"></div>
+    <div class="coach-rate-card" id="coachPlayerCard">
+      <div class="sheet-grab" id="coachPlayerGrab" aria-hidden="true"><span></span></div>
+      <div id="coachPlayerBody"></div>
+    </div>
   </div>
 
   <button class="coach-rate-back" id="coachParentInviteBack" type="button" hidden></button>
   <div class="coach-rate-sheet" id="coachParentInviteSheet" hidden>
-    <div class="coach-rate-card">
-      <div class="sheet-grab" aria-hidden="true"><span></span></div>
+    <div class="coach-rate-card" id="coachParentInviteCard">
+      <div class="sheet-grab" id="coachParentInviteGrab" aria-hidden="true"><span></span></div>
       <div class="pro-kicker" data-i18n="coachParentInviteKicker">Приглашение родителя</div>
       <h3 class="coach-rate-name" id="coachParentInviteName">—</h3>
       <p class="hint" id="coachParentInviteMeta"></p>
@@ -958,8 +961,8 @@ window.ffkIsNative = function () {
 
   <button class="coach-rate-back" id="parentClaimBack" type="button" hidden></button>
   <div class="coach-rate-sheet" id="parentClaimSheet" hidden>
-    <div class="coach-rate-card">
-      <div class="sheet-grab" aria-hidden="true"><span></span></div>
+    <div class="coach-rate-card" id="parentClaimCard">
+      <div class="sheet-grab" id="parentClaimGrab" aria-hidden="true"><span></span></div>
       <div class="pro-kicker" data-i18n="parentClaimKicker">Добавить ребёнка</div>
       <p class="hint" data-i18n="parentClaimLead">Вставьте ссылку из QR или код MC-XXXXXX от тренера.</p>
       <div class="field">
@@ -975,12 +978,18 @@ window.ffkIsNative = function () {
 
   <button class="coach-rate-back" id="parentLinkBack" type="button" hidden></button>
   <div class="coach-rate-sheet" id="parentLinkSheet" hidden>
-    <div class="coach-rate-card" id="parentLinkBody"></div>
+    <div class="coach-rate-card" id="parentLinkCard">
+      <div class="sheet-grab" id="parentLinkGrab" aria-hidden="true"><span></span></div>
+      <div id="parentLinkBody"></div>
+    </div>
   </div>
 
   <button class="coach-rate-back" id="parentMsgBack" type="button" hidden></button>
   <div class="coach-rate-sheet" id="parentMsgSheet" hidden>
-    <div class="coach-rate-card" id="parentMsgBody"></div>
+    <div class="coach-rate-card" id="parentMsgCard">
+      <div class="sheet-grab" id="parentMsgGrab" aria-hidden="true"><span></span></div>
+      <div id="parentMsgBody"></div>
+    </div>
   </div>
 
   <button class="coach-rate-back" id="inboxSheetBack" type="button" hidden aria-hidden="true"></button>

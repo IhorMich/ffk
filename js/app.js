@@ -4121,6 +4121,34 @@ function openSheet(card){
     );
   }catch(e){}
 }
+/** Show a bottom-sheet card with the same drag/expand behavior as player edit. */
+function presentSheetCard(card, back){
+  if(!card) return;
+  const wrap = card.parentElement;
+  card.__sheetOverlay = back || wrap;
+  if(back){
+    back.hidden = false;
+    back.classList.remove('sheet-hiding');
+  }
+  if(wrap){
+    wrap.hidden = false;
+    wrap.classList.remove('sheet-hiding');
+  }
+  openSheet(card);
+}
+function hideSheetCard(card, back){
+  if(card) resetSheet(card);
+  if(card && card.parentElement){
+    card.parentElement.hidden = true;
+    card.parentElement.classList.remove('sheet-hiding');
+  }
+  if(back){
+    back.hidden = true;
+    back.classList.remove('sheet-hiding');
+  }
+}
+window.presentSheetCard = presentSheetCard;
+window.hideSheetCard = hideSheetCard;
 // Glides the sheet from where the finger left it either back into place or out
 // of the screen; CSS transitions are unreliable right after a drag.
 function settleSheet(card, from, toClose, onClose){
@@ -4190,6 +4218,27 @@ function bindSheets(){
   bindSheetDrag('previewCard', 'previewGrab', () => closeCardPreview());
   bindSheetDrag('coachSettingsCard', 'coachSettingsGrab', () => {
     if(typeof window.closeCoachSettings === 'function') window.closeCoachSettings(true);
+  });
+  bindSheetDrag('coachRateCard', 'coachRateGrab', () => {
+    if(typeof window.closeCoachQuickRate === 'function') window.closeCoachQuickRate();
+  });
+  bindSheetDrag('coachPlayerCard', 'coachPlayerGrab', () => {
+    if(typeof window.closeCoachPlayerSheet === 'function') window.closeCoachPlayerSheet();
+  });
+  bindSheetDrag('coachParentInviteCard', 'coachParentInviteGrab', () => {
+    if(typeof window.closeCoachParentInviteSheet === 'function') window.closeCoachParentInviteSheet();
+  });
+  bindSheetDrag('coachTeamMenuCard', 'coachTeamMenuGrab', () => {
+    if(typeof window.closeTeamMenu === 'function') window.closeTeamMenu();
+  });
+  bindSheetDrag('parentClaimCard', 'parentClaimGrab', () => {
+    if(typeof window.closeParentClaimSheet === 'function') window.closeParentClaimSheet();
+  });
+  bindSheetDrag('parentLinkCard', 'parentLinkGrab', () => {
+    if(typeof window.closeParentLinkSheet === 'function') window.closeParentLinkSheet();
+  });
+  bindSheetDrag('parentMsgCard', 'parentMsgGrab', () => {
+    if(typeof window.closeParentMsgSheet === 'function') window.closeParentMsgSheet();
   });
 }
 // Android back (key and edge gesture) is routed through MainActivity, which calls
