@@ -15,7 +15,7 @@
   }
   function emptyDb(){
     return {
-      version: 2,
+      version: 3,
       accounts: {},
       academies: [],
       teams: [],
@@ -25,6 +25,7 @@
       ratings: [],
       match_invites: [],
       parent_invites: [],
+      device_tokens: [],
       activeTeamId: '',
       activeMatchId: ''
     };
@@ -36,7 +37,7 @@
       const db = JSON.parse(raw);
       if(!db || typeof db !== 'object') return emptyDb();
       return {
-        version: 2,
+        version: 3,
         accounts: db.accounts && typeof db.accounts === 'object' ? db.accounts : {},
         academies: Array.isArray(db.academies) ? db.academies : [],
         teams: Array.isArray(db.teams) ? db.teams : [],
@@ -46,6 +47,7 @@
         ratings: Array.isArray(db.ratings) ? db.ratings : [],
         match_invites: Array.isArray(db.match_invites) ? db.match_invites : [],
         parent_invites: Array.isArray(db.parent_invites) ? db.parent_invites : [],
+        device_tokens: Array.isArray(db.device_tokens) ? db.device_tokens : [],
         activeTeamId: String(db.activeTeamId || ''),
         activeMatchId: String(db.activeMatchId || '')
       };
@@ -55,6 +57,11 @@
   }
   function writeDb(db){
     localStorage.setItem(KEY, JSON.stringify(db));
+    try{
+      if(global.CoachCloud && typeof global.CoachCloud.scheduleSync === 'function'){
+        global.CoachCloud.scheduleSync();
+      }
+    }catch(e){}
   }
   function readSession(){
     try{
@@ -77,12 +84,48 @@
 
   const CoachStore = {
     getSession(){ return readSession(); },
-    signOut(){ writeSession(null); },
+    signOut(){
+      writeSession(null);
+      try{
+        if(global.CoachCloud && typeof global.CoachCloud.cloudSignOut === 'function'){
+          global.CoachCloud.cloudSignOut();
+        }
+      }catch(e){}
+    },
     async signUp(email, password){
       email = String(email || '').trim().toLowerCase();
       password = String(password || '');
       if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error('bad_email');
       if(password.length < 6) throw new Error('bad_password');
+
+      // Prefer Supabase auth when configured
+      if(global.CoachCloud && global.CoachCloud.ready && global.CoachCloud.ready()){
+        try{
+          const session = await global.CoachCloud.cloudSignUp(email, password);
+          const db = readDb();
+          db.accounts[email] = {
+            id: session.userId,
+            email,
+            passHash: '',
+            first_name: '',
+            last_name: '',
+            photo: '',
+            cover: '',
+            coach_sub: true,
+            createdAt: new Date().toISOString()
+          };
+          writeDb(db);
+          writeSession(session);
+          try{ await global.CoachCloud.pullRemoteIntoLocal(); }catch(e){}
+          return session;
+        }catch(e){
+          // Fall through to local if cloud rejects (e.g. network)
+          if(e && e.message === 'no_cloud'){ /* continue */ }
+          else if(e && /already|exists|registered/i.test(String(e.message || e))) throw new Error('exists');
+          else if(e && e.status === 422) throw new Error('exists');
+        }
+      }
+
       const db = readDb();
       if(db.accounts[email]) throw new Error('exists');
       const id = uid('usr');
@@ -94,6 +137,7 @@
         last_name: '',
         photo: '',
         cover: '',
+        coach_sub: false,
         createdAt: new Date().toISOString()
       };
       writeDb(db);
@@ -103,12 +147,38 @@
     },
     async signIn(email, password){
       email = String(email || '').trim().toLowerCase();
+      password = String(password || '');
+      if(global.CoachCloud && global.CoachCloud.ready && global.CoachCloud.ready()){
+        try{
+          const session = await global.CoachCloud.cloudSignIn(email, password);
+          const db = readDb();
+          if(!db.accounts[email]){
+            db.accounts[email] = {
+              id: session.userId,
+              email,
+              passHash: '',
+              first_name: '',
+              last_name: '',
+              photo: '',
+              cover: '',
+              coach_sub: true,
+              createdAt: new Date().toISOString()
+            };
+            writeDb(db);
+          }
+          writeSession(session);
+          try{ await global.CoachCloud.pullRemoteIntoLocal(); }catch(e){}
+          return session;
+        }catch(e){
+          if(e && e.message !== 'no_cloud') throw new Error('auth');
+        }
+      }
       const db = readDb();
       const acc = db.accounts[email];
       if(!acc) throw new Error('auth');
       const hash = await hashPass(password);
-      if(hash !== acc.passHash) throw new Error('auth');
-      const session = {userId: acc.id, email: acc.email};
+      if(acc.passHash !== hash) throw new Error('auth');
+      const session = {userId: acc.id, email};
       writeSession(session);
       return session;
     },
@@ -156,9 +226,25 @@
       const db = readDb();
       const uid = session && session.userId;
       if(!uid) return null;
-      const mem = db.memberships.find(m => m.user_id === uid && m.role === 'owner' && m.academy_id);
+      const mem = db.memberships.find(m =>
+        m.user_id === uid &&
+        m.academy_id &&
+        (m.role === 'owner' || m.role === 'assistant') &&
+        (m.status || 'active') !== 'revoked'
+      );
       if(!mem) return null;
       return db.academies.find(a => a.id === mem.academy_id) || null;
+    },
+    isAcademyOwner(session){
+      const academy = this.myAcademy(session);
+      if(!academy || !session) return false;
+      const db = readDb();
+      return db.memberships.some(m =>
+        m.user_id === session.userId &&
+        m.academy_id === academy.id &&
+        m.role === 'owner' &&
+        (m.status || 'active') === 'active'
+      );
     },
     createAcademy(session, name){
       name = String(name || '').trim().slice(0, 80);
@@ -180,6 +266,9 @@
         team_id: null,
         team_player_id: null,
         role: 'owner',
+        email: session.email || '',
+        invite_code: '',
+        status: 'active',
         created_at: new Date().toISOString()
       });
       writeDb(db);
@@ -197,6 +286,7 @@
       if(!name) throw new Error('name');
       const academy = this.myAcademy(session);
       if(!academy || academy.id !== academyId) throw new Error('forbidden');
+      if(!this.isAcademyOwner(session)) throw new Error('owner_only');
       const db = readDb();
       const count = db.teams.filter(t => t.academy_id === academyId).length;
       const maxTeams = (typeof COACH_MAX_TEAMS === 'number') ? COACH_MAX_TEAMS : 10;
@@ -420,6 +510,11 @@
         if(global.InboxStore && typeof global.InboxStore.upsertMatchResult === 'function'){
           global.InboxStore.upsertMatchResult({...payload, forceUnread});
         }
+        try{
+          if(global.CoachPush && typeof global.CoachPush.notifyResult === 'function'){
+            global.CoachPush.notifyResult(payload);
+          }
+        }catch(e){}
         // Refresh parent invite snapshot + local parent link ratings
         try{
           this.createParentInvite(session, p.id);
@@ -535,6 +630,11 @@
         }catch(e){}
         if(linked){
           delivered += 1;
+          try{
+            if(global.CoachPush && typeof global.CoachPush.notifyInvite === 'function'){
+              global.CoachPush.notifyInvite(payload);
+            }
+          }catch(e){}
           return {...inv, status: 'delivered', sent_at: now, channel: 'app'};
         }
         waiting += 1;
@@ -902,6 +1002,127 @@
     isCloudConfigured(){
       const c = global.FFK_COACH_CONFIG || {};
       return !!(c.supabaseUrl && c.supabaseAnonKey);
+    },
+    listAssistants(session){
+      const academy = this.myAcademy(session);
+      if(!academy) return [];
+      return readDb().memberships.filter(m =>
+        m.academy_id === academy.id &&
+        m.role === 'assistant' &&
+        (m.status || 'active') !== 'revoked'
+      );
+    },
+    inviteAssistant(session, email, name){
+      email = String(email || '').trim().toLowerCase();
+      name = String(name || '').trim().slice(0, 60);
+      if(!session) throw new Error('auth');
+      if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error('bad_email');
+      if(!this.isAcademyOwner(session)) throw new Error('owner_only');
+      const academy = this.myAcademy(session);
+      if(!academy) throw new Error('forbidden');
+      const db = readDb();
+      const existing = db.memberships.filter(m =>
+        m.academy_id === academy.id &&
+        m.role === 'assistant' &&
+        (m.status || 'active') !== 'revoked'
+      );
+      const maxA = typeof COACH_MAX_ASSISTANTS === 'number' ? COACH_MAX_ASSISTANTS : 2;
+      if(existing.length >= maxA) throw new Error('assistant_limit');
+      if(existing.some(m => String(m.email || '').toLowerCase() === email)) throw new Error('exists');
+      let code = inviteCode();
+      while(db.memberships.some(m => m.invite_code === code)) code = inviteCode();
+      const row = {
+        id: uid('mem'),
+        user_id: uid('ast'), // placeholder until claim
+        academy_id: academy.id,
+        team_id: null,
+        team_player_id: null,
+        role: 'assistant',
+        email,
+        name,
+        invite_code: code,
+        status: 'pending',
+        created_at: new Date().toISOString()
+      };
+      db.memberships.push(row);
+      writeDb(db);
+      return row;
+    },
+    removeAssistant(session, membershipId){
+      if(!this.isAcademyOwner(session)) throw new Error('owner_only');
+      const academy = this.myAcademy(session);
+      if(!academy) throw new Error('forbidden');
+      const db = readDb();
+      db.memberships = db.memberships.map(m => {
+        if(m.id !== membershipId || m.academy_id !== academy.id || m.role !== 'assistant') return m;
+        return {...m, status: 'revoked'};
+      });
+      writeDb(db);
+      return true;
+    },
+    claimAssistantInvite(session, code){
+      code = String(code || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+      if(!session || !code) throw new Error('bad_code');
+      const db = readDb();
+      const hit = db.memberships.find(m =>
+        m.role === 'assistant' &&
+        m.invite_code === code &&
+        (m.status || 'pending') === 'pending'
+      );
+      if(!hit) throw new Error('bad_code');
+      // Enforce email match when possible
+      if(hit.email && session.email && hit.email.toLowerCase() !== String(session.email).toLowerCase()){
+        throw new Error('email_mismatch');
+      }
+      const maxA = typeof COACH_MAX_ASSISTANTS === 'number' ? COACH_MAX_ASSISTANTS : 2;
+      const active = db.memberships.filter(m =>
+        m.academy_id === hit.academy_id &&
+        m.role === 'assistant' &&
+        m.status === 'active'
+      );
+      if(active.length >= maxA) throw new Error('assistant_limit');
+      db.memberships = db.memberships.map(m => m.id === hit.id
+        ? {...m, user_id: session.userId, status: 'active', claimed_at: new Date().toISOString()}
+        : m
+      );
+      writeDb(db);
+      return this.myAcademy(session);
+    },
+    saveDeviceToken(token, platform){
+      token = String(token || '').trim();
+      if(!token) return null;
+      const session = this.getSession();
+      const db = readDb();
+      const row = {
+        id: uid('tok'),
+        user_id: session ? session.userId : '',
+        token: token.slice(0, 512),
+        platform: String(platform || 'unknown').slice(0, 24),
+        updated_at: new Date().toISOString()
+      };
+      db.device_tokens = (db.device_tokens || []).filter(t => t.token !== row.token);
+      db.device_tokens.unshift(row);
+      db.device_tokens = db.device_tokens.slice(0, 8);
+      writeDb(db);
+      return row;
+    },
+    setCoachSub(session, on){
+      const acc = this.getAccount(session);
+      if(!acc) return null;
+      const db = readDb();
+      const email = acc.email;
+      if(!db.accounts[email]) return null;
+      db.accounts[email] = {...db.accounts[email], coach_sub: !!on};
+      writeDb(db);
+      return db.accounts[email];
+    },
+    hasCoachSub(session){
+      const acc = this.getAccount(session);
+      if(acc && acc.coach_sub) return true;
+      try{
+        if(global.settings && global.settings.coachSub === true) return true;
+      }catch(e){}
+      return false;
     }
   };
 

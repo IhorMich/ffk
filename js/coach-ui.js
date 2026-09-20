@@ -99,6 +99,47 @@
       : tt('coachModeLocal', 'Local mode: academy data stays on this phone until Supabase is connected.');
   }
 
+  function renderAssistantsBlock(session){
+    const list = document.getElementById('coachAssistantList');
+    if(!list || !session) return;
+    const store = global.CoachStore;
+    const rows = store.listAssistants(session);
+    const owner = store.isAcademyOwner(session);
+    if(!rows.length){
+      list.innerHTML = `<p class="hint">${esc(tt('coachAssistantsEmpty', 'No assistants yet.'))}</p>`;
+    }else{
+      list.innerHTML = rows.map(m => {
+        const st = m.status === 'pending'
+          ? tt('coachAssistantPending', 'Pending')
+          : tt('coachAssistantActive', 'Active');
+        const meta = [m.email, m.name, m.invite_code ? `MC-${m.invite_code}` : '', st].filter(Boolean).join(' · ');
+        const del = owner
+          ? `<button type="button" class="ghost-btn" data-del-assistant="${esc(m.id)}">${esc(tt('coachAssistantRemove', 'Remove'))}</button>`
+          : '';
+        return `<div class="coach-team-item" style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+          <span class="coach-team-meta">${esc(meta)}</span>${del}
+        </div>`;
+      }).join('');
+    }
+    const inviteBtn = document.getElementById('coachInviteAssistantBtn');
+    if(inviteBtn) inviteBtn.hidden = !owner;
+  }
+
+  function renderCloudPushStatus(){
+    const cloudEl = document.getElementById('coachCloudStatus');
+    if(cloudEl){
+      const st = global.CoachCloud && global.CoachCloud.status ? global.CoachCloud.status() : {configured: false, mode: 'local'};
+      cloudEl.textContent = st.configured
+        ? tt('coachCloudReady', 'Supabase connected — sync available.')
+        : tt('coachCloudOffline', 'Local mode. Add Supabase URL + key to enable cloud.');
+    }
+    const pushOn = document.getElementById('coachPushOnBtn');
+    const pushOff = document.getElementById('coachPushOffBtn');
+    const enabled = global.CoachPush && global.CoachPush.isEnabled && global.CoachPush.isEnabled();
+    if(pushOn) pushOn.hidden = !!enabled;
+    if(pushOff) pushOff.hidden = !enabled;
+  }
+
   function renderWorkspace(session){
     const store = global.CoachStore;
     const academy = store.myAcademy(session);
@@ -204,6 +245,8 @@
     }
     if(typeof applyHeader === 'function') applyHeader();
     if(typeof syncCoachModeViews === 'function') syncCoachModeViews();
+    renderAssistantsBlock(session);
+    renderCloudPushStatus();
   }
 
   function openCoachSettings(){
@@ -1435,7 +1478,80 @@
     document.getElementById('coachMatchCreateCancel')?.addEventListener('click', () => {
       setCoachMatchCreateOpen(false);
     });
+    document.getElementById('coachInviteAssistantBtn')?.addEventListener('click', () => {
+      const session = global.CoachStore.getSession();
+      if(!session) return;
+      try{
+        const row = global.CoachStore.inviteAssistant(
+          session,
+          document.getElementById('coachAssistantEmail')?.value || '',
+          document.getElementById('coachAssistantName')?.value || ''
+        );
+        const emailEl = document.getElementById('coachAssistantEmail');
+        const nameEl = document.getElementById('coachAssistantName');
+        if(emailEl) emailEl.value = '';
+        if(nameEl) nameEl.value = '';
+        toast(tt('coachAssistantInvited', 'Assistant invited. Code: MC-{code}').replace('{code}', row.invite_code));
+        renderCoachUi();
+      }catch(e){
+        const map = {
+          bad_email: tt('coachErrEmail', 'Enter a valid email.'),
+          owner_only: tt('coachErrOwnerOnly', 'Only the academy owner can manage assistants.'),
+          assistant_limit: tt('coachErrAssistantLimit', 'Assistant limit is 2.'),
+          exists: tt('coachErrAssistantExists', 'This assistant is already invited.')
+        };
+        toast(map[e.message] || tt('coachErrGeneric', 'Something went wrong.'));
+      }
+    });
+    document.getElementById('coachClaimAssistantBtn')?.addEventListener('click', () => {
+      const session = global.CoachStore.getSession();
+      if(!session) return;
+      try{
+        global.CoachStore.claimAssistantInvite(session, document.getElementById('coachAssistantClaimCode')?.value || '');
+        toast(tt('coachAssistantClaimed', 'Assistant access activated.'));
+        renderCoachUi();
+      }catch(e){
+        const map = {
+          bad_code: tt('coachErrAssistantCode', 'Invalid assistant code.'),
+          email_mismatch: tt('coachErrAssistantEmail', 'Sign in with the invited email.'),
+          assistant_limit: tt('coachErrAssistantLimit', 'Assistant limit is 2.')
+        };
+        toast(map[e.message] || tt('coachErrGeneric', 'Something went wrong.'));
+      }
+    });
+    document.getElementById('coachCloudSyncBtn')?.addEventListener('click', async () => {
+      if(!global.CoachCloud || !global.CoachCloud.ready || !global.CoachCloud.ready()){
+        toast(tt('coachCloudOffline', 'Local mode. Add Supabase URL + key to enable cloud.'));
+        return;
+      }
+      toast(tt('coachCloudSyncing', 'Syncing…'));
+      const res = await global.CoachCloud.syncNow();
+      toast(res && res.ok
+        ? tt('coachCloudSynced', 'Cloud sync done.')
+        : tt('coachCloudSyncFail', 'Cloud sync failed. Check keys and schema.'));
+      renderCoachUi();
+    });
+    document.getElementById('coachPushOnBtn')?.addEventListener('click', async () => {
+      if(global.CoachPush) await global.CoachPush.enable();
+      renderCloudPushStatus();
+    });
+    document.getElementById('coachPushOffBtn')?.addEventListener('click', () => {
+      if(global.CoachPush) global.CoachPush.disable();
+      renderCloudPushStatus();
+    });
     document.addEventListener('click', e => {
+      const delAst = e.target.closest('[data-del-assistant]');
+      if(delAst){
+        const session = global.CoachStore.getSession();
+        try{
+          global.CoachStore.removeAssistant(session, delAst.dataset.delAssistant);
+          toast(tt('coachAssistantRemoved', 'Assistant removed.'));
+          renderCoachUi();
+        }catch(err){
+          toast(tt('coachErrGeneric', 'Something went wrong.'));
+        }
+        return;
+      }
       const createBtn = e.target.closest('.js-cm-create');
       if(createBtn){
         onCreateMatch(createBtn);

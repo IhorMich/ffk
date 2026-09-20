@@ -100,6 +100,7 @@ function loadSettings(){
       onboardSkin: String(s.onboardSkin || ''),
       isPro: s.isPro === true,
       isCoach: s.isCoach === true,
+      coachSub: s.coachSub === true,
       pwaTransferSeen: s.pwaTransferSeen === true,
       introMark: String(s.introMark || '')
     };

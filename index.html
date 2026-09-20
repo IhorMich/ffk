@@ -575,6 +575,9 @@ window.ffkIsNative = function () {
           <li data-i18n="coachTeaserParents">Invite родителя к профилю ребёнка</li>
         </ul>
         <button class="save-btn" id="openCoachBtn" type="button" data-i18n="coachOpen">Matchcard Coach</button>
+        <button class="save-btn" id="coachSubUnlockBtn" type="button" data-i18n="coachSubUnlock">Включить Coach (тест)</button>
+        <button class="ghost-btn" id="coachSubLockBtn" type="button" hidden data-i18n="coachSubLock">Выключить Coach (тест)</button>
+        <p class="hint" id="coachSubHint" data-i18n="coachSubHint">Подписка Coach (тест). Store billing позже — как у Pro.</p>
         <button class="ghost-btn" id="enterParentModeBtn" type="button" hidden data-i18n="coachSwitchParent">Перейти в режим родителя / Free</button>
         <button class="ghost-btn" id="enterCoachModeBtn" type="button" hidden data-i18n="coachSwitchCoach">Вернуться в режим тренера</button>
       </div>
@@ -757,6 +760,40 @@ window.ffkIsNative = function () {
         </div>
         <button class="save-btn" id="coachCreateTeamBtn" type="button" data-i18n="coachCreateTeamBtn">Add team</button>
         <div id="coachSettingsTeamList" class="coach-team-list"></div>
+      </div>
+
+      <div class="coach-settings-block">
+        <div class="pro-kicker" data-i18n="coachAssistantsKicker">Ассистенты</div>
+        <p class="hint" data-i18n="coachAssistantsHint">До 2 ассистентов. Пригласи по email — им придёт код MC-XXXXXX.</p>
+        <div class="field">
+          <label data-i18n="coachAssistantEmail">Email ассистента</label>
+          <input id="coachAssistantEmail" type="email" maxlength="80" autocomplete="email">
+        </div>
+        <div class="field">
+          <label data-i18n="coachAssistantName">Имя (необязательно)</label>
+          <input id="coachAssistantName" type="text" maxlength="60">
+        </div>
+        <button class="save-btn" id="coachInviteAssistantBtn" type="button" data-i18n="coachInviteAssistantBtn">Пригласить ассистента</button>
+        <div id="coachAssistantList" class="coach-team-list"></div>
+        <div class="field" style="margin-top:12px">
+          <label data-i18n="coachAssistantClaimLabel">Код ассистента (если вас пригласили)</label>
+          <input id="coachAssistantClaimCode" type="text" maxlength="12" placeholder="MC-AB12CD" autocomplete="off">
+        </div>
+        <button class="ghost-btn" id="coachClaimAssistantBtn" type="button" data-i18n="coachClaimAssistantBtn">Принять приглашение</button>
+      </div>
+
+      <div class="coach-settings-block">
+        <div class="pro-kicker" data-i18n="coachCloudKicker">Облако</div>
+        <p class="hint" id="coachCloudStatus"></p>
+        <button class="save-btn" id="coachCloudSyncBtn" type="button" data-i18n="coachCloudSyncBtn">Синхронизировать сейчас</button>
+        <p class="hint" data-i18n="coachCloudHint">Впиши URL и anon key в js/coach-config.js и прогони supabase/schema.sql.</p>
+      </div>
+
+      <div class="coach-settings-block">
+        <div class="pro-kicker" data-i18n="coachPushKicker">Уведомления</div>
+        <p class="hint" data-i18n="coachPushHint">Push для приглашений и карточек матча. На телефоне — системные уведомления.</p>
+        <button class="save-btn" id="coachPushOnBtn" type="button" data-i18n="coachPushEnable">Включить push</button>
+        <button class="ghost-btn" id="coachPushOffBtn" type="button" data-i18n="coachPushDisable">Выключить</button>
       </div>
 
       <div class="coach-settings-block">
@@ -1134,7 +1171,10 @@ window.ffkIsNative = function () {
 <script src="js/storage.js"></script>
 <script src="js/qrcode-lite.js"></script>
 <script src="js/coach-config.js"></script>
+<script src="js/vendor/supabase.js"></script>
 <script src="js/coach-store.js"></script>
+<script src="js/coach-cloud.js"></script>
+<script src="js/coach-push.js"></script>
 <script src="js/inbox-store.js"></script>
 <script src="js/parent-store.js"></script>
 <script src="js/parent-stats-store.js"></script>

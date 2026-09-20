@@ -1,29 +1,32 @@
 # Matchcard Coach
 
-Personal Free/Pro stays on-device (`localStorage`). Coach is a **separate tree**.
+Personal Free/Pro stays on-device. Coach can run **local** or **Supabase cloud**.
 
-## Done locally (Phases 1–3)
+## Local (always works)
 
-1. Coach account on this phone
-2. Academy → teams → roster
-3. Parent QR / invite link + in-app inbox
-4. Team matches: invite squad → set score → rate + comment → send cards to parents
-5. History / analytics for the active team
+Academy → teams → roster → matches → parent invites → ratings → inbox cards.
 
-Data key: `ffk_coach_v1` — never mixed with personal roster/matches.
+## Cloud (Phase 1.1)
 
-## Next when asked: Phase 1.1 cloud (Supabase)
-
-1. Create Supabase project
-2. Run `supabase/schema.sql`
+1. Create a project at supabase.com
+2. Run `supabase/schema.sql` in the SQL editor
 3. Put URL + anon key into `js/coach-config.js`
-4. Wire `CoachStore` / inbox to Supabase auth + sync
+4. In Coach settings → **Sync now**
 
-## Later (Phase 4 ideas)
+Auth uses Supabase when keys are set; otherwise email/password stays on-device.
 
-- Assistants (up to 2)
-- Billing / Coach subscription
-- Push notifications for invites and match cards
+## Assistants (up to 2)
+
+Owner invites by email in Coach settings. Invitee signs in and enters code `MC-XXXXXX`.
+
+## Billing
+
+Test unlock **Enable Coach (test)** in Settings (same pattern as Pro). Store IAP later.
+
+## Push
+
+Coach settings → Enable push. Uses Capacitor Push Notifications on device.
+Cloud delivery of remote pushes needs FCM/APNs + a Supabase Edge Function (token table is ready: `device_tokens`).
 
 ## Limits
 
@@ -32,4 +35,4 @@ Data key: `ffk_coach_v1` — never mixed with personal roster/matches.
 | Academies | 1 |
 | Teams / academy | 10 |
 | Players / team | 50 |
-| Assistants | 2 (later) |
+| Assistants | 2 |

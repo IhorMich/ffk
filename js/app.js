@@ -353,6 +353,39 @@ function setPro(on){
   applyI18n();
   showToast(on ? t('proOn') : t('proOff'));
 }
+function isCoachSub(){
+  if(settings.coachSub === true) return true;
+  try{
+    const store = window.CoachStore;
+    const session = store && store.getSession && store.getSession();
+    if(session && store.hasCoachSub && store.hasCoachSub(session)) return true;
+  }catch(e){}
+  return false;
+}
+function setCoachSub(on){
+  settings.coachSub = !!on;
+  saveSettings();
+  try{
+    const store = window.CoachStore;
+    const session = store && store.getSession && store.getSession();
+    if(session && store.setCoachSub) store.setCoachSub(session, on);
+  }catch(e){}
+  syncCoachBillingUi();
+  showToast(on ? t('coachSubOn') : t('coachSubOff'));
+}
+function syncCoachBillingUi(){
+  const on = isCoachSub();
+  document.documentElement.classList.toggle('is-coach-sub', on);
+  const unlock = document.getElementById('coachSubUnlockBtn');
+  const lock = document.getElementById('coachSubLockBtn');
+  if(unlock) unlock.hidden = on;
+  if(lock) lock.hidden = !on;
+  const open = document.getElementById('openCoachBtn');
+  if(open) open.disabled = false;
+}
+window.isCoachSub = isCoachSub;
+window.setCoachSub = setCoachSub;
+window.syncCoachBillingUi = syncCoachBillingUi;
 function proTeaserHtml(titleKey){
   return `<div class="pro-lock">
     <div class="pro-lock-kicker">Matchcard Pro</div>
@@ -384,9 +417,10 @@ function syncProUi(){
   });
   syncCoachTabUi();
   if(typeof syncPlanModeButtons === 'function') syncPlanModeButtons();
+  if(typeof syncCoachBillingUi === 'function') syncCoachBillingUi();
 }
 
-let settings = {club:'', player:'', position:'fwd', format:'2x30', minutes:'60', lang:'ru', seasonCloseDeclined:'', theme:'dark', iconSet:'clear', onboarded:false, onboardSkin:'', isPro:false, isCoach:false, pwaTransferSeen:false, introMark:''};
+let settings = {club:'', player:'', position:'fwd', format:'2x30', minutes:'60', lang:'ru', seasonCloseDeclined:'', theme:'dark', iconSet:'clear', onboarded:false, onboardSkin:'', isPro:false, isCoach:false, coachSub:false, pwaTransferSeen:false, introMark:''};
 let roster = {currentId:'', ids:[]};
 let player = defaultPlayer();
 let extraSelected = [];
@@ -3140,7 +3174,12 @@ document.getElementById('cloudSyncBtn')?.addEventListener('click', () => {
 });
 document.getElementById('proUnlockBtn')?.addEventListener('click', () => setPro(true));
 document.getElementById('proLockBtn')?.addEventListener('click', () => setPro(false));
+document.getElementById('coachSubUnlockBtn')?.addEventListener('click', () => setCoachSub(true));
+document.getElementById('coachSubLockBtn')?.addEventListener('click', () => setCoachSub(false));
 document.getElementById('openCoachBtn')?.addEventListener('click', () => {
+  if(!isCoachSub()){
+    setCoachSub(true);
+  }
   if(typeof enterCoachMode === 'function') enterCoachMode();
   else showView('coach');
 });
