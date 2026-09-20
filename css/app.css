@@ -1838,58 +1838,72 @@
     max-height:100dvh;border-radius:0;
   }
   .coach-rate-card-quick{
-    display:flex;flex-direction:column;max-height:min(92dvh,92vh);
-    overflow:hidden;padding:8px 14px 10px;gap:0;
+    display:flex;flex-direction:column;max-height:min(96dvh,96vh);
+    overflow:hidden;padding:6px 12px 8px;gap:0;
   }
   .coach-rate-card-quick.sheet-full{max-height:100dvh;border-radius:0;}
-  .coach-rate-card-quick .sheet-grab{margin-bottom:2px;}
+  .coach-rate-card-quick .sheet-grab{margin-bottom:0;padding:8px 0 6px;}
   .coach-rate-quick-head{
-    display:flex;align-items:flex-start;justify-content:space-between;gap:10px;
-    flex-shrink:0;padding-bottom:8px;border-bottom:1px solid var(--card-line);
+    display:flex;align-items:flex-start;justify-content:space-between;gap:8px;
+    flex-shrink:0;padding-bottom:6px;border-bottom:1px solid var(--card-line);
   }
   .coach-rate-quick-head > div:first-child{min-width:0;flex:1;}
-  .coach-rate-quick-head .pro-kicker{margin:0;}
-  .coach-rate-quick-head .coach-rate-name{margin:2px 0 0;font-size:1.05rem;}
-  .coach-rate-quick-head .hint{margin:2px 0 0;font-size:.72rem;}
+  .coach-rate-quick-head .pro-kicker{margin:0;font-size:.68rem;}
+  .coach-rate-quick-head .coach-rate-name{margin:2px 0 0;font-size:1rem;}
+  .coach-rate-quick-head .hint{margin:2px 0 0;font-size:.68rem;line-height:1.25;}
   .coach-rate-score-inline{
-    flex-shrink:0;gap:6px;margin:0;
+    flex-shrink:0;gap:4px;margin:0;
   }
   .coach-rate-score-inline .coach-step{
-    width:36px;height:36px;border-radius:12px;font-size:1.25rem;
+    width:34px;height:34px;border-radius:11px;font-size:1.15rem;
   }
   .coach-rate-score-inline .coach-rate-score{
-    min-width:2.8rem;font-size:1.55rem;
+    min-width:2.5rem;font-size:1.4rem;
   }
   .coach-rate-quick-scroll{
     flex:1 1 auto;min-height:0;overflow:auto;-webkit-overflow-scrolling:touch;
-    padding:8px 0 4px;
+    padding:6px 0 2px;
+    display:flex;flex-direction:column;gap:6px;
   }
-  .coach-rate-card-quick .coach-rate-moments{margin:0 0 8px;}
-  .coach-rate-card-quick .coach-rate-moments .pro-kicker{margin:0 0 4px;}
+  .coach-rate-card-quick .coach-rate-moments{margin:0;flex:0 0 auto;}
+  .coach-rate-card-quick .coach-rate-moments .pro-kicker{margin:0 0 4px;font-size:.68rem;}
   .coach-rate-card-quick .coach-moment-grid{
-    grid-template-columns:1fr 1fr;gap:6px;margin-top:6px;
+    grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;margin-top:0;
   }
-  .coach-rate-card-quick .coach-moment{padding:6px 8px;border-radius:12px;}
-  .coach-rate-card-quick .coach-moment b{font-size:.7rem;}
+  .coach-rate-card-quick .coach-moment{
+    flex-direction:column;align-items:stretch;justify-content:center;
+    padding:6px 6px 5px;border-radius:11px;gap:4px;min-width:0;
+  }
+  .coach-rate-card-quick .coach-moment b{
+    font-size:.62rem;font-weight:800;line-height:1.15;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center;
+  }
+  .coach-rate-card-quick .coach-moment-ctr{
+    justify-content:center;gap:4px;
+  }
+  .coach-rate-card-quick .coach-moment-ctr span{
+    min-width:1.1rem;text-align:center;font-weight:800;font-size:.85rem;
+  }
   .coach-rate-card-quick .coach-moment-ctr button{
-    width:28px;height:28px;border-radius:8px;font-size:.9rem;
+    width:26px;height:26px;border-radius:8px;font-size:.85rem;padding:0;
   }
-  .coach-rate-comment-field{margin:0;}
-  .coach-rate-comment-field label{margin-bottom:4px;font-size:.75rem;}
+  .coach-rate-comment-field{margin:0;flex:0 0 auto;}
+  .coach-rate-comment-field label{margin-bottom:2px;font-size:.68rem;}
   .coach-rate-card-quick #coachRateComment{
-    min-height:52px;max-height:72px;resize:none;padding:8px 10px;border-radius:12px;
+    min-height:40px;max-height:48px;resize:none;padding:7px 9px;border-radius:11px;font-size:.85rem;
   }
   .coach-rate-sticky-actions{
     flex-shrink:0;display:grid;grid-template-columns:1fr auto;gap:8px;
-    padding-top:8px;border-top:1px solid var(--card-line);
+    padding-top:6px;border-top:1px solid var(--card-line);
     background:var(--card-paper);
   }
   .coach-rate-sticky-actions .save-btn,
-  .coach-rate-sticky-actions .ghost-btn{margin:0;width:100%;padding:11px 14px;}
+  .coach-rate-sticky-actions .ghost-btn{margin:0;width:100%;padding:10px 12px;}
   .coach-rate-sticky-actions .ghost-btn{width:auto;}
   @media (max-width:360px){
     .coach-rate-quick-head{flex-direction:column;align-items:stretch;}
     .coach-rate-score-inline{justify-content:flex-start;}
+    .coach-rate-card-quick .coach-moment-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
     .coach-rate-sticky-actions{grid-template-columns:1fr;}
     .coach-rate-sticky-actions .ghost-btn{width:100%;}
   }

@@ -1620,11 +1620,30 @@
     const box = document.getElementById('coachRateMoments');
     if(!box || !quickRate) return;
     const keys = quickKeysForPos(quickRate.position);
+    const short = {
+      goals: tt('m_goals', 'Goal'),
+      assists: tt('m_assists', 'Assist'),
+      shots: tt('m_shots', 'Shot'),
+      dribbles: tt('m_dribbles', 'Dribble'),
+      passes: tt('m_passes', 'Pass'),
+      losses: tt('m_losses', 'Loss'),
+      chances: tt('m_chances', 'Chance'),
+      tackles: tt('m_tackles', 'Tackle'),
+      duelswon: tt('m_duelswon', 'Duel+'),
+      interceptions: tt('m_interceptions', 'Intercept'),
+      clearances: tt('m_clearances', 'Clear'),
+      blocks: tt('m_blocks', 'Block'),
+      saves: tt('m_saves', 'Save'),
+      claims: tt('m_claims', 'Claim'),
+      conceded: tt('m_conceded', 'Conceded'),
+      gkpass: tt('m_gkpass', 'GK pass'),
+      buildpass: tt('m_buildpass', 'Build')
+    };
     box.innerHTML = keys.map(key => {
       const n = Number(quickRate.counts[key]) || 0;
-      const lab = typeof metricLabel === 'function' ? metricLabel(key) : key;
+      const lab = short[key] || (typeof metricLabel === 'function' ? metricLabel(key) : key);
       return `<div class="coach-moment" data-key="${esc(key)}">
-        <b>${esc(lab)}</b>
+        <b title="${esc(lab)}">${esc(lab)}</b>
         <div class="coach-moment-ctr">
           <button type="button" data-mom-delta="-1" aria-label="-">−</button>
           <span>${n}</span>
