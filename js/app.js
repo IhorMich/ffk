@@ -1811,7 +1811,7 @@ function addPlayer(){
   applyPlayerContext();
   showView('player');
   openPlayerEdit();
-  window.scrollTo({top:0, behavior:'instant'});
+  scrollMainToTop();
   showToast(t('toastPlayerAdded'));
 }
 function removePlayer(id){
@@ -2520,7 +2520,11 @@ window.shareMatch = function(id){
   if(m) shareCard(m);
 };
 
-function showView(name){
+function scrollMainToTop(){
+  const main = document.querySelector('.content');
+  if(main) main.scrollTop = 0;
+  window.scrollTo({top:0, behavior:'instant'});
+}
   const views = ['player','new','history','stats','settings','report'];
   if(!views.includes(name)) name = 'new';
   if(name !== 'player') closePlayerEdit();
@@ -3733,7 +3737,7 @@ document.querySelectorAll('.tabbtn').forEach(btn => {
 });
 document.getElementById('reportDoneBtn').addEventListener('click', () => {
   showView('new');
-  window.scrollTo({top:0, behavior:'instant'});
+  scrollMainToTop();
 });
 document.getElementById('reportShareBtn').addEventListener('click', () => {
   if(lastReportMatch) shareCard(lastReportMatch);
