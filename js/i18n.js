@@ -3402,6 +3402,23 @@ ru:{
   });
 })();
 
+(function mergeCardSkinI18n(){
+  const extra = {
+    uk:{ sCardSkin:'Картка матчу', sCardSkinHint:'Одразу видно на вкладці «Матч».', card_mint:'М’ята', card_wine:'Бордо', card_ice:'Платина', card_noir:'Нуар' },
+    pl:{ sCardSkin:'Karta meczu', sCardSkinHint:'Od razu widać w zakładce Mecz.', card_mint:'Mięta', card_wine:'Bordeaux', card_ice:'Platyna', card_noir:'Noir' },
+    en:{ sCardSkin:'Match card', sCardSkinHint:'You see it at once on the Match tab.', card_mint:'Mint', card_wine:'Bordeaux', card_ice:'Platinum', card_noir:'Noir' },
+    ru:{ sCardSkin:'Карточка матча', sCardSkinHint:'Сразу видно на вкладке «Матч».', card_mint:'Мята', card_wine:'Бордо', card_ice:'Платина', card_noir:'Нуар' },
+    es:{ sCardSkin:'Carta del partido', sCardSkinHint:'Se ve al momento en la pestaña Partido.', card_mint:'Menta', card_wine:'Burdeos', card_ice:'Platino', card_noir:'Noir' },
+    de:{ sCardSkin:'Spielkarte', sCardSkinHint:'Sofort sichtbar unter Spiel.', card_mint:'Mint', card_wine:'Bordeaux', card_ice:'Platin', card_noir:'Noir' },
+    it:{ sCardSkin:'Carta partita', sCardSkinHint:'Si vede subito nella scheda Partita.', card_mint:'Menta', card_wine:'Bordeaux', card_ice:'Platino', card_noir:'Noir' },
+    fr:{ sCardSkin:'Carte du match', sCardSkinHint:'Visible tout de suite dans l’onglet Match.', card_mint:'Menthe', card_wine:'Bordeaux', card_ice:'Platine', card_noir:'Noir' },
+    pt:{ sCardSkin:'Carta do jogo', sCardSkinHint:'Vê-se já no separador Jogo.', card_mint:'Menta', card_wine:'Bordeaux', card_ice:'Platina', card_noir:'Noir' }
+  };
+  LANGS.forEach(lang => {
+    Object.assign(I18N[lang], extra.en, extra[lang] || {});
+  });
+})();
+
 (function mergeCopyAndWrapI18n(){
   const extra = {
     uk:{

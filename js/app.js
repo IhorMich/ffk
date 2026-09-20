@@ -131,18 +131,25 @@ function applyTheme(){
   syncIconSetChips();
   applyNativeChrome();
 }
-const CARD_SKINS = ['mint','wine'];
+const CARD_SKINS = ['mint','wine','ice','noir'];
 function cardSkinName(){
   return CARD_SKINS.includes(settings.cardSkin) ? settings.cardSkin : 'mint';
 }
 function applyCardSkin(){
   document.documentElement.dataset.card = cardSkinName();
+  document.querySelectorAll('#cardSkinChips .chip').forEach(c => {
+    c.classList.toggle('active', c.dataset.card === cardSkinName());
+  });
+}
+function setCardSkin(skin){
+  if(!CARD_SKINS.includes(skin)) return;
+  settings.cardSkin = skin;
+  saveSettings();
+  applyCardSkin();
 }
 function cycleCardSkin(){
   const i = CARD_SKINS.indexOf(cardSkinName());
-  settings.cardSkin = CARD_SKINS[(i + 1) % CARD_SKINS.length];
-  saveSettings();
-  applyCardSkin();
+  setCardSkin(CARD_SKINS[(i + 1) % CARD_SKINS.length]);
   haptic('LIGHT');
 }
 function bindCardSkin(){
@@ -3598,6 +3605,12 @@ document.getElementById('iconSetChips').addEventListener('click', e => {
   settings.iconSet = chip.dataset.icons;
   saveSettings();
   applyIconSet();
+});
+document.getElementById('cardSkinChips').addEventListener('click', e => {
+  const chip = e.target.closest('.chip');
+  if(!chip || !CARD_SKINS.includes(chip.dataset.card)) return;
+  setCardSkin(chip.dataset.card);
+  haptic('LIGHT');
 });
 document.getElementById('previewPeriod').addEventListener('click', e => {
   const chip = e.target.closest('.chip');

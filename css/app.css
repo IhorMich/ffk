@@ -810,6 +810,26 @@
     --card-track:rgba(248,228,212,.16);
     --card-wash:rgba(248,228,212,.08);
   }
+  html[data-card="ice"] .hero,
+  html[data-card="ice"] .hero-pin-inner{
+    --card-ink:#F3F7FB;
+    --card-muted:#9AADC2;
+    --card-accent:#8EC4E8;
+    --card-line:rgba(142,196,232,.32);
+    --card-paper:linear-gradient(180deg, #1A2C44 0%, #0B1220 100%);
+    --card-track:rgba(142,196,232,.16);
+    --card-wash:rgba(243,247,251,.08);
+  }
+  html[data-card="noir"] .hero,
+  html[data-card="noir"] .hero-pin-inner{
+    --card-ink:#F6EFE3;
+    --card-muted:#B7AB9A;
+    --card-accent:#EDE4D4;
+    --card-line:rgba(237,228,212,.28);
+    --card-paper:linear-gradient(180deg, #1A1816 0%, #080706 100%);
+    --card-track:rgba(237,228,212,.14);
+    --card-wash:rgba(246,239,227,.08);
+  }
   .hero{
     margin:0 0 16px;position:relative;overflow:hidden;
     background:var(--card-paper);color:var(--card-ink);
@@ -1164,6 +1184,18 @@
     font-size:.82rem;font-weight:700;color:var(--text-soft);cursor:pointer;white-space:nowrap;
   }
   .chip.active{background:linear-gradient(135deg, var(--cta), var(--cta-2));border-color:transparent;color:#08121C;}
+  .card-skin-chips{flex-wrap:wrap;overflow:visible;}
+  #cardSkinChips .chip{
+    display:inline-flex;align-items:center;gap:8px;
+  }
+  #cardSkinChips .chip::before{
+    content:"";width:11px;height:11px;border-radius:50%;flex-shrink:0;
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,.28);
+  }
+  #cardSkinChips .chip[data-card="mint"]::before{background:#3DDC97;}
+  #cardSkinChips .chip[data-card="wine"]::before{background:#E8A87C;}
+  #cardSkinChips .chip[data-card="ice"]::before{background:#8EC4E8;}
+  #cardSkinChips .chip[data-card="noir"]::before{background:#EDE4D4;box-shadow:inset 0 0 0 1px rgba(0,0,0,.28);}
   .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px;}
   .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:13px 15px;}
   .stat-card .num{font-size:1.5rem;font-weight:800;font-variant-numeric:tabular-nums;}
