@@ -78,6 +78,7 @@
         address: String(payload.address || '').slice(0, 120),
         venue: payload.venue === 'away' ? 'away' : 'home',
         kind: String(payload.kind || 'league').slice(0, 16),
+        meetup: String(payload.meetup || '').slice(0, 8),
         kickoff: String(payload.kickoff || '').slice(0, 8),
         tournament: String(payload.tournament || '').slice(0, 48),
         // Never persist other children's names on parent messages.

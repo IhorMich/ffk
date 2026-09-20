@@ -195,7 +195,13 @@
           )}</p>
         </div>`
       : '';
-    const whenBits = [msg.date, msg.kickoff || '', venue, msg.kind].filter(Boolean);
+    const whenBits = [
+      msg.date,
+      msg.meetup ? `${tt('coachMatchMeetup', 'Meetup')} ${msg.meetup}` : '',
+      msg.kickoff ? `${tt('coachMatchKickoff', 'Kick-off')} ${msg.kickoff}` : '',
+      venue,
+      msg.kind
+    ].filter(Boolean);
     body.innerHTML = `
       <div class="parent-confirm-badge">${esc(isResult
         ? tt('parentInboxResultFromCoach', 'Match card from coach')

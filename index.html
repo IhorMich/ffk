@@ -347,6 +347,15 @@ window.ffkIsNative = function () {
                 <input class="js-cm-date" type="date">
               </div>
               <div class="field">
+                <label data-i18n="coachMatchMeetup">Время сбора</label>
+                <div class="coach-kickoff-row">
+                  <select class="js-cm-meetup-h" id="coachMeetupH" aria-label="meetup hour"></select>
+                  <span class="coach-kickoff-colon" aria-hidden="true">:</span>
+                  <select class="js-cm-meetup-m" id="coachMeetupM" aria-label="meetup minute"></select>
+                </div>
+                <input type="hidden" class="js-cm-meetup" id="coachMeetupValue" value="">
+              </div>
+              <div class="field">
                 <label data-i18n="coachMatchKickoff">Время начала</label>
                 <div class="coach-kickoff-row">
                   <select class="js-cm-kickoff-h" id="coachKickoffH" aria-label="hour"></select>
@@ -529,6 +538,15 @@ window.ffkIsNative = function () {
                   <div class="field">
                     <label data-i18n="labelDate">Дата</label>
                     <input class="js-ch-date" id="coachHistoryDate" type="date">
+                  </div>
+                  <div class="field">
+                    <label data-i18n="coachMatchMeetup">Время сбора</label>
+                    <div class="coach-kickoff-row">
+                      <select class="js-ch-meetup-h" id="coachHistoryMeetupH" aria-label="meetup hour"></select>
+                      <span class="coach-kickoff-colon" aria-hidden="true">:</span>
+                      <select class="js-ch-meetup-m" id="coachHistoryMeetupM" aria-label="meetup minute"></select>
+                    </div>
+                    <input type="hidden" class="js-ch-meetup" id="coachHistoryMeetupValue" value="">
                   </div>
                   <div class="field">
                     <label data-i18n="coachMatchKickoff">Время начала</label>

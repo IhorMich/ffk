@@ -497,6 +497,7 @@
       squad = [...new Set(squad.filter(id => rosterIds.has(id)))];
       if(!squad.length) throw new Error('squad');
       const kind = ['league','friendly','cup','tournament'].includes(fields.kind) ? fields.kind : 'league';
+      const meetup = normalizeKickoff(fields.meetup);
       const kickoff = normalizeKickoff(fields.kickoff);
       const tournament = kind === 'friendly'
         ? ''
@@ -523,6 +524,7 @@
         kind,
         status: fields.status === 'played' ? 'played' : 'upcoming',
         squad,
+        meetup,
         kickoff,
         tournament,
         event_id: eventId,
@@ -578,6 +580,9 @@
       if(fields && Object.prototype.hasOwnProperty.call(fields, 'kind')){
         next.kind = ['league','friendly','cup','tournament'].includes(fields.kind) ? fields.kind : next.kind;
         if(next.kind === 'friendly') next.tournament = '';
+      }
+      if(fields && Object.prototype.hasOwnProperty.call(fields, 'meetup')){
+        next.meetup = normalizeKickoff(fields.meetup);
       }
       if(fields && Object.prototype.hasOwnProperty.call(fields, 'kickoff')){
         next.kickoff = normalizeKickoff(fields.kickoff);
@@ -876,6 +881,7 @@
         address: match.address || '',
         venue: match.venue,
         kind: match.kind,
+        meetup: match.meetup || '',
         kickoff: match.kickoff || '',
         tournament: match.tournament || ''
       };

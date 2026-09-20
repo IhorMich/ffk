@@ -131,6 +131,7 @@
         kind: m.kind || 'league',
         status: m.status || (m.score ? 'played' : 'upcoming'),
         squad: m.squad || [],
+        meetup: m.meetup || '',
         kickoff: m.kickoff || '',
         tournament: m.tournament || '',
         event_id: m.event_id || '',
@@ -225,6 +226,7 @@
       team_matches: (matches || []).map(m => ({
         ...m,
         squad: Array.isArray(m.squad) ? m.squad : (m.squad || []),
+        meetup: m.meetup || '',
         kickoff: m.kickoff || '',
         tournament: m.tournament || '',
         event_id: m.event_id || '',

@@ -619,6 +619,7 @@
     const meta = played
       ? `${squadN} ${tt('coachSquadShort', 'played')} · ${rated}/${squadN} ${tt('coachRatedShort', 'rated')}`
       : [
+          m.meetup ? m.meetup : '',
           m.kickoff ? m.kickoff : '',
           m.tournament || '',
           `${squadN} ${tt('coachSquadShort', 'played')}`,
@@ -628,9 +629,10 @@
     const tourBit = m.tournament
       ? `<span class="coach-match-tour">${esc(m.tournament)}</span>`
       : '';
+    const timeBits = [m.meetup, m.kickoff].filter(Boolean).join(' · ');
     return `<button type="button" class="coach-team-item coach-match-item ${badgeCls}${on}" ${attr}="${esc(m.id)}">
       <span class="coach-match-row-top">
-        <span class="coach-team-name">${esc(m.date)}${m.kickoff ? ` · ${esc(m.kickoff)}` : ''} · ${esc(m.opponent)}</span>
+        <span class="coach-team-name">${esc(m.date)}${timeBits ? ` · ${esc(timeBits)}` : ''} · ${esc(m.opponent)}</span>
         <span class="coach-match-badge ${badgeCls}">${badgeInner}</span>
       </span>
       ${tourBit}
@@ -672,11 +674,10 @@
       syncCoachCompetitionField();
       fillCoachTourDatalist();
       ensureCoachKickoffSelects();
+      ensureCoachMeetupSelects();
     }
   }
-  function ensureCoachKickoffSelects(){
-    const hSel = document.getElementById('coachKickoffH');
-    const mSel = document.getElementById('coachKickoffM');
+  function fillHourMinuteSelects(hSel, mSel){
     if(!hSel || !mSel) return;
     if(!hSel.options.length){
       hSel.innerHTML = `<option value="">—</option>` + Array.from({length: 24}, (_, h) => {
@@ -691,6 +692,11 @@
         return `<option value="${v}">${v}</option>`;
       }).join('');
     }
+  }
+  function ensureCoachKickoffSelects(){
+    const hSel = document.getElementById('coachKickoffH');
+    const mSel = document.getElementById('coachKickoffM');
+    fillHourMinuteSelects(hSel, mSel);
     syncCoachKickoffHidden();
   }
   function syncCoachKickoffHidden(){
@@ -713,6 +719,36 @@
     const h = document.getElementById('coachKickoffH');
     const m = document.getElementById('coachKickoffM');
     const hidden = document.getElementById('coachKickoffValue');
+    if(h) h.value = '';
+    if(m) m.value = '';
+    if(hidden) hidden.value = '';
+  }
+  function ensureCoachMeetupSelects(){
+    const hSel = document.getElementById('coachMeetupH');
+    const mSel = document.getElementById('coachMeetupM');
+    fillHourMinuteSelects(hSel, mSel);
+    syncCoachMeetupHidden();
+  }
+  function syncCoachMeetupHidden(){
+    const h = document.getElementById('coachMeetupH')?.value || '';
+    const m = document.getElementById('coachMeetupM')?.value || '';
+    const hidden = document.getElementById('coachMeetupValue');
+    if(hidden) hidden.value = (h !== '' && m !== '') ? `${h}:${m}` : '';
+  }
+  function readCoachMeetup(root){
+    const scope = root || document;
+    const hidden = scope.querySelector?.('.js-cm-meetup') || document.getElementById('coachMeetupValue');
+    if(hidden && hidden.value) return String(hidden.value);
+    const h = scope.querySelector?.('.js-cm-meetup-h')?.value
+      || document.getElementById('coachMeetupH')?.value || '';
+    const m = scope.querySelector?.('.js-cm-meetup-m')?.value
+      || document.getElementById('coachMeetupM')?.value || '';
+    return (h !== '' && m !== '') ? `${h}:${m}` : '';
+  }
+  function clearCoachMeetup(){
+    const h = document.getElementById('coachMeetupH');
+    const m = document.getElementById('coachMeetupM');
+    const hidden = document.getElementById('coachMeetupValue');
     if(h) h.value = '';
     if(m) m.value = '';
     if(hidden) hidden.value = '';
@@ -848,7 +884,12 @@
       })[activeMatch.kind] || '';
       const bits = [
         activeMatch.date,
-        activeMatch.kickoff || '',
+        activeMatch.meetup
+          ? `${tt('coachMatchMeetup', 'Meetup')} ${activeMatch.meetup}`
+          : '',
+        activeMatch.kickoff
+          ? `${tt('coachMatchKickoff', 'Kick-off')} ${activeMatch.kickoff}`
+          : '',
         venueLab,
         kindLab,
         activeMatch.tournament || '',
@@ -1095,21 +1136,10 @@
   }
 
   function fillHistoryKickoffSelects(){
-    const hSel = document.getElementById('coachHistoryKickoffH');
-    const mSel = document.getElementById('coachHistoryKickoffM');
-    if(!hSel || !mSel) return;
-    if(!hSel.options.length){
-      hSel.innerHTML = `<option value="">—</option>` + Array.from({length: 24}, (_, h) => {
-        const v = String(h).padStart(2, '0');
-        return `<option value="${v}">${v}</option>`;
-      }).join('');
-    }
-    if(!mSel.options.length){
-      mSel.innerHTML = `<option value="">—</option>` + [0,5,10,15,20,25,30,35,40,45,50,55].map(m => {
-        const v = String(m).padStart(2, '0');
-        return `<option value="${v}">${v}</option>`;
-      }).join('');
-    }
+    fillHourMinuteSelects(
+      document.getElementById('coachHistoryKickoffH'),
+      document.getElementById('coachHistoryKickoffM')
+    );
   }
   function syncHistoryKickoffHidden(){
     const h = document.getElementById('coachHistoryKickoffH')?.value || '';
@@ -1137,6 +1167,39 @@
   function readHistoryKickoff(){
     syncHistoryKickoffHidden();
     return String(document.getElementById('coachHistoryKickoffValue')?.value || '');
+  }
+  function fillHistoryMeetupSelects(){
+    fillHourMinuteSelects(
+      document.getElementById('coachHistoryMeetupH'),
+      document.getElementById('coachHistoryMeetupM')
+    );
+  }
+  function syncHistoryMeetupHidden(){
+    const h = document.getElementById('coachHistoryMeetupH')?.value || '';
+    const m = document.getElementById('coachHistoryMeetupM')?.value || '';
+    const hidden = document.getElementById('coachHistoryMeetupValue');
+    if(hidden) hidden.value = (h !== '' && m !== '') ? `${h}:${m}` : '';
+  }
+  function setHistoryMeetup(meetup){
+    fillHistoryMeetupSelects();
+    const raw = String(meetup || '').trim();
+    const m = raw.match(/^(\d{1,2}):(\d{2})$/);
+    const hEl = document.getElementById('coachHistoryMeetupH');
+    const mEl = document.getElementById('coachHistoryMeetupM');
+    if(hEl) hEl.value = m ? String(Number(m[1])).padStart(2, '0') : '';
+    if(mEl){
+      if(m){
+        const mins = Number(m[2]);
+        const stepped = [0,5,10,15,20,25,30,35,40,45,50,55].reduce((best, cur) =>
+          Math.abs(cur - mins) < Math.abs(best - mins) ? cur : best, 0);
+        mEl.value = String(stepped).padStart(2, '0');
+      }else mEl.value = '';
+    }
+    syncHistoryMeetupHidden();
+  }
+  function readHistoryMeetup(){
+    syncHistoryMeetupHidden();
+    return String(document.getElementById('coachHistoryMeetupValue')?.value || '');
   }
   function syncHistoryCompetitionField(){
     const kind = document.getElementById('coachHistoryKind')?.value || 'league';
@@ -1431,7 +1494,12 @@
     if(summary){
       const bits = [
         match.date,
-        match.kickoff || '',
+        match.meetup
+          ? `${tt('coachMatchMeetup', 'Meetup')} ${match.meetup}`
+          : '',
+        match.kickoff
+          ? `${tt('coachMatchKickoff', 'Kick-off')} ${match.kickoff}`
+          : '',
         venueLab,
         kindLab,
         match.tournament || '',
@@ -1462,6 +1530,7 @@
       if(kindEl) kindEl.value = ['league','friendly','cup','tournament'].includes(match.kind) ? match.kind : 'league';
       if(tourEl) tourEl.value = match.tournament || '';
       if(addrEl) addrEl.value = match.address || '';
+      setHistoryMeetup(match.meetup || '');
       setHistoryKickoff(match.kickoff || '');
       syncHistoryCompetitionField();
     }
@@ -2425,6 +2494,7 @@
       store.updateMatch(session, coachHistoryMatchId, {
         opponent,
         date,
+        meetup: readHistoryMeetup(),
         kickoff: readHistoryKickoff(),
         venue: document.getElementById('coachHistoryVenue')?.value === 'away' ? 'away' : 'home',
         kind,
@@ -2592,6 +2662,7 @@
     const kindRaw = root.querySelector('.js-cm-kind')?.value || 'league';
     const kind = ['league','friendly','cup','tournament'].includes(kindRaw) ? kindRaw : 'league';
     const kickoff = readCoachKickoff(root);
+    const meetup = readCoachMeetup(root);
     const tournament = kind === 'friendly'
       ? ''
       : String(root.querySelector('.js-cm-tournament')?.value || '').trim();
@@ -2613,6 +2684,7 @@
         date,
         venue,
         kind,
+        meetup,
         kickoff,
         tournament,
         score: '',
@@ -2621,6 +2693,7 @@
       });
       root.querySelectorAll('.js-cm-opponent').forEach(el => { el.value = ''; });
       root.querySelectorAll('.js-cm-address').forEach(el => { el.value = ''; });
+      clearCoachMeetup();
       clearCoachKickoff();
       root.querySelectorAll('.js-cm-tournament').forEach(el => { el.value = ''; });
       document.querySelectorAll('#coachMatchCreate .js-cm-squad').forEach(el => { el.dataset.dirty = ''; });
@@ -3349,6 +3422,8 @@
     });
     document.getElementById('coachHistoryKickoffH')?.addEventListener('change', () => syncHistoryKickoffHidden());
     document.getElementById('coachHistoryKickoffM')?.addEventListener('change', () => syncHistoryKickoffHidden());
+    document.getElementById('coachHistoryMeetupH')?.addEventListener('change', () => syncHistoryMeetupHidden());
+    document.getElementById('coachHistoryMeetupM')?.addEventListener('change', () => syncHistoryMeetupHidden());
     document.getElementById('coachHistorySeason')?.addEventListener('change', e => {
       coachHistSeason = e.target.value || 'all';
       closeCoachHistoryMatch();
@@ -3406,6 +3481,8 @@
     });
     document.getElementById('coachKickoffH')?.addEventListener('change', () => syncCoachKickoffHidden());
     document.getElementById('coachKickoffM')?.addEventListener('change', () => syncCoachKickoffHidden());
+    document.getElementById('coachMeetupH')?.addEventListener('change', () => syncCoachMeetupHidden());
+    document.getElementById('coachMeetupM')?.addEventListener('change', () => syncCoachMeetupHidden());
     document.getElementById('coachMatchBackBtn')?.addEventListener('click', () => {
       closeCoachMatchDetail();
     });
