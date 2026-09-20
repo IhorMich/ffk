@@ -964,39 +964,27 @@ window.ffkIsNative = function () {
         <button type="button" class="ghost-btn coach-settings-close" id="coachSettingsCloseBtn" data-i18n="previewCancel">Закрыть</button>
       </div>
 
-      <div class="pro-kicker" data-i18n="coachProfileKicker">Coach profile</div>
-      <p class="hint" data-i18n="coachPhotoHint">Фото и фон меняются на странице тренера — нажмите на аватар или обложку.</p>
-      <div class="row2">
-        <div class="field">
-          <label data-i18n="coachFirstName">Имя</label>
-          <input id="coachFirstName" type="text" maxlength="40" autocomplete="given-name">
+      <div class="coach-settings-block coach-settings-block-first">
+        <div class="pro-kicker" data-i18n="coachProfileKicker">Профиль тренера</div>
+        <p class="hint" data-i18n="coachPhotoHint">Фото и фон меняются на странице тренера — нажмите на аватар или обложку.</p>
+        <div class="row2">
+          <div class="field">
+            <label data-i18n="coachFirstName">Имя</label>
+            <input id="coachFirstName" type="text" maxlength="40" autocomplete="given-name">
+          </div>
+          <div class="field">
+            <label data-i18n="coachLastName">Фамилия</label>
+            <input id="coachLastName" type="text" maxlength="40" autocomplete="family-name">
+          </div>
         </div>
-        <div class="field">
-          <label data-i18n="coachLastName">Фамилия</label>
-          <input id="coachLastName" type="text" maxlength="40" autocomplete="family-name">
-        </div>
+        <p class="hint" id="coachProfileEmail"></p>
+        <button class="save-btn" id="coachSaveProfileBtn" type="button" data-i18n="coachSaveProfile">Сохранить профиль</button>
       </div>
-      <p class="hint" id="coachProfileEmail"></p>
-      <button class="save-btn" id="coachSaveProfileBtn" type="button" data-i18n="coachSaveProfile">Сохранить профиль</button>
-      <div class="coach-analytics-sum" id="coachProfileStats"></div>
 
       <div class="coach-settings-block">
-        <div class="pro-kicker" data-i18n="coachAcademyLabel">Academy name</div>
+        <div class="pro-kicker" data-i18n="coachAcademyLabel">Академия</div>
         <h3 class="coach-team-heading" id="coachAcademyName">—</h3>
-      </div>
-
-      <div class="coach-settings-block">
-        <div class="pro-kicker" data-i18n="coachTeamsManageKicker">Команды</div>
-        <div class="field">
-          <label data-i18n="coachTeamLabel">New team</label>
-          <input id="coachTeamInput" type="text" maxlength="60" placeholder="U13 Blue">
-        </div>
-        <div class="field">
-          <label data-i18n="coachAgeLabel">Age group</label>
-          <input id="coachTeamAgeInput" type="text" maxlength="24" placeholder="U13">
-        </div>
-        <button class="save-btn" id="coachCreateTeamBtn" type="button" data-i18n="coachCreateTeamBtn">Add team</button>
-        <div id="coachSettingsTeamList" class="coach-team-list"></div>
+        <p class="hint" data-i18n="coachSettingsTeamsHint">Команды и состав — на главной странице тренера.</p>
       </div>
 
       <div class="coach-settings-block">
@@ -1012,7 +1000,7 @@ window.ffkIsNative = function () {
         </div>
         <button class="save-btn" id="coachInviteAssistantBtn" type="button" data-i18n="coachInviteAssistantBtn">Пригласить ассистента</button>
         <div id="coachAssistantList" class="coach-team-list"></div>
-        <div class="field" style="margin-top:12px">
+        <div class="field coach-settings-claim">
           <label data-i18n="coachAssistantClaimLabel">Код ассистента (если вас пригласили)</label>
           <input id="coachAssistantClaimCode" type="text" maxlength="12" placeholder="MC-AB12CD" autocomplete="off">
         </div>
@@ -1027,21 +1015,9 @@ window.ffkIsNative = function () {
       </div>
 
       <div class="coach-settings-block">
-        <div class="pro-kicker" data-i18n="coachAppSettingsKicker">Приложение</div>
-        <p class="hint" data-i18n="coachAppSettingsHint">Тема, язык, Free/Pro и копия данных — в общих настройках Matchcard.</p>
-        <button class="ghost-btn" id="coachOpenAppSettingsBtn" type="button" data-i18n="coachOpenAppSettings">Открыть настройки приложения</button>
-      </div>
-
-      <div class="coach-settings-block">
-        <div class="pro-kicker" data-i18n="coachModeSwitchKicker">Режим приложения</div>
-        <p class="hint" data-i18n="coachModeSwitchHint">Coach и Free/Pro на одном телефоне. Можно временно уйти к оценке ребёнка у бровки.</p>
-        <button class="save-btn" id="coachEnterParentBtn" type="button" data-i18n="coachSwitchParent">Перейти в режим родителя / Free</button>
-      </div>
-
-      <div class="coach-settings-block">
         <div class="pro-kicker" data-i18n="coachAccountKicker">Аккаунт</div>
         <p class="hint" id="coachSessionEmail"></p>
-        <button class="ghost-btn" id="coachSignOutBtn" type="button" data-i18n="coachSignOut">Sign out</button>
+        <button class="ghost-btn" id="coachSignOutBtn" type="button" data-i18n="coachSignOut">Выйти</button>
       </div>
     </div>
   </div>

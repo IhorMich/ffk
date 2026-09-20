@@ -1915,12 +1915,21 @@
   .coach-settings-block{
     margin:18px 0 0;padding-top:14px;border-top:1px solid var(--card-line);
   }
+  .coach-settings-block-first{
+    margin-top:4px;padding-top:0;border-top:none;
+  }
+  .coach-settings-block .pro-kicker{margin:0 0 8px;}
+  .coach-settings-block .hint{margin:0 0 10px;}
+  .coach-settings-block .coach-team-heading{margin:0 0 6px;}
+  .coach-settings-claim{margin-top:12px;}
   .coach-settings-block .save-btn,
   .coach-settings-block #coachSignOutBtn,
   #coachSettingsSheet #coachSaveProfileBtn{width:100%;}
   #coachSettingsSheet #coachProfileEmail{margin:0 0 10px;}
-  #coachSettingsSheet #coachProfileStats{grid-template-columns:repeat(2,1fr);margin-top:12px;}
   #coachSettingsSheet #coachSignOutBtn{margin-top:8px;}
+  #coachSettingsSheet #coachClaimAssistantBtn{width:100%;margin-top:8px;}
+  #coachSettingsSheet #coachInviteAssistantBtn{margin-top:4px;}
+  #coachSettingsSheet #coachAssistantList{margin-top:10px;}
   .coach-remove-player{
     width:100%;margin:0 0 8px;color:#c0392b;border-color:color-mix(in srgb, #c0392b 35%, var(--card-line));
   }

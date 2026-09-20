@@ -4449,13 +4449,6 @@ document.getElementById('transferFile').addEventListener('change', async (e) => 
   e.target.value = '';
 });
 document.getElementById('settingsBtn').addEventListener('click', () => {
-  if(isCoachPlan() && typeof openCoachSettings === 'function'){
-    const session = window.CoachStore && window.CoachStore.getSession && window.CoachStore.getSession();
-    if(session){
-      openCoachSettings();
-      return;
-    }
-  }
   document.getElementById('s-lang').value = settings.lang;
   refreshBackupBanner();
   showView('settings');

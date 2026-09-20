@@ -288,7 +288,6 @@
 
     const teams = store.listTeams(session, academy.id);
     const profileEmail = document.getElementById('coachProfileEmail');
-    const profileStats = document.getElementById('coachProfileStats');
     const profile = store.getProfile ? store.getProfile(session) : {email: session.email || '', first_name:'', last_name:''};
     const firstInput = document.getElementById('coachFirstName');
     const lastInput = document.getElementById('coachLastName');
@@ -308,9 +307,6 @@
         ratings += store.listRatings(session, m.id).length;
       });
     });
-    if(profileStats){
-      profileStats.innerHTML = coachJumpStatsHtml(teams.length, players, matches, ratings);
-    }
     const homeStats = document.getElementById('coachHomeStats');
     if(homeStats){
       homeStats.hidden = false;
@@ -361,8 +357,6 @@
         }).join('');
     const list = document.getElementById('coachTeamList');
     if(list) list.innerHTML = teamListHtml;
-    const settingsList = document.getElementById('coachSettingsTeamList');
-    if(settingsList) settingsList.innerHTML = teamListHtml;
 
     const addBtn = document.getElementById('coachAddTeamBtn');
     if(addBtn){
@@ -371,12 +365,6 @@
       addBtn.disabled = teams.length >= maxTeams;
     }
     if(!canAddTeam) setHomeCreateTeamOpen(false);
-    const settingsCreateBtn = document.getElementById('coachCreateTeamBtn');
-    if(settingsCreateBtn){
-      settingsCreateBtn.hidden = !canAddTeam;
-      const maxTeams = typeof COACH_MAX_TEAMS === 'number' ? COACH_MAX_TEAMS : 10;
-      settingsCreateBtn.disabled = teams.length >= maxTeams;
-    }
 
     if(teamPane) teamPane.hidden = !active;
     if(active){
@@ -2219,12 +2207,12 @@
       }
     }
   }
-  function onCreateTeam(fromHome){
+  function onCreateTeam(){
     const session = global.CoachStore.getSession();
     const academy = global.CoachStore.myAcademy(session);
     if(!academy) return;
-    const nameEl = document.getElementById(fromHome ? 'coachHomeTeamInput' : 'coachTeamInput');
-    const ageEl = document.getElementById(fromHome ? 'coachHomeTeamAgeInput' : 'coachTeamAgeInput');
+    const nameEl = document.getElementById('coachHomeTeamInput');
+    const ageEl = document.getElementById('coachHomeTeamAgeInput');
     const name = nameEl?.value || '';
     const age = ageEl?.value || '';
     try{
@@ -2232,11 +2220,6 @@
       global.CoachStore.setActiveTeamId(team.id);
       if(nameEl) nameEl.value = '';
       if(ageEl) ageEl.value = '';
-      // Keep settings form in sync when creating from home.
-      const otherName = document.getElementById(fromHome ? 'coachTeamInput' : 'coachHomeTeamInput');
-      const otherAge = document.getElementById(fromHome ? 'coachTeamAgeInput' : 'coachHomeTeamAgeInput');
-      if(otherName) otherName.value = '';
-      if(otherAge) otherAge.value = '';
       setHomeCreateTeamOpen(false);
       toast(tt('coachTeamCreated', 'Team created.'));
       renderCoachUi();
@@ -3350,16 +3333,14 @@
     document.getElementById('coachSignUpBtn')?.addEventListener('click', () => { onSignUp(); });
     document.getElementById('coachSignInBtn')?.addEventListener('click', () => { onSignIn(); });
     document.getElementById('coachSignOutBtn')?.addEventListener('click', () => { onSignOut(); });
-    document.getElementById('coachEnterParentBtn')?.addEventListener('click', () => { enterParentMode(); });
     document.getElementById('enterParentModeBtn')?.addEventListener('click', () => { enterParentMode(); });
     document.getElementById('enterCoachModeBtn')?.addEventListener('click', () => { enterCoachMode(); });
     document.getElementById('coachCreateAcademyBtn')?.addEventListener('click', () => { onCreateAcademy(); });
-    document.getElementById('coachCreateTeamBtn')?.addEventListener('click', () => { onCreateTeam(false); });
     document.getElementById('coachAddTeamBtn')?.addEventListener('click', () => {
       const box = document.getElementById('coachHomeCreateTeam');
       setHomeCreateTeamOpen(!!(box && box.hidden));
     });
-    document.getElementById('coachHomeCreateTeamBtn')?.addEventListener('click', () => { onCreateTeam(true); });
+    document.getElementById('coachHomeCreateTeamBtn')?.addEventListener('click', () => { onCreateTeam(); });
     document.getElementById('coachHomeCreateTeamCancel')?.addEventListener('click', () => { setHomeCreateTeamOpen(false); });
     document.getElementById('coachShowAddPlayerBtn')?.addEventListener('click', () => { setPlayerFormOpen(true); });
     document.getElementById('coachAddPlayerCancel')?.addEventListener('click', () => { setPlayerFormOpen(false); });
@@ -3384,18 +3365,8 @@
       const btn = e.target.closest('[data-coach-jump]');
       if(btn) jumpCoachStat(btn.dataset.coachJump);
     });
-    document.getElementById('coachProfileStats')?.addEventListener('click', e => {
-      const btn = e.target.closest('[data-coach-jump]');
-      if(btn) jumpCoachStat(btn.dataset.coachJump);
-    });
     document.getElementById('coachSettingsBack')?.addEventListener('click', () => closeCoachSettings());
     document.getElementById('coachSettingsCloseBtn')?.addEventListener('click', () => closeCoachSettings());
-    document.getElementById('coachOpenAppSettingsBtn')?.addEventListener('click', () => {
-      closeCoachSettings();
-      document.getElementById('s-lang').value = settings.lang;
-      if(typeof refreshBackupBanner === 'function') refreshBackupBanner();
-      if(typeof showView === 'function') showView('settings');
-    });
     document.getElementById('coachHistoryBackBtn')?.addEventListener('click', () => {
       closeCoachHistoryMatch();
       renderCoachUi();
@@ -3700,7 +3671,6 @@
       });
     };
     pickTeam(document.getElementById('coachTeamList'), false);
-    pickTeam(document.getElementById('coachSettingsTeamList'), true);
     document.getElementById('coachPlayerList')?.addEventListener('click', e => {
       const open = e.target.closest('[data-open-player]');
       if(open){
