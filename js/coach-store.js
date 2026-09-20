@@ -184,7 +184,7 @@
       const last = String(fields.last_name || '').trim().slice(0, 40);
       if(!first) throw new Error('name');
       const db = readDb();
-      const maxP = (typeof COACH_MAX_PLAYERS_PER_TEAM === 'number') ? COACH_MAX_PLAYERS_PER_TEAM : 30;
+      const maxP = (typeof COACH_MAX_PLAYERS_PER_TEAM === 'number') ? COACH_MAX_PLAYERS_PER_TEAM : 50;
       if(db.team_players.filter(p => p.team_id === teamId).length >= maxP) throw new Error('player_limit');
       const player = {
         id: uid('tpl'),

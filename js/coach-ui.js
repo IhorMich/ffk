@@ -93,7 +93,7 @@
           const n = store.listPlayers(session, t.id).length;
           return `<button type="button" class="coach-team-item${on}" data-team="${esc(t.id)}">
             <span class="coach-team-name">${esc(t.name)}${t.age_group ? ` · ${esc(t.age_group)}` : ''}</span>
-            <span class="coach-team-meta">${n}/${typeof COACH_MAX_PLAYERS_PER_TEAM === 'number' ? COACH_MAX_PLAYERS_PER_TEAM : 30} · ${esc(t.invite_code)}</span>
+            <span class="coach-team-meta">${n}/${typeof COACH_MAX_PLAYERS_PER_TEAM === 'number' ? COACH_MAX_PLAYERS_PER_TEAM : 50} · ${esc(t.invite_code)}</span>
           </button>`;
         }).join('');
       }

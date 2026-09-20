@@ -27,5 +27,5 @@ Data key: `ffk_coach_v1` — never mixed with personal roster/matches.
 |---|---|
 | Academies | 1 |
 | Teams / academy | 10 |
-| Players / team | 30 |
+| Players / team | 50 |
 | Assistants | 2 (Phase 2+) |
