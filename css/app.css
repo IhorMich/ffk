@@ -399,9 +399,9 @@
   .intro-ambience{
     position:absolute;inset:0;pointer-events:none;
     background:
-      radial-gradient(ellipse 58% 42% at 50% 44%, rgba(245,185,66,.22) 0%, transparent 72%),
-      radial-gradient(ellipse 36% 22% at 50% 48%, rgba(255,230,150,.12) 0%, transparent 70%),
-      radial-gradient(ellipse 90% 80% at 50% 50%, transparent 48%, rgba(0,0,0,.55) 100%);
+      radial-gradient(ellipse 70% 52% at 50% 46%, rgba(245,185,66,.42) 0%, transparent 72%),
+      radial-gradient(ellipse 42% 30% at 50% 48%, rgba(255,230,150,.28) 0%, transparent 68%),
+      radial-gradient(ellipse 90% 80% at 50% 50%, transparent 48%, rgba(0,0,0,.5) 100%);
   }
   .intro.play .intro-ambience{animation:introAmbience 2.8s ease-in-out .2s infinite alternate;}
   .intro-col{
@@ -415,6 +415,25 @@
     width:min(78vw, 280px);height:min(58vh, 380px);
     margin:0 0 4px;
     perspective:1100px;
+    overflow:visible;
+  }
+  .intro-halo{
+    position:absolute;left:50%;top:50%;
+    width:270%;height:180%;
+    margin:-90% 0 0 -135%;
+    border-radius:50%;
+    pointer-events:none;z-index:0;
+    background:radial-gradient(ellipse at center,
+      rgba(255,214,90,.55) 0%,
+      rgba(245,185,66,.32) 34%,
+      rgba(245,185,66,.08) 58%,
+      transparent 74%);
+    filter:blur(10px);
+    opacity:0;
+    transform:scale(.82);
+  }
+  .intro.play .intro-halo{
+    animation:introHaloIn 1.1s ease .08s forwards, introHaloPulse 2.8s ease-in-out 1.15s infinite alternate;
   }
   .intro.play .intro-stack{animation:introStackFloat 4s ease-in-out 4.3s infinite alternate;}
   .intro-fut{
@@ -439,8 +458,8 @@
   }
   .intro-fut-1{
     z-index:1;
-    --from:translate3d(0, 28px, 0) rotateX(6deg) scale(.92);
-    --over:translate3d(0, -2px, 0) rotateX(1deg) scale(1.012);
+    --from:translate3d(-38px, -92px, 28px) rotateZ(-14deg) rotateX(-16deg) scale(.88);
+    --over:translate3d(0, -5px, 0) rotateX(1deg) scale(1.02);
     --rest:translate3d(0, 0, 0) rotateX(2deg) rotateZ(0deg);
     --paper:linear-gradient(180deg, #F7F1E3 0%, #E7D6B4 100%);
     --ink:#1C140C;--muted:#7A6548;--accent:#C48416;--line:rgba(196,132,22,.38);
@@ -477,7 +496,7 @@
     --paper:linear-gradient(180deg, #16141C 0%, #07060C 100%);
     --ink:#FFE9B0;--muted:#C4B48A;--accent:#F5B942;--line:rgba(245,185,66,.32);
   }
-  .intro.play .intro-fut-1{animation:introFutIn 1.2s cubic-bezier(.22,.62,.2,1) .18s forwards;}
+  .intro.play .intro-fut-1{animation:introFutIn 1.15s cubic-bezier(.22,.62,.2,1) .12s forwards;}
   .intro.play .intro-fut-2{animation:introFutIn 1.05s cubic-bezier(.22,.62,.2,1) 1.45s forwards;}
   .intro.play .intro-fut-3{animation:introFutIn 1.05s cubic-bezier(.22,.62,.2,1) 1.95s forwards;}
   .intro.play .intro-fut-4{animation:introFutIn 1.05s cubic-bezier(.22,.62,.2,1) 2.45s forwards;}
@@ -563,6 +582,14 @@
   }
   .intro.play .intro-name-ch{
     animation:introBallBounce .9s cubic-bezier(.22,.8,.3,1) calc(4.2s + (var(--i) * .1s)) forwards;
+  }
+  @keyframes introHaloIn{
+    from{opacity:0;transform:scale(.82)}
+    to{opacity:1;transform:scale(1)}
+  }
+  @keyframes introHaloPulse{
+    from{opacity:.82;transform:scale(1)}
+    to{opacity:1;transform:scale(1.08)}
   }
   @keyframes introFutIn{
     0%{opacity:0;transform:var(--from)}
