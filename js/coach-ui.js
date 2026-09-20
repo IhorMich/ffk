@@ -1347,14 +1347,14 @@
     closeCoachParentInviteSheet();
     [
       'coachSettingsBack','coachRateBack','coachPlayerBack','coachParentInviteBack',
-      'parentClaimBack','parentLinkBack','parentMsgBack'
+      'parentClaimBack','parentLinkBack','parentMsgBack','inboxSheetBack'
     ].forEach(id => {
       const el = document.getElementById(id);
       if(el) el.hidden = true;
     });
     [
       'coachSettingsSheet','coachRateSheet','coachPlayerSheet','coachParentInviteSheet',
-      'parentClaimSheet','parentLinkSheet','parentMsgSheet'
+      'parentClaimSheet','parentLinkSheet','parentMsgSheet','inboxSheet'
     ].forEach(id => {
       const el = document.getElementById(id);
       if(el) el.hidden = true;

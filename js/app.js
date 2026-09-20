@@ -403,6 +403,7 @@ function syncPushSettingsUi(){
       ? t('coachPushOn')
       : t('coachPushHint');
   }
+  if(typeof syncInboxBellUi === 'function') syncInboxBellUi();
 }
 window.syncPushSettingsUi = syncPushSettingsUi;
 function proTeaserHtml(titleKey){
@@ -4018,6 +4019,16 @@ function handleAppBack(){
     else {
       document.getElementById('parentMsgSheet').hidden = true;
       const b = document.getElementById('parentMsgBack');
+      if(b) b.hidden = true;
+    }
+    return true;
+  }
+  if(isElShown('inboxSheet') || isElShown('inboxSheetBack')){
+    if(typeof closeInboxSheet === 'function') closeInboxSheet();
+    else {
+      const s = document.getElementById('inboxSheet');
+      const b = document.getElementById('inboxSheetBack');
+      if(s) s.hidden = true;
       if(b) b.hidden = true;
     }
     return true;

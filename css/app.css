@@ -867,6 +867,15 @@
     width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.85;
     stroke-linecap:round;stroke-linejoin:round;display:block;
   }
+  .inbox-btn{position:relative;}
+  .inbox-badge{
+    position:absolute;top:2px;right:2px;min-width:16px;height:16px;padding:0 4px;
+    border-radius:999px;background:#e25555;color:#fff;
+    font-size:.62rem;font-weight:800;line-height:16px;text-align:center;
+    box-shadow:0 0 0 2px var(--card-paper);
+  }
+  .inbox-badge[hidden]{display:none !important;}
+  .inbox-sheet-list{display:grid;gap:8px;margin-top:10px;max-height:min(60vh,480px);overflow:auto;}
   .theme-toggle .ico-moon{display:none;fill:currentColor;stroke:none;}
   html[data-theme="day"] .theme-toggle .ico-sun{display:none;}
   html[data-theme="day"] .theme-toggle .ico-moon{display:block;}

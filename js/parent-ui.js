@@ -23,34 +23,22 @@
     return [p.first_name, p.last_name].filter(Boolean).join(' ') || '—';
   }
 
-  function renderParentInbox(){
+  function inboxMessages(){
     const store = global.ParentStore;
-    const card = document.getElementById('parentInboxCard');
-    const list = document.getElementById('parentInboxList');
-    if(!card || !list || !store) return;
-    if(typeof isCoachPlan === 'function' && isCoachPlan()){
-      card.hidden = true;
-      return;
-    }
-    const links = store.listLinks();
-    if(!links.length){
-      card.hidden = true;
-      list.innerHTML = '';
-      return;
-    }
-    card.hidden = false;
-    const msgs = store.listInbox();
-    const unread = store.unreadInboxCount();
-    const title = card.querySelector('h3');
-    if(title){
-      const base = tt('parentInboxTitle', 'Messages');
-      title.textContent = unread ? `${base} (${unread})` : base;
-    }
+    if(store && typeof store.listInbox === 'function') return store.listInbox();
+    return global.InboxStore ? global.InboxStore.listAll() : [];
+  }
+  function inboxUnread(){
+    const store = global.ParentStore;
+    if(store && typeof store.unreadInboxCount === 'function') return store.unreadInboxCount();
+    if(!global.InboxStore) return 0;
+    return global.InboxStore.listAll().filter(m => m.status !== 'read').length;
+  }
+  function inboxRowsHtml(msgs){
     if(!msgs.length){
-      list.innerHTML = `<p class="hint">${esc(tt('parentInboxEmpty', 'No match invites yet. When the coach picks the squad, the invite appears here.'))}</p>`;
-      return;
+      return `<p class="hint">${esc(tt('parentInboxEmpty', 'No match invites yet. When the coach picks the squad, the invite appears here.'))}</p>`;
     }
-    list.innerHTML = msgs.map(m => {
+    return msgs.map(m => {
       const unreadCls = m.status === 'read' ? '' : ' unread';
       const isResult = m.type === 'match_result';
       const head = [m.date, m.opponent].filter(Boolean).join(' · ');
@@ -71,6 +59,85 @@
         <span class="parent-msg-dot" aria-hidden="true"></span>
       </button>`;
     }).join('');
+  }
+  function syncInboxBellUi(){
+    const btn = document.getElementById('inboxBtn');
+    const badge = document.getElementById('inboxBadge');
+    if(!btn) return;
+    const coachOn = typeof isCoachPlan === 'function' && isCoachPlan();
+    const pushOn = !!(global.CoachPush && global.CoachPush.isEnabled && global.CoachPush.isEnabled());
+    const msgs = inboxMessages();
+    const unread = inboxUnread();
+    const links = global.ParentStore && global.ParentStore.listLinks
+      ? global.ParentStore.listLinks().length
+      : 0;
+    // Show like modern apps: when push is on, or there are messages / linked kids (parent mode).
+    const show = !coachOn && (pushOn || unread > 0 || msgs.length > 0 || links > 0);
+    btn.hidden = !show;
+    btn.classList.toggle('has-unread', unread > 0);
+    if(badge){
+      if(unread > 0){
+        badge.hidden = false;
+        badge.textContent = unread > 99 ? '99+' : String(unread);
+      }else{
+        badge.hidden = true;
+      }
+    }
+  }
+  function openInboxSheet(){
+    if(typeof isCoachPlan === 'function' && isCoachPlan()){
+      toast(tt('parentNotInCoach', 'Switch off Coach plan to open parent messages.'));
+      return;
+    }
+    const sheet = document.getElementById('inboxSheet');
+    const back = document.getElementById('inboxSheetBack');
+    const list = document.getElementById('inboxSheetList');
+    if(list) list.innerHTML = inboxRowsHtml(inboxMessages());
+    if(sheet) sheet.hidden = false;
+    if(back) back.hidden = false;
+    if(typeof pushAppState === 'function') pushAppState('layer');
+    syncInboxBellUi();
+  }
+  function closeInboxSheet(){
+    const sheet = document.getElementById('inboxSheet');
+    const back = document.getElementById('inboxSheetBack');
+    if(sheet) sheet.hidden = true;
+    if(back) back.hidden = true;
+  }
+
+  function renderParentInbox(){
+    const store = global.ParentStore;
+    const card = document.getElementById('parentInboxCard');
+    const list = document.getElementById('parentInboxList');
+    if(!card || !list || !store){
+      syncInboxBellUi();
+      return;
+    }
+    if(typeof isCoachPlan === 'function' && isCoachPlan()){
+      card.hidden = true;
+      syncInboxBellUi();
+      return;
+    }
+    const links = store.listLinks();
+    if(!links.length){
+      card.hidden = true;
+      list.innerHTML = '';
+      syncInboxBellUi();
+      return;
+    }
+    card.hidden = false;
+    const msgs = store.listInbox();
+    const unread = store.unreadInboxCount();
+    const title = card.querySelector('h3');
+    if(title){
+      const base = tt('parentInboxTitle', 'Messages');
+      title.textContent = unread ? `${base} (${unread})` : base;
+    }
+    list.innerHTML = inboxRowsHtml(msgs);
+    const sheetList = document.getElementById('inboxSheetList');
+    const sheet = document.getElementById('inboxSheet');
+    if(sheetList && sheet && !sheet.hidden) sheetList.innerHTML = inboxRowsHtml(msgs);
+    syncInboxBellUi();
   }
 
   function openParentMessage(id){
@@ -126,12 +193,14 @@
     if(typeof pushAppState === 'function') pushAppState('layer');
     renderParentInbox();
     if(typeof renderCoachUi === 'function') renderCoachUi();
+    syncInboxBellUi();
   }
   function closeParentMsgSheet(){
     const sheet = document.getElementById('parentMsgSheet');
     const back = document.getElementById('parentMsgBack');
     if(sheet) sheet.hidden = true;
     if(back) back.hidden = true;
+    syncInboxBellUi();
   }
 
   function renderParentLinks(){
@@ -369,6 +438,7 @@
     renderParentInbox();
     renderParentLinks();
     renderParentCoachStats();
+    syncInboxBellUi();
   }
 
   function bindParentUi(){
@@ -381,7 +451,15 @@
     document.getElementById('parentClaimConfirmBtn')?.addEventListener('click', () => confirmClaim());
     document.getElementById('parentLinkBack')?.addEventListener('click', () => closeParentLinkSheet());
     document.getElementById('parentMsgBack')?.addEventListener('click', () => closeParentMsgSheet());
+    document.getElementById('inboxBtn')?.addEventListener('click', () => openInboxSheet());
+    document.getElementById('inboxSheetBack')?.addEventListener('click', () => closeInboxSheet());
+    document.getElementById('inboxSheetCloseBtn')?.addEventListener('click', () => closeInboxSheet());
     document.getElementById('parentInboxList')?.addEventListener('click', e => {
+      const btn = e.target.closest('[data-parent-msg]');
+      if(!btn) return;
+      openParentMessage(btn.dataset.parentMsg);
+    });
+    document.getElementById('inboxSheetList')?.addEventListener('click', e => {
       const btn = e.target.closest('[data-parent-msg]');
       if(!btn) return;
       openParentMessage(btn.dataset.parentMsg);
@@ -403,10 +481,14 @@
       toast(tt('parentUnlinked', 'Academy link removed.'));
     });
     checkLaunchParentInvite();
+    syncInboxBellUi();
   }
 
   global.renderParentUi = renderParentUi;
   global.bindParentUi = bindParentUi;
+  global.syncInboxBellUi = syncInboxBellUi;
+  global.openInboxSheet = openInboxSheet;
+  global.closeInboxSheet = closeInboxSheet;
   global.openParentClaimSheet = openParentClaimSheet;
   global.ingestParentDeepLink = ingestDeepLink;
   global.closeParentMsgSheet = closeParentMsgSheet;
