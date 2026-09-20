@@ -526,14 +526,9 @@
     background:rgba(128,128,128,.2);
   }
   .intro-sheet-bars i::after{
-    content:"";display:block;height:100%;width:0;border-radius:inherit;
+    content:"";display:block;height:100%;width:calc(var(--p) * 100%);border-radius:inherit;
     background:var(--accent);
   }
-  .intro.play .intro-fut-1 .intro-sheet-bars i::after{animation:introBar .7s ease .95s forwards;}
-  .intro.play .intro-fut-2 .intro-sheet-bars i::after{animation:introBar .7s ease 2.15s forwards;}
-  .intro.play .intro-fut-3 .intro-sheet-bars i::after{animation:introBar .7s ease 2.65s forwards;}
-  .intro.play .intro-fut-4 .intro-sheet-bars i::after{animation:introBar .7s ease 3.15s forwards;}
-  .intro.play .intro-fut-5 .intro-sheet-bars i::after{animation:introBar .7s ease 3.65s forwards;}
   .intro-sheet-bars b{
     font-size:.4rem;font-weight:800;letter-spacing:-.03em;text-align:right;
     font-variant-numeric:tabular-nums;color:var(--ink);
@@ -568,10 +563,6 @@
   }
   .intro.play .intro-name-ch{
     animation:introBallBounce .9s cubic-bezier(.22,.8,.3,1) calc(4.2s + (var(--i) * .1s)) forwards;
-  }
-  @keyframes introBar{
-    from{width:0}
-    to{width:calc(var(--p) * 100%)}
   }
   @keyframes introFutIn{
     0%{opacity:0;transform:var(--from)}
