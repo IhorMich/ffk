@@ -429,17 +429,12 @@ window.ffkIsNative = function () {
     <div class="intro-ambience" aria-hidden="true"></div>
     <div class="intro-stage">
       <span class="intro-floor-shadow" aria-hidden="true"></span>
-      <svg class="intro-gauge" viewBox="0 0 200 200" aria-hidden="true">
-        <defs>
-          <linearGradient id="introGold" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" stop-color="#F8D27A"/>
-            <stop offset="1" stop-color="#D4921A"/>
-          </linearGradient>
-        </defs>
-        <circle class="intro-gauge-track" cx="100" cy="100" r="74" transform="rotate(135 100 100)"/>
-        <circle class="intro-gauge-arc" id="introGaugeArc" cx="100" cy="100" r="74" transform="rotate(135 100 100)" stroke-dasharray="348.7 465" stroke-dashoffset="348.7"/>
+      <img class="intro-star" src="icons/intro-star.png" alt="">
+      <div class="intro-score" id="introScore">6.0</div>
+      <svg class="intro-check" viewBox="0 0 64 64" aria-hidden="true">
+        <circle cx="32" cy="32" r="28"/>
+        <path d="M18.5 33.2l9.4 9.6L46.5 22.4"/>
       </svg>
-      <div class="intro-gauge-score" id="introScore">6.0</div>
     </div>
     <div class="intro-name" aria-label="Matchcard">
       <span class="intro-name-line">
