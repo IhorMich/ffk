@@ -3574,8 +3574,8 @@ function startIntroScore(){
   const root = document.getElementById('intro');
   if(root) root.classList.remove('ok');
   paintIntroScore(6);
-  const delay = 480;
-  const dur = 2000;
+  const delay = 420;
+  const dur = 1800;
   const t0 = performance.now();
   const tick = now => {
     const t = now - t0 - delay;
@@ -3635,7 +3635,7 @@ function playIntro(){
   startIntroScore();
   requestAnimationFrame(() => requestAnimationFrame(hideNativeSplash));
   el.addEventListener('click', finishIntro, {once:true});
-  window.setTimeout(finishIntro, 6500);
+  window.setTimeout(finishIntro, 5200);
   return true;
 }
 function finishOnboard(){
