@@ -15,7 +15,7 @@ Academy → teams → roster → matches → parent invites → ratings → inbo
 
 Auth uses Supabase when keys are set; otherwise email/password stays on-device.
 
-## Assistants (up to 2)
+## Assistants (up to 5)
 
 Owner invites by email in Coach settings. Invitee signs in and enters code `MC-XXXXXX`.
 
@@ -35,4 +35,4 @@ Cloud delivery of remote pushes needs FCM/APNs + a Supabase Edge Function (token
 | Academies | 1 |
 | Teams / academy | 10 |
 | Players / team | 50 |
-| Assistants | 2 |
+| Assistants | 5 |

@@ -484,6 +484,29 @@
   function playerLabel(p){
     return [p.first_name, p.last_name].filter(Boolean).join(' ');
   }
+  function normPersonName(a, b){
+    return [a, b].filter(Boolean).join(' ').trim().toLowerCase().replace(/\s+/g, ' ');
+  }
+  /** Photo for a coach roster child: stored on player, else matching Free/Pro profile on this phone. */
+  function resolveCoachPlayerPhoto(tp){
+    if(!tp) return '';
+    if(tp.photo) return String(tp.photo);
+    const key = normPersonName(tp.first_name, tp.last_name);
+    if(!key) return '';
+    try{
+      if(typeof roster !== 'undefined' && roster && Array.isArray(roster.ids)){
+        for(const id of roster.ids){
+          const p = (typeof player !== 'undefined' && player && String(player.id) === String(id))
+            ? player
+            : (typeof readPlayerRecord === 'function' ? readPlayerRecord(id) : null);
+          if(!p) continue;
+          const n = normPersonName(p.firstName, p.lastName);
+          if(n === key && p.photo) return String(p.photo);
+        }
+      }
+    }catch(e){}
+    return '';
+  }
   function selectedSquadFrom(scope){
     const root = scope && scope.classList && scope.classList.contains('js-cm-squad')
       ? scope
@@ -838,6 +861,7 @@
 
   function coachPlayerCardMatch(match, player, rating){
     const name = playerLabel(player);
+    const photo = resolveCoachPlayerPhoto(player);
     return {
       date: match.date,
       opponent: match.opponent,
@@ -846,6 +870,8 @@
       kind: match.kind,
       cardName: name,
       player: name,
+      photo,
+      cardPhoto: photo,
       position: rating.position || player.position || 'fwd',
       pitchPos: rating.pitchPos || player.position || 'RW',
       rating: Number(rating.rating) || 6,
@@ -927,6 +953,9 @@
       const fit = typeof fitText === 'function'
         ? fitText
         : (c, text, x, y) => { c.fillText(text, x, y); };
+      const loadImg = typeof loadCanvasImage === 'function'
+        ? loadCanvasImage
+        : async () => null;
       ctx.fillStyle = muted;
       ctx.font = '700 22px sans-serif';
       fit(ctx, team && team.name ? team.name : 'Matchcard Coach', 64, 90, w - 128, '700', 22, 16);
@@ -949,14 +978,35 @@
       ctx.font = '800 20px sans-serif';
       fit(ctx, tt('coachMatchRatePhase', 'Player ratings'), 64, y, w - 128, '800', 20, 14);
       y += 40;
-      ratings.slice(0, rows).forEach(r => {
+      const topRates = ratings.slice(0, rows);
+      for(const r of topRates){
+        const tp = store.getPlayer(session, r.team_player_id || r.player_id);
+        const photoSrc = resolveCoachPlayerPhoto(tp);
+        const img = photoSrc ? await loadImg(photoSrc) : null;
+        const nameX = img ? 120 : 64;
+        if(img){
+          const ax = 64, ay = y - 28, as = 40;
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(ax + as / 2, ay + as / 2, as / 2, 0, Math.PI * 2);
+          ctx.closePath();
+          ctx.clip();
+          if(typeof drawCovered === 'function') drawCovered(ctx, img, ax, ay, as, as, 0.2);
+          else ctx.drawImage(img, ax, ay, as, as);
+          ctx.restore();
+          ctx.beginPath();
+          ctx.arc(ax + as / 2, ay + as / 2, as / 2, 0, Math.PI * 2);
+          ctx.strokeStyle = theme.foil || '#c9a227';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+        }
         ctx.fillStyle = ink;
         ctx.font = '800 28px sans-serif';
-        fit(ctx, r.player_name || '—', 64, y, w - 280, '800', 28, 18);
+        fit(ctx, r.player_name || '—', nameX, y, w - 280 - (nameX - 64), '800', 28, 18);
         ctx.fillStyle = theme.foil || '#c9a227';
         fit(ctx, Number(r.rating).toFixed(1), w - 200, y, 120, '900', 32, 22);
         y += 52;
-      });
+      }
       if(!ratings.length){
         ctx.fillStyle = muted;
         fit(ctx, tt('coachNoPlayers', 'No players'), 64, y, w - 128, '700', 24, 16);

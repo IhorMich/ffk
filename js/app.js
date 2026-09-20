@@ -5048,7 +5048,11 @@ function shareHistoryCard(){
 async function drawMatchCardCanvas(m, mode){
   const lines = reportLines(m);
   const split = actionSplit(m.counts, m.position, m.minutes, m.matchLen);
-  const photo = await loadCanvasImage(currentPhoto() || player.photo);
+  // Prefer an explicit photo on the match payload (coach player cards).
+  // Fall back to the active Free/Pro child only for personal cards.
+  const photoSrc = (m && (m.photo || m.cardPhoto))
+    || (!(m && m.cardName) ? (currentPhoto() || (player && player.photo) || '') : '');
+  const photo = await loadCanvasImage(photoSrc);
   const ovr = Math.round(Math.min(99, Math.max(45, Number(m.rating) * 10)));
   const theme = futTheme(ovr, mode);
   const w = 1280;
@@ -5152,9 +5156,12 @@ async function drawMatchCardCanvas(m, mode){
   return canvas;
 }
 async function shareCard(m){
+  const withPhoto = Object.assign({}, m, {
+    photo: m.photo || m.cardPhoto || currentPhoto() || (player && player.photo) || ''
+  });
   await openCardPreview({
     filename: `matchcard_${m.date}.png`,
-    build: mode => drawMatchCardCanvas(m, mode)
+    build: mode => drawMatchCardCanvas(withPhoto, mode)
   });
 }
 

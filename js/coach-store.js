@@ -1161,7 +1161,7 @@
         m.role === 'assistant' &&
         (m.status || 'active') !== 'revoked'
       );
-      const maxA = typeof COACH_MAX_ASSISTANTS === 'number' ? COACH_MAX_ASSISTANTS : 2;
+      const maxA = typeof COACH_MAX_ASSISTANTS === 'number' ? COACH_MAX_ASSISTANTS : 5;
       if(existing.length >= maxA) throw new Error('assistant_limit');
       if(existing.some(m => String(m.email || '').toLowerCase() === email)) throw new Error('exists');
       let code = inviteCode();
@@ -1209,7 +1209,7 @@
       if(hit.email && session.email && hit.email.toLowerCase() !== String(session.email).toLowerCase()){
         throw new Error('email_mismatch');
       }
-      const maxA = typeof COACH_MAX_ASSISTANTS === 'number' ? COACH_MAX_ASSISTANTS : 2;
+      const maxA = typeof COACH_MAX_ASSISTANTS === 'number' ? COACH_MAX_ASSISTANTS : 5;
       const active = db.memberships.filter(m =>
         m.academy_id === hit.academy_id &&
         m.role === 'assistant' &&
