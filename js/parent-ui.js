@@ -25,7 +25,7 @@
 
   function verifiedBadgeHtml(){
     const label = tt('parentVerifiedByCoach', 'Verified by coach');
-    return `<span class="verified-badge" title="${esc(label)}" aria-label="${esc(label)}"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M9.2 17.05 4.7 12.55l1.55-1.55 2.95 2.95 8.1-8.1 1.55 1.55z"/></svg></span>`;
+    return `<span class="verified-badge" title="${esc(label)}" aria-label="${esc(label)}"><svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><circle cx="8" cy="8" r="8" fill="currentColor"/><path d="M4.6 8.15l2.15 2.15 4.7-4.85" fill="none" stroke="#fff" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`;
   }
   function nameWithVerified(name, on){
     const text = esc(name || '—');

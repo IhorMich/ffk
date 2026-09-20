@@ -1568,7 +1568,7 @@
     background:color-mix(in srgb, var(--card-accent) 18%, transparent);color:var(--card-accent);
   }
   .name-with-verified{
-    display:inline-flex;align-items:center;gap:.34em;max-width:100%;
+    display:inline-flex;align-items:center;gap:.32em;max-width:100%;
     vertical-align:middle;
   }
   .name-with-verified-text{
@@ -1576,19 +1576,34 @@
   }
   .verified-badge{
     display:inline-flex;align-items:center;justify-content:center;
-    width:1.15rem;height:1.15rem;min-width:1.15rem;border-radius:50%;
-    background:#1d9bf0;color:#fff;flex-shrink:0;vertical-align:middle;
-    box-shadow:0 0 0 2px color-mix(in srgb, #1d9bf0 28%, transparent);
+    width:16px;height:16px;min-width:16px;border-radius:50%;
+    color:#1d9bf0;flex-shrink:0;vertical-align:middle;line-height:0;
+    /* Keep the glyph on whole pixels so it stays sharp on phones */
+    transform:translateZ(0);
   }
-  .verified-badge svg{width:68%;height:68%;display:block;}
+  .verified-badge svg{
+    width:16px;height:16px;display:block;
+    shape-rendering:geometricPrecision;
+  }
   .fb-name .verified-badge,
   #playerNameDisplay .verified-badge,
   .coach-rate-name .verified-badge,
   .coach-team-heading .verified-badge,
   .parent-link-main .verified-badge,
+  .parent-coach-block .verified-badge,
   .coach-player-text .verified-badge,
   .roster-item .verified-badge{
-    width:1.25rem;height:1.25rem;min-width:1.25rem;
+    width:18px;height:18px;min-width:18px;
+  }
+  .fb-name .verified-badge svg,
+  #playerNameDisplay .verified-badge svg,
+  .coach-rate-name .verified-badge svg,
+  .coach-team-heading .verified-badge svg,
+  .parent-link-main .verified-badge svg,
+  .parent-coach-block .verified-badge svg,
+  .coach-player-text .verified-badge svg,
+  .roster-item .verified-badge svg{
+    width:18px;height:18px;
   }
   .coach-rate-name .name-with-verified,
   .coach-team-heading .name-with-verified,
