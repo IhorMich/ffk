@@ -310,6 +310,17 @@ function syncCoachTabUi(){
     lab.setAttribute('data-i18n', on ? 'tabCoach' : 'tabPlayer');
     lab.textContent = t(on ? 'tabCoach' : 'tabPlayer');
   }
+  // Match = upcoming workspace; History = played archive — clearer labels in Coach.
+  const matchLab = document.querySelector('.tabbar [data-view="new"] .tab-lab');
+  const histLab = document.querySelector('.tabbar [data-view="history"] .tab-lab');
+  if(matchLab){
+    matchLab.setAttribute('data-i18n', on ? 'tabMatchCoach' : 'tabMatch');
+    matchLab.textContent = t(on ? 'tabMatchCoach' : 'tabMatch');
+  }
+  if(histLab){
+    histLab.setAttribute('data-i18n', on ? 'tabHistoryCoach' : 'tabHistory');
+    histLab.textContent = t(on ? 'tabHistoryCoach' : 'tabHistory');
+  }
   syncCoachModeViews();
   // Child player page is a dedicated screen — do not bounce it to Coach home.
   if(on && activeViewName() === 'player' && !isCoachChildView()) showView('coach');

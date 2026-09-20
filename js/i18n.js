@@ -4117,7 +4117,12 @@ ru:{
 (function mergeCoachPhase2I18n(){
   const extra = {
     en:{
-      coachMatchKicker:'Team matches',
+      coachMatchKicker:'Upcoming',
+      coachMatchEmptyUpcoming:'No upcoming matches',
+      coachHistoryEmpty:'No played matches yet',
+      tabMatchCoach:'Games',
+      tabHistoryCoach:'Results',
+      coachHistoryKicker:'Played',
       coachMatchHint:'Invite the squad first. After the match — score, ratings and a card for parents.',
       coachMatchOpponent:'Opponent',
       coachCreateMatchBtn:'Create match',
@@ -4183,14 +4188,18 @@ ru:{
       coachSaveProfile:'Save profile',
       coachProfileSaved:'Coach profile saved.',
       coachPickTeamFirst:'Pick a team in the Coach tab first.',
-      coachHistoryKicker:'Team history',
-      coachHistoryHint:'Matches of the active team and ratings for players who took part.',
+      coachHistoryKicker:'Played',
+      coachHistoryHint:'Played matches — open one to edit score and ratings.',
       coachPhotoHint:'Photo and cover change on the Coach page — tap the avatar or cover.',
       coachPhotoAria:'Coach photo',
       coachCoverAria:'Coach cover'
     },
     ru:{
-      coachMatchKicker:'Матчи команды',
+      coachMatchKicker:'Предстоящие',
+      coachMatchEmptyUpcoming:'Нет предстоящих матчей',
+      coachHistoryEmpty:'Пока нет сыгранных матчей',
+      tabMatchCoach:'Игры',
+      tabHistoryCoach:'Результаты',
       coachMatchHint:'Сначала пригласи состав. После игры — счёт, оценки и карточка родителю.',
       coachMatchOpponent:'Соперник',
       coachCreateMatchBtn:'Создать матч',
@@ -4256,14 +4265,18 @@ ru:{
       coachSaveProfile:'Сохранить профиль',
       coachProfileSaved:'Профиль тренера сохранён.',
       coachPickTeamFirst:'Сначала выбери команду во вкладке Тренер.',
-      coachHistoryKicker:'История команды',
-      coachHistoryHint:'Матчи активной команды и оценки игроков, которые принимали участие.',
+      coachHistoryKicker:'Сыгранные',
+      coachHistoryHint:'Сыгранные матчи — открой, чтобы править счёт и оценки.',
       coachPhotoHint:'Фото и фон меняются на странице тренера — нажмите на аватар или обложку.',
       coachPhotoAria:'Фото тренера',
       coachCoverAria:'Фон профиля тренера'
     },
     uk:{
-      coachMatchKicker:'Матчі команди',
+      coachMatchKicker:'Майбутні',
+      coachMatchEmptyUpcoming:'Немає майбутніх матчів',
+      coachHistoryEmpty:'Поки немає зіграних матчів',
+      tabMatchCoach:'Ігри',
+      tabHistoryCoach:'Результати',
       coachMatchHint:'Спочатку запросіть склад. Після гри — рахунок, оцінки і картка для батька.',
       coachMatchOpponent:'Суперник',
       coachCreateMatchBtn:'Створити матч',
@@ -4329,8 +4342,8 @@ ru:{
       coachSaveProfile:'Зберегти профіль',
       coachProfileSaved:'Профіль тренера збережено.',
       coachPickTeamFirst:'Спочатку вибери команду у вкладці Тренер.',
-      coachHistoryKicker:'Історія команди',
-      coachHistoryHint:'Матчі активної команди та оцінки гравців, які брали участь.',
+      coachHistoryKicker:'Зіграні',
+      coachHistoryHint:'Зіграні матчі — відкрий, щоб правити рахунок і оцінки.',
       coachPhotoHint:'Фото і фон змінюються на сторінці тренера — натисніть на аватар або обкладинку.',
       coachPhotoAria:'Фото тренера',
       coachCoverAria:'Фон профілю тренера'
@@ -4349,7 +4362,11 @@ ru:{
 
       coachMatchHintShort:'Invite the squad first. After the match — score, ratings and a card for parents.',
 
-      coachHistoryHintShort:'Tap a match to open score, ratings and cards.',
+      coachHistoryHintShort:'',
+      coachMatchEmptyUpcoming:'No upcoming matches',
+      coachHistoryEmpty:'No played matches yet',
+      tabMatchCoach:'Games',
+      tabHistoryCoach:'Results',
       coachHistUpcoming:'Upcoming',
       coachHistPlayed:'Played',
       coachStatsTapHint:'Tap a player to open their page with ratings.',
@@ -4532,7 +4549,11 @@ ru:{
 
       coachMatchHintShort:'Сначала пригласи состав. После игры — счёт, оценки и карточка родителю.',
 
-      coachHistoryHintShort:'Нажми матч, чтобы открыть счёт, оценки и отправку карточек.',
+      coachHistoryHintShort:'',
+      coachMatchEmptyUpcoming:'Нет предстоящих матчей',
+      coachHistoryEmpty:'Пока нет сыгранных матчей',
+      tabMatchCoach:'Игры',
+      tabHistoryCoach:'Результаты',
       coachHistUpcoming:'Предстоящие',
       coachHistPlayed:'Сыгранные',
       coachStatsTapHint:'Нажми игрока — откроется его страница с оценками.',
@@ -4715,7 +4736,11 @@ ru:{
 
       coachMatchHintShort:'Спочатку запросіть склад. Після гри — рахунок, оцінки і картка для батька.',
 
-      coachHistoryHintShort:'Натисни матч, щоб відкрити рахунок, оцінки і картки.',
+      coachHistoryHintShort:'',
+      coachMatchEmptyUpcoming:'Немає майбутніх матчів',
+      coachHistoryEmpty:'Поки немає зіграних матчів',
+      tabMatchCoach:'Ігри',
+      tabHistoryCoach:'Результати',
       coachHistUpcoming:'Майбутні',
       coachHistPlayed:'Зіграні',
       coachStatsTapHint:'Натисни гравця — відкриється його сторінка з оцінками.',

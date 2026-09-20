@@ -329,7 +329,7 @@ window.ffkIsNative = function () {
         <div class="coach-hero">
           <div class="coach-match-top">
             <div>
-              <div class="pro-kicker" data-i18n="coachMatchKicker">Team matches</div>
+              <div class="pro-kicker" data-i18n="coachMatchKicker">Предстоящие</div>
               <h3 class="coach-team-heading" id="coachMatchTabTeam">—</h3>
             </div>
             <button type="button" class="save-btn coach-match-new" id="coachMatchNewBtn" data-i18n="coachMatchNewBtn">+ Новый матч</button>
@@ -440,13 +440,13 @@ window.ffkIsNative = function () {
       </div>
       <div id="coachHistoryTab" class="coach-tab-panel" hidden>
         <div class="coach-hero">
-          <div class="pro-kicker" data-i18n="coachHistoryKicker">История команды</div>
+          <div class="pro-kicker" data-i18n="coachHistoryKicker">Сыгранные</div>
           <h3 class="coach-team-heading" id="coachHistoryTeam">—</h3>
-          <p class="hint" data-i18n="coachHistoryHintShort">Нажми матч, чтобы открыть счёт, оценки и отправку карточек.</p>
           <div class="period-chips coach-hist-filters" id="coachHistoryFilter">
             <button type="button" class="chip active" data-coach-hist="all" data-i18n="histKindAll">Все</button>
-            <button type="button" class="chip" data-coach-hist="upcoming" data-i18n="coachHistUpcoming">Предстоящие</button>
-            <button type="button" class="chip" data-coach-hist="played" data-i18n="coachHistPlayed">Сыгранные</button>
+            <button type="button" class="chip" data-coach-hist="win" data-i18n="coachMatchWin">Победа</button>
+            <button type="button" class="chip" data-coach-hist="draw" data-i18n="coachMatchDraw">Ничья</button>
+            <button type="button" class="chip" data-coach-hist="loss" data-i18n="coachMatchLoss">Поражение</button>
           </div>
           <div id="coachHistoryList" class="coach-team-list"></div>
         </div>

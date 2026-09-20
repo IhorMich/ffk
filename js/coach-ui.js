@@ -612,23 +612,13 @@
       if(hasDirty) el.dataset.dirty = '1';
     });
 
-    const matchListHtml = !matches.length
-      ? `<p class="hint">${esc(tt('coachNoMatches', 'No team matches yet.'))}</p>`
-      : (() => {
-          const sorted = sortMatchesForList(matches);
-          const upcoming = sorted.filter(m => !matchIsPlayed(m));
-          const played = sorted.filter(m => matchIsPlayed(m));
-          const parts = [];
-          if(upcoming.length){
-            parts.push(`<div class="coach-match-section-lab">${esc(tt('coachHistUpcoming', 'Upcoming'))}</div>`);
-            parts.push(upcoming.map(m => matchListRowHtml(m, {activeId: activeMatchId})).join(''));
-          }
-          if(played.length){
-            parts.push(`<div class="coach-match-section-lab">${esc(tt('coachHistPlayed', 'Played'))}</div>`);
-            parts.push(played.map(m => matchListRowHtml(m, {activeId: activeMatchId})).join(''));
-          }
-          return parts.join('');
-        })();
+    const matchListHtml = (() => {
+      const upcoming = sortMatchesForList(matches).filter(m => !matchIsPlayed(m));
+      if(!upcoming.length){
+        return `<div class="inbox-empty coach-tab-empty">${esc(tt('coachMatchEmptyUpcoming', 'No upcoming matches'))}</div>`;
+      }
+      return upcoming.map(m => matchListRowHtml(m, {activeId: activeMatchId})).join('');
+    })();
     document.querySelectorAll('.js-cm-matches').forEach(el => { el.innerHTML = matchListHtml; });
 
     const listEl = document.querySelector('#coachMatchTab .js-cm-matches');
@@ -812,17 +802,16 @@
     const el = document.getElementById('coachHistoryList');
     if(!el) return;
     const store = global.CoachStore;
-    let matches = store.listMatches(session, team.id);
+    // History = played matches only (upcoming live on Match tab).
+    let matches = store.listMatches(session, team.id).filter(m => matchIsPlayed(m));
     document.querySelectorAll('#coachHistoryFilter [data-coach-hist]').forEach(btn => {
       btn.classList.toggle('active', btn.dataset.coachHist === coachHistFilter);
     });
-    if(coachHistFilter === 'upcoming'){
-      matches = matches.filter(m => !matchIsPlayed(m));
-    }else if(coachHistFilter === 'played'){
-      matches = matches.filter(m => matchIsPlayed(m));
+    if(coachHistFilter === 'win' || coachHistFilter === 'draw' || coachHistFilter === 'loss'){
+      matches = matches.filter(m => matchOutcome(m) === coachHistFilter);
     }
     if(!matches.length){
-      el.innerHTML = `<p class="hint">${esc(tt('coachNoMatches', 'No team matches yet.'))}</p>`;
+      el.innerHTML = `<div class="inbox-empty coach-tab-empty">${esc(tt('coachHistoryEmpty', 'No played matches yet'))}</div>`;
       return;
     }
     const sorted = sortMatchesForList(matches);

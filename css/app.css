@@ -904,6 +904,10 @@
     flex:1;display:grid;place-items:center;padding:48px 24px;
     font-size:1rem;font-weight:700;color:var(--card-muted);text-align:center;
   }
+  .coach-tab-empty{
+    min-height:28vh;margin:12px 0;border:1px dashed var(--card-line);border-radius:16px;
+    background:transparent;
+  }
   .inbox-page-list .parent-msg-row{
     border-radius:0;border:0;border-bottom:1px solid var(--card-line);
     background:transparent;padding:14px 16px;margin:0;
