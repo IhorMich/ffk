@@ -4339,6 +4339,15 @@ ru:{
       coachRosterToMatchHint:'Matches and ratings — Match tab. History and analytics — their own tabs.',
 
       coachMatchHintShort:'Invite the squad first. After the match — score, ratings and a card for parents.',
+
+      coachHistoryHintShort:'Tap a match to open score, ratings and cards.',
+      coachHistUpcoming:'Upcoming',
+      coachHistPlayed:'Played',
+      coachStatsTapHint:'Tap a player to open their page with ratings.',
+      coachResultsNoneYet:'Rate players, then send cards to parents.',
+      coachResultsAllSent:'Cards sent for all rated players.',
+      coachResultsPartialSent:'{s}/{t} cards sent — you can send again.',
+      coachSendResultsAgainBtn:'Send / update cards to parents',
       coachMatchNewBtn:'+ New match',
       coachMatchCreateKicker:'New match',
       coachMatchInvitePhase:'Invites',
@@ -4445,6 +4454,15 @@ ru:{
       coachRosterToMatchHint:'Матчи и оценки — во вкладке «Матч». История и аналитика — в своих вкладках.',
 
       coachMatchHintShort:'Сначала пригласи состав. После игры — счёт, оценки и карточка родителю.',
+
+      coachHistoryHintShort:'Нажми матч, чтобы открыть счёт, оценки и отправку карточек.',
+      coachHistUpcoming:'Предстоящие',
+      coachHistPlayed:'Сыгранные',
+      coachStatsTapHint:'Нажми игрока — откроется его страница с оценками.',
+      coachResultsNoneYet:'Оцени игроков, затем отправь карточки родителям.',
+      coachResultsAllSent:'Карточки отправлены по всем оценённым.',
+      coachResultsPartialSent:'{s}/{t} карточек отправлено — можно отправить ещё раз.',
+      coachSendResultsAgainBtn:'Отправить / обновить карточки родителям',
       coachMatchNewBtn:'+ Новый матч',
       coachMatchCreateKicker:'Новый матч',
       coachMatchInvitePhase:'Приглашения',
@@ -4551,6 +4569,15 @@ ru:{
       coachRosterToMatchHint:'Матчі та оцінки — у вкладці «Матч». Історія та аналітика — у своїх вкладках.',
 
       coachMatchHintShort:'Спочатку запросіть склад. Після гри — рахунок, оцінки і картка для батька.',
+
+      coachHistoryHintShort:'Натисни матч, щоб відкрити рахунок, оцінки і картки.',
+      coachHistUpcoming:'Майбутні',
+      coachHistPlayed:'Зіграні',
+      coachStatsTapHint:'Натисни гравця — відкриється його сторінка з оцінками.',
+      coachResultsNoneYet:'Оцініть гравців, потім надішліть картки батькам.',
+      coachResultsAllSent:'Картки надіслано за всіма оціненими.',
+      coachResultsPartialSent:'{s}/{t} карток надіслано — можна надіслати ще раз.',
+      coachSendResultsAgainBtn:'Надіслати / оновити картки батькам',
       coachMatchNewBtn:'+ Новий матч',
       coachMatchCreateKicker:'Новий матч',
       coachMatchInvitePhase:'Запрошення',

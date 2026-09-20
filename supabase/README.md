@@ -2,37 +2,28 @@
 
 Personal Free/Pro stays on-device (`localStorage`). Coach is a **separate tree**.
 
-## Phase 1 (local)
+## Done locally (Phases 1–3)
 
-1. Coach account (email + password, this device)
-2. Create **1 academy**
-3. Add up to **10 teams**
-4. Add up to **50 `team_players`** per team
-5. Team invite code generated (parents later)
+1. Coach account on this phone
+2. Academy → teams → roster
+3. Parent QR / invite link + in-app inbox
+4. Team matches: invite squad → set score → rate + comment → send cards to parents
+5. History / analytics for the active team
 
 Data key: `ffk_coach_v1` — never mixed with personal roster/matches.
 
-## Phase 2 (local) — current
-
-1. Create **team matches**
-2. Rate each `team_player` via the live Matchcard UI (writes to Coach only)
-3. Team analytics (matches / ratings / averages)
-
-## Skipped / owed: Phase 1.1 cloud
-
-Remind when asked “what’s left”:
+## Next when asked: Phase 1.1 cloud (Supabase)
 
 1. Create Supabase project
 2. Run `supabase/schema.sql`
 3. Put URL + anon key into `js/coach-config.js`
-4. Wire `CoachStore` to Supabase auth + sync
+4. Wire `CoachStore` / inbox to Supabase auth + sync
 
-## Connect Supabase later
+## Later (Phase 4 ideas)
 
-1. Create a project at supabase.com
-2. Run `supabase/schema.sql` in the SQL editor
-3. Put URL + anon key into `js/coach-config.js`
-4. Phase 1.1 swaps `CoachStore` writes to the API (same UI)
+- Assistants (up to 2)
+- Billing / Coach subscription
+- Push notifications for invites and match cards
 
 ## Limits
 

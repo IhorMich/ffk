@@ -397,6 +397,7 @@ window.ffkIsNative = function () {
               <p class="hint" data-i18n="coachMatchRateHint">Оцени каждого и добавь комментарий. Потом отправь карточку родителю.</p>
               <div class="js-cm-rates coach-player-list"></div>
               <button class="save-btn js-cm-send-results" type="button" data-i18n="coachSendResultsBtn">Отправить карточки родителям</button>
+              <p class="hint js-cm-results-status" id="coachResultsStatus"></p>
               <p class="hint" data-i18n="coachSendResultsHint">Карточка появится в сообщениях родителя и в статистике от тренера — как приглашение на матч.</p>
             </div>
           </div>
@@ -442,8 +443,13 @@ window.ffkIsNative = function () {
         <div class="coach-hero">
           <div class="pro-kicker" data-i18n="coachHistoryKicker">История команды</div>
           <h3 class="coach-team-heading" id="coachHistoryTeam">—</h3>
-          <p class="hint" data-i18n="coachHistoryHint">Матчи активной команды и оценки игроков, которые принимали участие.</p>
-          <div id="coachHistoryList" class="coach-player-list"></div>
+          <p class="hint" data-i18n="coachHistoryHintShort">Нажми матч, чтобы открыть счёт, оценки и отправку карточек.</p>
+          <div class="period-chips coach-hist-filters" id="coachHistoryFilter">
+            <button type="button" class="chip active" data-coach-hist="all" data-i18n="histKindAll">Все</button>
+            <button type="button" class="chip" data-coach-hist="upcoming" data-i18n="coachHistUpcoming">Предстоящие</button>
+            <button type="button" class="chip" data-coach-hist="played" data-i18n="coachHistPlayed">Сыгранные</button>
+          </div>
+          <div id="coachHistoryList" class="coach-team-list"></div>
         </div>
       </div>
     </div>
@@ -499,7 +505,7 @@ window.ffkIsNative = function () {
           <div class="pro-kicker" data-i18n="coachAnalyticsKicker">Team analytics</div>
           <h3 class="coach-team-heading" id="coachStatsTeam">—</h3>
           <div id="coachStatsBoard" class="coach-analytics"></div>
-          <p class="hint" data-i18n="coachPhase2Note">Матчи, оценки и аналитика команды. Облако Supabase — следующий шаг.</p>
+          <p class="hint" data-i18n="coachStatsTapHint">Нажми игрока — откроется его страница с оценками.</p>
         </div>
       </div>
     </div>

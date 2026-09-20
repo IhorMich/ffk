@@ -1481,6 +1481,13 @@
   .parent-msg-row.result{box-shadow:inset 3px 0 0 color-mix(in srgb, var(--card-accent) 55%, #2f9e44);}
   .parent-msg-result{margin:12px 0;}
   .parent-msg-result .coach-analytics-sum{grid-template-columns:repeat(2,1fr);}
+  .coach-hist-filters{margin:10px 0 12px;}
+  .coach-player-open-row{
+    width:100%;text-align:left;cursor:pointer;
+    appearance:none;border:1px solid var(--card-line);background:transparent;
+  }
+  .coach-player-open-row:active{opacity:.85;}
+  #coachResultsStatus{margin:6px 0 0;font-weight:700;}
   .coach-settings-head{
     display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 8px;
   }
