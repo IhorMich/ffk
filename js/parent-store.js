@@ -141,6 +141,12 @@
       // Full deep link / URL with d= or ffk_parent=
       let m = text.match(/[?&#](?:d|ffk_parent)=([A-Za-z0-9\-_=]+)/);
       if(m) return this.decodePayload(m[1]);
+      // Test-mode short app link (same device: resolved from CoachStore).
+      m = text.match(/[?&#]code=(?:MC-)?([A-Za-z0-9]{4,8})/i);
+      if(m && global.CoachStore && typeof global.CoachStore.findParentInviteByCode === 'function'){
+        const hit = global.CoachStore.findParentInviteByCode(m[1]);
+        if(hit && hit.payload) return normalizePayload(hit.payload);
+      }
       // Bare base64 payload
       if(/^[A-Za-z0-9\-_=]{40,}$/.test(text) && !/^MC-/i.test(text)){
         try{ return this.decodePayload(text); }catch(e){}
@@ -171,6 +177,10 @@
     buildLink(payload){
       const data = this.encodePayload(payload);
       return `ffk://parent?d=${data}`;
+    },
+    buildCodeLink(code){
+      const value = String(code || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8);
+      return value ? `ffk://parent?code=${value}` : '';
     },
     buildWebLink(payload){
       const data = this.encodePayload(payload);

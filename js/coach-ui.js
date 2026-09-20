@@ -3807,21 +3807,13 @@
     const session = store && store.getSession && store.getSession();
     if(!store || !session) return;
     const full = parentInviteRow.payload || {};
-    const compact = {
-      v: 1,
-      t: full.t || parentInviteRow.token || '',
-      code: full.code || parentInviteRow.code || '',
-      a: full.a || {},
-      tm: full.tm || {},
-      c: full.c || {},
-      player: full.player || {},
-      iat: full.iat || new Date().toISOString()
-    };
-    const child = compact.player
-      ? [compact.player.fn, compact.player.ln].filter(Boolean).join(' ')
+    const child = full.player
+      ? [full.player.fn, full.player.ln].filter(Boolean).join(' ')
       : '';
     const subject = `${tt('coachParentEmailSubject', 'Matchcard invitation')}${child ? ` — ${child}` : ''}`;
-    const link = global.ParentStore ? global.ParentStore.buildWebLink(compact) : '';
+    const link = global.ParentStore
+      ? global.ParentStore.buildCodeLink(parentInviteRow.code || full.code || '')
+      : '';
     const body = tt(
       'coachParentEmailBody',
       '[TEST MODE] Confirm the player in Matchcard: {link}'
