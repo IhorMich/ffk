@@ -3558,10 +3558,30 @@ function onboardPages(){
 }
 let introBusy = false;
 let introScoreTimer = 0;
+let introChartLen = 0;
 function paintIntroScore(score){
   const el = document.getElementById('introScore');
   const v = Math.max(6, Math.min(10, Number(score) || 6));
   if(el) el.textContent = fmtNum(Math.round(v * 10) / 10, 1);
+}
+function paintIntroChart(p){
+  const line = document.getElementById('introChartLine');
+  const dot = document.getElementById('introChartDot');
+  if(!line || !introChartLen) return;
+  const t = Math.max(0, Math.min(1, Number(p) || 0));
+  line.style.strokeDashoffset = String(introChartLen * (1 - t));
+  const pt = line.getPointAtLength(introChartLen * t);
+  if(dot){
+    dot.setAttribute('cx', String(pt.x));
+    dot.setAttribute('cy', String(pt.y));
+  }
+}
+function prepareIntroChart(){
+  const line = document.getElementById('introChartLine');
+  if(!line) return;
+  introChartLen = line.getTotalLength();
+  line.style.strokeDasharray = String(introChartLen);
+  paintIntroChart(0);
 }
 function stopIntroScore(){
   if(introScoreTimer){
@@ -3573,7 +3593,9 @@ function startIntroScore(){
   stopIntroScore();
   const root = document.getElementById('intro');
   if(root) root.classList.remove('ok');
+  prepareIntroChart();
   paintIntroScore(6);
+  paintIntroChart(0);
   const delay = 800;
   const dur = 4400;
   const t0 = performance.now();
@@ -3586,9 +3608,11 @@ function startIntroScore(){
     const p = Math.min(1, t / dur);
     const tenths = Math.round(p * 40);
     paintIntroScore(6 + tenths * 0.1);
+    paintIntroChart(p);
     if(p < 1) introScoreTimer = requestAnimationFrame(tick);
     else{
       paintIntroScore(10);
+      paintIntroChart(1);
       introScoreTimer = 0;
       if(root) root.classList.add('ok');
     }

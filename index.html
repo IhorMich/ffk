@@ -428,10 +428,14 @@ window.ffkIsNative = function () {
   <div class="intro" id="intro">
     <div class="intro-ambience" aria-hidden="true"></div>
     <div class="intro-col">
+      <svg class="intro-chart" viewBox="0 0 200 84" aria-hidden="true">
+        <line class="intro-chart-grid" x1="0" y1="70" x2="200" y2="70"/>
+        <line class="intro-chart-grid" x1="0" y1="40" x2="200" y2="40"/>
+        <line class="intro-chart-grid" x1="0" y1="12" x2="200" y2="12"/>
+        <path id="introChartLine" class="intro-chart-line" d="M6 70 L28 62 L50 64 L72 48 L94 44 L116 30 L138 26 L160 16 L186 8" stroke-dasharray="400" stroke-dashoffset="400"/>
+        <circle id="introChartDot" class="intro-chart-dot" cx="6" cy="70" r="4.5"/>
+      </svg>
       <div class="intro-lockup">
-        <svg class="intro-star" viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M12 2.15l2.47 6.04 6.53.7-4.9 4.5 1.36 6.42L12 16.78 6.54 19.8l1.36-6.42-4.9-4.5 6.53-.7z"/>
-        </svg>
         <div class="intro-score" id="introScore">6.0</div>
         <svg class="intro-check" viewBox="0 0 24 24" aria-hidden="true">
           <circle cx="12" cy="12" r="12"/>
