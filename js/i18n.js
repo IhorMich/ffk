@@ -4103,7 +4103,7 @@ ru:{
   const extra = {
     en:{
       coachMatchKicker:'Team matches',
-      coachMatchHint:'Create a match, then rate each player with the live Matchcard tools. Ratings stay in Coach — not in Personal Free/Pro.',
+      coachMatchHint:'Create a match, then quickly rate players: score, key moments and a comment. No full live tally for every player.',
       coachMatchOpponent:'Opponent',
       coachCreateMatchBtn:'Create match',
       coachMatchCreated:'Match created.',
@@ -4122,13 +4122,23 @@ ru:{
       coachStatAvg:'Team avg',
       coachGames:'games',
       coachAnalyticsEmpty:'Rate players in matches to see analytics.',
-      coachPhase2Note:'Phase 2: matches + ratings + team analytics. Parent invite and Supabase sync come next.',
+      coachPhase2Note:'Phase 2: matches + quick ratings + team analytics. Parent invite and Supabase sync come next.',
       coachRateBanner:'Coach rating · {name} vs {opp}. Save writes to Coach only.',
-      coachRatingSaved:'Player rating saved to Coach.'
+      coachRatingSaved:'Player rating saved to Coach.',
+      coachQuickKicker:'Quick rating',
+      coachQuickScore:'Rating',
+      coachQuickMoments:'Key moments',
+      coachQuickComment:'Comment',
+      coachQuickCommentPh:'What to remember about this player',
+      coachQuickSave:'Save rating',
+      tabCoach:'Coach',
+      coachProfileKicker:'Coach profile',
+      coachStatTeams:'Teams',
+      coachStatPlayers:'Players'
     },
     ru:{
       coachMatchKicker:'Матчи команды',
-      coachMatchHint:'Создай матч, затем оцени каждого игрока в live Matchcard. Оценки только в Coach — не в Personal Free/Pro.',
+      coachMatchHint:'Создай матч, затем быстро оцени игроков: оценка, ключевые моменты и комментарий. Без полного подсчёта на каждого.',
       coachMatchOpponent:'Соперник',
       coachCreateMatchBtn:'Создать матч',
       coachMatchCreated:'Матч создан.',
@@ -4147,13 +4157,23 @@ ru:{
       coachStatAvg:'Средняя',
       coachGames:'игр',
       coachAnalyticsEmpty:'Оцени игроков в матчах, чтобы увидеть аналитику.',
-      coachPhase2Note:'Phase 2: матчи + оценки + аналитика. Invite родителей и Supabase — дальше.',
+      coachPhase2Note:'Phase 2: матчи + быстрые оценки + аналитика. Invite родителей и Supabase — дальше.',
       coachRateBanner:'Coach · {name} против {opp}. Сохранение только в Coach.',
-      coachRatingSaved:'Оценка игрока сохранена в Coach.'
+      coachRatingSaved:'Оценка игрока сохранена в Coach.',
+      coachQuickKicker:'Быстрая оценка',
+      coachQuickScore:'Оценка',
+      coachQuickMoments:'Ключевые моменты',
+      coachQuickComment:'Комментарий',
+      coachQuickCommentPh:'Что запомнить по игроку',
+      coachQuickSave:'Сохранить оценку',
+      tabCoach:'Тренер',
+      coachProfileKicker:'Профиль тренера',
+      coachStatTeams:'Команды',
+      coachStatPlayers:'Игроки'
     },
     uk:{
       coachMatchKicker:'Матчі команди',
-      coachMatchHint:'Створи матч, потім оціни кожного гравця в live Matchcard. Оцінки лише в Coach — не в Personal Free/Pro.',
+      coachMatchHint:'Створи матч, потім швидко оціни гравців: оцінка, ключові моменти і коментар. Без повного підрахунку на кожного.',
       coachMatchOpponent:'Суперник',
       coachCreateMatchBtn:'Створити матч',
       coachMatchCreated:'Матч створено.',
@@ -4172,9 +4192,19 @@ ru:{
       coachStatAvg:'Середня',
       coachGames:'ігор',
       coachAnalyticsEmpty:'Оціни гравців у матчах, щоб побачити аналітику.',
-      coachPhase2Note:'Phase 2: матчі + оцінки + аналітика. Invite батьків і Supabase — далі.',
+      coachPhase2Note:'Phase 2: матчі + швидкі оцінки + аналітика. Invite батьків і Supabase — далі.',
       coachRateBanner:'Coach · {name} проти {opp}. Збереження лише в Coach.',
-      coachRatingSaved:'Оцінку гравця збережено в Coach.'
+      coachRatingSaved:'Оцінку гравця збережено в Coach.',
+      coachQuickKicker:'Швидка оцінка',
+      coachQuickScore:'Оцінка',
+      coachQuickMoments:'Ключові моменти',
+      coachQuickComment:'Коментар',
+      coachQuickCommentPh:'Що запам’ятати про гравця',
+      coachQuickSave:'Зберегти оцінку',
+      tabCoach:'Тренер',
+      coachProfileKicker:'Профіль тренера',
+      coachStatTeams:'Команди',
+      coachStatPlayers:'Гравці'
     }
   };
   LANGS.forEach(lang => {

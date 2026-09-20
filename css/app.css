@@ -1218,10 +1218,12 @@
   .coach-player-form{
     display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 0 10px;
   }
-  .coach-player-form input{
+  .coach-player-form input,
+  .coach-player-form select.coach-pos-select{
     width:100%;box-sizing:border-box;padding:11px 12px;border-radius:12px;
     border:1px solid var(--card-line);background:var(--surface);color:var(--text);font:inherit;font-weight:600;
   }
+  .coach-player-form select.coach-pos-select{grid-column:1 / -1;}
   .coach-player-list{display:grid;gap:8px;margin:12px 0 8px;}
   .coach-player-row{
     display:flex;align-items:center;justify-content:space-between;gap:10px;
@@ -1249,6 +1251,66 @@
   }
   .app.coach-rate-on .coach-banner{display:block;}
   .app.coach-rate-on .tabbar{opacity:.35;pointer-events:none;}
+  html.is-coach .tab-ico-player{display:none;}
+  html.is-coach .tab-ico-coach{display:block;}
+  html:not(.is-coach) .tab-ico-coach{display:none;}
+  html.is-coach #coachBackBtn{display:none;}
+  .coach-profile-hero{margin-bottom:12px;}
+  .coach-profile-hero .coach-title{margin-bottom:2px;}
+  .coach-profile-hero #coachProfileEmail{margin:0 0 12px;}
+  #coachProfileStats{grid-template-columns:repeat(4,1fr);}
+  @media (max-width:380px){
+    #coachProfileStats{grid-template-columns:repeat(2,1fr);}
+  }
+  .coach-rate-back{
+    position:fixed;inset:0;z-index:140;border:0;padding:0;margin:0;
+    background:rgba(4,8,16,.55);backdrop-filter:blur(2px);
+  }
+  .coach-rate-sheet{
+    position:fixed;left:0;right:0;bottom:0;z-index:141;padding:0 0 env(safe-area-inset-bottom,0);
+    pointer-events:none;
+  }
+  .coach-rate-sheet:not([hidden]){pointer-events:auto;}
+  .coach-rate-card{
+    margin:0 auto;max-width:520px;max-height:min(88vh,760px);overflow:auto;
+    padding:10px 16px 18px;border-radius:22px 22px 0 0;
+    background:var(--card-paper);color:var(--card-ink);
+    border:1px solid var(--card-line);border-bottom:0;
+    box-shadow:0 -12px 40px rgba(0,0,0,.35), inset 3px 0 0 var(--card-accent);
+  }
+  .coach-rate-name{margin:4px 0 2px;font-size:1.25rem;font-weight:800;}
+  .coach-rate-score-block{margin:12px 0 16px;text-align:center;}
+  .coach-rate-score-row{
+    display:flex;align-items:center;justify-content:center;gap:18px;margin-top:8px;
+  }
+  .coach-step{
+    width:48px;height:48px;border-radius:16px;border:1px solid var(--card-line);
+    background:var(--surface);color:var(--text);font-size:1.6rem;font-weight:700;line-height:1;
+  }
+  .coach-rate-score{
+    min-width:4.2rem;font-size:2.6rem;font-weight:800;letter-spacing:-.03em;color:var(--card-accent);
+  }
+  .coach-rate-moments{margin:0 0 14px;}
+  .coach-moment-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;}
+  .coach-moment{
+    display:flex;align-items:center;justify-content:space-between;gap:8px;
+    padding:10px 10px;border-radius:14px;border:1px solid var(--card-line);
+    background:color-mix(in srgb, var(--card-paper) 90%, var(--card-accent));
+  }
+  .coach-moment b{font-size:.78rem;font-weight:800;line-height:1.2;}
+  .coach-moment-ctr{display:flex;align-items:center;gap:6px;}
+  .coach-moment-ctr button{
+    width:34px;height:34px;border-radius:10px;border:1px solid var(--card-line);
+    background:var(--surface);color:var(--text);font-weight:800;
+  }
+  .coach-moment-ctr span{min-width:1.4rem;text-align:center;font-weight:800;}
+  #coachRateComment{
+    width:100%;box-sizing:border-box;min-height:84px;resize:vertical;
+    padding:12px;border-radius:14px;border:1px solid var(--card-line);
+    background:var(--surface);color:var(--text);font:inherit;font-weight:600;
+  }
+  #coachRateSaveBtn{width:100%;margin:4px 0 8px;}
+  #coachRateCancelBtn{width:100%;margin:0;}
   .pro-lock{
     margin:0 0 14px;padding:16px 14px 14px 18px;border-radius:18px;text-align:left;
     background:var(--card-paper);color:var(--card-ink);

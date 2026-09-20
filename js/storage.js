@@ -99,6 +99,7 @@ function loadSettings(){
       onboarded: s.onboarded === true,
       onboardSkin: String(s.onboardSkin || ''),
       isPro: s.isPro === true,
+      isCoach: s.isCoach === true,
       pwaTransferSeen: s.pwaTransferSeen === true,
       introMark: String(s.introMark || '')
     };

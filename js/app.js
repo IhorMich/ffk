@@ -277,6 +277,32 @@ function applyI18n(){
 function isPro(){
   return settings.isPro === true;
 }
+function isCoachPlan(){
+  return settings.isCoach === true;
+}
+function setCoachPlan(on){
+  settings.isCoach = !!on;
+  saveSettings();
+  syncCoachTabUi();
+}
+function syncCoachTabUi(){
+  const on = isCoachPlan();
+  document.documentElement.classList.toggle('is-coach', on);
+  const btn = document.getElementById('tabPlayerOrCoach');
+  const lab = document.getElementById('tabPlayerOrCoachLab');
+  if(btn){
+    btn.dataset.view = on ? 'coach' : 'player';
+    btn.classList.toggle('active', activeViewName() === btn.dataset.view);
+  }
+  if(lab){
+    lab.setAttribute('data-i18n', on ? 'tabCoach' : 'tabPlayer');
+    lab.textContent = t(on ? 'tabCoach' : 'tabPlayer');
+  }
+  if(on && activeViewName() === 'player') showView('coach');
+}
+window.setCoachPlan = setCoachPlan;
+window.isCoachPlan = isCoachPlan;
+window.syncCoachTabUi = syncCoachTabUi;
 function playerCap(){
   return isPro() ? PRO_MAX_PLAYERS : FREE_MAX_PLAYERS;
 }
@@ -331,9 +357,10 @@ function syncProUi(){
   document.querySelectorAll('.js-pro-btn').forEach(btn => {
     btn.classList.toggle('pro-gated', !isPro());
   });
+  syncCoachTabUi();
 }
 
-let settings = {club:'', player:'', position:'fwd', format:'2x30', minutes:'60', lang:'ru', seasonCloseDeclined:'', theme:'dark', iconSet:'clear', onboarded:false, onboardSkin:'', isPro:false, pwaTransferSeen:false, introMark:''};
+let settings = {club:'', player:'', position:'fwd', format:'2x30', minutes:'60', lang:'ru', seasonCloseDeclined:'', theme:'dark', iconSet:'clear', onboarded:false, onboardSkin:'', isPro:false, isCoach:false, pwaTransferSeen:false, introMark:''};
 let roster = {currentId:'', ids:[]};
 let player = defaultPlayer();
 let extraSelected = [];
@@ -368,81 +395,7 @@ function syncCoachRateBanner(){
   });
 }
 function startCoachPlayerRating(matchId, teamPlayerId){
-  const store = window.CoachStore;
-  const session = store && store.getSession();
-  if(!store || !session) return;
-  const match = store.getMatch(session, matchId);
-  const players = match ? store.listPlayers(session, match.team_id) : [];
-  const tp = players.find(p => p.id === teamPlayerId);
-  if(!match || !tp){
-    showToast(t('coachErrGeneric'));
-    return;
-  }
-  const existing = store.getRatingForPlayer(session, matchId, teamPlayerId);
-  coachRateCtx = {
-    matchId: match.id,
-    teamId: match.team_id,
-    teamPlayerId: tp.id,
-    playerName: [tp.first_name, tp.last_name].filter(Boolean).join(' '),
-    pitchPos: (isPitchCode(tp.position) ? tp.position : null) || 'RW',
-    opponent: match.opponent,
-    score: match.score || '',
-    ratingId: existing ? existing.id : null
-  };
-  if(existing){
-    fillForm({
-      ...existing,
-      id: existing.id,
-      player: existing.player_name,
-      pitchPos: existing.pitchPos,
-      position: existing.position
-    });
-  }else{
-    resetForm();
-    document.getElementById('f-date').value = match.date;
-    document.getElementById('f-opponent').value = match.opponent;
-    fillScoreFields(match.score || '');
-    fillMatchPitchSelects(coachRateCtx.pitchPos);
-    syncDateShown();
-  }
-  syncCoachRateBanner();
-  showView('new');
-  openLive();
-}
-function saveCoachRatingFromForm(){
-  const store = window.CoachStore;
-  const session = store && store.getSession();
-  if(!store || !session || !coachRateCtx) return false;
-  const row = collectMatch();
-  if(!row.opponent && !confirm(t('confirmNoOpp'))) return false;
-  store.upsertRating(session, {
-    match_id: coachRateCtx.matchId,
-    team_player_id: coachRateCtx.teamPlayerId,
-    player_name: coachRateCtx.playerName,
-    pitchPos: row.pitchPos,
-    position: row.position,
-    minutes: row.minutes,
-    format: row.format,
-    matchLen: row.matchLen,
-    role: row.role,
-    comment: row.comment,
-    counts: row.counts,
-    behaviors: row.behaviors,
-    timeline: row.timeline,
-    kickoffAt: row.kickoffAt,
-    kickoffClock: row.kickoffClock,
-    actionRating: row.actionRating,
-    effortRating: row.effortRating,
-    rating: row.rating,
-    score: row.score
-  });
-  showToast(t('coachRatingSaved'));
-  clearCoachRateContext();
-  resetForm();
-  if(document.getElementById('app')?.classList.contains('live-on')) closeLive();
-  showView('coach');
-  if(typeof renderCoachUi === 'function') renderCoachUi();
-  return true;
+  if(typeof openCoachQuickRate === 'function') openCoachQuickRate(matchId, teamPlayerId);
 }
 window.startCoachPlayerRating = startCoachPlayerRating;
 window.clearCoachRateContext = clearCoachRateContext;
@@ -2751,6 +2704,7 @@ function bindHeroPin(){
 function showView(name){
   const views = ['player','new','history','stats','settings','report','coach'];
   if(!views.includes(name)) name = 'new';
+  if(name === 'player' && isCoachPlan()) name = 'coach';
   if(name !== 'player') closePlayerEdit();
   document.getElementById('app').classList.toggle('player-on', name === 'player');
   document.querySelectorAll('.tabbtn').forEach(b => b.classList.toggle('active', b.dataset.view === name));
@@ -2766,7 +2720,11 @@ function showView(name){
   if(name === 'coach' && typeof renderCoachUi === 'function') renderCoachUi();
   renderLiveClock();
   if(clockPhase() === 'run') startClockTick();
-  try{ sessionStorage.setItem(VIEW_KEY, name === 'report' ? 'history' : (name === 'coach' ? 'settings' : name)); }catch(e){}
+  try{
+    const persist = name === 'report' ? 'history'
+      : (name === 'coach' ? (isCoachPlan() ? 'coach' : 'settings') : name);
+    sessionStorage.setItem(VIEW_KEY, persist);
+  }catch(e){}
   if(!popping && name !== 'player') pushAppState('tab');
   syncHeroPin();
 }
@@ -2774,7 +2732,11 @@ function restoreView(){
   let name = 'new';
   try{ name = sessionStorage.getItem(VIEW_KEY) || 'new'; }catch(e){}
   if(name === 'report') name = 'history';
-  if(!['player','new','history','stats','settings'].includes(name)) name = 'new';
+  if(name === 'coach' && !isCoachPlan()) name = 'settings';
+  const allowed = ['player','new','history','stats','settings'];
+  if(isCoachPlan()) allowed.push('coach');
+  if(!allowed.includes(name)) name = 'new';
+  if(name === 'player' && isCoachPlan()) name = 'coach';
   showView(name);
 }
 
@@ -3660,6 +3622,10 @@ function handleAppBack(){
   }
   if(isElShown('cropModal')){ closeCrop(); return true; }
   if(isElShown('photoSheet')){ closePhotoSheet(); return true; }
+  if(isElShown('coachRateSheet')){
+    if(typeof closeCoachQuickRate === 'function') closeCoachQuickRate();
+    return true;
+  }
   if(isElShown('previewModal')){ closeCardPreview(); return true; }
   if(isElShown('playerEdit')){ closePlayerEdit(true); return true; }
   if(document.getElementById('app')?.classList.contains('live-on')){ closeLive(); return true; }
@@ -3676,8 +3642,14 @@ function handleAppBack(){
     if(openDetails){ openDetails.classList.remove('open'); return true; }
   }
   if(name === 'report'){ showView('history'); return true; }
-  if(name === 'coach'){ showView('settings'); return true; }
-  if(name !== 'player'){ showView('player'); return true; }
+  if(name === 'coach'){
+    showView(isCoachPlan() ? 'new' : 'settings');
+    return true;
+  }
+  if(name !== 'player' && name !== 'coach'){
+    showView(isCoachPlan() ? 'coach' : 'player');
+    return true;
+  }
   return false;
 }
 // Called from MainActivity on the back key and the edge gesture. Keep the name
@@ -4019,7 +3991,7 @@ document.getElementById('pOpenSeasonBtn').addEventListener('click', () => {
   if(openSeason(s)){ currentSeasonFilter = 'current'; saveFilters(); }
 });
 document.getElementById('pCloseSeasonBtn').addEventListener('click', () => closeSeason(false));
-document.getElementById('playerHeadBtn').addEventListener('click', () => showView('player'));
+document.getElementById('playerHeadBtn').addEventListener('click', () => showView(isCoachPlan() ? 'coach' : 'player'));
 document.getElementById('addPlayerBtn').addEventListener('click', addPlayer);
 document.getElementById('statsCardBtn').addEventListener('click', () => {
   if(!requirePro('periodCard')) return;

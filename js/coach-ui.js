@@ -44,6 +44,8 @@
     auth.hidden = true;
     work.hidden = false;
     work.dataset.started = '1';
+    const academy = store.myAcademy(session);
+    if(academy && typeof setCoachPlan === 'function') setCoachPlan(true);
     renderWorkspace(session);
   }
 
@@ -82,6 +84,30 @@
     if(nameEl) nameEl.textContent = academy.name;
 
     const teams = store.listTeams(session, academy.id);
+    const profileName = document.getElementById('coachProfileName');
+    const profileEmail = document.getElementById('coachProfileEmail');
+    const profileStats = document.getElementById('coachProfileStats');
+    if(profileName) profileName.textContent = academy.name;
+    if(profileEmail) profileEmail.textContent = session.email || '';
+    if(profileStats){
+      let players = 0;
+      let matches = 0;
+      let ratings = 0;
+      teams.forEach(t => {
+        players += store.listPlayers(session, t.id).length;
+        const ms = store.listMatches(session, t.id);
+        matches += ms.length;
+        ms.forEach(m => {
+          ratings += store.listRatings(session, m.id).length;
+        });
+      });
+      profileStats.innerHTML = `
+        <div><b>${teams.length}</b><span>${esc(tt('coachStatTeams', 'Teams'))}</span></div>
+        <div><b>${players}</b><span>${esc(tt('coachStatPlayers', 'Players'))}</span></div>
+        <div><b>${matches}</b><span>${esc(tt('coachStatMatches', 'Matches'))}</span></div>
+        <div><b>${ratings}</b><span>${esc(tt('coachStatRatings', 'Ratings'))}</span></div>`;
+    }
+
     const list = document.getElementById('coachTeamList');
     if(list){
       if(!teams.length){
@@ -119,6 +145,11 @@
     const code = document.getElementById('coachTeamCode');
     if(title) title.textContent = team.name + (team.age_group ? ` · ${team.age_group}` : '');
     if(code) code.textContent = team.invite_code;
+    const posSel = document.getElementById('coachPlayerPos');
+    if(posSel && typeof fillPitchSelect === 'function'){
+      const keep = posSel.value;
+      fillPitchSelect(posSel, keep || 'RW', true);
+    }
 
     const players = store.listPlayers(session, team.id);
     const el = document.getElementById('coachPlayerList');
@@ -129,7 +160,10 @@
     }
     el.innerHTML = players.map(p => {
       const label = [p.first_name, p.last_name].filter(Boolean).join(' ');
-      const meta = [p.number ? `#${p.number}` : '', p.position].filter(Boolean).join(' · ');
+      const pos = p.position && typeof pitchPosLabelShort === 'function'
+        ? pitchPosLabelShort(p.position)
+        : (p.position || '');
+      const meta = [p.number ? `#${p.number}` : '', pos].filter(Boolean).join(' · ');
       return `<div class="coach-player-row">
         <div class="coach-player-main">
           <b>${esc(label)}</b>
@@ -260,16 +294,20 @@
     if(auth) auth.dataset.open = '';
     const work = document.getElementById('coachWorkspace');
     if(work) work.dataset.started = '';
-    if(typeof clearCoachRateContext === 'function') clearCoachRateContext();
+    if(typeof closeCoachQuickRate === 'function') closeCoachQuickRate();
+    if(typeof setCoachPlan === 'function') setCoachPlan(false);
     toast(tt('coachSignedOut', 'Signed out of Coach.'));
     renderCoachUi();
+    if(typeof showView === 'function') showView('new');
   }
   function onCreateAcademy(){
     const name = document.getElementById('coachAcademyInput')?.value || '';
     try{
       global.CoachStore.createAcademy(global.CoachStore.getSession(), name);
+      if(typeof setCoachPlan === 'function') setCoachPlan(true);
       toast(tt('coachAcademyCreated', 'Academy created.'));
       renderCoachUi();
+      if(typeof showView === 'function') showView('coach');
     }catch(e){
       const map = {
         name: tt('coachErrAcademyName', 'Enter academy name.'),
@@ -316,10 +354,11 @@
         number,
         position
       });
-      ['coachPlayerFirst','coachPlayerLast','coachPlayerNumber','coachPlayerPos'].forEach(id => {
+      ['coachPlayerFirst','coachPlayerLast','coachPlayerNumber'].forEach(id => {
         const el = document.getElementById(id);
         if(el) el.value = '';
       });
+      document.getElementById('coachPlayerFirst')?.focus();
       toast(tt('coachPlayerAdded', 'Player added.'));
       renderCoachUi();
     }catch(e){
@@ -351,6 +390,139 @@
         ? tt('coachErrOpponent', 'Enter opponent.')
         : tt('coachErrGeneric', 'Could not create match.'));
     }
+  }
+
+  const COACH_QUICK_KEYS = {
+    fwd: ['goals','assists','shots','dribbles'],
+    mid: ['goals','assists','chances','tackles'],
+    def: ['tackles','interceptions','clearances','blocks'],
+    gk: ['saves','claims','conceded','interceptions']
+  };
+  let quickRate = null; // {matchId, teamPlayerId, pitchPos, position, playerName, opponent, date, score, rating, counts}
+
+  function quickKeysForPos(pos){
+    return COACH_QUICK_KEYS[pos] || COACH_QUICK_KEYS.fwd;
+  }
+  function clampQuickScore(n){
+    n = Math.round(Number(n) * 10) / 10;
+    if(!Number.isFinite(n)) n = 6;
+    return Math.max(4, Math.min(10, n));
+  }
+  function renderQuickMoments(){
+    const box = document.getElementById('coachRateMoments');
+    if(!box || !quickRate) return;
+    const keys = quickKeysForPos(quickRate.position);
+    box.innerHTML = keys.map(key => {
+      const n = Number(quickRate.counts[key]) || 0;
+      const lab = typeof metricLabel === 'function' ? metricLabel(key) : key;
+      return `<div class="coach-moment" data-key="${esc(key)}">
+        <b>${esc(lab)}</b>
+        <div class="coach-moment-ctr">
+          <button type="button" data-mom-delta="-1" aria-label="-">−</button>
+          <span>${n}</span>
+          <button type="button" data-mom-delta="1" aria-label="+">+</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+  function syncQuickScoreUi(){
+    const el = document.getElementById('coachRateScore');
+    if(el && quickRate) el.textContent = clampQuickScore(quickRate.rating).toFixed(1);
+  }
+  function openCoachQuickRate(matchId, teamPlayerId){
+    const store = global.CoachStore;
+    const session = store && store.getSession();
+    if(!store || !session) return;
+    const match = store.getMatch(session, matchId);
+    const players = match ? store.listPlayers(session, match.team_id) : [];
+    const tp = players.find(p => p.id === teamPlayerId);
+    if(!match || !tp){
+      toast(tt('coachErrGeneric', 'Something went wrong.'));
+      return;
+    }
+    const existing = store.getRatingForPlayer(session, matchId, teamPlayerId);
+    const pitchPos = (typeof isPitchCode === 'function' && isPitchCode(tp.position) ? tp.position : null)
+      || (existing && existing.pitchPos)
+      || 'RW';
+    const position = (typeof ratingPosOf === 'function' ? ratingPosOf(pitchPos) : 'fwd') || 'fwd';
+    const emptyCounts = {};
+    (typeof METRICS !== 'undefined' ? METRICS : []).forEach(m => { emptyCounts[m.key] = 0; });
+    const counts = {...emptyCounts, ...(existing && existing.counts ? existing.counts : {})};
+    quickRate = {
+      matchId: match.id,
+      teamId: match.team_id,
+      teamPlayerId: tp.id,
+      playerName: [tp.first_name, tp.last_name].filter(Boolean).join(' '),
+      pitchPos,
+      position,
+      opponent: match.opponent,
+      date: match.date,
+      score: match.score || '',
+      rating: existing ? clampQuickScore(existing.rating) : 6,
+      counts,
+      comment: existing ? String(existing.comment || '') : ''
+    };
+    const sheet = document.getElementById('coachRateSheet');
+    const back = document.getElementById('coachRateBack');
+    if(sheet) sheet.hidden = false;
+    if(back) back.hidden = false;
+    const nameEl = document.getElementById('coachRateName');
+    const metaEl = document.getElementById('coachRateMeta');
+    const commentEl = document.getElementById('coachRateComment');
+    if(nameEl) nameEl.textContent = quickRate.playerName;
+    if(metaEl){
+      const posLab = typeof pitchPosLabelShort === 'function' ? pitchPosLabelShort(pitchPos) : pitchPos;
+      metaEl.textContent = `${quickRate.date} · ${quickRate.opponent}${quickRate.score ? ` · ${quickRate.score}` : ''} · ${posLab}`;
+    }
+    if(commentEl) commentEl.value = quickRate.comment;
+    syncQuickScoreUi();
+    renderQuickMoments();
+    if(typeof pushAppState === 'function') pushAppState('layer');
+  }
+  function closeCoachQuickRate(){
+    quickRate = null;
+    const sheet = document.getElementById('coachRateSheet');
+    const back = document.getElementById('coachRateBack');
+    if(sheet) sheet.hidden = true;
+    if(back) back.hidden = true;
+  }
+  function saveCoachQuickRate(){
+    if(!quickRate) return;
+    const store = global.CoachStore;
+    const session = store.getSession();
+    if(!session) return;
+    const comment = document.getElementById('coachRateComment')?.value || '';
+    const minutes = 60;
+    const matchLen = 60;
+    const format = '2x30';
+    const behaviors = (typeof emptyForm === 'function') ? emptyForm().behaviors : {};
+    const action = (typeof actionScore === 'function')
+      ? actionScore(quickRate.counts, quickRate.position, minutes, matchLen)
+      : quickRate.rating;
+    store.upsertRating(session, {
+      match_id: quickRate.matchId,
+      team_player_id: quickRate.teamPlayerId,
+      player_name: quickRate.playerName,
+      pitchPos: quickRate.pitchPos,
+      position: quickRate.position,
+      minutes,
+      format,
+      matchLen,
+      role: 'start',
+      comment: String(comment).trim().slice(0, 400),
+      counts: quickRate.counts,
+      behaviors,
+      timeline: [],
+      kickoffAt: 0,
+      kickoffClock: '',
+      actionRating: action,
+      effortRating: 6,
+      rating: clampQuickScore(quickRate.rating),
+      score: quickRate.score
+    });
+    closeCoachQuickRate();
+    toast(tt('coachRatingSaved', 'Player rating saved to Coach.'));
+    renderCoachUi();
   }
 
   function bindCoachUi(){
@@ -392,12 +564,35 @@
     document.getElementById('coachRateList')?.addEventListener('click', e => {
       const btn = e.target.closest('[data-rate-player]');
       if(!btn) return;
-      if(typeof startCoachPlayerRating === 'function'){
-        startCoachPlayerRating(btn.dataset.match, btn.dataset.ratePlayer);
-      }
+      openCoachQuickRate(btn.dataset.match, btn.dataset.ratePlayer);
     });
+    document.getElementById('coachRateMinus')?.addEventListener('click', () => {
+      if(!quickRate) return;
+      quickRate.rating = clampQuickScore(quickRate.rating - 0.1);
+      syncQuickScoreUi();
+    });
+    document.getElementById('coachRatePlus')?.addEventListener('click', () => {
+      if(!quickRate) return;
+      quickRate.rating = clampQuickScore(quickRate.rating + 0.1);
+      syncQuickScoreUi();
+    });
+    document.getElementById('coachRateMoments')?.addEventListener('click', e => {
+      const btn = e.target.closest('[data-mom-delta]');
+      const row = e.target.closest('[data-key]');
+      if(!btn || !row || !quickRate) return;
+      const key = row.dataset.key;
+      const d = Number(btn.dataset.momDelta) || 0;
+      const next = Math.max(0, Math.min(30, (Number(quickRate.counts[key]) || 0) + d));
+      quickRate.counts[key] = next;
+      renderQuickMoments();
+    });
+    document.getElementById('coachRateSaveBtn')?.addEventListener('click', () => { saveCoachQuickRate(); });
+    document.getElementById('coachRateCancelBtn')?.addEventListener('click', () => { closeCoachQuickRate(); });
+    document.getElementById('coachRateBack')?.addEventListener('click', () => { closeCoachQuickRate(); });
   }
 
   global.renderCoachUi = renderCoachUi;
   global.bindCoachUi = bindCoachUi;
+  global.openCoachQuickRate = openCoachQuickRate;
+  global.closeCoachQuickRate = closeCoachQuickRate;
 })(window);

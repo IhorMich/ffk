@@ -522,6 +522,13 @@ window.ffkIsNative = function () {
         </div>
 
         <div id="coachAcademyHome" hidden>
+          <div class="coach-hero coach-profile-hero" id="coachProfileHero">
+            <div class="pro-kicker" data-i18n="coachProfileKicker">Coach profile</div>
+            <h2 class="coach-title" id="coachProfileName">—</h2>
+            <p class="hint" id="coachProfileEmail"></p>
+            <div class="coach-analytics-sum" id="coachProfileStats"></div>
+          </div>
+
           <div class="coach-hero">
             <div class="pro-kicker">Academy</div>
             <h2 class="coach-title" id="coachAcademyName"></h2>
@@ -546,7 +553,7 @@ window.ffkIsNative = function () {
               <input id="coachPlayerFirst" type="text" maxlength="40" data-i18n-placeholder="coachFirstPh" placeholder="First name">
               <input id="coachPlayerLast" type="text" maxlength="40" data-i18n-placeholder="coachLastPh" placeholder="Last name">
               <input id="coachPlayerNumber" type="text" maxlength="4" inputmode="numeric" placeholder="#">
-              <input id="coachPlayerPos" type="text" maxlength="8" placeholder="RW">
+              <select id="coachPlayerPos" class="coach-pos-select" aria-label="position"></select>
             </div>
             <button class="save-btn" id="coachAddPlayerBtn" type="button" data-i18n="coachAddPlayerBtn">Add player</button>
             <div id="coachPlayerList" class="coach-player-list"></div>
@@ -554,7 +561,7 @@ window.ffkIsNative = function () {
 
           <div id="coachMatchPane" class="coach-hero" hidden>
             <div class="pro-kicker" data-i18n="coachMatchKicker">Team matches</div>
-            <p class="hint" data-i18n="coachMatchHint">Create a match, then rate each player with the live Matchcard tools. Ratings stay in Coach — not in Personal Free/Pro.</p>
+            <p class="hint" data-i18n="coachMatchHint">Создай матч, затем быстро оцени игроков: оценка, ключевые моменты и комментарий. Без полного подсчёта на каждого.</p>
             <div class="field">
               <label data-i18n="coachMatchOpponent">Opponent</label>
               <input id="coachMatchOpponent" type="text" maxlength="48" placeholder="Rival FC">
@@ -579,9 +586,10 @@ window.ffkIsNative = function () {
   </div>
 
   <div class="tabbar" id="tabbar">
-    <button class="tabbtn" data-view="player" type="button">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.2"/><path d="M5.5 19.2c.8-3.2 3.3-5 6.5-5s5.7 1.8 6.5 5"/></svg>
-      <span class="tab-lab" data-i18n="tabPlayer">Игрок</span>
+    <button class="tabbtn" id="tabPlayerOrCoach" data-view="player" type="button">
+      <svg class="tab-ico-player" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.2"/><path d="M5.5 19.2c.8-3.2 3.3-5 6.5-5s5.7 1.8 6.5 5"/></svg>
+      <svg class="tab-ico-coach" viewBox="0 0 24 24" aria-hidden="true" hidden><path d="M4.5 7.5h15v11.2a1.8 1.8 0 0 1-1.8 1.8H6.3a1.8 1.8 0 0 1-1.8-1.8V7.5z"/><path d="M8 7.5V5.8A2.8 2.8 0 0 1 10.8 3h2.4A2.8 2.8 0 0 1 16 5.8V7.5"/><path d="M8.5 12.2h7M8.5 15.4h4.5"/></svg>
+      <span class="tab-lab" id="tabPlayerOrCoachLab" data-i18n="tabPlayer">Игрок</span>
     </button>
     <button class="tabbtn active" data-view="new" type="button">
       <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.2"/><path d="M12 4v16M4.5 9.5h15M4.5 14.5h15"/><path d="M8.2 5.6c2 2.6 2 10.2 0 12.8M15.8 5.6c-2 2.6-2 10.2 0 12.8"/></svg>
@@ -597,6 +605,33 @@ window.ffkIsNative = function () {
     </button>
   </div>
   <div class="toast" id="toast"></div>
+  <button class="coach-rate-back" id="coachRateBack" type="button" hidden></button>
+  <div class="coach-rate-sheet" id="coachRateSheet" hidden>
+    <div class="coach-rate-card">
+      <div class="sheet-grab" aria-hidden="true"><span></span></div>
+      <div class="pro-kicker" data-i18n="coachQuickKicker">Быстрая оценка</div>
+      <h3 class="coach-rate-name" id="coachRateName">—</h3>
+      <p class="hint" id="coachRateMeta"></p>
+      <div class="coach-rate-score-block">
+        <span class="hint" data-i18n="coachQuickScore">Оценка</span>
+        <div class="coach-rate-score-row">
+          <button type="button" class="coach-step" id="coachRateMinus" aria-label="-">−</button>
+          <div class="coach-rate-score" id="coachRateScore">6.0</div>
+          <button type="button" class="coach-step" id="coachRatePlus" aria-label="+">+</button>
+        </div>
+      </div>
+      <div class="coach-rate-moments">
+        <div class="pro-kicker" data-i18n="coachQuickMoments">Ключевые моменты</div>
+        <div id="coachRateMoments" class="coach-moment-grid"></div>
+      </div>
+      <div class="field">
+        <label data-i18n="coachQuickComment">Комментарий</label>
+        <textarea id="coachRateComment" rows="3" maxlength="400" data-i18n-placeholder="coachQuickCommentPh" placeholder="Что запомнить по игроку"></textarea>
+      </div>
+      <button class="save-btn" id="coachRateSaveBtn" type="button" data-i18n="coachQuickSave">Сохранить оценку</button>
+      <button class="ghost-btn" id="coachRateCancelBtn" type="button" data-i18n="previewCancel">Отмена</button>
+    </div>
+  </div>
   <button class="photo-sheet-back" id="photoSheetBack" type="button" hidden></button>
   <div class="photo-sheet" id="photoSheet" hidden>
     <button type="button" id="photoSheetCamera" data-i18n="pTakePhoto">Снять фото</button>
