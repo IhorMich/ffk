@@ -21,6 +21,69 @@
   function today(){
     try{ return todayStr(); }catch(e){ return new Date().toISOString().slice(0, 10); }
   }
+  function metricLab(key){
+    try{
+      if(typeof metricLabel === 'function') return metricLabel(key);
+    }catch(e){}
+    return key;
+  }
+  function fmtScore(n){
+    if(n == null || !Number.isFinite(Number(n))) return '—';
+    return Number(n).toFixed(1);
+  }
+  function formSpark(form){
+    const arr = Array.isArray(form) ? form : [];
+    if(!arr.length) return '—';
+    return arr.map(n => Number(n).toFixed(1)).join(' → ');
+  }
+  function trendLabel(trend){
+    if(trend == null || !Number.isFinite(Number(trend))) return '';
+    const n = Number(trend);
+    if(Math.abs(n) < 0.05) return tt('coachTrendFlat', 'stable');
+    const sign = n > 0 ? '+' : '';
+    return `${sign}${n.toFixed(1)}`;
+  }
+  function trendClass(trend){
+    if(trend == null || !Number.isFinite(Number(trend))) return '';
+    const n = Number(trend);
+    if(n >= 0.05) return 'up';
+    if(n <= -0.05) return 'down';
+    return '';
+  }
+  function momentsHtml(list, emptyHint){
+    const rows = Array.isArray(list) ? list : [];
+    if(!rows.length){
+      return emptyHint
+        ? `<p class="hint">${esc(emptyHint)}</p>`
+        : '';
+    }
+    return `<div class="coach-moment-chips">${rows.map(m =>
+      `<span class="coach-moment-chip"><b>${esc(metricLab(m.key))}</b> ${esc(String(m.n))}</span>`
+    ).join('')}</div>`;
+  }
+  const ROSTER_FOLD_KEY = 'ffk_coach_roster_fold';
+  function rosterFolded(){
+    try{ return sessionStorage.getItem(ROSTER_FOLD_KEY) === '1'; }catch(e){ return false; }
+  }
+  function setRosterFolded(on){
+    try{ sessionStorage.setItem(ROSTER_FOLD_KEY, on ? '1' : '0'); }catch(e){}
+  }
+  function syncRosterFoldUi(playerCount){
+    const body = document.getElementById('coachRosterBody');
+    const btn = document.getElementById('coachRosterToggle');
+    const folded = rosterFolded();
+    if(body) body.hidden = folded;
+    if(btn){
+      btn.setAttribute('aria-expanded', folded ? 'false' : 'true');
+      const n = Number(playerCount) || 0;
+      btn.textContent = folded
+        ? tt('coachRosterExpand', 'Expand · {n}').replace('{n}', String(n))
+        : '▴';
+      btn.title = folded
+        ? tt('coachRosterExpandHint', 'Show players')
+        : tt('coachRosterCollapseHint', 'Hide players');
+    }
+  }
 
   function renderCoachUi(){
     const store = global.CoachStore;
@@ -300,6 +363,7 @@
     }
 
     const players = store.listPlayers(session, team.id);
+    syncRosterFoldUi(players.length);
     const el = document.getElementById('coachPlayerList');
     if(!el) return;
     if(!players.length){
@@ -653,21 +717,65 @@
   function renderAnalyticsPane(session, team){
     const store = global.CoachStore;
     const a = store.teamAnalytics(session, team.id);
-    const avg = a.avg == null ? '—' : Number(a.avg).toFixed(1);
+    const avg = fmtScore(a.avg);
+    const band = a.ratings
+      ? `<div class="coach-stat-bands">
+          <span class="band high"><b>${a.high}</b> ${esc(tt('coachBandHigh', '≥7.5'))}</span>
+          <span class="band mid"><b>${a.mid}</b> ${esc(tt('coachBandMid', '6–7.4'))}</span>
+          <span class="band low"><b>${a.low}</b> ${esc(tt('coachBandLow', '<6'))}</span>
+        </div>`
+      : '';
+    const momentsBlock = a.topMoments && a.topMoments.length
+      ? `<div class="coach-stat-section">
+          <div class="pro-kicker">${esc(tt('coachTeamMomentsKicker', 'Team moments'))}</div>
+          ${momentsHtml(a.topMoments)}
+        </div>`
+      : '';
+    const playersHtml = a.players.length
+      ? `<div class="coach-player-list">${a.players.map(p => {
+          const tr = trendLabel(p.trend);
+          const tc = trendClass(p.trend);
+          const pos = p.position && typeof pitchPosLabelShort === 'function'
+            ? pitchPosLabelShort(p.position)
+            : (p.position || '');
+          const metaBits = [
+            `${p.games} ${tt('coachGames', 'games')}`,
+            p.last != null ? `${tt('coachStatLast', 'last')} ${fmtScore(p.last)}` : '',
+            tr ? `${tt('coachStatTrend', 'trend')} ${tr}` : '',
+            pos
+          ].filter(Boolean).join(' · ');
+          const form = p.form && p.form.length
+            ? `<span class="coach-form-spark">${esc(formSpark(p.form))}</span>`
+            : '';
+          const mom = (p.topMoments || []).slice(0, 2).map(m => `${metricLab(m.key)} ${m.n}`).join(' · ');
+          return `<button type="button" class="coach-player-row coach-player-open-row coach-stat-player" data-open-player="${esc(p.id)}">
+            <div class="coach-player-main">
+              <b>${esc(p.name)}${p.number ? ` · #${esc(p.number)}` : ''}</b>
+              <span>${esc(metaBits)}</span>
+              ${form}
+              ${mom ? `<span class="coach-stat-mom">${esc(mom)}</span>` : ''}
+            </div>
+            <div class="coach-stat-side">
+              <b class="${tc}">${fmtScore(p.avg)}</b>
+              <span>${esc(tt('coachStatAvgShort', 'avg'))}</span>
+              ${p.best != null ? `<span class="coach-stat-range">${esc(fmtScore(p.worst))}–${esc(fmtScore(p.best))}</span>` : ''}
+            </div>
+          </button>`;
+        }).join('')}</div>`
+      : `<p class="hint">${esc(tt('coachAnalyticsEmpty', 'Rate players in matches to see analytics.'))}</p>`;
     const html = `
-      <div class="coach-analytics-sum">
-        <div><b>${a.matches}</b><span>${esc(tt('coachStatMatches', 'Matches'))}</span></div>
+      <div class="coach-analytics-sum coach-analytics-sum-4">
+        <div><b>${a.played || a.matches}</b><span>${esc(tt('coachStatMatches', 'Matches'))}</span></div>
         <div><b>${a.ratings}</b><span>${esc(tt('coachStatRatings', 'Ratings'))}</span></div>
         <div><b>${esc(avg)}</b><span>${esc(tt('coachStatAvg', 'Team avg'))}</span></div>
+        <div><b>${esc(fmtScore(a.best))}</b><span>${esc(tt('coachStatBest', 'Best'))}</span></div>
       </div>
-      ${a.players.length ? `<div class="coach-player-list">${a.players.map(p => `
-        <button type="button" class="coach-player-row coach-player-open-row" data-open-player="${esc(p.id)}">
-          <div class="coach-player-main">
-            <b>${esc(p.name)}${p.number ? ` · #${esc(p.number)}` : ''}</b>
-            <span>${p.games} ${esc(tt('coachGames', 'games'))}</span>
-          </div>
-          <b>${p.avg == null ? '—' : Number(p.avg).toFixed(1)}</b>
-        </button>`).join('')}</div>` : `<p class="hint">${esc(tt('coachAnalyticsEmpty', 'Rate players in matches to see analytics.'))}</p>`}
+      ${band}
+      ${momentsBlock}
+      <div class="coach-stat-section">
+        <div class="pro-kicker">${esc(tt('coachPlayersStatsKicker', 'Players'))}</div>
+        ${playersHtml}
+      </div>
     `;
     const statsBoard = document.getElementById('coachStatsBoard');
     if(statsBoard) statsBoard.innerHTML = html;
@@ -1143,10 +1251,18 @@
     const ratingsHtml = detail.ratings.length
       ? detail.ratings.slice(0, 12).map(r => {
           const head = [r.date, r.opponent, r.score].filter(Boolean).join(' · ');
+          const c = r.counts && typeof r.counts === 'object' ? r.counts : {};
+          const mom = Object.keys(c)
+            .filter(k => Number(c[k]) > 0)
+            .sort((a, b) => Number(c[b]) - Number(c[a]))
+            .slice(0, 3)
+            .map(k => `${metricLab(k)} ${c[k]}`)
+            .join(' · ');
           return `<div class="coach-player-row">
             <div class="coach-player-main">
               <b>${esc(head)}</b>
               ${r.comment ? `<span>${esc(r.comment)}</span>` : ''}
+              ${mom ? `<span class="coach-stat-mom">${esc(mom)}</span>` : ''}
             </div>
             <b class="parent-rate-num">${esc(Number(r.rating).toFixed(1))}</b>
           </div>`;
@@ -1169,10 +1285,19 @@
         <select id="coachEditPos" class="coach-pos-select" aria-label="position"></select>
       </div>
       <button type="button" class="save-btn" id="coachSavePlayerBtn">${esc(tt('coachSavePlayer', 'Save player'))}</button>
-      <div class="coach-analytics-sum">
+      <div class="coach-analytics-sum coach-analytics-sum-4">
         <div><b>${esc(detail.games)}</b><span>${esc(tt('coachGames', 'games'))}</span></div>
-        <div><b>${esc(detail.avg != null ? detail.avg.toFixed(1) : '—')}</b><span>${esc(tt('coachStatAvg', 'Team avg'))}</span></div>
+        <div><b>${esc(fmtScore(detail.avg))}</b><span>${esc(tt('coachStatAvgShort', 'avg'))}</span></div>
+        <div><b>${esc(fmtScore(detail.last))}</b><span>${esc(tt('coachStatLast', 'last'))}</span></div>
+        <div><b class="${trendClass(detail.trend)}">${esc(trendLabel(detail.trend) || '—')}</b><span>${esc(tt('coachStatTrend', 'trend'))}</span></div>
       </div>
+      <div class="coach-analytics-sum">
+        <div><b>${esc(fmtScore(detail.best))}</b><span>${esc(tt('coachStatBest', 'Best'))}</span></div>
+        <div><b>${esc(fmtScore(detail.worst))}</b><span>${esc(tt('coachStatWorst', 'Worst'))}</span></div>
+        <div><b>${esc(detail.minutes || 0)}</b><span>${esc(tt('coachStatMinutes', 'Minutes'))}</span></div>
+      </div>
+      ${detail.form && detail.form.length ? `<p class="hint coach-form-line"><b>${esc(tt('coachStatForm', 'Form'))}:</b> ${esc(formSpark(detail.form))}</p>` : ''}
+      ${detail.topMoments && detail.topMoments.length ? `<div class="coach-stat-section"><div class="pro-kicker">${esc(tt('coachPlayerMomentsKicker', 'Key moments'))}</div>${momentsHtml(detail.topMoments)}</div>` : ''}
       <div class="pro-kicker">${esc(tt('coachPlayerRatingsKicker', 'Recent ratings'))}</div>
       <div class="coach-player-list">${ratingsHtml}</div>
       <button type="button" class="save-btn" id="coachOpenChildPageBtn">${esc(tt('coachOpenChildPage', 'Open player page'))}</button>
@@ -1458,6 +1583,16 @@
     document.getElementById('coachCreateAcademyBtn')?.addEventListener('click', () => { onCreateAcademy(); });
     document.getElementById('coachCreateTeamBtn')?.addEventListener('click', () => { onCreateTeam(); });
     document.getElementById('coachAddPlayerBtn')?.addEventListener('click', () => { onAddPlayer(); });
+    document.getElementById('coachRosterToggle')?.addEventListener('click', () => {
+      setRosterFolded(!rosterFolded());
+      const session = global.CoachStore && global.CoachStore.getSession();
+      const teamId = global.CoachStore && global.CoachStore.getActiveTeamId && global.CoachStore.getActiveTeamId();
+      let n = 0;
+      try{
+        if(session && teamId) n = global.CoachStore.listPlayers(session, teamId).length;
+      }catch(e){}
+      syncRosterFoldUi(n);
+    });
     document.getElementById('coachSaveProfileBtn')?.addEventListener('click', () => { onSaveProfile(); });
     document.getElementById('coachSettingsBtn')?.addEventListener('click', () => openCoachSettings());
     document.getElementById('coachSettingsBack')?.addEventListener('click', () => closeCoachSettings());

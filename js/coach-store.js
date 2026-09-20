@@ -814,33 +814,120 @@
       writeDb(db);
       return row;
     },
+    _playerStatsFromRatings(list){
+      const sorted = (list || []).slice().sort((a, b) =>
+        String(a.date || '').localeCompare(String(b.date || '')) ||
+        String(a.updated_at || '').localeCompare(String(b.updated_at || ''))
+      );
+      const scores = sorted.map(r => Number(r.rating) || 0);
+      const avg = scores.length
+        ? Math.round((scores.reduce((a, b) => a + b, 0) / scores.length) * 10) / 10
+        : null;
+      const last = scores.length ? scores[scores.length - 1] : null;
+      const best = scores.length ? Math.max(...scores) : null;
+      const worst = scores.length ? Math.min(...scores) : null;
+      const form = scores.slice(-5);
+      const recent = scores.slice(-3);
+      const prev = scores.slice(-6, -3);
+      let trend = null;
+      if(recent.length >= 2 && prev.length >= 2){
+        const a = recent.reduce((x, y) => x + y, 0) / recent.length;
+        const b = prev.reduce((x, y) => x + y, 0) / prev.length;
+        trend = Math.round((a - b) * 10) / 10;
+      }else if(scores.length >= 2){
+        trend = Math.round((scores[scores.length - 1] - scores[scores.length - 2]) * 10) / 10;
+      }
+      const moments = {};
+      let minutes = 0;
+      let comments = 0;
+      sorted.forEach(r => {
+        minutes += Math.max(0, Number(r.minutes) || 0);
+        if(String(r.comment || '').trim()) comments += 1;
+        const c = r.counts && typeof r.counts === 'object' ? r.counts : {};
+        Object.keys(c).forEach(k => {
+          const n = Number(c[k]) || 0;
+          if(n) moments[k] = (moments[k] || 0) + n;
+        });
+      });
+      const topMoments = Object.keys(moments)
+        .map(k => ({key: k, n: moments[k]}))
+        .sort((a, b) => b.n - a.n || a.key.localeCompare(b.key))
+        .slice(0, 4);
+      return {
+        games: scores.length,
+        avg,
+        last,
+        best,
+        worst,
+        form,
+        trend,
+        minutes,
+        comments,
+        topMoments,
+        moments
+      };
+    },
     teamAnalytics(session, teamId){
-      if(!this.getTeam(session, teamId)) return {matches: 0, ratings: 0, avg: null, players: []};
+      if(!this.getTeam(session, teamId)){
+        return {
+          matches: 0, played: 0, ratings: 0, avg: null, best: null, worst: null,
+          high: 0, mid: 0, low: 0, players: [], topMoments: []
+        };
+      }
       const db = readDb();
-      const matchIds = new Set(db.team_matches.filter(m => m.team_id === teamId).map(m => m.id));
+      const matches = db.team_matches.filter(m => m.team_id === teamId);
+      const matchIds = new Set(matches.map(m => m.id));
+      const played = matches.filter(m => m.status === 'played' || m.score).length;
       const ratings = db.ratings.filter(r => matchIds.has(r.match_id));
       const byPlayer = {};
       ratings.forEach(r => {
         if(!byPlayer[r.team_player_id]) byPlayer[r.team_player_id] = [];
-        byPlayer[r.team_player_id].push(Number(r.rating) || 0);
+        byPlayer[r.team_player_id].push(r);
+      });
+      const teamMoments = {};
+      ratings.forEach(r => {
+        const c = r.counts && typeof r.counts === 'object' ? r.counts : {};
+        Object.keys(c).forEach(k => {
+          const n = Number(c[k]) || 0;
+          if(n) teamMoments[k] = (teamMoments[k] || 0) + n;
+        });
       });
       const players = this.listPlayers(session, teamId).map(p => {
         const list = byPlayer[p.id] || [];
-        const avg = list.length ? Math.round((list.reduce((a, b) => a + b, 0) / list.length) * 10) / 10 : null;
+        const st = this._playerStatsFromRatings(list);
         return {
           id: p.id,
           name: [p.first_name, p.last_name].filter(Boolean).join(' '),
           number: p.number,
-          games: list.length,
-          avg
+          position: p.position || '',
+          ...st
         };
       }).sort((a, b) => (b.avg || 0) - (a.avg || 0) || a.name.localeCompare(b.name));
       const all = ratings.map(r => Number(r.rating) || 0);
       const avg = all.length ? Math.round((all.reduce((a, b) => a + b, 0) / all.length) * 10) / 10 : null;
+      const best = all.length ? Math.max(...all) : null;
+      const worst = all.length ? Math.min(...all) : null;
+      let high = 0, mid = 0, low = 0;
+      all.forEach(n => {
+        if(n >= 7.5) high += 1;
+        else if(n >= 6) mid += 1;
+        else low += 1;
+      });
+      const topMoments = Object.keys(teamMoments)
+        .map(k => ({key: k, n: teamMoments[k]}))
+        .sort((a, b) => b.n - a.n || a.key.localeCompare(b.key))
+        .slice(0, 6);
       return {
         matches: matchIds.size,
+        played,
         ratings: ratings.length,
         avg,
+        best,
+        worst,
+        high,
+        mid,
+        low,
+        topMoments,
         players
       };
     },
@@ -865,10 +952,7 @@
       const academy = this.myAcademy(session);
       const profile = this.getProfile(session);
       const ratings = this.listRatingsForPlayer(session, playerId);
-      const scores = ratings.map(r => Number(r.rating) || 0);
-      const avg = scores.length
-        ? Math.round((scores.reduce((a, b) => a + b, 0) / scores.length) * 10) / 10
-        : null;
+      const st = this._playerStatsFromRatings(ratings);
       return {
         player,
         team,
@@ -878,8 +962,16 @@
           email: profile.email || ''
         },
         ratings,
-        avg,
-        games: ratings.length
+        avg: st.avg,
+        games: st.games,
+        last: st.last,
+        best: st.best,
+        worst: st.worst,
+        form: st.form,
+        trend: st.trend,
+        minutes: st.minutes,
+        comments: st.comments,
+        topMoments: st.topMoments
       };
     },
     buildParentInvitePayload(session, playerId, opts){

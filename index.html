@@ -684,20 +684,27 @@ window.ffkIsNative = function () {
           </div>
 
           <div id="coachTeamPane" class="coach-hero" hidden>
-            <div class="pro-kicker" data-i18n="coachRosterKicker">Team roster</div>
-            <h3 class="coach-team-heading" id="coachTeamTitle"></h3>
-            <p class="hint" data-i18n="coachInviteCodeHint">Код команды для родителя:</p>
-            <p class="coach-code" id="coachTeamCode"></p>
-            <div class="coach-player-form">
-              <input id="coachPlayerFirst" type="text" maxlength="40" data-i18n-placeholder="coachFirstPh" placeholder="First name">
-              <input id="coachPlayerLast" type="text" maxlength="40" data-i18n-placeholder="coachLastPh" placeholder="Last name">
-              <input id="coachPlayerNumber" type="text" maxlength="4" inputmode="numeric" placeholder="#">
-              <input id="coachPlayerContact" type="text" maxlength="80" data-i18n-placeholder="coachContactPh" placeholder="Телефон или email родителя">
-              <select id="coachPlayerPos" class="coach-pos-select" aria-label="position"></select>
+            <div class="coach-roster-head">
+              <div class="coach-roster-head-text">
+                <div class="pro-kicker" data-i18n="coachRosterKicker">Team roster</div>
+                <h3 class="coach-team-heading" id="coachTeamTitle"></h3>
+              </div>
+              <button type="button" class="ghost-btn coach-fold-btn" id="coachRosterToggle" aria-expanded="true" data-i18n-aria="coachRosterToggleAria" aria-label="Свернуть игроков">▾</button>
             </div>
-            <button class="save-btn" id="coachAddPlayerBtn" type="button" data-i18n="coachAddPlayerBtn">Add player</button>
-            <div id="coachPlayerList" class="coach-player-list"></div>
-            <p class="hint" data-i18n="coachRosterToMatchHint">Матчи и оценки — во вкладке «Матч». История и аналитика — в своих вкладках.</p>
+            <div id="coachRosterBody" class="coach-roster-body">
+              <p class="hint" data-i18n="coachInviteCodeHint">Код команды для родителя:</p>
+              <p class="coach-code" id="coachTeamCode"></p>
+              <div class="coach-player-form">
+                <input id="coachPlayerFirst" type="text" maxlength="40" data-i18n-placeholder="coachFirstPh" placeholder="First name">
+                <input id="coachPlayerLast" type="text" maxlength="40" data-i18n-placeholder="coachLastPh" placeholder="Last name">
+                <input id="coachPlayerNumber" type="text" maxlength="4" inputmode="numeric" placeholder="#">
+                <input id="coachPlayerContact" type="text" maxlength="80" data-i18n-placeholder="coachContactPh" placeholder="Телефон или email родителя">
+                <select id="coachPlayerPos" class="coach-pos-select" aria-label="position"></select>
+              </div>
+              <button class="save-btn" id="coachAddPlayerBtn" type="button" data-i18n="coachAddPlayerBtn">Add player</button>
+              <div id="coachPlayerList" class="coach-player-list"></div>
+              <p class="hint" data-i18n="coachRosterToMatchHint">Матчи и оценки — во вкладке «Матч». История и аналитика — в своих вкладках.</p>
+            </div>
           </div>
         </div>
       </div>

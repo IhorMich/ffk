@@ -1358,11 +1358,60 @@
   .coach-analytics-sum{
     display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:0 0 12px;
   }
+  .coach-analytics-sum-4{grid-template-columns:repeat(2,1fr);}
+  @media (min-width:380px){
+    .coach-analytics-sum-4{grid-template-columns:repeat(4,1fr);}
+  }
   .coach-analytics-sum div{
     padding:10px 8px;border-radius:12px;border:1px solid var(--card-line);text-align:center;
   }
   .coach-analytics-sum b{display:block;font-size:1.15rem;font-weight:800;color:var(--card-ink);}
+  .coach-analytics-sum b.up{color:#1faa5a;}
+  .coach-analytics-sum b.down{color:#e25555;}
   .coach-analytics-sum span{display:block;margin-top:2px;font-size:.68rem;font-weight:700;color:var(--card-muted);text-transform:uppercase;letter-spacing:.04em;}
+  .coach-stat-bands{
+    display:flex;flex-wrap:wrap;gap:8px;margin:0 0 12px;
+  }
+  .coach-stat-bands .band{
+    flex:1 1 90px;padding:8px 10px;border-radius:12px;border:1px solid var(--card-line);
+    font-size:.72rem;font-weight:700;color:var(--card-muted);text-align:center;
+  }
+  .coach-stat-bands .band b{display:block;font-size:1.05rem;font-weight:800;color:var(--card-ink);margin-bottom:2px;}
+  .coach-stat-bands .band.high{box-shadow:inset 3px 0 0 #1faa5a;}
+  .coach-stat-bands .band.mid{box-shadow:inset 3px 0 0 #d4a017;}
+  .coach-stat-bands .band.low{box-shadow:inset 3px 0 0 #e25555;}
+  .coach-stat-section{margin:4px 0 12px;}
+  .coach-stat-section .pro-kicker{margin-bottom:8px;}
+  .coach-moment-chips{display:flex;flex-wrap:wrap;gap:6px;}
+  .coach-moment-chip{
+    display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;
+    border:1px solid var(--card-line);font-size:.74rem;font-weight:700;color:var(--card-ink);
+    background:var(--card-paper);
+  }
+  .coach-moment-chip b{font-weight:800;}
+  .coach-stat-player .coach-form-spark,
+  .coach-stat-player .coach-stat-mom,
+  .coach-form-line{
+    display:block;margin-top:2px;font-size:.72rem;font-weight:700;color:var(--card-muted);
+  }
+  .coach-stat-side{
+    display:flex;flex-direction:column;align-items:flex-end;gap:1px;flex-shrink:0;
+  }
+  .coach-stat-side b{font-size:1.05rem;font-weight:800;}
+  .coach-stat-side b.up{color:#1faa5a;}
+  .coach-stat-side b.down{color:#e25555;}
+  .coach-stat-side span{font-size:.65rem;font-weight:700;color:var(--card-muted);text-transform:uppercase;}
+  .coach-stat-range{font-size:.68rem !important;text-transform:none !important;}
+  .coach-roster-head{
+    display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin:0 0 8px;
+  }
+  .coach-roster-head-text{min-width:0;flex:1;}
+  .coach-roster-head .coach-team-heading{margin:4px 0 0;}
+  .coach-fold-btn{
+    margin:0;padding:8px 12px;width:auto;min-width:44px;font-size:.78rem;border-radius:999px;flex-shrink:0;
+  }
+  .coach-roster-body{margin-top:4px;}
+  .coach-roster-body[hidden]{display:none !important;}
   .coach-banner{
     display:none;margin:0 0 12px;padding:10px 12px;border-radius:14px;
     background:var(--card-paper);border:1px solid var(--card-line);color:var(--card-ink);
