@@ -3765,6 +3765,10 @@ function handleAppBack(){
     if(typeof closeCoachParentInviteSheet === 'function') closeCoachParentInviteSheet();
     return true;
   }
+  if(isElShown('coachSettingsSheet')){
+    if(typeof closeCoachSettings === 'function') closeCoachSettings();
+    return true;
+  }
   if(isElShown('coachPlayerSheet')){
     if(typeof closeCoachPlayerSheet === 'function') closeCoachPlayerSheet();
     return true;

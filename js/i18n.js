@@ -4376,7 +4376,13 @@ ru:{
       parentInboxTeam:'Team',
       parentInboxSquad:'Squad',
       parentInboxCodeHint:'Team invite code from the academy',
-      parentTeamCode:'Code'
+      parentTeamCode:'Code',
+      coachSettingsKicker:'Coach settings',
+      coachSettingsAria:'Coach settings',
+      coachTeamsKicker:'Teams',
+      coachTeamsSettingsHint:'Academy, profile and new teams — in settings ⚙',
+      coachTeamsManageKicker:'Teams',
+      coachAccountKicker:'Account'
     },
     ru:{
       coachPhase2Note:'Матчи, оценки, аналитика + QR-invite родителя. Дальше — Supabase.',
@@ -4435,7 +4441,13 @@ ru:{
       parentInboxTeam:'Команда',
       parentInboxSquad:'Состав',
       parentInboxCodeHint:'Код команды академии',
-      parentTeamCode:'Код'
+      parentTeamCode:'Код',
+      coachSettingsKicker:'Настройки тренера',
+      coachSettingsAria:'Настройки тренера',
+      coachTeamsKicker:'Команды',
+      coachTeamsSettingsHint:'Академия, профиль и новые команды — в настройках ⚙',
+      coachTeamsManageKicker:'Команды',
+      coachAccountKicker:'Аккаунт'
     },
     uk:{
       coachPhase2Note:'Матчі, оцінки, аналітика + QR-invite батька. Далі — Supabase.',
@@ -4494,7 +4506,13 @@ ru:{
       parentInboxTeam:'Команда',
       parentInboxSquad:'Склад',
       parentInboxCodeHint:'Код команди академії',
-      parentTeamCode:'Код'
+      parentTeamCode:'Код',
+      coachSettingsKicker:'Налаштування тренера',
+      coachSettingsAria:'Налаштування тренера',
+      coachTeamsKicker:'Команди',
+      coachTeamsSettingsHint:'Академія, профіль і нові команди — у налаштуваннях ⚙',
+      coachTeamsManageKicker:'Команди',
+      coachAccountKicker:'Акаунт'
     }
   };
   LANGS.forEach(lang => {

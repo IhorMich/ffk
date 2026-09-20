@@ -1407,22 +1407,60 @@
   .coach-profile-hero{margin-bottom:12px;}
   .coach-profile-hero .coach-title{margin-bottom:2px;}
   .coach-profile-hero #coachProfileEmail{margin:0 0 12px;}
-  /* Same full-bleed cover + avatar as player card — never nest inside .coach-hero */
-  #view-coach .coach-media.profile-hero{
+  /* Coach media in settings sheet */
+  #coachSettingsSheet .coach-media.profile-hero{
     position:relative;
-    width:calc(100% + 32px);
-    margin:-18px -16px 96px;
+    width:100%;
+    margin:0 0 72px;
     overflow:visible;
-    border-radius:0;
+    border-radius:16px;
   }
-  #view-coach .coach-media .avatar-pin{
-    position:absolute;left:50%;bottom:-84px;transform:translateX(-50%);
-    width:172px;height:172px;z-index:5;
+  #coachSettingsSheet .coach-media .avatar-pin{
+    position:absolute;left:50%;bottom:-64px;transform:translateX(-50%);
+    width:128px;height:128px;z-index:5;
   }
-  #view-coach .coach-media .photo-box{
-    width:172px;height:172px;
+  #coachSettingsSheet .coach-media .photo-box{
+    width:128px;height:128px;
   }
   .app.coach-profile-on #view-coach .coach-back{margin-top:8px;}
+  .coach-home-bar{
+    display:flex;align-items:flex-start;justify-content:space-between;gap:12px;
+    margin:0 0 14px;padding:14px 14px 14px 16px;border-radius:18px;
+    background:var(--card-paper);color:var(--card-ink);
+    border:1px solid var(--card-line);
+    box-shadow:var(--card-shadow), inset 3px 0 0 var(--card-accent);
+  }
+  .coach-home-bar-text{min-width:0;flex:1;}
+  .coach-home-title{
+    margin:4px 0 2px;font-size:1.2rem;font-weight:800;letter-spacing:-.02em;line-height:1.25;
+  }
+  .coach-home-bar .hint{margin:0;}
+  .coach-settings-btn{
+    flex-shrink:0;width:44px;height:44px;border-radius:14px;
+    border:1px solid var(--card-line);background:var(--surface);color:var(--text);
+    display:grid;place-items:center;padding:0;cursor:pointer;
+  }
+  .coach-settings-btn svg{
+    width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;
+    stroke-linecap:round;stroke-linejoin:round;
+  }
+  .coach-home-teams{margin-bottom:14px;}
+  .coach-settings-head{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 8px;
+  }
+  .coach-settings-head .pro-kicker{margin:0;}
+  .coach-settings-close{width:auto;margin:0;padding:8px 12px;}
+  .coach-settings-card{max-height:min(92vh,820px);}
+  .coach-settings-block{
+    margin:18px 0 0;padding-top:14px;border-top:1px solid var(--card-line);
+  }
+  .coach-settings-block .save-btn,
+  .coach-settings-block #coachSignOutBtn,
+  #coachSettingsSheet #coachSaveProfileBtn{width:100%;}
+  #coachSettingsSheet #coachProfileEmail{margin:0 0 10px;}
+  #coachSettingsSheet #coachProfileStats{grid-template-columns:repeat(2,1fr);margin-top:12px;}
+  #coachSettingsSheet #coachSignOutBtn{margin-top:8px;}
+  .coach-session-bar{display:none;}
   #coachProfileStats{grid-template-columns:repeat(4,1fr);}
   @media (max-width:380px){
     #coachProfileStats{grid-template-columns:repeat(2,1fr);}

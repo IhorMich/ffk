@@ -79,6 +79,7 @@
       if(teamPane) teamPane.hidden = true;
       if(matchPane) matchPane.hidden = true;
       if(analyticsPane) analyticsPane.hidden = true;
+      closeCoachSettings();
       return;
     }
     if(createBox) createBox.hidden = true;
@@ -88,7 +89,6 @@
     if(nameEl) nameEl.textContent = academy.name;
 
     const teams = store.listTeams(session, academy.id);
-    const profileName = document.getElementById('coachProfileName');
     const profileEmail = document.getElementById('coachProfileEmail');
     const profileStats = document.getElementById('coachProfileStats');
     const profile = store.getProfile ? store.getProfile(session) : {email: session.email || '', first_name:'', last_name:''};
@@ -97,37 +97,53 @@
     if(firstInput && document.activeElement !== firstInput) firstInput.value = profile.first_name || '';
     if(lastInput && document.activeElement !== lastInput) lastInput.value = profile.last_name || '';
     const fullName = [profile.first_name, profile.last_name].filter(Boolean).join(' ');
-    if(profileName) profileName.textContent = fullName || academy.name;
     if(profileEmail) profileEmail.textContent = profile.email || session.email || '';
-    if(profileStats){
-      let players = 0;
-      let matches = 0;
-      let ratings = 0;
-      teams.forEach(t => {
-        players += store.listPlayers(session, t.id).length;
-        const ms = store.listMatches(session, t.id);
-        matches += ms.length;
-        ms.forEach(m => {
-          ratings += store.listRatings(session, m.id).length;
-        });
+
+    let players = 0;
+    let matches = 0;
+    let ratings = 0;
+    teams.forEach(t => {
+      players += store.listPlayers(session, t.id).length;
+      const ms = store.listMatches(session, t.id);
+      matches += ms.length;
+      ms.forEach(m => {
+        ratings += store.listRatings(session, m.id).length;
       });
+    });
+    if(profileStats){
       profileStats.innerHTML = `
         <div><b>${teams.length}</b><span>${esc(tt('coachStatTeams', 'Teams'))}</span></div>
         <div><b>${players}</b><span>${esc(tt('coachStatPlayers', 'Players'))}</span></div>
         <div><b>${matches}</b><span>${esc(tt('coachStatMatches', 'Matches'))}</span></div>
         <div><b>${ratings}</b><span>${esc(tt('coachStatRatings', 'Ratings'))}</span></div>`;
-      if(typeof applyHeader === 'function') applyHeader();
     }
 
-    const list = document.getElementById('coachTeamList');
-    if(list){
-      if(!teams.length){
-        list.innerHTML = `<p class="hint">${esc(tt('coachNoTeams', 'No teams yet. Create the first one.'))}</p>`;
-      }else{
-        let activeId = store.getActiveTeamId();
-        if(!teams.some(t => t.id === activeId)) activeId = teams[0].id;
-        store.setActiveTeamId(activeId);
-        list.innerHTML = teams.map(t => {
+    let activeId = store.getActiveTeamId();
+    if(teams.length && !teams.some(t => t.id === activeId)) activeId = teams[0].id;
+    if(activeId) store.setActiveTeamId(activeId);
+    const active = store.getTeam(session, store.getActiveTeamId());
+
+    const homeAcademy = document.getElementById('coachHomeAcademy');
+    const homeTitle = document.getElementById('coachHomeTitle');
+    const homeMeta = document.getElementById('coachHomeMeta');
+    if(homeAcademy) homeAcademy.textContent = academy.name;
+    if(homeTitle){
+      if(active) homeTitle.textContent = active.name + (active.age_group ? ` · ${active.age_group}` : '');
+      else if(fullName) homeTitle.textContent = fullName;
+      else homeTitle.textContent = academy.name;
+    }
+    if(homeMeta){
+      const bits = [
+        fullName || '',
+        teams.length ? `${teams.length} ${tt('coachStatTeams', 'Teams')}` : '',
+        players ? `${players} ${tt('coachStatPlayers', 'Players')}` : ''
+      ].filter(Boolean);
+      homeMeta.textContent = bits.join(' · ');
+    }
+
+    const teamListHtml = !teams.length
+      ? `<p class="hint">${esc(tt('coachNoTeams', 'No teams yet. Create the first one.'))}</p>`
+      : teams.map(t => {
           const on = t.id === activeId ? ' on' : '';
           const n = store.listPlayers(session, t.id).length;
           const maxP = typeof COACH_MAX_PLAYERS_PER_TEAM === 'number' ? COACH_MAX_PLAYERS_PER_TEAM : 50;
@@ -136,10 +152,11 @@
             <span class="coach-team-meta">${n}/${maxP} · ${esc(t.invite_code)}</span>
           </button>`;
         }).join('');
-      }
-    }
+    const list = document.getElementById('coachTeamList');
+    if(list) list.innerHTML = teamListHtml;
+    const settingsList = document.getElementById('coachSettingsTeamList');
+    if(settingsList) settingsList.innerHTML = teamListHtml;
 
-    const active = store.getTeam(session, store.getActiveTeamId());
     if(teamPane) teamPane.hidden = !active;
     if(matchPane) matchPane.hidden = !active;
     if(analyticsPane) analyticsPane.hidden = !active;
@@ -151,7 +168,27 @@
     }else{
       renderCoachTabsEmpty();
     }
+    if(typeof applyHeader === 'function') applyHeader();
     if(typeof syncCoachModeViews === 'function') syncCoachModeViews();
+  }
+
+  function openCoachSettings(){
+    const sheet = document.getElementById('coachSettingsSheet');
+    const back = document.getElementById('coachSettingsBack');
+    if(!sheet) return;
+    const store = global.CoachStore;
+    const session = store && store.getSession();
+    if(session) renderWorkspace(session);
+    if(typeof refreshCoachMediaUi === 'function') refreshCoachMediaUi();
+    sheet.hidden = false;
+    if(back) back.hidden = false;
+    if(typeof pushAppState === 'function') pushAppState('layer');
+  }
+  function closeCoachSettings(){
+    const sheet = document.getElementById('coachSettingsSheet');
+    const back = document.getElementById('coachSettingsBack');
+    if(sheet) sheet.hidden = true;
+    if(back) back.hidden = true;
   }
 
   function renderCoachTabsEmpty(){
@@ -511,6 +548,7 @@
     if(auth) auth.dataset.open = '';
     const work = document.getElementById('coachWorkspace');
     if(work) work.dataset.started = '';
+    closeCoachSettings();
     if(typeof closeCoachQuickRate === 'function') closeCoachQuickRate();
     if(typeof setCoachPlan === 'function') setCoachPlan(false);
     toast(tt('coachSignedOut', 'Signed out of Coach.'));
@@ -1036,6 +1074,9 @@
     document.getElementById('coachCreateTeamBtn')?.addEventListener('click', () => { onCreateTeam(); });
     document.getElementById('coachAddPlayerBtn')?.addEventListener('click', () => { onAddPlayer(); });
     document.getElementById('coachSaveProfileBtn')?.addEventListener('click', () => { onSaveProfile(); });
+    document.getElementById('coachSettingsBtn')?.addEventListener('click', () => openCoachSettings());
+    document.getElementById('coachSettingsBack')?.addEventListener('click', () => closeCoachSettings());
+    document.getElementById('coachSettingsCloseBtn')?.addEventListener('click', () => closeCoachSettings());
     document.addEventListener('click', e => {
       const createBtn = e.target.closest('.js-cm-create');
       if(createBtn){
@@ -1087,12 +1128,17 @@
       // Manual ticks only — no auto-save / no forced re-check.
       markSquadDirty(box.closest('.js-cm-squad'));
     });
-    document.getElementById('coachTeamList')?.addEventListener('click', e => {
-      const btn = e.target.closest('[data-team]');
-      if(!btn) return;
-      global.CoachStore.setActiveTeamId(btn.dataset.team);
-      renderCoachUi();
-    });
+    const pickTeam = (root, closeAfter) => {
+      root?.addEventListener('click', e => {
+        const btn = e.target.closest('[data-team]');
+        if(!btn) return;
+        global.CoachStore.setActiveTeamId(btn.dataset.team);
+        renderCoachUi();
+        if(closeAfter) closeCoachSettings();
+      });
+    };
+    pickTeam(document.getElementById('coachTeamList'), false);
+    pickTeam(document.getElementById('coachSettingsTeamList'), true);
     document.getElementById('coachPlayerList')?.addEventListener('click', e => {
       const del = e.target.closest('[data-del-player]');
       if(del){
@@ -1162,4 +1208,6 @@
   global.closeCoachQuickRate = closeCoachQuickRate;
   global.closeCoachPlayerSheet = closeCoachPlayerSheet;
   global.closeCoachParentInviteSheet = closeCoachParentInviteSheet;
+  global.closeCoachSettings = closeCoachSettings;
+  global.openCoachSettings = openCoachSettings;
 })(window);

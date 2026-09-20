@@ -584,11 +584,6 @@ window.ffkIsNative = function () {
       </div>
 
       <div id="coachWorkspace" class="coach-panel" hidden>
-        <div class="coach-session-bar">
-          <span id="coachSessionEmail"></span>
-          <button class="ghost-btn" id="coachSignOutBtn" type="button" data-i18n="coachSignOut">Sign out</button>
-        </div>
-
         <div id="coachCreateAcademy" class="coach-hero" hidden>
           <div class="pro-kicker" data-i18n="coachCreateAcademyKicker">Create academy</div>
           <p class="coach-lead" data-i18n="coachCreateAcademyLead">One academy per coach on launch. Then add up to 10 teams.</p>
@@ -600,50 +595,21 @@ window.ffkIsNative = function () {
         </div>
 
         <div id="coachAcademyHome" hidden>
-          <div class="profile-hero coach-media" id="coachProfileMedia">
-            <button class="profile-cover" id="cCoverBtn" type="button" data-i18n-aria="coachCoverAria">
-              <img class="cover-fill" id="cCoverBlur" alt="" hidden>
-              <img class="cover-fit" id="cCoverImg" alt="" hidden>
-              <span class="cover-cta" data-i18n="pAddCover">Добавить фото</span>
+          <div class="coach-home-bar">
+            <div class="coach-home-bar-text">
+              <div class="pro-kicker" id="coachHomeAcademy">—</div>
+              <h2 class="coach-home-title" id="coachHomeTitle">—</h2>
+              <p class="hint" id="coachHomeMeta"></p>
+            </div>
+            <button type="button" class="coach-settings-btn" id="coachSettingsBtn" data-i18n-aria="coachSettingsAria" aria-label="Settings">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8.4a3.6 3.6 0 1 0 0 7.2 3.6 3.6 0 0 0 0-7.2z"/><path d="M19.4 13.1v-2.2l-1.7-.3a5.7 5.7 0 0 0-.5-1.1l1-1.4-1.6-1.6-1.4 1a5.7 5.7 0 0 0-1.1-.5L13.1 4.6h-2.2l-.3 1.7a5.7 5.7 0 0 0-1.1.5l-1.4-1-1.6 1.6 1 1.4a5.7 5.7 0 0 0-.5 1.1l-1.7.3v2.2l1.7.3c.1.4.3.8.5 1.1l-1 1.4 1.6 1.6 1.4-1c.3.2.7.4 1.1.5l.3 1.7h2.2l.3-1.7c.4-.1.8-.3 1.1-.5l1.4 1 1.6-1.6-1-1.4c.2-.3.4-.7.5-1.1l1.7-.3z"/></svg>
             </button>
-            <div class="avatar-pin" id="cPhotoWrap">
-              <button class="photo-box" id="cPhotoBox" type="button" data-i18n-aria="coachPhotoAria">Т</button>
-            </div>
-            <input type="file" id="c-photo" accept="image/jpeg,image/png,image/webp,image/gif,image/heic,image/heif,.jpg,.jpeg,.png,.webp,.gif,.heic,.heif" hidden>
-            <input type="file" id="c-cover" accept="image/jpeg,image/png,image/webp,image/gif,image/heic,image/heif,.jpg,.jpeg,.png,.webp,.gif,.heic,.heif" hidden>
           </div>
 
-          <div class="coach-hero coach-profile-hero" id="coachProfileHero">
-            <p class="hint" data-i18n="coachPhotoHint" style="text-align:center;margin:0 0 12px;">Нажмите на фото или фон, чтобы сменить.</p>
-            <div class="pro-kicker" data-i18n="coachProfileKicker">Coach profile</div>
-            <div class="row2">
-              <div class="field">
-                <label data-i18n="coachFirstName">Имя</label>
-                <input id="coachFirstName" type="text" maxlength="40" autocomplete="given-name">
-              </div>
-              <div class="field">
-                <label data-i18n="coachLastName">Фамилия</label>
-                <input id="coachLastName" type="text" maxlength="40" autocomplete="family-name">
-              </div>
-            </div>
-            <p class="hint" id="coachProfileEmail"></p>
-            <button class="save-btn" id="coachSaveProfileBtn" type="button" data-i18n="coachSaveProfile">Сохранить профиль</button>
-            <div class="coach-analytics-sum" id="coachProfileStats"></div>
-          </div>
-
-          <div class="coach-hero">
-            <div class="pro-kicker">Academy</div>
-            <h2 class="coach-title" id="coachAcademyName"></h2>
-            <div class="field">
-              <label data-i18n="coachTeamLabel">New team</label>
-              <input id="coachTeamInput" type="text" maxlength="60" placeholder="U13 Blue">
-            </div>
-            <div class="field">
-              <label data-i18n="coachAgeLabel">Age group</label>
-              <input id="coachTeamAgeInput" type="text" maxlength="24" placeholder="U13">
-            </div>
-            <button class="save-btn" id="coachCreateTeamBtn" type="button" data-i18n="coachCreateTeamBtn">Add team</button>
+          <div class="coach-hero coach-home-teams">
+            <div class="pro-kicker" data-i18n="coachTeamsKicker">Teams</div>
             <div id="coachTeamList" class="coach-team-list"></div>
+            <p class="hint" data-i18n="coachTeamsSettingsHint">Академия, профиль и новые команды — в настройках ⚙</p>
           </div>
 
           <div id="coachTeamPane" class="coach-hero" hidden>
@@ -698,6 +664,71 @@ window.ffkIsNative = function () {
             <p class="hint" data-i18n="coachPhase2Note">Phase 2: matches + ratings + team analytics. Parent invite and Supabase sync come next.</p>
           </div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <button class="coach-rate-back" id="coachSettingsBack" type="button" hidden></button>
+  <div class="coach-rate-sheet" id="coachSettingsSheet" hidden>
+    <div class="coach-rate-card coach-settings-card">
+      <div class="sheet-grab" aria-hidden="true"><span></span></div>
+      <div class="coach-settings-head">
+        <div class="pro-kicker" data-i18n="coachSettingsKicker">Настройки тренера</div>
+        <button type="button" class="ghost-btn coach-settings-close" id="coachSettingsCloseBtn" data-i18n="previewCancel">Закрыть</button>
+      </div>
+
+      <div class="profile-hero coach-media" id="coachProfileMedia">
+        <button class="profile-cover" id="cCoverBtn" type="button" data-i18n-aria="coachCoverAria">
+          <img class="cover-fill" id="cCoverBlur" alt="" hidden>
+          <img class="cover-fit" id="cCoverImg" alt="" hidden>
+          <span class="cover-cta" data-i18n="pAddCover">Добавить фото</span>
+        </button>
+        <div class="avatar-pin" id="cPhotoWrap">
+          <button class="photo-box" id="cPhotoBox" type="button" data-i18n-aria="coachPhotoAria">Т</button>
+        </div>
+        <input type="file" id="c-photo" accept="image/jpeg,image/png,image/webp,image/gif,image/heic,image/heif,.jpg,.jpeg,.png,.webp,.gif,.heic,.heif" hidden>
+        <input type="file" id="c-cover" accept="image/jpeg,image/png,image/webp,image/gif,image/heic,image/heif,.jpg,.jpeg,.png,.webp,.gif,.heic,.heif" hidden>
+      </div>
+
+      <p class="hint" data-i18n="coachPhotoHint" style="text-align:center;margin:0 0 12px;">Нажмите на фото или фон, чтобы сменить.</p>
+      <div class="pro-kicker" data-i18n="coachProfileKicker">Coach profile</div>
+      <div class="row2">
+        <div class="field">
+          <label data-i18n="coachFirstName">Имя</label>
+          <input id="coachFirstName" type="text" maxlength="40" autocomplete="given-name">
+        </div>
+        <div class="field">
+          <label data-i18n="coachLastName">Фамилия</label>
+          <input id="coachLastName" type="text" maxlength="40" autocomplete="family-name">
+        </div>
+      </div>
+      <p class="hint" id="coachProfileEmail"></p>
+      <button class="save-btn" id="coachSaveProfileBtn" type="button" data-i18n="coachSaveProfile">Сохранить профиль</button>
+      <div class="coach-analytics-sum" id="coachProfileStats"></div>
+
+      <div class="coach-settings-block">
+        <div class="pro-kicker" data-i18n="coachAcademyLabel">Academy name</div>
+        <h3 class="coach-team-heading" id="coachAcademyName">—</h3>
+      </div>
+
+      <div class="coach-settings-block">
+        <div class="pro-kicker" data-i18n="coachTeamsManageKicker">Команды</div>
+        <div class="field">
+          <label data-i18n="coachTeamLabel">New team</label>
+          <input id="coachTeamInput" type="text" maxlength="60" placeholder="U13 Blue">
+        </div>
+        <div class="field">
+          <label data-i18n="coachAgeLabel">Age group</label>
+          <input id="coachTeamAgeInput" type="text" maxlength="24" placeholder="U13">
+        </div>
+        <button class="save-btn" id="coachCreateTeamBtn" type="button" data-i18n="coachCreateTeamBtn">Add team</button>
+        <div id="coachSettingsTeamList" class="coach-team-list"></div>
+      </div>
+
+      <div class="coach-settings-block">
+        <div class="pro-kicker" data-i18n="coachAccountKicker">Аккаунт</div>
+        <p class="hint" id="coachSessionEmail"></p>
+        <button class="ghost-btn" id="coachSignOutBtn" type="button" data-i18n="coachSignOut">Sign out</button>
       </div>
     </div>
   </div>
