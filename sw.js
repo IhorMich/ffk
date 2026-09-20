@@ -105,6 +105,10 @@ self.addEventListener('fetch', event => {
   event.respondWith((async () => {
     const cache = await caches.open(CACHE);
     if(event.request.mode === 'navigate'){
+      if(url.pathname.endsWith('/open.html')){
+        const opener = await cache.match(new URL('./open.html', self.location).href);
+        if(opener) return opener;
+      }
       const page = await cache.match(new URL('./index.html', self.location).href) || await cache.match(new URL('./', self.location).href);
       if(page) return page;
     }
