@@ -10,7 +10,7 @@ from threading import Thread
 from PIL import Image, ImageDraw
 
 ROOT = Path(__file__).resolve().parents[1]
-BG = (244, 239, 228, 255)
+BG = (243, 245, 248, 255)
 CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 SOURCE = ROOT / "scripts" / "icon-source.html"
 CAPTURE = Path("/tmp/ffk-icon-src.png")
