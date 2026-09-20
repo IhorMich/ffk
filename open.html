@@ -19,18 +19,18 @@
 <body>
   <main>
     <h1>Matchcard</h1>
-    <p id="message">Opening the app…</p>
-    <a id="openApp" href="#" hidden>Open Matchcard</a>
-    <small id="hint" hidden>If the app did not open, tap the button.</small>
+    <p id="message">Tap the button to open the invitation in the app.</p>
+    <a id="openApp" href="#">Open Matchcard</a>
+    <small id="hint">Android requires a tap before a website can open an app.</small>
   </main>
   <script>
   (function(){
     const lang = (navigator.language || 'en').toLowerCase();
     const text = lang.startsWith('ru')
-      ? {opening:'Открываем приложение…', button:'Открыть Matchcard', hint:'Если приложение не открылось, нажмите кнопку.', bad:'Неверная ссылка-приглашение.'}
+      ? {opening:'Нажмите кнопку, чтобы открыть приглашение в приложении.', button:'Открыть Matchcard', hint:'Android требует нажатия перед переходом из сайта в приложение.', bad:'Неверная ссылка-приглашение.'}
       : lang.startsWith('uk')
-        ? {opening:'Відкриваємо застосунок…', button:'Відкрити Matchcard', hint:'Якщо застосунок не відкрився, натисніть кнопку.', bad:'Невірне посилання-запрошення.'}
-        : {opening:'Opening the app…', button:'Open Matchcard', hint:'If the app did not open, tap the button.', bad:'Invalid invitation link.'};
+        ? {opening:'Натисніть кнопку, щоб відкрити запрошення в застосунку.', button:'Відкрити Matchcard', hint:'Android вимагає натискання перед переходом із сайту в застосунок.', bad:'Невірне посилання-запрошення.'}
+        : {opening:'Tap the button to open the invitation in the app.', button:'Open Matchcard', hint:'Android requires a tap before a website can open an app.', bad:'Invalid invitation link.'};
     const code = new URLSearchParams(location.search).get('code') || '';
     const valid = /^[A-Z0-9]{4,8}$/i.test(code);
     const message = document.getElementById('message');
@@ -42,15 +42,13 @@
       return;
     }
     const deep = 'ffk://parent?code=' + encodeURIComponent(code.toUpperCase());
+    const androidIntent = 'intent://parent?code=' + encodeURIComponent(code.toUpperCase())
+      + '#Intent;scheme=ffk;package=app.ffk.rating;end';
+    const target = /Android/i.test(navigator.userAgent) ? androidIntent : deep;
     message.textContent = text.opening;
     button.textContent = text.button;
-    button.href = deep;
-    setTimeout(() => {
-      button.hidden = false;
-      hint.hidden = false;
-      hint.textContent = text.hint;
-    }, 900);
-    location.href = deep;
+    button.href = target;
+    hint.textContent = text.hint;
   })();
   </script>
 </body>
