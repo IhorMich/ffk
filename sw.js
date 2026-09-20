@@ -1,10 +1,16 @@
-const CACHE = 'ffk_v283';
+const CACHE = 'ffk_v284';
 const ASSETS = [
   './',
   './index.html',
   './privacy.html',
   './css/app.css',
   './js/version.js',
+  './js/i18n-coach-pl.js',
+  './js/i18n-coach-es.js',
+  './js/i18n-coach-de.js',
+  './js/i18n-coach-it.js',
+  './js/i18n-coach-fr.js',
+  './js/i18n-coach-pt.js',
   './js/i18n.js',
   './js/rating.js',
   './js/metric-icons.js',

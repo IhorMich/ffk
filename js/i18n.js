@@ -5542,3 +5542,12 @@ ru:{
     Object.assign(I18N[lang], extra.en, extra[lang] || {});
   });
 })();
+
+(function mergeCompleteCoachLocales(){
+  const localized = (typeof window !== 'undefined' && window.FFK_COACH_I18N)
+    ? window.FFK_COACH_I18N
+    : {};
+  ['pl','es','de','it','fr','pt'].forEach(lang => {
+    if(localized[lang]) Object.assign(I18N[lang], localized[lang]);
+  });
+})();
