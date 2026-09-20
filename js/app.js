@@ -117,6 +117,7 @@ function applyTheme(){
   }
   const theme = themeName();
   document.documentElement.dataset.theme = theme;
+  applyCardSkin();
   const meta = document.querySelector('meta[name="theme-color"]');
   if(meta) meta.content = theme === 'day' ? '#FFF8D6' : '#05060c';
   const apple = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
@@ -129,6 +130,27 @@ function applyTheme(){
   });
   syncIconSetChips();
   applyNativeChrome();
+}
+const CARD_SKINS = ['mint','wine'];
+function cardSkinName(){
+  return CARD_SKINS.includes(settings.cardSkin) ? settings.cardSkin : 'mint';
+}
+function applyCardSkin(){
+  document.documentElement.dataset.card = cardSkinName();
+}
+function cycleCardSkin(){
+  const i = CARD_SKINS.indexOf(cardSkinName());
+  settings.cardSkin = CARD_SKINS[(i + 1) % CARD_SKINS.length];
+  saveSettings();
+  applyCardSkin();
+  haptic('LIGHT');
+}
+function bindCardSkin(){
+  if(window.__ffkCardSkin) return;
+  window.__ffkCardSkin = true;
+  document.querySelectorAll('.js-card-skin').forEach(btn => {
+    btn.addEventListener('click', cycleCardSkin);
+  });
 }
 function syncIconSetChips(){
   const set = iconSetName();
@@ -271,7 +293,7 @@ function applyI18n(){
   syncSeasonChipLabels();
 }
 
-let settings = {club:'', player:'', position:'fwd', format:'2x30', minutes:'60', lang:'ru', seasonCloseDeclined:'', theme:'dark', iconSet:'clear', onboarded:false, pwaTransferSeen:false, introMark:''};
+let settings = {club:'', player:'', position:'fwd', format:'2x30', minutes:'60', lang:'ru', seasonCloseDeclined:'', theme:'dark', iconSet:'clear', onboarded:false, pwaTransferSeen:false, introMark:'', cardSkin:'mint'};
 let roster = {currentId:'', ids:[]};
 let player = defaultPlayer();
 let extraSelected = [];
@@ -4501,6 +4523,7 @@ async function shareCard(m){
     bindBehaviorSlider();
     bindSheets();
     bindHeroPin();
+    bindCardSkin();
     bindCameraRestore();
     syncScoreResultHint();
     hydrateAllMedia().then(() => {

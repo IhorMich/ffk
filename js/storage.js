@@ -92,7 +92,8 @@ function loadSettings(){
       iconSet: (typeof ICON_SET_ORDER !== 'undefined' && ICON_SET_ORDER.includes(s.iconSet)) ? s.iconSet : 'clear',
       onboarded: s.onboarded === true,
       pwaTransferSeen: s.pwaTransferSeen === true,
-      introMark: String(s.introMark || '')
+      introMark: String(s.introMark || ''),
+      cardSkin: s.cardSkin === 'wine' ? 'wine' : 'mint'
     };
     if(s.langManual !== true) saveSettings();
   }catch(e){}
