@@ -284,6 +284,7 @@ function setCoachPlan(on){
   settings.isCoach = !!on;
   saveSettings();
   syncCoachTabUi();
+  applyHeader();
 }
 function syncCoachTabUi(){
   const on = isCoachPlan();
@@ -1825,6 +1826,10 @@ function renderPlayerFeed(){
     ${note ? `<div class="pf-card pf-coach"><h3>${escapeHtml(t('pfCoach'))}</h3><p>${escapeHtml(note)}</p></div>` : ''}`;
 }
 function applyHeader(){
+  if(isCoachPlan()){
+    applyCoachHeader();
+    return;
+  }
   const no = shirtNo();
   const age = ageYears(player.birthDate);
   const meta = [age != null ? ageLabel(age) : '', posLine()].filter(Boolean).join(' · ');
@@ -1845,6 +1850,42 @@ function applyHeader(){
   if(fbName) fbName.textContent = displayName();
   if(fbMeta) fbMeta.textContent = [no ? ((langLatin() ? '#' : '№') + no) : '', posLine(), clubBits].filter(Boolean).join(' · ');
   renderPlayerFeed();
+}
+function applyCoachHeader(){
+  const store = window.CoachStore;
+  const session = store && store.getSession();
+  const academy = session && store.myAcademy(session);
+  const nameEl = document.getElementById('playerNameDisplay');
+  const metaEl = document.getElementById('playerMetaLine');
+  const clubEl = document.getElementById('playerClubLine');
+  const avgEl = document.getElementById('playerSeasonAvg');
+  if(avgEl) avgEl.hidden = true;
+  const title = academy && academy.name
+    ? academy.name
+    : (t('tabCoach') || 'Coach');
+  if(nameEl) nameEl.textContent = title;
+  if(metaEl){
+    metaEl.textContent = session && session.email
+      ? session.email
+      : (t('coachProfileKicker') || 'Coach');
+  }
+  if(clubEl){
+    if(academy && session){
+      const teams = store.listTeams(session, academy.id) || [];
+      let players = 0;
+      teams.forEach(tm => { players += store.listPlayers(session, tm.id).length; });
+      const bits = [
+        teams.length ? `${teams.length} ${t('coachStatTeams')}` : '',
+        players ? `${players} ${t('coachStatPlayers')}` : ''
+      ].filter(Boolean);
+      clubEl.textContent = bits.join(' · ');
+    }else{
+      clubEl.textContent = t('coachLead') || '';
+    }
+  }
+  const initials = (academy && academy.name ? academy.name : (session && session.email) || 'C')
+    .trim().slice(0, 1).toUpperCase() || 'C';
+  setBadge(document.getElementById('clubBadge'), '', initials);
 }
 function rosterAvatarHtml(p){
   if(p.photo) return `<span class="roster-av"><img alt="" src="${p.photo}"></span>`;

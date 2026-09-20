@@ -46,6 +46,7 @@
     work.dataset.started = '1';
     const academy = store.myAcademy(session);
     if(academy && typeof setCoachPlan === 'function') setCoachPlan(true);
+    else if(typeof applyHeader === 'function') applyHeader();
     renderWorkspace(session);
   }
 
@@ -106,6 +107,7 @@
         <div><b>${players}</b><span>${esc(tt('coachStatPlayers', 'Players'))}</span></div>
         <div><b>${matches}</b><span>${esc(tt('coachStatMatches', 'Matches'))}</span></div>
         <div><b>${ratings}</b><span>${esc(tt('coachStatRatings', 'Ratings'))}</span></div>`;
+      if(typeof applyHeader === 'function') applyHeader();
     }
 
     const list = document.getElementById('coachTeamList');
