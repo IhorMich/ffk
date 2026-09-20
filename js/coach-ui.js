@@ -1713,6 +1713,8 @@
       if(sheet) sheet.hidden = false;
       if(back) back.hidden = false;
     }
+    // Full height so the 3×2 moment chips fit without inner scrolling.
+    if(card) card.classList.add('sheet-full');
     if(typeof pushAppState === 'function') pushAppState('layer');
   }
   function closeCoachQuickRate(){
