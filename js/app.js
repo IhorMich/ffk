@@ -131,7 +131,7 @@ function applyTheme(){
   syncIconSetChips();
   applyNativeChrome();
 }
-const CARD_SKINS = ['mint','wine','ice','noir'];
+const CARD_SKINS = ['mint','wine','ice','noir','royal','sand'];
 function cardSkinName(){
   return CARD_SKINS.includes(settings.cardSkin) ? settings.cardSkin : 'mint';
 }
