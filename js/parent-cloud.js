@@ -164,6 +164,7 @@
           sender_user_id: m.sender_user_id || session.user.id,
           sender_role: m.sender_role,
           body: m.text,
+          edited_at: m.edited_at || null,
           read_by_parent: !!m.read_by_parent,
           read_by_coach: !!m.read_by_coach,
           created_at: m.created_at || new Date().toISOString()

@@ -4164,6 +4164,15 @@ function handleAppBack(){
   }
   if(isElShown('cropModal')){ closeCrop(); return true; }
   if(isElShown('photoSheet')){ closePhotoSheet(); return true; }
+  if(isElShown('msgMenu')){
+    if(typeof closeMessageMenu === 'function') closeMessageMenu();
+    else {
+      document.getElementById('msgMenu').hidden = true;
+      const b = document.getElementById('msgMenuBack');
+      if(b) b.hidden = true;
+    }
+    return true;
+  }
   if(isElShown('chatPage')){
     if(typeof closePlayerCoachChat === 'function') closePlayerCoachChat();
     else document.getElementById('chatPage').hidden = true;

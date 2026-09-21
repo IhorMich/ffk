@@ -51,7 +51,8 @@ create table if not exists public.player_chat_messages (
 );
 alter table public.player_chat_messages
   add column if not exists deleted_by_parent boolean not null default false,
-  add column if not exists deleted_by_coach boolean not null default false;
+  add column if not exists deleted_by_coach boolean not null default false,
+  add column if not exists edited_at timestamptz;
 
 create index if not exists personal_players_owner_idx on public.personal_players(owner_user_id);
 create index if not exists parent_links_parent_idx on public.parent_player_links(parent_user_id);
@@ -139,6 +140,9 @@ create policy player_chat_participants_select on public.player_chat_messages
       )
     )
   );
+create policy player_chat_sender_update on public.player_chat_messages
+  for update using (sender_user_id = auth.uid())
+  with check (sender_user_id = auth.uid());
 create policy player_chat_participants_insert on public.player_chat_messages
   for insert with check (
     sender_user_id = auth.uid()

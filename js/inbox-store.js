@@ -69,6 +69,28 @@
     listDeleted(){
       return {...readDb().deleted};
     },
+    editChatMessage(id, text){
+      const value = String(text || '').trim().slice(0, 500);
+      if(!id || !value) return null;
+      const db = readDb();
+      const now = new Date().toISOString();
+      let hit = null;
+      db.messages = db.messages.map(m => {
+        if(m.id !== id || m.type !== 'chat_message') return m;
+        hit = {...m, text: value, edited_at: now, updated_at: now};
+        return hit;
+      });
+      if(hit) writeDb(db);
+      return hit;
+    },
+    deleteMessages(ids){
+      const list = (ids || []).map(String).filter(Boolean);
+      let removed = 0;
+      list.forEach(id => {
+        if(this.deleteMessage(id)) removed += 1;
+      });
+      return removed;
+    },
     deleteMessage(id){
       const db = readDb();
       const message = db.messages.find(m => m.id === id);
@@ -352,6 +374,7 @@
         sender_role: raw.sender_role === 'coach' ? 'coach' : 'parent',
         sender_user_id: String(raw.sender_user_id || existing && existing.sender_user_id || ''),
         text: String(raw.body || raw.text || '').slice(0, 500),
+        edited_at: raw.edited_at || (existing && existing.edited_at) || '',
         read_by_parent: !!raw.read_by_parent,
         read_by_coach: !!raw.read_by_coach,
         status: 'delivered',

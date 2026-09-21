@@ -1245,7 +1245,21 @@ window.ffkIsNative = function () {
       </button>
       <h2 class="inbox-page-title" data-i18n="parentInboxTitle">Сообщения</h2>
     </header>
+    <div class="inbox-select-bar" id="inboxSelectBar" hidden>
+      <span id="inboxSelectCount">0</span>
+      <div class="inbox-select-actions">
+        <button type="button" class="ghost-btn" id="inboxSelectAllBtn" data-i18n="msgSelectAll">Выбрать все</button>
+        <button type="button" class="ghost-btn danger-btn" id="inboxSelectDeleteBtn" data-i18n="msgDeleteSelected">Удалить</button>
+        <button type="button" class="ghost-btn" id="inboxSelectCancelBtn" data-i18n="previewCancel">Отмена</button>
+      </div>
+    </div>
     <div id="inboxSheetList" class="inbox-page-list"></div>
+  </div>
+
+  <button class="msg-menu-back" id="msgMenuBack" type="button" hidden></button>
+  <div class="msg-menu" id="msgMenu" hidden role="menu">
+    <button type="button" id="msgMenuEdit" data-i18n="msgEdit">Редактировать</button>
+    <button type="button" class="danger" id="msgMenuDelete" data-i18n="msgDelete">Удалить</button>
   </div>
 
   <div class="chat-page" id="chatPage" hidden>

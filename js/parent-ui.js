@@ -190,10 +190,9 @@
             });
           }catch(e){}
           return `<div class="chat-bubble-row${own ? ' own' : ''}">
-            <div class="chat-bubble">
-              <button type="button" class="chat-delete-btn" data-delete-chat="${esc(message.id)}" aria-label="${esc(tt('chatDelete', 'Delete message'))}">×</button>
+            <div class="chat-bubble" data-chat-id="${esc(message.id)}" data-own="${own ? '1' : ''}">
               <p>${esc(message.text || '')}</p>
-              <span>${esc(time)}</span>
+              <span>${esc(time)}${message.edited_at ? ` <em>${esc(tt('msgEdited', 'edited'))}</em>` : ''}</span>
             </div>
           </div>`;
         }).join('')
@@ -239,12 +238,118 @@
     renderChatThread();
     renderParentInbox();
   }
+  function editChatMessage(id){
+    if(!id || !global.InboxStore || typeof global.InboxStore.editChatMessage !== 'function') return;
+    const current = global.InboxStore.get(id);
+    if(!current) return;
+    const next = prompt(tt('msgEdit', 'Edit message'), current.text || '');
+    if(next == null) return;
+    const value = String(next).trim();
+    if(!value){
+      deleteChatMessage(id);
+      return;
+    }
+    global.InboxStore.editChatMessage(id, value);
+    renderChatThread();
+    renderParentInbox();
+  }
   function deleteInboxMessage(id){
     if(!id || !global.InboxStore || typeof global.InboxStore.deleteMessage !== 'function') return;
     if(!confirm(tt('chatDeleteConfirm', 'Delete this message?'))) return;
     global.InboxStore.deleteMessage(id);
     closeParentMsgSheet();
     renderParentInbox();
+  }
+
+  let menuTargetId = '';
+  function closeMessageMenu(){
+    menuTargetId = '';
+    const menu = document.getElementById('msgMenu');
+    const back = document.getElementById('msgMenuBack');
+    if(menu) menu.hidden = true;
+    if(back) back.hidden = true;
+    document.querySelectorAll('.chat-bubble.is-active').forEach(el => el.classList.remove('is-active'));
+  }
+  function openMessageMenu(bubble){
+    const menu = document.getElementById('msgMenu');
+    const back = document.getElementById('msgMenuBack');
+    const editBtn = document.getElementById('msgMenuEdit');
+    if(!menu || !back || !bubble) return;
+    menuTargetId = bubble.dataset.chatId || '';
+    if(!menuTargetId) return;
+    if(editBtn) editBtn.hidden = bubble.dataset.own !== '1';
+    document.querySelectorAll('.chat-bubble.is-active').forEach(el => el.classList.remove('is-active'));
+    bubble.classList.add('is-active');
+    back.hidden = false;
+    menu.hidden = false;
+    const rect = bubble.getBoundingClientRect();
+    const width = menu.offsetWidth || 176;
+    const height = menu.offsetHeight || 96;
+    const left = Math.min(Math.max(8, rect.left), window.innerWidth - width - 8);
+    const top = rect.bottom + height + 8 > window.innerHeight
+      ? Math.max(8, rect.top - height - 8)
+      : rect.bottom + 8;
+    menu.style.left = `${left}px`;
+    menu.style.top = `${top}px`;
+    if(typeof pushAppState === 'function') pushAppState('layer');
+  }
+
+  let selectedInbox = new Set();
+  function selectionActive(){
+    return selectedInbox.size > 0;
+  }
+  function syncInboxSelectionUi(){
+    const bar = document.getElementById('inboxSelectBar');
+    const count = document.getElementById('inboxSelectCount');
+    if(bar) bar.hidden = !selectionActive();
+    if(count) count.textContent = tt('msgSelectedCount', 'Selected: {n}').replace('{n}', String(selectedInbox.size));
+    document.querySelectorAll('#inboxSheetList [data-parent-msg]').forEach(row => {
+      row.classList.toggle('is-selected', selectedInbox.has(row.dataset.parentMsg));
+    });
+  }
+  function clearInboxSelection(){
+    selectedInbox = new Set();
+    syncInboxSelectionUi();
+  }
+  function toggleInboxSelection(id){
+    if(!id) return;
+    if(selectedInbox.has(id)) selectedInbox.delete(id);
+    else selectedInbox.add(id);
+    syncInboxSelectionUi();
+  }
+  function selectAllInbox(){
+    document.querySelectorAll('#inboxSheetList [data-parent-msg]').forEach(row => {
+      selectedInbox.add(row.dataset.parentMsg);
+    });
+    syncInboxSelectionUi();
+  }
+  function deleteSelectedInbox(){
+    if(!selectionActive() || !global.InboxStore) return;
+    if(!confirm(tt('msgDeleteSelectedConfirm', 'Delete selected messages?'))) return;
+    global.InboxStore.deleteMessages([...selectedInbox]);
+    clearInboxSelection();
+    renderParentInbox();
+  }
+  function bindLongPress(element, handler){
+    if(!element) return;
+    let timer = null;
+    let moved = false;
+    const cancel = () => { clearTimeout(timer); timer = null; };
+    element.addEventListener('contextmenu', e => {
+      const target = handler(e.target, true);
+      if(target) e.preventDefault();
+    });
+    element.addEventListener('pointerdown', e => {
+      moved = false;
+      cancel();
+      timer = setTimeout(() => {
+        if(!moved) handler(e.target, true);
+      }, 420);
+    });
+    element.addEventListener('pointermove', () => { moved = true; cancel(); });
+    ['pointerup','pointercancel','pointerleave','scroll'].forEach(type => {
+      element.addEventListener(type, cancel, {passive: true});
+    });
   }
   function sendChatMessage(){
     const textEl = document.getElementById('chatText');
@@ -335,7 +440,7 @@
             <b>${esc(tt('coachLeaveKicker', 'Leave request'))}${esc(decision)}</b>
             <span>${esc([m.player_name, where].filter(Boolean).join(' · '))}</span>
           </span>
-          <span class="parent-msg-dot" aria-hidden="true"></span>
+          <span class="parent-msg-check" aria-hidden="true">✓</span>
         </button>`;
       }
       if(m.type === 'player_leave_decision'){
@@ -344,7 +449,7 @@
             <b>${esc(tt('playerLeaveDeclinedShort', 'Leave declined'))}</b>
             <span>${esc([m.player_name, m.team_name, m.academy_name].filter(Boolean).join(' · '))}</span>
           </span>
-          <span class="parent-msg-dot" aria-hidden="true"></span>
+          <span class="parent-msg-check" aria-hidden="true">✓</span>
         </button>`;
       }
       const isResult = m.type === 'match_result';
@@ -379,7 +484,7 @@
           <b>${esc(title)}${esc(rsvpMark)}</b>
           <span>${esc(meta || '—')}</span>
         </span>
-        <span class="parent-msg-dot" aria-hidden="true"></span>
+        <span class="parent-msg-check" aria-hidden="true">✓</span>
       </button>`;
     }).join('');
   }
@@ -421,6 +526,7 @@
     const back = document.getElementById('inboxSheetBack');
     const list = document.getElementById('inboxSheetList');
     if(list) list.innerHTML = inboxRowsHtml(inboxMessages());
+    clearInboxSelection();
     if(sheet) sheet.hidden = false;
     // Full-screen inbox — no dimmed bottom-sheet backdrop.
     if(back) back.hidden = true;
@@ -428,6 +534,7 @@
     syncInboxBellUi();
   }
   function closeInboxSheet(){
+    clearInboxSelection();
     const sheet = document.getElementById('inboxSheet');
     const back = document.getElementById('inboxSheetBack');
     if(sheet) sheet.hidden = true;
@@ -445,6 +552,7 @@
     const sheet = document.getElementById('inboxSheet');
     if(sheetList && sheet && !sheet.hidden){
       sheetList.innerHTML = inboxRowsHtml(inboxMessages());
+      syncInboxSelectionUi();
     }
     syncInboxBellUi();
   }
@@ -1278,19 +1386,44 @@
         sendChatMessage();
       }
     });
-    document.getElementById('chatThread')?.addEventListener('click', e => {
-      const btn = e.target.closest('[data-delete-chat]');
-      if(btn) deleteChatMessage(btn.dataset.deleteChat);
+    bindLongPress(document.getElementById('chatThread'), node => {
+      const bubble = node && node.closest ? node.closest('.chat-bubble') : null;
+      if(bubble) openMessageMenu(bubble);
+      return bubble;
     });
+    document.getElementById('msgMenuBack')?.addEventListener('click', () => closeMessageMenu());
+    document.getElementById('msgMenuEdit')?.addEventListener('click', () => {
+      const id = menuTargetId;
+      closeMessageMenu();
+      editChatMessage(id);
+    });
+    document.getElementById('msgMenuDelete')?.addEventListener('click', () => {
+      const id = menuTargetId;
+      closeMessageMenu();
+      deleteChatMessage(id);
+    });
+    bindLongPress(document.getElementById('inboxSheetList'), node => {
+      const row = node && node.closest ? node.closest('[data-parent-msg]') : null;
+      if(row) toggleInboxSelection(row.dataset.parentMsg);
+      return row;
+    });
+    document.getElementById('inboxSelectAllBtn')?.addEventListener('click', () => selectAllInbox());
+    document.getElementById('inboxSelectDeleteBtn')?.addEventListener('click', () => deleteSelectedInbox());
+    document.getElementById('inboxSelectCancelBtn')?.addEventListener('click', () => clearInboxSelection());
     document.getElementById('inboxSheetList')?.addEventListener('click', e => {
       const chatBtn = e.target.closest('[data-parent-chat]');
       if(chatBtn){
+        if(selectionActive()) return;
         closeInboxSheet();
         openPlayerCoachChat(chatBtn.dataset.parentChat);
         return;
       }
       const btn = e.target.closest('[data-parent-msg]');
       if(!btn) return;
+      if(selectionActive()){
+        toggleInboxSelection(btn.dataset.parentMsg);
+        return;
+      }
       openParentMessage(btn.dataset.parentMsg);
     });
     document.getElementById('parentMsgBody')?.addEventListener('click', e => {
@@ -1477,6 +1610,7 @@
   global.closeInboxSheet = closeInboxSheet;
   global.openPlayerCoachChat = openPlayerCoachChat;
   global.closePlayerCoachChat = closePlayerCoachChat;
+  global.closeMessageMenu = closeMessageMenu;
   global.openParentClaimSheet = openParentClaimSheet;
   global.closeParentClaimSheet = closeParentClaimSheet;
   global.closeParentLinkSheet = closeParentLinkSheet;

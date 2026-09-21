@@ -2,7 +2,13 @@
 
 alter table public.player_chat_messages
   add column if not exists deleted_by_parent boolean not null default false,
-  add column if not exists deleted_by_coach boolean not null default false;
+  add column if not exists deleted_by_coach boolean not null default false,
+  add column if not exists edited_at timestamptz;
+
+drop policy if exists player_chat_sender_update on public.player_chat_messages;
+create policy player_chat_sender_update on public.player_chat_messages
+  for update using (sender_user_id = auth.uid())
+  with check (sender_user_id = auth.uid());
 
 drop policy if exists player_chat_participants_select on public.player_chat_messages;
 create policy player_chat_participants_select on public.player_chat_messages

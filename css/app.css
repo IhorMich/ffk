@@ -978,12 +978,40 @@
   }
   .chat-bubble p{margin:0;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.35;}
   .chat-bubble span{display:block;margin-top:3px;text-align:right;font-size:.62rem;color:var(--card-muted);}
-  .chat-delete-btn{
-    position:absolute;top:-7px;right:-7px;width:22px;height:22px;padding:0;border-radius:50%;
-    border:1px solid var(--card-line);background:var(--card-paper);color:var(--card-muted);
-    font-size:.9rem;line-height:1;opacity:.72;
+  .chat-bubble{-webkit-touch-callout:none;user-select:none;}
+  .chat-bubble.is-active{outline:2px solid var(--card-accent);}
+  .chat-bubble em{font-style:normal;font-size:.62rem;color:var(--card-muted);}
+  .msg-menu-back{
+    position:fixed;inset:0;z-index:180;border:0;padding:0;margin:0;
+    background:#0008;cursor:pointer;
   }
-  .chat-bubble-row:not(.own) .chat-delete-btn{right:auto;left:-7px;}
+  .msg-menu-back[hidden],.msg-menu[hidden]{display:none !important;}
+  .msg-menu{
+    position:fixed;z-index:181;min-width:11rem;padding:6px;border-radius:14px;
+    border:1px solid var(--card-line);background:var(--card-paper);
+    box-shadow:0 12px 32px #0006;display:grid;gap:2px;
+  }
+  .msg-menu button{
+    width:100%;padding:11px 13px;border:0;border-radius:10px;background:transparent;
+    color:var(--card-ink);font:inherit;font-weight:700;text-align:left;cursor:pointer;
+  }
+  .msg-menu button:active{background:var(--card-wash);}
+  .msg-menu button.danger{color:#e25555;}
+  .inbox-select-bar{
+    flex-shrink:0;display:flex;align-items:center;justify-content:space-between;gap:10px;
+    padding:8px 12px;border-bottom:1px solid var(--card-line);background:var(--card-paper);
+  }
+  .inbox-select-bar[hidden]{display:none !important;}
+  .inbox-select-bar > span{font-weight:800;}
+  .inbox-select-actions{display:flex;gap:6px;flex-wrap:wrap;}
+  .inbox-select-actions .ghost-btn{width:auto;margin:0;padding:7px 11px;font-size:.78rem;}
+  .parent-msg-row.is-selected{box-shadow:inset 0 0 0 2px var(--card-accent);}
+  .parent-msg-check{
+    flex-shrink:0;width:20px;height:20px;border-radius:6px;border:1px solid var(--card-line);
+    display:grid;place-items:center;font-size:.72rem;font-weight:800;color:#101400;
+    background:var(--card-paper);
+  }
+  .parent-msg-row.is-selected .parent-msg-check{background:var(--card-accent);}
   .chat-compose{
     flex-shrink:0;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;
     padding:9px 10px calc(9px + env(safe-area-inset-bottom,0));border-top:1px solid var(--card-line);
