@@ -16,6 +16,9 @@ Academy → teams → roster → matches → parent invites → ratings → inbo
 6. Put URL + anon key into `js/coach-config.js` (never use `service_role` in the app)
 7. Run `npm run cap:sync`, rebuild the app, then Coach settings → **Sync now**
 
+All three SQL files are safe to run again: policies are dropped before they are
+recreated, so re-running never fails with “policy already exists”.
+
 Auth uses Supabase when keys are set; otherwise email/password stays on-device.
 
 The cross-device migration adds:

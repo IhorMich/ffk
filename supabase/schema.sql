@@ -123,43 +123,58 @@ as $$
   );
 $$;
 
+drop policy if exists academies_select on public.academies;
 create policy academies_select on public.academies
   for select using (public.is_academy_coach(id) or owner_user_id = auth.uid());
+drop policy if exists academies_insert on public.academies;
 create policy academies_insert on public.academies
   for insert with check (owner_user_id = auth.uid());
+drop policy if exists academies_update on public.academies;
 create policy academies_update on public.academies
   for update using (owner_user_id = auth.uid());
+drop policy if exists academies_delete on public.academies;
 create policy academies_delete on public.academies
   for delete using (owner_user_id = auth.uid());
 
+drop policy if exists teams_select on public.teams;
 create policy teams_select on public.teams
   for select using (public.is_academy_coach(academy_id));
+drop policy if exists teams_insert on public.teams;
 create policy teams_insert on public.teams
   for insert with check (public.is_academy_coach(academy_id));
+drop policy if exists teams_update on public.teams;
 create policy teams_update on public.teams
   for update using (public.is_academy_coach(academy_id));
+drop policy if exists teams_delete on public.teams;
 create policy teams_delete on public.teams
   for delete using (public.is_academy_coach(academy_id));
 
+drop policy if exists team_players_select on public.team_players;
 create policy team_players_select on public.team_players
   for select using (
     public.is_team_coach(team_id)
     or public.parent_of_player(id)
   );
+drop policy if exists team_players_insert on public.team_players;
 create policy team_players_insert on public.team_players
   for insert with check (public.is_team_coach(team_id));
+drop policy if exists team_players_update on public.team_players;
 create policy team_players_update on public.team_players
   for update using (public.is_team_coach(team_id));
+drop policy if exists team_players_delete on public.team_players;
 create policy team_players_delete on public.team_players
   for delete using (public.is_team_coach(team_id));
 
+drop policy if exists memberships_select on public.memberships;
 create policy memberships_select on public.memberships
   for select using (user_id = auth.uid() or public.is_academy_coach(academy_id));
+drop policy if exists memberships_insert on public.memberships;
 create policy memberships_insert on public.memberships
   for insert with check (
     user_id = auth.uid()
     or public.is_academy_coach(academy_id)
   );
+drop policy if exists memberships_update on public.memberships;
 create policy memberships_update on public.memberships
   for update using (
     user_id = auth.uid()
@@ -171,6 +186,7 @@ create policy memberships_update on public.memberships
         and m.status = 'active'
     )
   );
+drop policy if exists memberships_delete on public.memberships;
 create policy memberships_delete on public.memberships
   for delete using (
     user_id = auth.uid()
@@ -243,24 +259,32 @@ create index if not exists ratings_player_idx on public.ratings(team_player_id);
 alter table public.team_matches enable row level security;
 alter table public.ratings enable row level security;
 
+drop policy if exists team_matches_select on public.team_matches;
 create policy team_matches_select on public.team_matches
   for select using (public.is_team_coach(team_id));
+drop policy if exists team_matches_insert on public.team_matches;
 create policy team_matches_insert on public.team_matches
   for insert with check (public.is_team_coach(team_id));
+drop policy if exists team_matches_update on public.team_matches;
 create policy team_matches_update on public.team_matches
   for update using (public.is_team_coach(team_id));
+drop policy if exists team_matches_delete on public.team_matches;
 create policy team_matches_delete on public.team_matches
   for delete using (public.is_team_coach(team_id));
 
+drop policy if exists ratings_select on public.ratings;
 create policy ratings_select on public.ratings
   for select using (
     public.is_team_coach(team_id)
     or public.parent_of_player(team_player_id)
   );
+drop policy if exists ratings_insert on public.ratings;
 create policy ratings_insert on public.ratings
   for insert with check (public.is_team_coach(team_id));
+drop policy if exists ratings_update on public.ratings;
 create policy ratings_update on public.ratings
   for update using (public.is_team_coach(team_id));
+drop policy if exists ratings_delete on public.ratings;
 create policy ratings_delete on public.ratings
   for delete using (public.is_team_coach(team_id));
 
@@ -279,12 +303,16 @@ create index if not exists parent_invites_player_idx on public.parent_invites(te
 create index if not exists parent_invites_code_idx on public.parent_invites(code);
 
 alter table public.parent_invites enable row level security;
+drop policy if exists parent_invites_select on public.parent_invites;
 create policy parent_invites_select on public.parent_invites
   for select using (public.is_team_coach(team_id));
+drop policy if exists parent_invites_insert on public.parent_invites;
 create policy parent_invites_insert on public.parent_invites
   for insert with check (public.is_team_coach(team_id));
+drop policy if exists parent_invites_update on public.parent_invites;
 create policy parent_invites_update on public.parent_invites
   for update using (public.is_team_coach(team_id));
+drop policy if exists parent_invites_delete on public.parent_invites;
 create policy parent_invites_delete on public.parent_invites
   for delete using (public.is_team_coach(team_id));
 
@@ -298,6 +326,7 @@ create table if not exists public.device_tokens (
 );
 create index if not exists device_tokens_user_idx on public.device_tokens(user_id);
 alter table public.device_tokens enable row level security;
+drop policy if exists device_tokens_own on public.device_tokens;
 create policy device_tokens_own on public.device_tokens
   for all using (user_id = auth.uid()) with check (user_id = auth.uid());
 
@@ -309,5 +338,6 @@ create table if not exists public.coach_subscriptions (
   updated_at timestamptz not null default now()
 );
 alter table public.coach_subscriptions enable row level security;
+drop policy if exists coach_subscriptions_own on public.coach_subscriptions;
 create policy coach_subscriptions_own on public.coach_subscriptions
   for all using (user_id = auth.uid()) with check (user_id = auth.uid());

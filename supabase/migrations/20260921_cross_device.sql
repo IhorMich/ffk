@@ -65,9 +65,11 @@ alter table public.parent_player_links enable row level security;
 alter table public.parent_matches enable row level security;
 alter table public.player_chat_messages enable row level security;
 
+drop policy if exists personal_players_owner_all on public.personal_players;
 create policy personal_players_owner_all on public.personal_players
   for all using (owner_user_id = auth.uid())
   with check (owner_user_id = auth.uid());
+drop policy if exists personal_players_coach_select on public.personal_players;
 create policy personal_players_coach_select on public.personal_players
   for select using (
     exists (
@@ -80,6 +82,7 @@ create policy personal_players_coach_select on public.personal_players
     )
   );
 
+drop policy if exists parent_links_participants_select on public.parent_player_links;
 create policy parent_links_participants_select on public.parent_player_links
   for select using (
     parent_user_id = auth.uid()
@@ -89,10 +92,12 @@ create policy parent_links_participants_select on public.parent_player_links
         and public.is_team_coach(tp.team_id)
     )
   );
+drop policy if exists parent_links_parent_update on public.parent_player_links;
 create policy parent_links_parent_update on public.parent_player_links
   for update using (parent_user_id = auth.uid())
   with check (parent_user_id = auth.uid());
 
+drop policy if exists parent_matches_participants_select on public.parent_matches;
 create policy parent_matches_participants_select on public.parent_matches
   for select using (
     parent_user_id = auth.uid()
@@ -102,6 +107,7 @@ create policy parent_matches_participants_select on public.parent_matches
         and public.is_team_coach(tp.team_id)
     )
   );
+drop policy if exists parent_matches_parent_insert on public.parent_matches;
 create policy parent_matches_parent_insert on public.parent_matches
   for insert with check (
     parent_user_id = auth.uid()
@@ -113,6 +119,7 @@ create policy parent_matches_parent_insert on public.parent_matches
         and l.status <> 'revoked'
     )
   );
+drop policy if exists parent_matches_parent_update on public.parent_matches;
 create policy parent_matches_parent_update on public.parent_matches
   for update using (parent_user_id = auth.uid())
   with check (
@@ -125,9 +132,11 @@ create policy parent_matches_parent_update on public.parent_matches
         and l.status <> 'revoked'
     )
   );
+drop policy if exists parent_matches_parent_delete on public.parent_matches;
 create policy parent_matches_parent_delete on public.parent_matches
   for delete using (parent_user_id = auth.uid());
 
+drop policy if exists player_chat_participants_select on public.player_chat_messages;
 create policy player_chat_participants_select on public.player_chat_messages
   for select using (
     (parent_user_id = auth.uid() and not deleted_by_parent)
@@ -140,9 +149,11 @@ create policy player_chat_participants_select on public.player_chat_messages
       )
     )
   );
+drop policy if exists player_chat_sender_update on public.player_chat_messages;
 create policy player_chat_sender_update on public.player_chat_messages
   for update using (sender_user_id = auth.uid())
   with check (sender_user_id = auth.uid());
+drop policy if exists player_chat_participants_insert on public.player_chat_messages;
 create policy player_chat_participants_insert on public.player_chat_messages
   for insert with check (
     sender_user_id = auth.uid()
@@ -336,18 +347,21 @@ insert into storage.buckets(id, name, public)
 values ('player-media', 'player-media', false)
 on conflict(id) do update set public = false;
 
+drop policy if exists player_media_owner_insert on storage.objects;
 create policy player_media_owner_insert on storage.objects
   for insert to authenticated
   with check (
     bucket_id = 'player-media'
     and (storage.foldername(name))[1] = auth.uid()::text
   );
+drop policy if exists player_media_owner_update on storage.objects;
 create policy player_media_owner_update on storage.objects
   for update to authenticated
   using (
     bucket_id = 'player-media'
     and (storage.foldername(name))[1] = auth.uid()::text
   );
+drop policy if exists player_media_participants_select on storage.objects;
 create policy player_media_participants_select on storage.objects
   for select to authenticated
   using (
