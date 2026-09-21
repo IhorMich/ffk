@@ -11,9 +11,10 @@ Academy → teams → roster → matches → parent invites → ratings → inbo
 1. Create a project at supabase.com
 2. Run `supabase/schema.sql` in the SQL editor
 3. Run `supabase/migrations/20260921_cross_device.sql`
-4. In Authentication → Providers, enable **Anonymous Sign-Ins** for parent devices
-5. Put URL + anon key into `js/coach-config.js` (never use `service_role` in the app)
-6. Run `npm run cap:sync`, rebuild the app, then Coach settings → **Sync now**
+4. Run `supabase/migrations/20260921_message_deletion.sql`
+5. In Authentication → Providers, enable **Anonymous Sign-Ins** for parent devices
+6. Put URL + anon key into `js/coach-config.js` (never use `service_role` in the app)
+7. Run `npm run cap:sync`, rebuild the app, then Coach settings → **Sync now**
 
 Auth uses Supabase when keys are set; otherwise email/password stays on-device.
 
