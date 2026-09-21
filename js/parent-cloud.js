@@ -1,5 +1,6 @@
 /* Matchcard parent/player cross-device sync through Supabase. */
 (function(global){
+  const COACH_LINKS_KEY = 'ffk_cloud_parent_links_v1';
   let syncing = false;
   let syncTimer = null;
 
@@ -28,6 +29,16 @@
   function buildInviteUrl(token){
     const value = String(token || '').replace(/[^A-Za-z0-9_-]/g, '').slice(0, 64);
     return value ? `https://ihormich.github.io/ffk/open.html?token=${encodeURIComponent(value)}` : '';
+  }
+  function coachLinks(){
+    try{
+      const list = JSON.parse(localStorage.getItem(COACH_LINKS_KEY) || '[]');
+      return Array.isArray(list) ? list : [];
+    }catch(e){ return []; }
+  }
+  function isCoachPlayerLinked(teamPlayerId){
+    const id = String(teamPlayerId || '');
+    return !!id && coachLinks().some(link => String(link.team_player_id || '') === id);
   }
   async function publishInvite(invite){
     const sb = client();
@@ -254,6 +265,7 @@
       .in('team_player_id', playerIds)
       .neq('status', 'revoked');
     if(linksRes.error) throw linksRes.error;
+    try{ localStorage.setItem(COACH_LINKS_KEY, JSON.stringify(linksRes.data || [])); }catch(e){}
     const profileIds = [...new Set((linksRes.data || []).map(l => l.personal_player_id).filter(Boolean))];
     if(profileIds.length){
       const profilesRes = await sb.from('personal_players')
@@ -282,6 +294,8 @@
     ensureSession,
     tokenFromUrl,
     buildInviteUrl,
+    coachLinks,
+    isCoachPlayerLinked,
     publishInvite,
     resolveInvite,
     claimInvite,

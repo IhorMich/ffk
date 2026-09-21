@@ -97,10 +97,28 @@ create policy parent_matches_participants_select on public.parent_matches
     )
   );
 create policy parent_matches_parent_insert on public.parent_matches
-  for insert with check (parent_user_id = auth.uid());
+  for insert with check (
+    parent_user_id = auth.uid()
+    and exists (
+      select 1 from public.parent_player_links l
+      where l.parent_user_id = auth.uid()
+        and l.personal_player_id = parent_matches.personal_player_id
+        and l.team_player_id = parent_matches.team_player_id
+        and l.status <> 'revoked'
+    )
+  );
 create policy parent_matches_parent_update on public.parent_matches
   for update using (parent_user_id = auth.uid())
-  with check (parent_user_id = auth.uid());
+  with check (
+    parent_user_id = auth.uid()
+    and exists (
+      select 1 from public.parent_player_links l
+      where l.parent_user_id = auth.uid()
+        and l.personal_player_id = parent_matches.personal_player_id
+        and l.team_player_id = parent_matches.team_player_id
+        and l.status <> 'revoked'
+    )
+  );
 create policy parent_matches_parent_delete on public.parent_matches
   for delete using (parent_user_id = auth.uid());
 
@@ -117,11 +135,27 @@ create policy player_chat_participants_insert on public.player_chat_messages
   for insert with check (
     sender_user_id = auth.uid()
     and (
-      (sender_role = 'parent' and parent_user_id = auth.uid())
-      or exists (
-        select 1 from public.team_players tp
-        where tp.id = player_chat_messages.team_player_id
-          and public.is_team_coach(tp.team_id)
+      (
+        sender_role = 'parent'
+        and parent_user_id = auth.uid()
+        and exists (
+          select 1 from public.parent_player_links l
+          where l.parent_user_id = auth.uid()
+            and l.team_player_id = player_chat_messages.team_player_id
+            and l.status <> 'revoked'
+        )
+      )
+      or (
+        sender_role = 'coach'
+        and exists (
+          select 1
+          from public.parent_player_links l
+          join public.team_players tp on tp.id = l.team_player_id
+          where l.parent_user_id = player_chat_messages.parent_user_id
+            and l.team_player_id = player_chat_messages.team_player_id
+            and l.status <> 'revoked'
+            and public.is_team_coach(tp.team_id)
+        )
       )
     )
   );
@@ -219,6 +253,8 @@ begin
 end;
 $$;
 
+revoke all on function public.resolve_parent_invite(text) from public;
+revoke all on function public.claim_parent_invite(text,text,text,text,text) from public;
 grant execute on function public.resolve_parent_invite(text) to anon, authenticated;
 grant execute on function public.claim_parent_invite(text,text,text,text,text) to authenticated;
 
@@ -250,6 +286,7 @@ begin
 end;
 $$;
 
+revoke all on function public.mark_player_chat_read(text) from public;
 grant execute on function public.mark_player_chat_read(text) to authenticated;
 
 insert into storage.buckets(id, name, public)

@@ -121,7 +121,11 @@
       const out = [];
       teams.forEach(team => {
         (coach.listPlayers ? coach.listPlayers(session, team.id) : []).forEach(player => {
-          if(typeof coach.parentLinkedForPlayer === 'function' && !coach.parentLinkedForPlayer(player.id)) return;
+          const localLinked = typeof coach.parentLinkedForPlayer === 'function'
+            && coach.parentLinkedForPlayer(player.id);
+          const cloudLinked = global.ParentCloud && global.ParentCloud.isCoachPlayerLinked
+            && global.ParentCloud.isCoachPlayerLinked(player.id);
+          if(!localLinked && !cloudLinked) return;
           out.push({
             team_player_id: player.id,
             team_id: team.id,

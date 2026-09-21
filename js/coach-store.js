@@ -1047,7 +1047,10 @@
     },
     parentLinkedForPlayer(teamPlayerId){
       const pid = String(teamPlayerId || '');
-      if(!pid || !global.ParentStore || typeof global.ParentStore.listLinks !== 'function') return false;
+      if(!pid) return false;
+      if(global.ParentCloud && typeof global.ParentCloud.isCoachPlayerLinked === 'function'
+        && global.ParentCloud.isCoachPlayerLinked(pid)) return true;
+      if(!global.ParentStore || typeof global.ParentStore.listLinks !== 'function') return false;
       return global.ParentStore.listLinks().some(l => l && l.player && String(l.player.id) === pid);
     },
     buildMatchInvitePayload(session, matchId, teamPlayerId){
