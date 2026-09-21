@@ -45,8 +45,13 @@ create table if not exists public.player_chat_messages (
   body text not null check (char_length(trim(body)) between 1 and 500),
   read_by_parent boolean not null default false,
   read_by_coach boolean not null default false,
+  deleted_by_parent boolean not null default false,
+  deleted_by_coach boolean not null default false,
   created_at timestamptz not null default now()
 );
+alter table public.player_chat_messages
+  add column if not exists deleted_by_parent boolean not null default false,
+  add column if not exists deleted_by_coach boolean not null default false;
 
 create index if not exists personal_players_owner_idx on public.personal_players(owner_user_id);
 create index if not exists parent_links_parent_idx on public.parent_player_links(parent_user_id);
@@ -124,11 +129,14 @@ create policy parent_matches_parent_delete on public.parent_matches
 
 create policy player_chat_participants_select on public.player_chat_messages
   for select using (
-    parent_user_id = auth.uid()
-    or exists (
-      select 1 from public.team_players tp
-      where tp.id = player_chat_messages.team_player_id
-        and public.is_team_coach(tp.team_id)
+    (parent_user_id = auth.uid() and not deleted_by_parent)
+    or (
+      not deleted_by_coach
+      and exists (
+        select 1 from public.team_players tp
+        where tp.id = player_chat_messages.team_player_id
+          and public.is_team_coach(tp.team_id)
+      )
     )
   );
 create policy player_chat_participants_insert on public.player_chat_messages
@@ -288,6 +296,37 @@ $$;
 
 revoke all on function public.mark_player_chat_read(text) from public;
 grant execute on function public.mark_player_chat_read(text) to authenticated;
+
+create or replace function public.delete_player_chat_message(message_id text)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  update public.player_chat_messages m
+  set
+    deleted_by_parent = case when m.parent_user_id = auth.uid() then true else m.deleted_by_parent end,
+    deleted_by_coach = case
+      when exists (
+        select 1 from public.team_players tp
+        where tp.id = m.team_player_id and public.is_team_coach(tp.team_id)
+      ) then true
+      else m.deleted_by_coach
+    end
+  where m.id = message_id
+    and (
+      m.parent_user_id = auth.uid()
+      or exists (
+        select 1 from public.team_players tp
+        where tp.id = m.team_player_id and public.is_team_coach(tp.team_id)
+      )
+    );
+end;
+$$;
+
+revoke all on function public.delete_player_chat_message(text) from public;
+grant execute on function public.delete_player_chat_message(text) to authenticated;
 
 insert into storage.buckets(id, name, public)
 values ('player-media', 'player-media', false)

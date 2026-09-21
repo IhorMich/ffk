@@ -426,6 +426,8 @@ window.FFK_COACH_I18N.pl = {
   chatWritePlayer:'Napisz do zawodnika / rodzica',
   chatEmpty:'Nie ma jeszcze wiadomości. Napisz pierwszą.',
   chatUnavailable:'Najpierw połącz zawodnika z trenerem.',
+  chatDelete:'Usuń wiadomość',
+  chatDeleteConfirm:'Usunąć tę wiadomość?',
   parentInboxLead:'',
   parentInboxEmpty:'Brak wiadomości',
   parentInboxMatch:'Zaproszenie na mecz',

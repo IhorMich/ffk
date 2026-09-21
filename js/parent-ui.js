@@ -160,7 +160,7 @@
       : global.InboxStore.listForPlayers([playerId]);
     return list.filter(m =>
       m.type === 'chat_message' && String(m.team_player_id || '') === String(playerId || '')
-    ).sort((a,b) => String(a.created_at || '').localeCompare(String(b.created_at || '')));
+    ).sort((a,b) => String(b.created_at || '').localeCompare(String(a.created_at || '')));
   }
   function renderChatThread(){
     const page = document.getElementById('chatPage');
@@ -185,17 +185,20 @@
           const own = coachMode ? message.sender_role === 'coach' : message.sender_role === 'parent';
           let time = '';
           try{
-            time = new Date(message.created_at).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+            time = new Date(message.created_at).toLocaleString([], {
+              day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'
+            });
           }catch(e){}
           return `<div class="chat-bubble-row${own ? ' own' : ''}">
             <div class="chat-bubble">
+              <button type="button" class="chat-delete-btn" data-delete-chat="${esc(message.id)}" aria-label="${esc(tt('chatDelete', 'Delete message'))}">×</button>
               <p>${esc(message.text || '')}</p>
               <span>${esc(time)}</span>
             </div>
           </div>`;
         }).join('')
       : `<div class="inbox-empty">${esc(tt('chatEmpty', 'No messages yet. Write the first one.'))}</div>`;
-    requestAnimationFrame(() => { thread.scrollTop = thread.scrollHeight; });
+    requestAnimationFrame(() => { thread.scrollTop = 0; });
     syncInboxBellUi();
   }
   function openPlayerCoachChat(teamPlayerId, fallback){
@@ -218,6 +221,20 @@
     if(page) page.hidden = true;
     activeChat = null;
     syncInboxBellUi();
+  }
+  function deleteChatMessage(id){
+    if(!id || !global.InboxStore || typeof global.InboxStore.deleteMessage !== 'function') return;
+    if(!confirm(tt('chatDeleteConfirm', 'Delete this message?'))) return;
+    global.InboxStore.deleteMessage(id);
+    renderChatThread();
+    renderParentInbox();
+  }
+  function deleteInboxMessage(id){
+    if(!id || !global.InboxStore || typeof global.InboxStore.deleteMessage !== 'function') return;
+    if(!confirm(tt('chatDeleteConfirm', 'Delete this message?'))) return;
+    global.InboxStore.deleteMessage(id);
+    closeParentMsgSheet();
+    renderParentInbox();
   }
   function sendChatMessage(){
     const textEl = document.getElementById('chatText');
@@ -607,6 +624,14 @@
 
     const alreadyOpen = !sheet.hidden;
     fillParentMessageBody(msg);
+    if(!body.querySelector('[data-delete-inbox]')){
+      const remove = document.createElement('button');
+      remove.type = 'button';
+      remove.className = 'ghost-btn danger-btn';
+      remove.dataset.deleteInbox = msg.id;
+      remove.textContent = tt('chatDelete', 'Delete message');
+      body.appendChild(remove);
+    }
 
     if(!alreadyOpen){
       const card = document.getElementById('parentMsgCard');
@@ -1203,12 +1228,22 @@
         sendChatMessage();
       }
     });
+    document.getElementById('chatThread')?.addEventListener('click', e => {
+      const btn = e.target.closest('[data-delete-chat]');
+      if(btn) deleteChatMessage(btn.dataset.deleteChat);
+    });
     document.getElementById('inboxSheetList')?.addEventListener('click', e => {
       const btn = e.target.closest('[data-parent-msg]');
       if(!btn) return;
       openParentMessage(btn.dataset.parentMsg);
     });
     document.getElementById('parentMsgBody')?.addEventListener('click', e => {
+      const deleteBtn = e.target.closest('[data-delete-inbox]');
+      if(deleteBtn){
+        e.preventDefault();
+        deleteInboxMessage(deleteBtn.dataset.deleteInbox);
+        return;
+      }
       if(e.target.closest('#parentMsgCloseBtn')){
         e.preventDefault();
         e.stopPropagation();

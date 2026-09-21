@@ -416,6 +416,8 @@ window.FFK_COACH_I18N.pt = {
   chatWritePlayer: "Escrever ao jogador / encarregado",
   chatEmpty: "Ainda não há mensagens. Escreva a primeira.",
   chatUnavailable: "Associe primeiro o jogador ao treinador.",
+  chatDelete: "Eliminar mensagem",
+  chatDeleteConfirm: "Eliminar esta mensagem?",
   parentInboxLead: "",
   parentInboxEmpty: "Sem mensagens",
   parentInboxMatch: "Convite para o jogo",

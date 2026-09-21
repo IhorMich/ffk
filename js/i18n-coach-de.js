@@ -420,6 +420,8 @@ window.FFK_COACH_I18N.de = {
   chatWritePlayer: 'Spieler / Eltern schreiben',
   chatEmpty: 'Noch keine Nachrichten. Schreibe die erste.',
   chatUnavailable: 'Verknüpfe zuerst Spieler und Trainer.',
+  chatDelete: 'Nachricht löschen',
+  chatDeleteConfirm: 'Diese Nachricht löschen?',
   parentInboxLead: '',
   parentInboxEmpty: 'Keine Nachrichten',
   parentInboxMatch: 'Spieleinladung',

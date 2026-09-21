@@ -185,6 +185,15 @@
       const marked = await sb.rpc('mark_player_chat_read', {message_id: id});
       if(marked.error) throw marked.error;
     }
+    const deleted = global.InboxStore.listDeleted ? global.InboxStore.listDeleted() : {};
+    const deletedChatIds = Object.keys(deleted)
+      .filter(key => key.startsWith('chat:'))
+      .map(key => key.slice('chat:'.length))
+      .filter(Boolean);
+    for(const id of deletedChatIds){
+      const removed = await sb.rpc('delete_player_chat_message', {message_id: id});
+      if(removed.error) throw removed.error;
+    }
     const playerIds = [...byPlayer.keys()].filter(Boolean);
     if(!playerIds.length) return;
     const pulled = await sb.from('player_chat_messages')

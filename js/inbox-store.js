@@ -7,7 +7,7 @@
     return `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
   }
   function emptyDb(){
-    return {version: 1, messages: []};
+    return {version: 2, messages: [], deleted: {}};
   }
   function readDb(){
     try{
@@ -16,8 +16,9 @@
       const db = JSON.parse(raw);
       if(!db || typeof db !== 'object') return emptyDb();
       return {
-        version: 1,
-        messages: Array.isArray(db.messages) ? db.messages : []
+        version: 2,
+        messages: Array.isArray(db.messages) ? db.messages : [],
+        deleted: db.deleted && typeof db.deleted === 'object' ? db.deleted : {}
       };
     }catch(e){
       return emptyDb();
@@ -31,6 +32,15 @@
         global.ParentCloud.scheduleSync();
       }
     }catch(e){}
+  }
+  function deletionKey(message){
+    if(!message) return '';
+    if(message.type === 'chat_message') return `chat:${message.id}`;
+    if(message.type === 'coach_leave_request') return `coach_leave:${message.request_id || message.id}`;
+    if(message.type === 'player_leave_decision') return `leave_decision:${message.request_id || message.id}`;
+    if(message.type === 'match_invite') return `match_invite:${message.match_id}:${message.team_player_id}`;
+    if(message.type === 'match_result') return `match_result:${message.match_id}:${message.team_player_id}`;
+    return `${message.type || 'message'}:${message.id || ''}`;
   }
 
   const InboxStore = {
@@ -55,6 +65,19 @@
     },
     get(id){
       return readDb().messages.find(m => m.id === id) || null;
+    },
+    listDeleted(){
+      return {...readDb().deleted};
+    },
+    deleteMessage(id){
+      const db = readDb();
+      const message = db.messages.find(m => m.id === id);
+      if(!message) return null;
+      const key = deletionKey(message);
+      db.messages = db.messages.filter(m => m.id !== id);
+      if(key) db.deleted[key] = new Date().toISOString();
+      writeDb(db);
+      return message;
     },
     findMatchInvite(matchId, teamPlayerId){
       return readDb().messages.find(m =>
@@ -222,6 +245,7 @@
       const db = readDb();
       const requestId = String(payload.id || payload.request_id || '');
       if(!requestId) throw new Error('bad_message');
+      if(db.deleted[`coach_leave:${requestId}`]) return null;
       const existing = db.messages.find(m =>
         m.type === 'coach_leave_request' && String(m.request_id || '') === requestId
       );
@@ -256,6 +280,7 @@
       const requestId = String(payload.id || payload.request_id || '');
       const playerId = String(payload.team_player_id || '');
       if(!requestId || !playerId) throw new Error('bad_message');
+      if(db.deleted[`leave_decision:${requestId}`]) return null;
       const existing = db.messages.find(m =>
         m.type === 'player_leave_decision' && String(m.request_id || '') === requestId
       );
@@ -312,6 +337,7 @@
     importCloudChat(raw){
       if(!raw || !raw.id || !raw.team_player_id) return null;
       const db = readDb();
+      if(db.deleted[`chat:${raw.id}`]) return null;
       const existing = db.messages.find(m => m.id === raw.id);
       const row = {
         ...(existing || {}),
