@@ -36,10 +36,16 @@
       if(!want.size) return [];
       return this.listAll().filter(m =>
         m.type !== 'coach_leave_request' && want.has(String(m.team_player_id || ''))
-      );
+      ).map(m => m.type === 'chat_message'
+        ? {...m, status: m.read_by_parent ? 'read' : 'delivered'}
+        : m);
     },
     listForCoach(){
-      return this.listAll().filter(m => m.type === 'coach_leave_request');
+      return this.listAll()
+        .filter(m => m.type === 'coach_leave_request' || m.type === 'chat_message')
+        .map(m => m.type === 'chat_message'
+          ? {...m, status: m.read_by_coach ? 'read' : 'delivered'}
+          : m);
     },
     get(id){
       return readDb().messages.find(m => m.id === id) || null;
@@ -268,6 +274,35 @@
       writeDb(db);
       return row;
     },
+    sendChatMessage(payload){
+      const playerId = String(payload && payload.team_player_id || '');
+      const role = payload && payload.sender_role === 'coach' ? 'coach' : 'parent';
+      const text = String(payload && payload.text || '').trim().slice(0, 500);
+      if(!playerId || !text) throw new Error('bad_message');
+      const db = readDb();
+      const now = new Date().toISOString();
+      const row = {
+        id: uid('chat'),
+        type: 'chat_message',
+        team_player_id: playerId,
+        team_id: String(payload.team_id || ''),
+        player_name: String(payload.player_name || '').slice(0, 80),
+        team_name: String(payload.team_name || '').slice(0, 60),
+        academy_name: String(payload.academy_name || '').slice(0, 80),
+        coach_name: String(payload.coach_name || '').slice(0, 80),
+        sender_role: role,
+        text,
+        read_by_parent: role === 'parent',
+        read_by_coach: role === 'coach',
+        status: 'delivered',
+        created_at: now,
+        updated_at: now,
+        read_at: ''
+      };
+      db.messages.push(row);
+      writeDb(db);
+      return row;
+    },
     resolveCoachLeaveRequest(requestId, decision){
       const rid = String(requestId || '');
       const result = decision === 'accepted' ? 'accepted' : decision === 'declined' ? 'declined' : '';
@@ -295,11 +330,20 @@
       });
       return out;
     },
-    markRead(id){
+    markRead(id, readerRole){
       const db = readDb();
       const now = new Date().toISOString();
       db.messages = db.messages.map(m => {
         if(m.id !== id) return m;
+        if(m.type === 'chat_message'){
+          const role = readerRole === 'coach' ? 'coach' : 'parent';
+          return {
+            ...m,
+            read_by_parent: role === 'parent' ? true : !!m.read_by_parent,
+            read_by_coach: role === 'coach' ? true : !!m.read_by_coach,
+            updated_at: now
+          };
+        }
         return {...m, status: 'read', read_at: m.read_at || now, updated_at: now};
       });
       writeDb(db);

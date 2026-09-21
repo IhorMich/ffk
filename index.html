@@ -1241,6 +1241,11 @@ window.ffkIsNative = function () {
       </button>
       <h2 class="inbox-page-title" data-i18n="parentInboxTitle">Сообщения</h2>
     </header>
+    <div class="inbox-composer" id="inboxComposer" hidden>
+      <select id="inboxChatPlayer" aria-label="Player"></select>
+      <textarea id="inboxChatText" rows="2" maxlength="500" data-i18n-placeholder="chatMessagePh" placeholder="Сообщение"></textarea>
+      <button class="save-btn" id="inboxChatSend" type="button" data-i18n="chatSendBtn">Отправить</button>
+    </div>
     <div id="inboxSheetList" class="inbox-page-list"></div>
   </div>
 

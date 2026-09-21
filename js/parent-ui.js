@@ -110,6 +110,83 @@
     }
     return 0;
   }
+  function chatTargets(){
+    const coachMode = typeof isCoachPlan === 'function' && isCoachPlan();
+    if(coachMode){
+      const coach = global.CoachStore;
+      const session = coach && coach.getSession && coach.getSession();
+      const academy = session && coach.myAcademy && coach.myAcademy(session);
+      if(!session || !academy) return [];
+      const teams = coach.listTeams ? coach.listTeams(session, academy.id) : [];
+      const out = [];
+      teams.forEach(team => {
+        (coach.listPlayers ? coach.listPlayers(session, team.id) : []).forEach(player => {
+          if(typeof coach.parentLinkedForPlayer === 'function' && !coach.parentLinkedForPlayer(player.id)) return;
+          out.push({
+            team_player_id: player.id,
+            team_id: team.id,
+            player_name: [player.first_name, player.last_name].filter(Boolean).join(' '),
+            team_name: team.name || '',
+            academy_name: academy.name || ''
+          });
+        });
+      });
+      return out;
+    }
+    const parent = global.ParentStore;
+    const personalId = parent && parent.currentPersonalPlayerId ? parent.currentPersonalPlayerId() : '';
+    const links = parent && parent.linksForPersonalPlayer
+      ? parent.linksForPersonalPlayer(personalId)
+      : [];
+    return links.map(link => ({
+      team_player_id: link.player && link.player.id,
+      team_id: link.team && link.team.id,
+      player_name: playerName(link.player),
+      team_name: link.team && link.team.name || '',
+      academy_name: link.academy && link.academy.name || '',
+      coach_name: link.coach && link.coach.name || ''
+    })).filter(x => x.team_player_id);
+  }
+  function renderInboxComposer(){
+    const wrap = document.getElementById('inboxComposer');
+    const select = document.getElementById('inboxChatPlayer');
+    if(!wrap || !select) return;
+    const targets = chatTargets();
+    wrap.hidden = !targets.length;
+    if(!targets.length){
+      select.innerHTML = '';
+      return;
+    }
+    const previous = select.value;
+    select.innerHTML = targets.map(target =>
+      `<option value="${esc(target.team_player_id)}">${esc([
+        target.player_name,
+        target.team_name
+      ].filter(Boolean).join(' · '))}</option>`
+    ).join('');
+    if(targets.some(t => String(t.team_player_id) === previous)) select.value = previous;
+    select.hidden = targets.length === 1;
+  }
+  function sendChatMessage(){
+    const select = document.getElementById('inboxChatPlayer');
+    const textEl = document.getElementById('inboxChatText');
+    const text = String(textEl && textEl.value || '').trim();
+    const target = chatTargets().find(t => String(t.team_player_id) === String(select && select.value));
+    if(!target || !text || !global.InboxStore || typeof global.InboxStore.sendChatMessage !== 'function') return;
+    const coachMode = typeof isCoachPlan === 'function' && isCoachPlan();
+    try{
+      global.InboxStore.sendChatMessage({
+        ...target,
+        sender_role: coachMode ? 'coach' : 'parent',
+        text
+      });
+      if(textEl) textEl.value = '';
+      renderParentInbox();
+      toast(tt('chatSent', 'Message sent.'));
+    }catch(e){
+      toast(tt('coachErrGeneric', 'Something went wrong.'));
+    }
+  }
   function inboxRowsHtml(msgs){
     if(!msgs.length){
       return `<div class="inbox-empty">${esc(tt('parentInboxEmpty', 'No messages'))}</div>`;
@@ -135,6 +212,19 @@
           <span class="parent-link-main">
             <b>${esc(tt('playerLeaveDeclinedShort', 'Leave declined'))}</b>
             <span>${esc([m.player_name, m.team_name, m.academy_name].filter(Boolean).join(' · '))}</span>
+          </span>
+          <span class="parent-msg-dot" aria-hidden="true"></span>
+        </button>`;
+      }
+      if(m.type === 'chat_message'){
+        const fromCoach = m.sender_role === 'coach';
+        const title = fromCoach
+          ? tt('chatFromCoach', 'Coach')
+          : (m.player_name || tt('chatFromPlayer', 'Player / parent'));
+        return `<button type="button" class="parent-msg-row${unreadCls}" data-parent-msg="${esc(m.id)}">
+          <span class="parent-link-main">
+            <b>${esc(title)}</b>
+            <span>${esc(m.text || '')}</span>
           </span>
           <span class="parent-msg-dot" aria-hidden="true"></span>
         </button>`;
@@ -213,6 +303,7 @@
     const back = document.getElementById('inboxSheetBack');
     const list = document.getElementById('inboxSheetList');
     if(list) list.innerHTML = inboxRowsHtml(inboxMessages());
+    renderInboxComposer();
     if(sheet) sheet.hidden = false;
     // Full-screen inbox — no dimmed bottom-sheet backdrop.
     if(back) back.hidden = true;
@@ -237,6 +328,7 @@
     const sheet = document.getElementById('inboxSheet');
     if(sheetList && sheet && !sheet.hidden){
       sheetList.innerHTML = inboxRowsHtml(inboxMessages());
+      renderInboxComposer();
     }
     syncInboxBellUi();
   }
@@ -244,6 +336,21 @@
   function fillParentMessageBody(msg){
     const body = document.getElementById('parentMsgBody');
     if(!body || !msg) return;
+    if(msg.type === 'chat_message'){
+      const fromCoach = msg.sender_role === 'coach';
+      body.innerHTML = `
+        <div class="parent-confirm-badge">${esc(fromCoach
+          ? tt('chatFromCoach', 'From coach')
+          : tt('chatFromPlayer', 'From player / parent'))}</div>
+        <h3 class="coach-rate-name">${esc(msg.player_name || '—')}</h3>
+        <p class="parent-msg-comment-text">${esc(msg.text || '')}</p>
+        <div class="parent-msg-details">
+          <p class="parent-msg-detail"><b>${esc(tt('parentInboxTeam', 'Team'))}</b><span>${esc(msg.team_name || '—')}</span></p>
+        </div>
+        <button type="button" class="ghost-btn" id="parentMsgCloseBtn">${esc(tt('btnClose', 'Close'))}</button>
+      `;
+      return;
+    }
     if(msg.type === 'player_leave_decision'){
       body.innerHTML = `
         <div class="parent-confirm-badge">${esc(tt('playerLeaveDeclinedShort', 'Leave declined'))}</div>
@@ -451,7 +558,10 @@
     }
 
     // Mark read only after the sheet is actually shown (above the inbox page).
-    if(global.InboxStore) global.InboxStore.markRead(id);
+    if(global.InboxStore){
+      const readerRole = (typeof isCoachPlan === 'function' && isCoachPlan()) ? 'coach' : 'parent';
+      global.InboxStore.markRead(id, readerRole);
+    }
     try{
       const coach = global.CoachStore;
       const session = coach && coach.getSession && coach.getSession();
@@ -998,6 +1108,13 @@
     document.getElementById('inboxBtn')?.addEventListener('click', () => openInboxSheet());
     document.getElementById('inboxSheetBack')?.addEventListener('click', () => closeInboxSheet());
     document.getElementById('inboxSheetCloseBtn')?.addEventListener('click', () => closeInboxSheet());
+    document.getElementById('inboxChatSend')?.addEventListener('click', () => sendChatMessage());
+    document.getElementById('inboxChatText')?.addEventListener('keydown', e => {
+      if(e.key === 'Enter' && !e.shiftKey){
+        e.preventDefault();
+        sendChatMessage();
+      }
+    });
     document.getElementById('inboxSheetList')?.addEventListener('click', e => {
       const btn = e.target.closest('[data-parent-msg]');
       if(!btn) return;
