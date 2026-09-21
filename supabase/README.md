@@ -12,7 +12,9 @@ Academy → teams → roster → matches → parent invites → ratings → inbo
 2. Run `supabase/schema.sql` in the SQL editor
 3. Run `supabase/migrations/20260921_cross_device.sql`
 4. Run `supabase/migrations/20260921_message_deletion.sql`
-5. In Authentication → Providers, enable **Anonymous Sign-Ins** for parent devices
+5. In Authentication, keep the **Email** provider enabled. **Anonymous sign-ins** are
+   optional: when the project does not offer them, the app asks the family for an
+   email and password the first time it links a player.
 6. Put URL + anon key into `js/coach-config.js` (never use `service_role` in the app)
 7. Run `npm run cap:sync`, rebuild the app, then Coach settings → **Sync now**
 

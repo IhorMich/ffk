@@ -436,6 +436,8 @@ window.FFK_COACH_I18N.pl = {
   msgDeleteSelected:'Usuń',
   msgSelectedCount:'Zaznaczono: {n}',
   msgDeleteSelectedConfirm:'Usunąć zaznaczone wiadomości?',
+  parentCloudEmailPrompt:'Email do synchronizacji między urządzeniami:',
+  parentCloudPasswordPrompt:'Hasło (co najmniej 6 znaków):',
   parentInboxLead:'',
   parentInboxEmpty:'Brak wiadomości',
   parentInboxMatch:'Zaproszenie na mecz',

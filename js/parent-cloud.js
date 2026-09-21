@@ -10,16 +10,52 @@
   function client(){
     return ready() && global.CoachCloud.getClient ? global.CoachCloud.getClient() : null;
   }
-  async function ensureSession(){
+  function tt(key, fallback){
+    try{
+      if(typeof t === 'function'){
+        const value = t(key);
+        if(value && value !== key) return value;
+      }
+    }catch(e){}
+    return fallback || key;
+  }
+  /** Parent account: anonymous when the project allows it, otherwise email + password. */
+  async function signInWithEmail(email, password){
     const sb = client();
     if(!sb) throw new Error('no_cloud');
-    let {data, error} = await sb.auth.getSession();
+    const credentials = {
+      email: String(email || '').trim().toLowerCase(),
+      password: String(password || '')
+    };
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(credentials.email)) throw new Error('bad_email');
+    if(credentials.password.length < 6) throw new Error('bad_password');
+    const signedIn = await sb.auth.signInWithPassword(credentials);
+    if(signedIn.data && signedIn.data.session) return signedIn.data.session;
+    const signedUp = await sb.auth.signUp(credentials);
+    if(signedUp.error) throw signedUp.error;
+    if(signedUp.data && signedUp.data.session) return signedUp.data.session;
+    throw new Error('confirm_email');
+  }
+  async function promptEmailSession(){
+    if(typeof prompt !== 'function') throw new Error('auth');
+    const email = prompt(tt('parentCloudEmailPrompt', 'Email for syncing across devices:'));
+    if(!email) throw new Error('auth');
+    const password = prompt(tt('parentCloudPasswordPrompt', 'Password (at least 6 characters):'));
+    if(!password) throw new Error('auth');
+    return signInWithEmail(email, password);
+  }
+  async function ensureSession(interactive){
+    const sb = client();
+    if(!sb) throw new Error('no_cloud');
+    const {data, error} = await sb.auth.getSession();
     if(error) throw error;
     if(data && data.session) return data.session;
-    const res = await sb.auth.signInAnonymously();
-    if(res.error) throw res.error;
-    if(!res.data || !res.data.session) throw new Error('auth');
-    return res.data.session;
+    if(typeof sb.auth.signInAnonymously === 'function'){
+      const anon = await sb.auth.signInAnonymously();
+      if(anon.data && anon.data.session) return anon.data.session;
+    }
+    if(!interactive) throw new Error('no_session');
+    return promptEmailSession();
   }
   function tokenFromUrl(raw){
     const text = String(raw || '');
@@ -83,7 +119,7 @@
     const sb = client();
     const profile = activeProfile();
     if(!sb || !token || !profile) throw new Error('bad_invite');
-    await ensureSession();
+    await ensureSession(true);
     const {data, error} = await sb.rpc('claim_parent_invite', {
       invite_token: token,
       personal_id: profile.id,
@@ -226,11 +262,11 @@
       }catch(e){}
     });
   }
-  async function syncParentData(){
+  async function syncParentData(options){
     if(!ready() || syncing) return {ok: false, reason: ready() ? 'busy' : 'no_cloud'};
     syncing = true;
     try{
-      const session = await ensureSession();
+      const session = await ensureSession(!!(options && options.interactive));
       const links = global.ParentStore && global.ParentStore.listLinks
         ? global.ParentStore.listLinks()
         : [];
@@ -322,6 +358,7 @@
   global.ParentCloud = {
     ready,
     ensureSession,
+    signInWithEmail,
     tokenFromUrl,
     buildInviteUrl,
     coachLinks,

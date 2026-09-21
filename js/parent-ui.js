@@ -1230,7 +1230,7 @@
         try{ global.ParentStatsStore.syncAllPersonalHistory(); }catch(e){}
       }
       if(global.ParentCloud && typeof global.ParentCloud.syncParentData === 'function'){
-        try{ await global.ParentCloud.syncParentData(); }catch(e){}
+        try{ await global.ParentCloud.syncParentData({interactive: true}); }catch(e){}
       }
       if(typeof renderCoachUi === 'function' && typeof isCoachPlan === 'function' && isCoachPlan()){
         try{ renderCoachUi(); }catch(e){}

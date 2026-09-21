@@ -426,6 +426,8 @@ window.FFK_COACH_I18N.it = {
   msgDeleteSelected: 'Elimina',
   msgSelectedCount: 'Selezionati: {n}',
   msgDeleteSelectedConfirm: 'Eliminare i messaggi selezionati?',
+  parentCloudEmailPrompt: 'Email per la sincronizzazione tra dispositivi:',
+  parentCloudPasswordPrompt: 'Password (almeno 6 caratteri):',
   parentInboxLead: '',
   parentInboxEmpty: 'Nessun messaggio',
   parentInboxMatch: 'Invito alla partita',
