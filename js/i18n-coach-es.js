@@ -421,6 +421,7 @@ window.FFK_COACH_I18N.es = {
   chatUnavailable: "Primero vincula al jugador con el entrenador.",
   chatDelete: "Eliminar mensaje",
   chatDeleteConfirm: "¿Eliminar este mensaje?",
+  chatThreadCount: "Mensajes: {n}",
   parentInboxLead: "",
   parentInboxEmpty: "No hay mensajes",
   parentInboxMatch: "Invitación al partido",

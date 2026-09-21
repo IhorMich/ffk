@@ -422,6 +422,7 @@ window.FFK_COACH_I18N.de = {
   chatUnavailable: 'Verknüpfe zuerst Spieler und Trainer.',
   chatDelete: 'Nachricht löschen',
   chatDeleteConfirm: 'Diese Nachricht löschen?',
+  chatThreadCount: 'Nachrichten: {n}',
   parentInboxLead: '',
   parentInboxEmpty: 'Keine Nachrichten',
   parentInboxMatch: 'Spieleinladung',

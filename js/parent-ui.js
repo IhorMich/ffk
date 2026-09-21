@@ -202,8 +202,18 @@
     syncInboxBellUi();
   }
   function openPlayerCoachChat(teamPlayerId, fallback){
-    const target = chatTargets().find(t => String(t.team_player_id) === String(teamPlayerId || ''))
+    const wanted = String(teamPlayerId || '');
+    const lastMessage = wanted ? chatMessages(wanted)[0] : null;
+    const target = chatTargets().find(t => String(t.team_player_id) === wanted)
       || fallback
+      || (lastMessage ? {
+        team_player_id: lastMessage.team_player_id,
+        team_id: lastMessage.team_id,
+        player_name: lastMessage.player_name,
+        team_name: lastMessage.team_name,
+        academy_name: lastMessage.academy_name,
+        coach_name: lastMessage.coach_name
+      } : null)
       || chatTargets()[0];
     if(!target || !target.team_player_id){
       toast(tt('chatUnavailable', 'Link the player and coach first.'));
@@ -255,11 +265,64 @@
       toast(tt('coachErrGeneric', 'Something went wrong.'));
     }
   }
+  /** Chats collapse into one row per player; notices stay individual. */
+  function inboxEntries(msgs){
+    const coachMode = typeof isCoachPlan === 'function' && isCoachPlan();
+    const threads = new Map();
+    const entries = [];
+    (msgs || []).forEach(m => {
+      if(m.type !== 'chat_message'){
+        entries.push({kind: 'message', message: m, sortAt: m.created_at || ''});
+        return;
+      }
+      const key = String(m.team_player_id || '');
+      const incoming = coachMode ? m.sender_role === 'parent' : m.sender_role === 'coach';
+      const existing = threads.get(key);
+      if(existing){
+        existing.total += 1;
+        if(incoming && m.status !== 'read') existing.unread += 1;
+        if(String(m.created_at || '') > String(existing.sortAt || '')){
+          existing.sortAt = m.created_at || '';
+          existing.last = m;
+        }
+        return;
+      }
+      const thread = {
+        kind: 'thread',
+        playerId: key,
+        last: m,
+        total: 1,
+        unread: incoming && m.status !== 'read' ? 1 : 0,
+        sortAt: m.created_at || ''
+      };
+      threads.set(key, thread);
+      entries.push(thread);
+    });
+    return entries.sort((a, b) => String(b.sortAt || '').localeCompare(String(a.sortAt || '')));
+  }
   function inboxRowsHtml(msgs){
-    if(!msgs.length){
+    const entries = inboxEntries(msgs);
+    if(!entries.length){
       return `<div class="inbox-empty">${esc(tt('parentInboxEmpty', 'No messages'))}</div>`;
     }
-    return msgs.map(m => {
+    const coachMode = typeof isCoachPlan === 'function' && isCoachPlan();
+    return entries.map(entry => {
+      if(entry.kind === 'thread'){
+        const m = entry.last;
+        const target = chatTargets().find(x => String(x.team_player_id) === entry.playerId) || {};
+        const title = coachMode
+          ? (target.player_name || m.player_name || tt('chatFromPlayer', 'Player / parent'))
+          : (target.coach_name || m.coach_name || tt('parentCoachLabel', 'Coach'));
+        const count = tt('chatThreadCount', '{n} messages').replace('{n}', String(entry.total));
+        return `<button type="button" class="parent-msg-row${entry.unread ? ' unread' : ''}" data-parent-chat="${esc(entry.playerId)}">
+          <span class="parent-link-main">
+            <b>${esc(title)}</b>
+            <span>${esc([count, m.text].filter(Boolean).join(' · '))}</span>
+          </span>
+          ${entry.unread ? `<span class="parent-msg-count">${esc(entry.unread)}</span>` : '<span class="parent-msg-dot" aria-hidden="true"></span>'}
+        </button>`;
+      }
+      const m = entry.message;
       const unreadCls = m.status === 'read' ? '' : ' unread';
       const isCoachLeave = m.type === 'coach_leave_request';
       if(isCoachLeave){
@@ -280,19 +343,6 @@
           <span class="parent-link-main">
             <b>${esc(tt('playerLeaveDeclinedShort', 'Leave declined'))}</b>
             <span>${esc([m.player_name, m.team_name, m.academy_name].filter(Boolean).join(' · '))}</span>
-          </span>
-          <span class="parent-msg-dot" aria-hidden="true"></span>
-        </button>`;
-      }
-      if(m.type === 'chat_message'){
-        const fromCoach = m.sender_role === 'coach';
-        const title = fromCoach
-          ? tt('chatFromCoach', 'Coach')
-          : (m.player_name || tt('chatFromPlayer', 'Player / parent'));
-        return `<button type="button" class="parent-msg-row${unreadCls}" data-parent-msg="${esc(m.id)}">
-          <span class="parent-link-main">
-            <b>${esc(title)}</b>
-            <span>${esc(m.text || '')}</span>
           </span>
           <span class="parent-msg-dot" aria-hidden="true"></span>
         </button>`;
@@ -1233,6 +1283,12 @@
       if(btn) deleteChatMessage(btn.dataset.deleteChat);
     });
     document.getElementById('inboxSheetList')?.addEventListener('click', e => {
+      const chatBtn = e.target.closest('[data-parent-chat]');
+      if(chatBtn){
+        closeInboxSheet();
+        openPlayerCoachChat(chatBtn.dataset.parentChat);
+        return;
+      }
       const btn = e.target.closest('[data-parent-msg]');
       if(!btn) return;
       openParentMessage(btn.dataset.parentMsg);

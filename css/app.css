@@ -1572,6 +1572,11 @@
     background:transparent;flex-shrink:0;
   }
   .parent-msg-row.unread .parent-msg-dot{background:var(--card-accent);}
+  .parent-msg-count{
+    flex-shrink:0;min-width:1.35rem;padding:2px 7px;border-radius:999px;
+    background:var(--card-accent);color:#101400;
+    font-size:.72rem;font-weight:800;text-align:center;
+  }
   .parent-msg-squad{margin:12px 0;}
   #parentMsgCloseBtn{width:100%;margin-top:8px;}
   .js-cm-invite-again{width:100%;margin:0 0 10px;}

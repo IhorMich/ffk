@@ -428,6 +428,7 @@ window.FFK_COACH_I18N.pl = {
   chatUnavailable:'Najpierw połącz zawodnika z trenerem.',
   chatDelete:'Usuń wiadomość',
   chatDeleteConfirm:'Usunąć tę wiadomość?',
+  chatThreadCount:'Wiadomości: {n}',
   parentInboxLead:'',
   parentInboxEmpty:'Brak wiadomości',
   parentInboxMatch:'Zaproszenie na mecz',

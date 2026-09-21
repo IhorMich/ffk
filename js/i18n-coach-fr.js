@@ -421,6 +421,7 @@ window.FFK_COACH_I18N.fr = {
   chatUnavailable: "Associez d’abord le joueur et l’entraîneur.",
   chatDelete: "Supprimer le message",
   chatDeleteConfirm: "Supprimer ce message ?",
+  chatThreadCount: "Messages : {n}",
   parentInboxLead: "",
   parentInboxEmpty: "Aucun message",
   parentInboxMatch: "Invitation au match",
