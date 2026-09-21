@@ -348,7 +348,7 @@
         }
       }
     }
-    await syncChats(session, linksRes.data || [], 'coach');
+    await syncChats(coachSession, linksRes.data || [], 'coach');
     if(typeof syncCoachChildPlayerUi === 'function'){
       try{ syncCoachChildPlayerUi(); }catch(e){}
     }
