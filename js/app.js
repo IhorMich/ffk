@@ -2064,6 +2064,13 @@ function syncCoachChildPlayerUi(){
     : (p.photo || '');
   setBadge(document.getElementById('clubBadge'), photo || '', initials);
   const backBtn = document.getElementById('coachChildBackBtn');
+  const chatBtn = document.getElementById('coachChildChatBtn');
+  if(chatBtn){
+    const linked = window.CoachStore && window.CoachStore.parentLinkedForPlayer
+      ? window.CoachStore.parentLinkedForPlayer(p.id)
+      : false;
+    chatBtn.hidden = !linked;
+  }
   if(backBtn){
     const backKey = ctx.returnTo === 'stats' ? 'coachChildBackStats' : 'coachChildBack';
     backBtn.setAttribute('data-i18n', backKey);
@@ -4157,6 +4164,11 @@ function handleAppBack(){
   }
   if(isElShown('cropModal')){ closeCrop(); return true; }
   if(isElShown('photoSheet')){ closePhotoSheet(); return true; }
+  if(isElShown('chatPage')){
+    if(typeof closePlayerCoachChat === 'function') closePlayerCoachChat();
+    else document.getElementById('chatPage').hidden = true;
+    return true;
+  }
   if(isElShown('coachRateSheet')){
     if(typeof closeCoachQuickRate === 'function') closeCoachQuickRate();
     return true;

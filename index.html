@@ -118,6 +118,7 @@ window.ffkIsNative = function () {
         <p class="hint" data-i18n="parentLinksLead">Игрок, подтверждённый тренером. Личная статистика у бровки — как раньше, отдельно.</p>
         <div id="parentLinksList"></div>
         <button class="save-btn" id="parentOpenCoachStatsBtn" type="button" data-i18n="parentCoachStatsBtn" hidden>Статистика тренера</button>
+        <button class="ghost-btn" id="parentChatCoachBtn" type="button" data-i18n="chatWriteCoach" hidden>Написать тренеру</button>
         <button class="ghost-btn" id="parentAddLinkBtn" type="button" data-i18n="parentAddLinkBtn">Добавить по QR / ссылке</button>
       </div>
       <div class="pf-card">
@@ -1006,7 +1007,10 @@ window.ffkIsNative = function () {
             <b id="coachChildBannerName">—</b>
             <p class="hint" id="coachChildBannerMeta"></p>
           </div>
-          <button type="button" class="save-btn" id="coachChildBackBtn" data-i18n="coachChildBack">← К составу</button>
+          <div class="coach-child-banner-actions">
+            <button type="button" class="ghost-btn" id="coachChildChatBtn" data-i18n="chatWritePlayer">Написать игроку</button>
+            <button type="button" class="save-btn" id="coachChildBackBtn" data-i18n="coachChildBack">← К составу</button>
+          </div>
         </div>
         <div id="coachChildFeed" class="coach-child-feed"></div>
       </div>
@@ -1241,12 +1245,24 @@ window.ffkIsNative = function () {
       </button>
       <h2 class="inbox-page-title" data-i18n="parentInboxTitle">Сообщения</h2>
     </header>
-    <div class="inbox-composer" id="inboxComposer" hidden>
-      <select id="inboxChatPlayer" aria-label="Player"></select>
-      <textarea id="inboxChatText" rows="2" maxlength="500" data-i18n-placeholder="chatMessagePh" placeholder="Сообщение"></textarea>
-      <button class="save-btn" id="inboxChatSend" type="button" data-i18n="chatSendBtn">Отправить</button>
-    </div>
     <div id="inboxSheetList" class="inbox-page-list"></div>
+  </div>
+
+  <div class="chat-page" id="chatPage" hidden>
+    <header class="inbox-page-head">
+      <button type="button" class="inbox-page-back-btn" id="chatPageCloseBtn" aria-label="Back">
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M15.41 7.41 14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+      </button>
+      <div class="chat-page-title-wrap">
+        <h2 class="inbox-page-title" id="chatPageTitle">—</h2>
+        <span id="chatPageMeta"></span>
+      </div>
+    </header>
+    <div class="chat-thread" id="chatThread"></div>
+    <div class="chat-compose">
+      <textarea id="chatText" rows="1" maxlength="500" data-i18n-placeholder="chatMessagePh" placeholder="Сообщение"></textarea>
+      <button class="save-btn" id="chatSendBtn" type="button" data-i18n="chatSendBtn">Отправить</button>
+    </div>
   </div>
 
   <button class="photo-sheet-back" id="photoSheetBack" type="button" hidden></button>

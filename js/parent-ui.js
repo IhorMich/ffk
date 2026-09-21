@@ -151,31 +151,78 @@
       coach_name: link.coach && link.coach.name || ''
     })).filter(x => x.team_player_id);
   }
-  function renderInboxComposer(){
-    const wrap = document.getElementById('inboxComposer');
-    const select = document.getElementById('inboxChatPlayer');
-    if(!wrap || !select) return;
-    const targets = chatTargets();
-    wrap.hidden = !targets.length;
-    if(!targets.length){
-      select.innerHTML = '';
+  let activeChat = null;
+  function chatMessages(playerId){
+    if(!global.InboxStore) return [];
+    const coachMode = typeof isCoachPlan === 'function' && isCoachPlan();
+    const list = coachMode && global.InboxStore.listForCoach
+      ? global.InboxStore.listForCoach()
+      : global.InboxStore.listForPlayers([playerId]);
+    return list.filter(m =>
+      m.type === 'chat_message' && String(m.team_player_id || '') === String(playerId || '')
+    ).sort((a,b) => String(a.created_at || '').localeCompare(String(b.created_at || '')));
+  }
+  function renderChatThread(){
+    const page = document.getElementById('chatPage');
+    const thread = document.getElementById('chatThread');
+    const title = document.getElementById('chatPageTitle');
+    const meta = document.getElementById('chatPageMeta');
+    if(!page || !thread || !activeChat) return;
+    const coachMode = typeof isCoachPlan === 'function' && isCoachPlan();
+    if(title) title.textContent = coachMode
+      ? (activeChat.player_name || tt('chatFromPlayer', 'Player / parent'))
+      : (activeChat.coach_name || tt('parentCoachLabel', 'Coach'));
+    if(meta) meta.textContent = [activeChat.team_name, activeChat.academy_name].filter(Boolean).join(' · ');
+    const messages = chatMessages(activeChat.team_player_id);
+    messages.forEach(message => {
+      const incoming = coachMode ? message.sender_role === 'parent' : message.sender_role === 'coach';
+      if(incoming && message.status !== 'read' && global.InboxStore.markRead){
+        global.InboxStore.markRead(message.id, coachMode ? 'coach' : 'parent');
+      }
+    });
+    thread.innerHTML = messages.length
+      ? messages.map(message => {
+          const own = coachMode ? message.sender_role === 'coach' : message.sender_role === 'parent';
+          let time = '';
+          try{
+            time = new Date(message.created_at).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+          }catch(e){}
+          return `<div class="chat-bubble-row${own ? ' own' : ''}">
+            <div class="chat-bubble">
+              <p>${esc(message.text || '')}</p>
+              <span>${esc(time)}</span>
+            </div>
+          </div>`;
+        }).join('')
+      : `<div class="inbox-empty">${esc(tt('chatEmpty', 'No messages yet. Write the first one.'))}</div>`;
+    requestAnimationFrame(() => { thread.scrollTop = thread.scrollHeight; });
+    syncInboxBellUi();
+  }
+  function openPlayerCoachChat(teamPlayerId, fallback){
+    const target = chatTargets().find(t => String(t.team_player_id) === String(teamPlayerId || ''))
+      || fallback
+      || chatTargets()[0];
+    if(!target || !target.team_player_id){
+      toast(tt('chatUnavailable', 'Link the player and coach first.'));
       return;
     }
-    const previous = select.value;
-    select.innerHTML = targets.map(target =>
-      `<option value="${esc(target.team_player_id)}">${esc([
-        target.player_name,
-        target.team_name
-      ].filter(Boolean).join(' · '))}</option>`
-    ).join('');
-    if(targets.some(t => String(t.team_player_id) === previous)) select.value = previous;
-    select.hidden = targets.length === 1;
+    activeChat = {...target};
+    const page = document.getElementById('chatPage');
+    if(page) page.hidden = false;
+    renderChatThread();
+    if(typeof pushAppState === 'function') pushAppState('layer');
+    setTimeout(() => document.getElementById('chatText')?.focus(), 80);
+  }
+  function closePlayerCoachChat(){
+    const page = document.getElementById('chatPage');
+    if(page) page.hidden = true;
+    activeChat = null;
+    syncInboxBellUi();
   }
   function sendChatMessage(){
-    const select = document.getElementById('inboxChatPlayer');
-    const textEl = document.getElementById('inboxChatText');
+    const textEl = document.getElementById('chatText');
     const text = String(textEl && textEl.value || '').trim();
-    const target = chatTargets().find(t => String(t.team_player_id) === String(select && select.value));
+    const target = activeChat;
     if(!target || !text || !global.InboxStore || typeof global.InboxStore.sendChatMessage !== 'function') return;
     const coachMode = typeof isCoachPlan === 'function' && isCoachPlan();
     try{
@@ -185,8 +232,8 @@
         text
       });
       if(textEl) textEl.value = '';
+      renderChatThread();
       renderParentInbox();
-      toast(tt('chatSent', 'Message sent.'));
     }catch(e){
       toast(tt('coachErrGeneric', 'Something went wrong.'));
     }
@@ -307,7 +354,6 @@
     const back = document.getElementById('inboxSheetBack');
     const list = document.getElementById('inboxSheetList');
     if(list) list.innerHTML = inboxRowsHtml(inboxMessages());
-    renderInboxComposer();
     if(sheet) sheet.hidden = false;
     // Full-screen inbox — no dimmed bottom-sheet backdrop.
     if(back) back.hidden = true;
@@ -332,7 +378,6 @@
     const sheet = document.getElementById('inboxSheet');
     if(sheetList && sheet && !sheet.hidden){
       sheetList.innerHTML = inboxRowsHtml(inboxMessages());
-      renderInboxComposer();
     }
     syncInboxBellUi();
   }
@@ -543,6 +588,18 @@
   function openParentMessage(id){
     const msg = global.InboxStore && global.InboxStore.get(id);
     if(!msg) return;
+    if(msg.type === 'chat_message'){
+      closeInboxSheet();
+      openPlayerCoachChat(msg.team_player_id, {
+        team_player_id: msg.team_player_id,
+        team_id: msg.team_id,
+        player_name: msg.player_name,
+        team_name: msg.team_name,
+        academy_name: msg.academy_name,
+        coach_name: msg.coach_name
+      });
+      return;
+    }
     const sheet = document.getElementById('parentMsgSheet');
     const back = document.getElementById('parentMsgBack');
     const body = document.getElementById('parentMsgBody');
@@ -804,7 +861,7 @@
     if(typeof isCoachPlan === 'function' && isCoachPlan()) return;
     syncLinkedCoachStatsFromDevice();
     const store = global.ParentStore;
-    const links = store && store.listLinks ? store.listLinks() : [];
+    const links = store ? linksForCurrentPlayer() : [];
     if(!links.length){
       toast(tt('parentLinksEmpty', 'No academy link yet. Ask the coach for a QR or invite link.'));
       return;
@@ -827,19 +884,22 @@
     const box = document.getElementById('parentLinksList');
     const root = document.getElementById('parentLinksCard');
     const statsBtn = document.getElementById('parentOpenCoachStatsBtn');
+    const chatBtn = document.getElementById('parentChatCoachBtn');
     const addBtn = document.getElementById('parentAddLinkBtn');
     const addBottom = document.getElementById('parentAddLinkBtnBottom');
     if(!box || !root || !store) return;
     if(typeof isCoachPlan === 'function' && isCoachPlan()){
       root.hidden = true;
       if(statsBtn) statsBtn.hidden = true;
+      if(chatBtn) chatBtn.hidden = true;
       if(addBtn) addBtn.hidden = true;
       if(addBottom) addBottom.hidden = true;
       return;
     }
     root.hidden = false;
-    const links = store.listLinks();
+    const links = linksForCurrentPlayer();
     if(statsBtn) statsBtn.hidden = !links.length;
+    if(chatBtn) chatBtn.hidden = !chatTargets().length;
     // Already linked → QR/add goes to the very bottom of the player screen.
     if(addBtn) addBtn.hidden = !!links.length;
     if(addBottom) addBottom.hidden = !links.length;
@@ -876,7 +936,7 @@
       panel.hidden = true;
       return;
     }
-    const links = store.listLinks();
+    const links = linksForCurrentPlayer();
     if(!links.length){
       panel.hidden = true;
       board.innerHTML = '';
@@ -1121,6 +1181,11 @@
     document.getElementById('parentAddLinkBtn')?.addEventListener('click', () => openParentClaimSheet(''));
     document.getElementById('parentAddLinkBtnBottom')?.addEventListener('click', () => openParentClaimSheet(''));
     document.getElementById('parentOpenCoachStatsBtn')?.addEventListener('click', () => openParentCoachStats());
+    document.getElementById('parentChatCoachBtn')?.addEventListener('click', () => openPlayerCoachChat());
+    document.getElementById('coachChildChatBtn')?.addEventListener('click', () => {
+      const id = global.coachChildView && global.coachChildView.playerId;
+      if(id) openPlayerCoachChat(id);
+    });
     document.getElementById('parentClaimBack')?.addEventListener('click', () => closeParentClaimSheet());
     document.getElementById('parentClaimCancelBtn')?.addEventListener('click', () => closeParentClaimSheet());
     document.getElementById('parentClaimPreviewBtn')?.addEventListener('click', () => previewClaim());
@@ -1130,8 +1195,9 @@
     document.getElementById('inboxBtn')?.addEventListener('click', () => openInboxSheet());
     document.getElementById('inboxSheetBack')?.addEventListener('click', () => closeInboxSheet());
     document.getElementById('inboxSheetCloseBtn')?.addEventListener('click', () => closeInboxSheet());
-    document.getElementById('inboxChatSend')?.addEventListener('click', () => sendChatMessage());
-    document.getElementById('inboxChatText')?.addEventListener('keydown', e => {
+    document.getElementById('chatPageCloseBtn')?.addEventListener('click', () => closePlayerCoachChat());
+    document.getElementById('chatSendBtn')?.addEventListener('click', () => sendChatMessage());
+    document.getElementById('chatText')?.addEventListener('keydown', e => {
       if(e.key === 'Enter' && !e.shiftKey){
         e.preventDefault();
         sendChatMessage();
@@ -1318,6 +1384,8 @@
   global.syncInboxBellUi = syncInboxBellUi;
   global.openInboxSheet = openInboxSheet;
   global.closeInboxSheet = closeInboxSheet;
+  global.openPlayerCoachChat = openPlayerCoachChat;
+  global.closePlayerCoachChat = closePlayerCoachChat;
   global.openParentClaimSheet = openParentClaimSheet;
   global.closeParentClaimSheet = closeParentClaimSheet;
   global.closeParentLinkSheet = closeParentLinkSheet;

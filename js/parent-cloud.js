@@ -193,7 +193,27 @@
       .order('created_at', {ascending: false});
     if(pulled.error) throw pulled.error;
     (pulled.data || []).forEach(row => {
-      try{ global.InboxStore.importCloudChat(row); }catch(e){}
+      const link = byPlayer.get(String(row.team_player_id)) || {};
+      let playerName = link.player && [link.player.first_name, link.player.last_name].filter(Boolean).join(' ');
+      let teamName = link.team && link.team.name || '';
+      if(!playerName && global.CoachStore && global.CoachStore.getSession){
+        try{
+          const coachSession = global.CoachStore.getSession();
+          const player = coachSession && global.CoachStore.getPlayer(coachSession, row.team_player_id);
+          const team = player && global.CoachStore.getTeam(coachSession, player.team_id);
+          playerName = player && [player.first_name, player.last_name].filter(Boolean).join(' ');
+          teamName = team && team.name || teamName;
+        }catch(e){}
+      }
+      try{
+        global.InboxStore.importCloudChat({
+          ...row,
+          player_name: playerName || '',
+          team_name: teamName,
+          academy_name: link.academy && link.academy.name || '',
+          coach_name: link.coach && link.coach.name || ''
+        });
+      }catch(e){}
     });
   }
   async function syncParentData(){

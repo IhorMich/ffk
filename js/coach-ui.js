@@ -3519,6 +3519,7 @@
       <div class="coach-player-sheet-actions">
         <button type="button" class="save-btn" id="coachOpenChildPageBtn">${esc(tt('coachOpenChildPage', 'Open player page'))}</button>
         <button type="button" class="ghost-btn" id="coachToggleEditPlayerBtn">${esc(detailEditOpen ? tt('coachHideEditPlayer', 'Hide edit') : tt('coachEditPlayerBtn', 'Edit player'))}</button>
+        <button type="button" class="ghost-btn" id="coachMessagePlayerBtn" ${isCoachPlayerVerified(p) ? '' : 'hidden'}>${esc(tt('chatWritePlayer', 'Message player / parent'))}</button>
         <button type="button" class="ghost-btn" id="coachAddParentBtn">${esc(tt('coachAddParentBtn', 'Add parent / guardian'))}</button>
         <button type="button" class="ghost-btn coach-remove-player" id="coachRemovePlayerBtn">${esc(tt('coachRemovePlayer', 'Remove player'))}</button>
         <button type="button" class="ghost-btn" id="coachPlayerCloseBtn">${esc(tt('btnClose', 'Close'))}</button>
@@ -4333,6 +4334,10 @@
       }
       if(e.target.closest('#coachOpenChildPageBtn') && detailPlayerId){
         openCoachChildPlayerPage(detailPlayerId);
+        return;
+      }
+      if(e.target.closest('#coachMessagePlayerBtn') && detailPlayerId){
+        if(typeof global.openPlayerCoachChat === 'function') global.openPlayerCoachChat(detailPlayerId);
         return;
       }
       if(e.target.closest('#coachRemovePlayerBtn') && detailPlayerId){
