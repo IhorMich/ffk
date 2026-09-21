@@ -1161,6 +1161,9 @@ function persistPlayerMedia(kind){
   if(typeof renderCoachUi === 'function' && typeof isCoachPlan === 'function' && isCoachPlan()){
     try{ renderCoachUi(); }catch(e){}
   }
+  if(window.ParentCloud && typeof window.ParentCloud.scheduleSync === 'function'){
+    try{ window.ParentCloud.scheduleSync(); }catch(e){}
+  }
 }
 function coachProfileMedia(){
   try{
@@ -2984,6 +2987,9 @@ function saveCurrentMatch(){
   try{
     if(typeof ParentStatsStore !== 'undefined' && ParentStatsStore.publishFromPersonal){
       ParentStatsStore.publishFromPersonal(row, player && player.id);
+    }
+    if(window.ParentCloud && typeof window.ParentCloud.scheduleSync === 'function'){
+      window.ParentCloud.scheduleSync();
     }
   }catch(e){}
   showToast(editingId ? t('toastUpdated') : t('toastSaved'));
@@ -5458,6 +5464,14 @@ async function shareCard(m){
       }
       if(window.ParentStatsStore && typeof window.ParentStatsStore.syncAllPersonalHistory === 'function'){
         try{ window.ParentStatsStore.syncAllPersonalHistory(); }catch(e){}
+      }
+      if(window.ParentCloud && window.ParentCloud.ready && window.ParentCloud.ready()){
+        try{
+          const task = isCoachPlan()
+            ? window.ParentCloud.pullCoachData()
+            : window.ParentCloud.syncParentData();
+          Promise.resolve(task).catch(() => {});
+        }catch(e){}
       }
       if(typeof renderCoachUi === 'function' && typeof isCoachPlan === 'function' && isCoachPlan()){
         try{ renderCoachUi(); }catch(e){}

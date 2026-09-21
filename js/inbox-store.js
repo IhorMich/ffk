@@ -23,8 +23,14 @@
       return emptyDb();
     }
   }
-  function writeDb(db){
+  function writeDb(db, quiet){
     localStorage.setItem(KEY, JSON.stringify(db));
+    if(quiet) return;
+    try{
+      if(global.ParentCloud && typeof global.ParentCloud.scheduleSync === 'function'){
+        global.ParentCloud.scheduleSync();
+      }
+    }catch(e){}
   }
 
   const InboxStore = {
@@ -301,6 +307,35 @@
       };
       db.messages.push(row);
       writeDb(db);
+      return row;
+    },
+    importCloudChat(raw){
+      if(!raw || !raw.id || !raw.team_player_id) return null;
+      const db = readDb();
+      const existing = db.messages.find(m => m.id === raw.id);
+      const row = {
+        ...(existing || {}),
+        id: String(raw.id),
+        type: 'chat_message',
+        team_player_id: String(raw.team_player_id),
+        team_id: String(raw.team_id || existing && existing.team_id || ''),
+        player_name: String(raw.player_name || existing && existing.player_name || '').slice(0, 80),
+        team_name: String(raw.team_name || existing && existing.team_name || '').slice(0, 60),
+        academy_name: String(raw.academy_name || existing && existing.academy_name || '').slice(0, 80),
+        coach_name: String(raw.coach_name || existing && existing.coach_name || '').slice(0, 80),
+        sender_role: raw.sender_role === 'coach' ? 'coach' : 'parent',
+        sender_user_id: String(raw.sender_user_id || existing && existing.sender_user_id || ''),
+        text: String(raw.body || raw.text || '').slice(0, 500),
+        read_by_parent: !!raw.read_by_parent,
+        read_by_coach: !!raw.read_by_coach,
+        status: 'delivered',
+        created_at: raw.created_at || existing && existing.created_at || new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        cloud_synced: true
+      };
+      if(existing) db.messages = db.messages.map(m => m.id === row.id ? row : m);
+      else db.messages.push(row);
+      writeDb(db, true);
       return row;
     },
     resolveCoachLeaveRequest(requestId, decision){

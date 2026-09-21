@@ -234,6 +234,7 @@ function listPersonalPlayersWithMedia(){
       id: sid,
       firstName: p.firstName || '',
       lastName: p.lastName || '',
+      birthDate: p.birthDate || '',
       photo: isUsablePhoto(photo) ? photo : ''
     });
   });

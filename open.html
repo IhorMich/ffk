@@ -31,18 +31,24 @@
       : lang.startsWith('uk')
         ? {opening:'Натисніть кнопку, щоб відкрити запрошення в застосунку.', button:'Відкрити Matchcard', hint:'Android вимагає натискання перед переходом із сайту в застосунок.', bad:'Невірне посилання-запрошення.'}
         : {opening:'Tap the button to open the invitation in the app.', button:'Open Matchcard', hint:'Android requires a tap before a website can open an app.', bad:'Invalid invitation link.'};
-    const code = new URLSearchParams(location.search).get('code') || '';
-    const valid = /^[A-Z0-9]{4,8}$/i.test(code);
+    const params = new URLSearchParams(location.search);
+    const code = params.get('code') || '';
+    const token = params.get('token') || '';
+    const validCode = /^[A-Z0-9]{4,8}$/i.test(code);
+    const validToken = /^[A-Z0-9_-]{12,64}$/i.test(token);
     const message = document.getElementById('message');
     const button = document.getElementById('openApp');
     const hint = document.getElementById('hint');
     document.documentElement.lang = lang.slice(0, 2);
-    if(!valid){
+    if(!validCode && !validToken){
       message.textContent = text.bad;
       return;
     }
-    const deep = 'ffk://parent?code=' + encodeURIComponent(code.toUpperCase());
-    const androidIntent = 'intent://parent?code=' + encodeURIComponent(code.toUpperCase())
+    const query = validToken
+      ? 'token=' + encodeURIComponent(token)
+      : 'code=' + encodeURIComponent(code.toUpperCase());
+    const deep = 'ffk://parent?' + query;
+    const androidIntent = 'intent://parent?' + query
       + '#Intent;scheme=ffk;package=app.ffk.rating;end';
     const target = /Android/i.test(navigator.userAgent) ? androidIntent : deep;
     message.textContent = text.opening;

@@ -6,14 +6,27 @@ Personal Free/Pro stays on-device. Coach can run **local** or **Supabase cloud**
 
 Academy → teams → roster → matches → parent invites → ratings → inbox cards.
 
-## Cloud (Phase 1.1)
+## Cloud (cross-device foundation)
 
 1. Create a project at supabase.com
 2. Run `supabase/schema.sql` in the SQL editor
-3. Put URL + anon key into `js/coach-config.js`
-4. In Coach settings → **Sync now**
+3. Run `supabase/migrations/20260921_cross_device.sql`
+4. In Authentication → Providers, enable **Anonymous Sign-Ins** for parent devices
+5. Put URL + anon key into `js/coach-config.js` (never use `service_role` in the app)
+6. Run `npm run cap:sync`, rebuild the app, then Coach settings → **Sync now**
 
 Auth uses Supabase when keys are set; otherwise email/password stays on-device.
+
+The cross-device migration adds:
+
+- secure long-token parent invitations;
+- permanent parent profile ↔ team player links by ID;
+- parent match/stat synchronization;
+- private player photo storage;
+- per-player coach/family chat with separate read state.
+
+Short six-character codes remain same-device test mode. Cross-device email links
+use the long random token but show only a short HTTPS URL.
 
 ## Assistants (up to 5)
 

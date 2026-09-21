@@ -961,7 +961,7 @@
       return null;
     }
   }
-  function confirmClaim(){
+  async function confirmClaim(){
     const store = global.ParentStore;
     if(!store) return;
     let payload = store.getPending();
@@ -971,6 +971,9 @@
       return;
     }
     try{
+      if(payload.token && global.ParentCloud && global.ParentCloud.ready && global.ParentCloud.ready()){
+        await global.ParentCloud.claimInvite(payload.token);
+      }
       store.claim(payload);
       closeParentClaimSheet();
       if(typeof syncCoachPlayerPhotosFromPersonal === 'function'){
@@ -978,6 +981,9 @@
       }
       if(global.ParentStatsStore && typeof global.ParentStatsStore.syncAllPersonalHistory === 'function'){
         try{ global.ParentStatsStore.syncAllPersonalHistory(); }catch(e){}
+      }
+      if(global.ParentCloud && typeof global.ParentCloud.syncParentData === 'function'){
+        try{ await global.ParentCloud.syncParentData(); }catch(e){}
       }
       if(typeof renderCoachUi === 'function' && typeof isCoachPlan === 'function' && isCoachPlan()){
         try{ renderCoachUi(); }catch(e){}
@@ -1049,6 +1055,18 @@
   function ingestDeepLink(url){
     const store = global.ParentStore;
     if(!store || !url) return false;
+    const token = global.ParentCloud && global.ParentCloud.tokenFromUrl
+      ? global.ParentCloud.tokenFromUrl(url)
+      : '';
+    if(token && global.ParentCloud && global.ParentCloud.ready && global.ParentCloud.ready()){
+      global.ParentCloud.resolveInvite(token).then(raw => {
+        const encoded = store.encodePayload(raw);
+        openParentClaimSheet('FFKP1:' + encoded);
+      }).catch(() => {
+        toast(tt('parentBadInvite', 'Could not read this invite.'));
+      });
+      return true;
+    }
     try{
       const payload = store.parseInviteInput(String(url));
       store.setPending(payload);
@@ -1064,7 +1082,7 @@
       const q = location.search || '';
       const h = location.hash || '';
       const blob = q + h;
-      if(/ffk_parent=|[#&?]d=/.test(blob) || /ffk:\/\/parent/.test(location.href)){
+      if(/ffk_parent=|[#&?](?:d|token)=/.test(blob) || /ffk:\/\/parent/.test(location.href)){
         ingestDeepLink(location.href);
       }
     }catch(e){}

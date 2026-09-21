@@ -3794,7 +3794,7 @@
     }
   }
 
-  function sendParentInviteEmailTest(){
+  async function sendParentInviteEmailTest(){
     if(!TEST_EMAIL_INVITES || !parentInviteRow) return;
     const emailEl = document.getElementById('coachParentInviteEmail');
     const email = String(emailEl && emailEl.value || '').trim();
@@ -3811,9 +3811,17 @@
       ? [full.player.fn, full.player.ln].filter(Boolean).join(' ')
       : '';
     const subject = `${tt('coachParentEmailSubject', 'Matchcard invitation')}${child ? ` — ${child}` : ''}`;
-    const link = global.ParentStore
-      ? global.ParentStore.buildCodeWebLink(parentInviteRow.code || full.code || '')
-      : '';
+    let link = '';
+    if(global.ParentCloud && global.ParentCloud.ready && global.ParentCloud.ready()){
+      try{
+        link = await global.ParentCloud.publishInvite(parentInviteRow);
+      }catch(e){
+        toast(tt('coachCloudSyncFail', 'Cloud sync failed. Check keys and schema.'));
+        return;
+      }
+    }else if(global.ParentStore){
+      link = global.ParentStore.buildCodeWebLink(parentInviteRow.code || full.code || '');
+    }
     const body = tt(
       'coachParentEmailBody',
       '[TEST MODE] Confirm the player in Matchcard: {link}'

@@ -5,6 +5,7 @@
 node_modules/
 www/
 android/keystore.properties
+js/coach-config.local.js
 android/*.jks
 android/*.keystore
 *.jks

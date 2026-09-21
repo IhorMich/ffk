@@ -282,6 +282,9 @@
     try{
       await pushLocalSnapshot();
       await pullRemoteIntoLocal();
+      if(global.ParentCloud && typeof global.ParentCloud.pullCoachData === 'function'){
+        await global.ParentCloud.pullCoachData();
+      }
       if(typeof renderCoachUi === 'function') renderCoachUi();
       return {ok: true};
     }catch(e){
