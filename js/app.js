@@ -2727,7 +2727,15 @@ window.stepMetric = function(key, dir){
   if(dir === 1){
     liveStack.push(key);
     const phase = clockPhase();
-    if(phase === 'idle' || phase === 'break') startMatchClock();
+    // Only auto-start the clock from 'idle' (parent forgot to press "start
+    // match"). From 'break' we must NEVER auto-start: that phase means a
+    // half already ended and is waiting for an explicit "start next half"
+    // tap. Silently starting here would begin a new period at minute 0,
+    // which previously caused the recorded minute/period counters to reset
+    // mid-match (e.g. after the tab was backgrounded and the clock's
+    // draft state fell back to a stale 'break' snapshot).
+    if(phase === 'idle') startMatchClock();
+    else if(phase === 'break') showToast(t('toastClockPaused'));
     if(matchClock.startedAt){
       const stamp = clockStamp();
       matchClock.events.push({key, at: Date.now(), minute: stamp.matchMin, period: stamp.period, inPeriod: stamp.minute});
@@ -4107,6 +4115,14 @@ document.getElementById('liveDoneBtn').addEventListener('click', () => {
   closeLive();
   syncMatchContextFold();
 });
+// Backgrounding (phone lock, app switch, tab hidden) is when a PWA is most
+// likely to get suspended or killed by the OS. Flush the draft — including
+// matchClock — right away so a relaunch restores exactly where the live
+// timer was, rather than an older snapshot from the last button press.
+document.addEventListener('visibilitychange', () => {
+  if(document.visibilityState === 'hidden') persistDraft();
+});
+window.addEventListener('pagehide', () => persistDraft());
 function suggestMinutesFromClock(){
   if(!matchClock.startedAt) return;
   const played = Math.max(1, Math.min(120, Math.round(playingMs() / 60000) || 1));
