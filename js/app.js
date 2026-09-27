@@ -802,6 +802,13 @@ function periodStoryLines(list){
     if(bM > aM) tilt++;
   });
   const lines = [];
+  const allPlus = all.filter(e => e.sign === 1);
+  const allMinus = all.filter(e => e.sign === -1);
+  if(allPlus.length || allMinus.length) lines.push(t('storyTally', {plus: allPlus.length, minus: allMinus.length}));
+  const topPlus = topKeys(all, 1, 3);
+  if(topPlus.length) lines.push(t('storyTopPlus', {list: metricList(topPlus)}));
+  const topMinus = topKeys(all, -1, 3);
+  if(topMinus.length) lines.push(t('storyTopMinus', {list: metricList(topMinus)}));
   if(used < 4 || firstM + lastM < 10){
     lines.push(t('repNeed', {n: timed.length}));
   } else if(tilt / used >= 0.6 && lastM >= firstM * 1.25){
