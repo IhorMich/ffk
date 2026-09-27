@@ -713,12 +713,21 @@ function edgeShare(events, sign, edge){
   if(hit < 3 || hit / pool.length < 0.55) return null;
   return {n: hit, total: pool.length, from: pool[0].lateFrom, earlyTo: pool[0].earlyTo, pct: Math.round(100 * hit / pool.length)};
 }
-function topKey(events, sign){
+function assistMinutes(m){
+  return (Array.isArray(m.timeline) ? m.timeline : [])
+    .filter(ev => ev && ev.key === 'assists')
+    .map(ev => Math.max(1, Number(ev.minute) || 1));
+}
+function topKeys(events, sign, limit){
   const map = {};
   events.filter(e => e.sign === sign).forEach(e => { map[e.key] = (map[e.key] || 0) + 1; });
-  const key = Object.keys(map).sort((a,b)=> map[b] - map[a])[0];
-  if(!key || map[key] < 2) return null;
-  return {key, n: map[key]};
+  return Object.keys(map)
+    .sort((a, b) => map[b] - map[a])
+    .slice(0, limit || 3)
+    .map(key => ({key, n: map[key]}));
+}
+function metricList(list){
+  return list.map(x => `${metricLabel(x.key)} (${x.n})`).join(', ');
 }
 function goalBand(list){
   const mins = [];
@@ -740,9 +749,11 @@ function matchStoryLines(m){
   const lines = [];
   if(m.kickoffClock) lines.push(t('storyOpen', {who, kick: m.kickoffClock, fmt}));
   else lines.push(t('storyOpenNoKick', {who, fmt}));
-  const ev = timedEvents(m);
   const goals = goalMinutes(m);
   if(goals.length) lines.push(t('storyGoals', {mins: goals.map(x => t('minLbl', {n:x})).join(', ')}));
+  const assists = assistMinutes(m);
+  if(assists.length) lines.push(t('storyAssists', {mins: assists.map(x => t('minLbl', {n:x})).join(', ')}));
+  const ev = timedEvents(m);
   if(!ev.length){
     lines.push(t('storyNoTime'));
     lines.push(t('storyNeedClock'));
@@ -753,6 +764,13 @@ function matchStoryLines(m){
     return lines;
   }
   const parts = ev[0].parts;
+  const allPlus = ev.filter(e => e.sign === 1);
+  const allMinus = ev.filter(e => e.sign === -1);
+  lines.push(t('storyTally', {plus: allPlus.length, minus: allMinus.length}));
+  const topPlus = topKeys(ev, 1, 3);
+  if(topPlus.length) lines.push(t('storyTopPlus', {list: metricList(topPlus)}));
+  const topMinus = topKeys(ev, -1, 3);
+  if(topMinus.length) lines.push(t('storyTopMinus', {list: metricList(topMinus)}));
   const plusH = skewPeriod(ev, 1, parts);
   const minusH = skewPeriod(ev, -1, parts);
   if(plusH) lines.push(t('storyPlusHalf', {half: halfLabel(plusH.period, m.format, m.matchLen), a: plusH.n, n: plusH.total, p: plusH.pct}));
@@ -761,10 +779,6 @@ function matchStoryLines(m){
   if(late) lines.push(t('storyLateMinus', {n: late.total, a: late.n, m: late.from}));
   const early = edgeShare(ev, 1, 'early');
   if(early) lines.push(t('storyEarlyPlus', {n: early.total, a: early.n, m: early.earlyTo}));
-  const mainP = topKey(ev, 1);
-  if(mainP) lines.push(t('storyMainPlus', {what: metricLabel(mainP.key).toLowerCase(), n: mainP.n}));
-  const mainM = topKey(ev, -1);
-  if(mainM) lines.push(t('storyMainMinus', {what: metricLabel(mainM.key).toLowerCase(), n: mainM.n}));
   if(!plusH && !minusH && !late && !early) lines.push(t('storyEven'));
   return lines;
 }
