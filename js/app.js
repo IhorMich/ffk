@@ -1920,7 +1920,7 @@ function coachWindows(list){
 function firstName(){
   return (player.firstName || '').trim() || displayName();
 }
-function profileCoachNote(list, strengths, focus){
+function profileCoachNote(list, strengths, focus, pos){
   const name = firstName();
   const win = coachWindows(list);
   const plusKey = strengths[0]?.m.key;
@@ -1928,14 +1928,22 @@ function profileCoachNote(list, strengths, focus){
   if(win){
     const {n, now, prev} = win;
     const vars = {name, n};
-    if(metricRose(now, prev, 'dribbles') && metricRose(now, prev, 'losses')) return t('coachDribbleLoss', vars);
-    if(metricRose(now, prev, 'passes') && metricRose(now, prev, 'badpass', 0.28)) return t('coachPassBad', vars);
-    if(metricRose(now, prev, 'tackles') && metricRose(now, prev, 'losses')) return t('coachTackleLoss', vars);
-    if(metricRose(now, prev, 'duelslost', 0.3) && !metricRose(now, prev, 'duelswon', 0.45)) return t('coachDuels', vars);
-    if(metricRose(now, prev, 'shots', 0.28) && !metricRose(now, prev, 'goals', 0.12)) return t('coachFinish', vars);
-    if(metricRose(now, prev, 'dribbles') && (metricFlat(now, prev, 'losses') || ratePerMatch(now, 'losses') < ratePerMatch(prev, 'losses'))) return t('coachDribbleGood', vars);
-    if(metricRose(now, prev, 'badtouch', 0.25)) return t('coachBadtouch', vars);
-    if(metricRose(now, prev, 'losses')) return t('coachLoss', vars);
+    if(pos === 'gk'){
+      if(metricRose(now, prev, 'saves', 0.5) && metricRose(now, prev, 'conceded', 0.25)) return t('coachGkSavesConceded', vars);
+      if(metricRose(now, prev, 'claims', 0.3) && ratePerMatch(now, 'conceded') < ratePerMatch(prev, 'conceded')) return t('coachGkClaimsGood', vars);
+      if(metricRose(now, prev, 'conceded', 0.25) && !metricRose(now, prev, 'saves', 0.5)) return t('coachGkConceded', vars);
+      if(metricRose(now, prev, 'gkpass', 0.6) && metricRose(now, prev, 'badpass', 0.28)) return t('coachGkPassBad', vars);
+      if(metricRose(now, prev, 'saves', 0.5) && (metricFlat(now, prev, 'claims', 0.25) || ratePerMatch(now, 'claims') < ratePerMatch(prev, 'claims'))) return t('coachGkReactive', vars);
+    } else {
+      if(metricRose(now, prev, 'dribbles') && metricRose(now, prev, 'losses')) return t('coachDribbleLoss', vars);
+      if(metricRose(now, prev, 'passes') && metricRose(now, prev, 'badpass', 0.28)) return t('coachPassBad', vars);
+      if(metricRose(now, prev, 'tackles') && metricRose(now, prev, 'losses')) return t('coachTackleLoss', vars);
+      if(metricRose(now, prev, 'duelslost', 0.3) && !metricRose(now, prev, 'duelswon', 0.45)) return t('coachDuels', vars);
+      if(metricRose(now, prev, 'shots', 0.28) && !metricRose(now, prev, 'goals', 0.12)) return t('coachFinish', vars);
+      if(metricRose(now, prev, 'dribbles') && (metricFlat(now, prev, 'losses') || ratePerMatch(now, 'losses') < ratePerMatch(prev, 'losses'))) return t('coachDribbleGood', vars);
+      if(metricRose(now, prev, 'badtouch', 0.25)) return t('coachBadtouch', vars);
+      if(metricRose(now, prev, 'losses')) return t('coachLoss', vars);
+    }
   }
   if(plusKey === 'dribbles' && (minusKey === 'losses' || minusKey === 'badtouch')) return t('coachNowDribbleLoss', {name});
   if(plusKey && minusKey) return t('coachNowPair', {name, plus: profileMetricLabel(plusKey).toLowerCase(), minus: profileMetricLabel(minusKey).toLowerCase()});
@@ -1988,7 +1996,7 @@ function renderPlayerFeed(){
   const weakPos = grades.filter(g => g.w > 0 && g.grade < 6.6).sort((a,b)=> a.grade - b.grade);
   const focus = (weakNeg.length ? weakNeg : weakPos).slice(0, 3);
     const row = (g, bad) => `<div class="pf-row${bad ? ' bad' : ''}"><span class="pf-lab"><span class="ic">${metricIconSvg(g.m.key)}</span>${escapeHtml(profileMetricLabel(g.m.key))}</span><span class="g">${fmtNum(g.grade, 1)}</span></div>`;
-  const note = profileCoachNote(list, strengths, focus);
+  const note = profileCoachNote(list, strengths, focus, mainPos);
   el.innerHTML = `<div class="pf-card">
       <div class="pf-rate">${fmtNum(avg, 2)}<small>${escapeHtml(season ? t('pfSeasonAvg') : t('pfAllAvg'))}</small></div>
       ${trendHtml}
