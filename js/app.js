@@ -1054,18 +1054,9 @@ function buildInsights(m, history){
   const hasRating = Number.isFinite(rating);
   const hist = Array.isArray(history) ? history : [];
   const prevLed = hist.slice(0, 4).some(x => countOf(x, 'ledtogoal') > 0);
-  if(matchIsBlank(m)) return {plus: t('plusEven'), focus: t('focusDefault')};
+  if(matchIsBlank(m)) return {rows: [{label: t('insRecommend'), text: t('focusDefault')}]};
 
   const plusOrder = ['goals','assists','saves','claims','chances','openings','tackles','interceptions','blocks','clearances','duelswon','passes','buildpass','shots','support','dribbles','gkpass'];
-  const plusBits = plusOrder.filter(k => countOf(m, k) > 0).map(k => plusFact(k, countOf(m, k)));
-  const head = [];
-  if(hasRating && rating >= 9.5) head.push(t('plusTop', {r: fmtRating(rating)}));
-  else if(hasRating && rating >= 8.5) head.push(t('plusGreat', {r: fmtRating(rating)}));
-  const ended = matchResult(m);
-  if(ended === 'win') head.push(t('plusWin'));
-  else if(ended === 'loss') head.push(t('plusLoss'));
-  else if(ended === 'draw') head.push(t('plusDraw'));
-  const plus = (head.concat(plusBits).slice(0, 4).join(' ')) || (hasRating && rating >= 6.8 ? t('plusSolid') : t('plusEven'));
 
   const led = countOf(m, 'ledtogoal');
   const loss = countOf(m, 'losses');
@@ -1114,13 +1105,54 @@ function buildInsights(m, history){
   else if(hasRating && rating < 5.5) set('focusBase', {r: fmtRating(rating)});
   else if(hasRating && rating >= 7) set('focusKeep', {r: fmtRating(rating)});
   else if(goals || assists) set('focusFinish');
-  return {plus, focus: t(key, vars)};
+  const rows = [];
+  const sides = scoreSides(m.score);
+  const resBits = [];
+  if(m.score) resBits.push(scoreLine(m));
+  if(hasRating){
+    let r = t('insRating', {r: fmtRating(rating)});
+    const season = matchSeason(m);
+    const pool = hist.filter(x => x && x.rating != null && x.rating !== '' && Number.isFinite(Number(x.rating)) && sameSeason(matchSeason(x), season));
+    if(pool.length >= 3){
+      const avg = pool.reduce((sum, x) => sum + Number(x.rating), 0) / pool.length;
+      r += ' (' + t('insAvg', {a: fmtNum(avg, 1), d: fmtSigned(rating - avg, 1)}) + ')';
+    }
+    resBits.push(r);
+  }
+  if(resBits.length) rows.push({label: t('insResult'), text: resBits.join(' · ') + '.'});
+
+  const seg = [];
+  const ga = goals + assists;
+  if(ga > 0){
+    const parts = [t('insContrib', {g: goals, a: assists, ga})];
+    if(sides && sides.us > 0) parts.push(t('insShare', {p: Math.min(100, Math.round(100 * ga / sides.us))}));
+    if(Math.abs(minutes - 60) >= 10) parts.push(t('insPer60', {v: fmtNum(ga * 60 / minutes, 1)}));
+    seg.push(parts.join(' · '));
+  }
+  const actionList = plusOrder
+    .filter(k => k !== 'goals' && k !== 'assists' && k !== 'duelswon' && countOf(m, k) > 0)
+    .map(k => ({key: k, n: countOf(m, k)}))
+    .sort((x, y) => y.n - x.n)
+    .slice(0, 3);
+  if(actionList.length) seg.push(t('insActions', {list: metricList(actionList)}));
+  if(won + lost >= 3) seg.push(t('insDuels', {w: won, t: won + lost, p: Math.round(100 * won / (won + lost))}));
+  if(!seg.length) seg.push(t('insNoActions'));
+  rows.push({label: t('insContribution'), text: seg.join('. ') + '.'});
+
+  const ctrlOrder = ['owngoal', 'ledtogoal', 'conceded', 'losses', 'badtouch', 'badpass', 'fouls'];
+  const ctrl = ctrlOrder
+    .filter(k => countOf(m, k) > 0 && (k !== 'conceded' || pos === 'gk'))
+    .map(k => ({key: k, n: countOf(m, k)}));
+  rows.push({label: t('insControl'), text: (ctrl.length ? metricList(ctrl) : t('insControlNone')) + '.'});
+
+  rows.push({label: t('insRecommend'), text: t(key, vars)});
+  return {rows};
 }
 function matchInsightHtml(m){
   if(!m || matchIsBlank(m)) return '';
   const rest = matches.filter(x => x.id !== m.id).sort((a,b)=> b.date.localeCompare(a.date) || b.id-a.id);
   const ins = buildInsights(m, rest);
-  return `<div class="insight"><b>${escapeHtml(t('insightPlus'))}:</b> ${escapeHtml(ins.plus)}<br><b>${escapeHtml(t('insightFocus'))}:</b> ${escapeHtml(ins.focus)}</div>`;
+  return `<div class="insight">${ins.rows.map(r => `<b>${escapeHtml(r.label)}:</b> ${escapeHtml(r.text)}`).join('<br>')}</div>`;
 }
 function escapeHtml(s){
   return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
