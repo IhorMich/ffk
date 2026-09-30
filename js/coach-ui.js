@@ -4802,7 +4802,10 @@
     document.getElementById('coachTeamRenameSaveBtn')?.addEventListener('click', () => onSaveTeamRename());
     document.getElementById('coachTeamDeleteBtn')?.addEventListener('click', () => onDeleteTeam());
     document.getElementById('coachRosterToggle')?.addEventListener('click', () => {
-      setRosterFolded(!rosterFolded());
+      const nextFolded = !rosterFolded();
+      setRosterFolded(nextFolded);
+      // Expanding "Show" only reveals the roster — never the add-player form.
+      if(!nextFolded) setPlayerFormOpen(false);
       const session = global.CoachStore && global.CoachStore.getSession();
       const teamId = global.CoachStore && global.CoachStore.getActiveTeamId && global.CoachStore.getActiveTeamId();
       let n = 0;
