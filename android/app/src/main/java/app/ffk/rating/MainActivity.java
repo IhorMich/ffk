@@ -1,5 +1,7 @@
 package app.ffk.rating;
 
+import android.app.AlarmManager;
+import android.content.SharedPreferences;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -128,6 +130,50 @@ public class MainActivity extends BridgeActivity {
     @JavascriptInterface
     public void show(String title, String body) {
       runOnUiThread(() -> postAlert(title, body));
+    }
+
+    @JavascriptInterface
+    public void schedule(String id, String title, String body, double whenMs) {
+      long at = (long) whenMs;
+      if (id == null || id.isEmpty() || at <= System.currentTimeMillis()) return;
+      Intent intent = new Intent(MainActivity.this, TrainingAlarmReceiver.class);
+      intent.setAction("app.ffk.rating.TRAINING_REMINDER");
+      intent.putExtra("id", id);
+      intent.putExtra("title", title == null ? "Matchcard" : title);
+      intent.putExtra("body", body == null ? "" : body);
+      int req = Math.abs(id.hashCode());
+      int flags = PendingIntent.FLAG_UPDATE_CURRENT;
+      if (Build.VERSION.SDK_INT >= 23) flags |= PendingIntent.FLAG_IMMUTABLE;
+      PendingIntent pi = PendingIntent.getBroadcast(MainActivity.this, req, intent, flags);
+      AlarmManager am = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+      if (am == null) return;
+      try {
+        if (Build.VERSION.SDK_INT >= 23) {
+          am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, at, pi);
+        } else {
+          am.setExact(AlarmManager.RTC_WAKEUP, at, pi);
+        }
+      } catch (SecurityException e) {
+        am.set(AlarmManager.RTC_WAKEUP, at, pi);
+      }
+      SharedPreferences sp = getSharedPreferences("ffk_train_alarms", MODE_PRIVATE);
+      sp.edit().putLong(id, at).putString(id + "_title", title == null ? "" : title)
+        .putString(id + "_body", body == null ? "" : body).apply();
+    }
+
+    @JavascriptInterface
+    public void cancel(String id) {
+      if (id == null || id.isEmpty()) return;
+      Intent intent = new Intent(MainActivity.this, TrainingAlarmReceiver.class);
+      intent.setAction("app.ffk.rating.TRAINING_REMINDER");
+      int req = Math.abs(id.hashCode());
+      int flags = PendingIntent.FLAG_UPDATE_CURRENT;
+      if (Build.VERSION.SDK_INT >= 23) flags |= PendingIntent.FLAG_IMMUTABLE;
+      PendingIntent pi = PendingIntent.getBroadcast(MainActivity.this, req, intent, flags);
+      AlarmManager am = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+      if (am != null) am.cancel(pi);
+      getSharedPreferences("ffk_train_alarms", MODE_PRIVATE).edit()
+        .remove(id).remove(id + "_title").remove(id + "_body").apply();
     }
   }
 

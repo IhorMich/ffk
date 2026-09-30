@@ -241,6 +241,115 @@
   }
 
   /** Cold start: never prompt. Only re-wire remote FCM if already enabled + backend ready. */
+
+  const TRAIN_FIRED_KEY = 'ffk_train_fired_v1';
+  function readFired(){
+    try{ return JSON.parse(localStorage.getItem(TRAIN_FIRED_KEY) || '{}') || {}; }catch(e){ return {}; }
+  }
+  function writeFired(map){
+    try{ localStorage.setItem(TRAIN_FIRED_KEY, JSON.stringify(map || {})); }catch(e){}
+  }
+  function trainingStartMs(tr){
+    if(!tr || !tr.date || !tr.start_time) return 0;
+    const ms = Date.parse(`${tr.date}T${tr.start_time}:00`);
+    return Number.isFinite(ms) ? ms : 0;
+  }
+  function collectUpcomingTrainings(){
+    const out = [];
+    const today = new Date().toISOString().slice(0, 10);
+    const to = new Date(Date.now() + 14 * 86400000).toISOString().slice(0, 10);
+    try{
+      if(typeof isCoachPlan === 'function' && isCoachPlan()){
+        const store = global.CoachStore;
+        const session = store && store.getSession && store.getSession();
+        const teamId = store && store.getActiveTeamId && store.getActiveTeamId();
+        if(session && teamId && store.listTrainingsInRange){
+          store.listTrainingsInRange(session, teamId, today, to).forEach(tr => out.push(tr));
+        }
+      }
+    }catch(e){}
+    try{
+      if(global.ParentStore && typeof global.ParentStore.listUpcomingTrainingsForLinks === 'function'
+         && typeof global.ParentStore.listLinks === 'function'){
+        global.ParentStore.listUpcomingTrainingsForLinks(global.ParentStore.listLinks())
+          .forEach(tr => out.push(tr));
+      }
+    }catch(e){}
+    const seen = new Set();
+    return out.filter(tr => {
+      const key = `${tr.team_id || ''}|${tr.date}|${tr.start_time}|${tr.id}`;
+      if(seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }
+  function nativeSchedule(id, title, body, whenMs){
+    try{
+      if(global.FfkNotify && typeof global.FfkNotify.schedule === 'function'){
+        global.FfkNotify.schedule(String(id), String(title || 'Matchcard'), String(body || ''), Number(whenMs));
+        return true;
+      }
+    }catch(e){}
+    return false;
+  }
+  function nativeCancel(id){
+    try{
+      if(global.FfkNotify && typeof global.FfkNotify.cancel === 'function'){
+        global.FfkNotify.cancel(String(id));
+      }
+    }catch(e){}
+  }
+  function resyncTrainingReminders(){
+    const list = collectUpcomingTrainings();
+    const now = Date.now();
+    const fired = readFired();
+    // Drop old fired keys
+    Object.keys(fired).forEach(k => {
+      if(fired[k] < now - 2 * 86400000) delete fired[k];
+    });
+    list.forEach(tr => {
+      const mins = Number(tr.notify_minutes);
+      if(!Number.isFinite(mins) || mins <= 0) return;
+      const start = trainingStartMs(tr);
+      if(!start || start <= now) return;
+      const when = start - mins * 60000;
+      const id = `train_${tr.id}_${tr.date}_${tr.start_time}`;
+      if(when <= now){
+        // Due now / overdue window (within start): fire once if in the last notify window
+        if(!fired[id] && now < start){
+          fired[id] = now;
+          notifyHeadsUp(
+            tt('coachPushTrainTitle', 'Training soon'),
+            `${tr.date} ${tr.start_time}${tr.end_time ? '–' + tr.end_time : ''}${tr.address ? ' · ' + tr.address : ''}`.trim(),
+            false
+          );
+        }
+        nativeCancel(id);
+        return;
+      }
+      // Schedule native alarm for future reminder
+      nativeSchedule(
+        id,
+        tt('coachPushTrainTitle', 'Training soon'),
+        `${tr.date} ${tr.start_time}${tr.end_time ? '–' + tr.end_time : ''}${tr.address ? ' · ' + tr.address : ''}`.trim(),
+        when
+      );
+    });
+    writeFired(fired);
+  }
+  let trainTimer = 0;
+  function startTrainingReminderLoop(){
+    if(trainTimer) return;
+    const tick = () => {
+      try{ resyncTrainingReminders(); }catch(e){}
+    };
+    tick();
+    trainTimer = setInterval(tick, 60000);
+    document.addEventListener('visibilitychange', () => {
+      if(document.visibilityState === 'visible') tick();
+    });
+  }
+
   async function bootstrap(){
     if(bootstrapped) return;
     bootstrapped = true;
@@ -264,7 +373,10 @@
     queueCoachAlert,
     flushCoachAlerts,
     bootstrap,
+    resyncTrainingReminders,
+    startTrainingReminderLoop,
     getToken(){ return read().token || ''; },
     wasAsked(){ return !!read().asked; }
   };
+  try{ startTrainingReminderLoop(); }catch(e){}
 })(window);

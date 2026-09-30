@@ -2781,3 +2781,29 @@
       grid-column:1 / -1;
     }
   }
+
+  /* Coach / parent trainings calendar */
+  .coach-trainings{margin:0 0 18px;padding:0 0 14px;border-bottom:1px solid color-mix(in srgb, var(--line) 70%, transparent);}
+  .coach-train-cal-nav{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:10px 0 8px;}
+  .coach-train-cal-nav b{font-size:.95rem;text-transform:capitalize;}
+  .coach-train-dow-row,.coach-train-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;}
+  .coach-train-dow{text-align:center;font-size:.65rem;font-weight:700;color:var(--muted);padding:2px 0;}
+  .coach-train-cell{
+    appearance:none;border:0;background:color-mix(in srgb, var(--card) 88%, transparent);
+    border-radius:10px;min-height:42px;padding:6px 2px 4px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
+    color:inherit;font:inherit;cursor:pointer;
+  }
+  .coach-train-cell.is-empty{background:transparent;pointer-events:none;}
+  .coach-train-cell.is-today{outline:1px solid var(--accent);}
+  .coach-train-cell.has-train{background:color-mix(in srgb, var(--accent) 18%, var(--card));}
+  .coach-train-cell span{font-size:.78rem;font-weight:700;line-height:1;}
+  .coach-train-dots{display:flex;gap:2px;margin-top:4px;min-height:6px;}
+  .coach-train-dots i{width:4px;height:4px;border-radius:50%;background:var(--accent);display:block;}
+  .coach-train-days{flex-wrap:wrap;}
+  .coach-train-list{margin-top:8px;}
+  .coach-train-rules{margin-top:10px;}
+  .parent-trainings{margin-bottom:14px;}
+
+
+  .kickoff-pair{display:flex;align-items:center;gap:6px;}
+  .kickoff-pair select{flex:1;min-width:0;}

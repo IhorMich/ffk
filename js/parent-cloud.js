@@ -525,9 +525,79 @@
         await pushProfile(link, profile, session);
       }
       await syncChats(session, links, 'parent');
+      try{
+        const teamIds = [...new Set(links.map(l => l && l.team && l.team.id).filter(Boolean))];
+        if(teamIds.length){
+          const sb = parentClient();
+          const rulesRes = await sb.from('training_rules').select('*').in('team_id', teamIds);
+          const rowsRes = await sb.from('team_trainings').select('*').in('team_id', teamIds);
+          if(!rulesRes.error && !rowsRes.error && global.CoachStore){
+            // Expand using a temporary local view without wiping coach DB:
+            // cache expanded lists per team for ParentStore.
+            const today = new Date().toISOString().slice(0, 10);
+            const toDate = new Date(Date.now() + 60 * 86400000).toISOString().slice(0, 10);
+            const ymdAdd = (ymd, days) => {
+              const t0 = Date.parse(ymd + 'T12:00:00');
+              const d = new Date(t0 + days * 86400000);
+              return d.toISOString().slice(0, 10);
+            };
+            const ymdWd = (ymd) => new Date(Date.parse(ymd + 'T12:00:00')).getDay();
+            const rules = rulesRes.data || [];
+            const rows = rowsRes.data || [];
+            teamIds.forEach(teamId => {
+              const teamRules = rules.filter(r => r.team_id === teamId && r.active !== false);
+              const teamRows = rows.filter(r => r.team_id === teamId);
+              const overrides = new Map();
+              teamRows.forEach(r => { if(r.rule_id) overrides.set(r.date + '|' + r.rule_id, r); });
+              const out = [];
+              teamRules.forEach(rule => {
+                const days = Array.isArray(rule.weekdays) ? rule.weekdays.map(Number) : [];
+                let cur = today;
+                while(cur <= toDate){
+                  if(days.includes(ymdWd(cur))){
+                    const ov = overrides.get(cur + '|' + rule.id);
+                    if(ov && ov.status === 'cancelled'){ /* skip */ }
+                    else if(ov){
+                      out.push({
+                        id: ov.id, team_id: teamId, rule_id: rule.id, date: ov.date,
+                        title: ov.title || rule.title || '', start_time: ov.start_time || rule.start_time || '',
+                        end_time: ov.end_time || rule.end_time || '', address: ov.address || rule.address || '',
+                        notify_minutes: Number(ov.notify_minutes != null ? ov.notify_minutes : rule.notify_minutes) || 60,
+                        recurring: true
+                      });
+                    }else{
+                      out.push({
+                        id: 'occ_' + rule.id + '_' + cur, team_id: teamId, rule_id: rule.id, date: cur,
+                        title: rule.title || '', start_time: rule.start_time || '', end_time: rule.end_time || '',
+                        address: rule.address || '', notify_minutes: Number(rule.notify_minutes) || 60, recurring: true
+                      });
+                    }
+                  }
+                  cur = ymdAdd(cur, 1);
+                }
+              });
+              teamRows.filter(r => !r.rule_id && r.status !== 'cancelled' && r.date >= today && r.date <= toDate)
+                .forEach(r => out.push({
+                  id: r.id, team_id: teamId, rule_id: '', date: r.date, title: r.title || '',
+                  start_time: r.start_time || '', end_time: r.end_time || '', address: r.address || '',
+                  notify_minutes: Number(r.notify_minutes) || 60, recurring: false
+                }));
+              out.sort((a,b) => String(a.date).localeCompare(String(b.date)) || String(a.start_time).localeCompare(String(b.start_time)));
+              if(global.ParentStore && global.ParentStore.cacheTeamTrainings){
+                global.ParentStore.cacheTeamTrainings(teamId, out);
+              }
+            });
+          }
+        }
+      }catch(e){ console.warn('parent trainings pull', e); }
       if(typeof renderParentUi === 'function'){
         try{ renderParentUi(); }catch(e){}
       }
+      try{
+        if(global.CoachPush && typeof global.CoachPush.resyncTrainingReminders === 'function'){
+          global.CoachPush.resyncTrainingReminders();
+        }
+      }catch(e){}
       return {ok: true};
     }catch(error){
       console.warn('Parent cloud sync', error);

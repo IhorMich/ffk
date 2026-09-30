@@ -1077,6 +1077,7 @@
       toast(tt('parentLinksEmpty', 'No academy link yet. Ask the coach for a QR or invite link.'));
       return;
     }
+    renderParentTrainings();
     renderParentCoachStats();
     if(typeof showView === 'function') showView('stats');
     requestAnimationFrame(() => {
@@ -1135,6 +1136,47 @@
         </span>
         <span class="parent-link-avg">${esc(avg)}</span>
       </button>`;
+    }).join('');
+  }
+
+
+  function renderParentTrainings(){
+    const store = global.ParentStore;
+    const panel = document.getElementById('parentTrainingsPanel');
+    const board = document.getElementById('parentTrainingsBoard');
+    if(!panel || !board || !store) return;
+    if(typeof isCoachPlan === 'function' && isCoachPlan()){
+      panel.hidden = true;
+      return;
+    }
+    const links = linksForCurrentPlayer();
+    if(!links.length){
+      panel.hidden = true;
+      board.innerHTML = '';
+      return;
+    }
+    const list = typeof store.listUpcomingTrainingsForLinks === 'function'
+      ? store.listUpcomingTrainingsForLinks(links).slice(0, 10)
+      : [];
+    panel.hidden = false;
+    if(!list.length){
+      board.innerHTML = `<p class="hint">${esc(tt('parentTrainEmpty', 'No upcoming trainings from the coach yet.'))}</p>`;
+      return;
+    }
+    board.innerHTML = list.map(tr => {
+      const when = [tr.date, tr.start_time + (tr.end_time ? `–${tr.end_time}` : '')].filter(Boolean).join(' · ');
+      const meta = [
+        tr.team_name || tr.academy_name || '',
+        tr.address || '',
+        tr.recurring ? tt('coachTrainRecurringShort', 'Weekly') : '',
+        tr.notify_minutes ? tt('parentTrainRemindHint', 'Reminder {n} min before').replace('{n}', String(tr.notify_minutes)) : ''
+      ].filter(Boolean).join(' · ');
+      return `<div class="coach-player-row">
+        <div class="coach-player-main">
+          <b>${esc(when)}</b>
+          <span>${esc(meta)}</span>
+        </div>
+      </div>`;
     }).join('');
   }
 

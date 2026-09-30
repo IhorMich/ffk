@@ -363,6 +363,37 @@
           created_at: m.created_at || new Date().toISOString()
         }, {onConflict: 'id'}));
       }
+      for(const rule of (db.training_rules || [])){
+        await upsertChecked(sb.from('training_rules').upsert({
+          id: rule.id,
+          team_id: rule.team_id,
+          title: rule.title || '',
+          weekdays: Array.isArray(rule.weekdays) ? rule.weekdays : [],
+          start_time: rule.start_time || '',
+          end_time: rule.end_time || '',
+          address: rule.address || '',
+          notify_minutes: Number(rule.notify_minutes) || 60,
+          active: rule.active !== false,
+          created_at: rule.created_at || new Date().toISOString(),
+          updated_at: rule.updated_at || new Date().toISOString()
+        }, {onConflict: 'id'}));
+      }
+      for(const tr of (db.team_trainings || [])){
+        await upsertChecked(sb.from('team_trainings').upsert({
+          id: tr.id,
+          team_id: tr.team_id,
+          rule_id: tr.rule_id || null,
+          date: tr.date,
+          title: tr.title || '',
+          start_time: tr.start_time || '',
+          end_time: tr.end_time || '',
+          address: tr.address || '',
+          notify_minutes: Number(tr.notify_minutes) || 60,
+          status: tr.status === 'cancelled' ? 'cancelled' : 'scheduled',
+          created_at: tr.created_at || new Date().toISOString(),
+          updated_at: tr.updated_at || new Date().toISOString()
+        }, {onConflict: 'id'}));
+      }
       for(const r of (db.ratings || [])){
         await upsertChecked(sb.from('ratings').upsert({
           id: r.id,
@@ -425,6 +456,8 @@
     const teamIds = (teams || []).map(t => t.id);
     let players = [];
     let matches = [];
+    let trainingRules = [];
+    let teamTrainings = [];
     let ratings = [];
     let parentInvites = [];
     if(teamIds.length){
@@ -434,6 +467,10 @@
       const m = await sb.from('team_matches').select('*').in('team_id', teamIds);
       if(m.error) throw m.error;
       matches = m.data || [];
+      const trules = await sb.from('training_rules').select('*').in('team_id', teamIds);
+      if(!trules.error) trainingRules = trules.data || [];
+      const trows = await sb.from('team_trainings').select('*').in('team_id', teamIds);
+      if(!trows.error) teamTrainings = trows.data || [];
       const matchIds = matches.map(x => x.id);
       if(matchIds.length){
         const r = await sb.from('ratings').select('*').in('match_id', matchIds);
@@ -453,7 +490,7 @@
       m && !remoteMemIds.has(String(m.id)) && !isUuid(m.user_id)
     );
     const db = {
-      version: 4,
+      version: 5,
       accounts: raw.accounts || {},
       academies: academies || [],
       teams: teams || [],
@@ -473,6 +510,18 @@
         tournament: m.tournament || '',
         event_id: m.event_id || '',
         comment: m.comment || ''
+      })),
+      training_rules: (trainingRules || []).map(r => ({
+        ...r,
+        weekdays: Array.isArray(r.weekdays) ? r.weekdays : [],
+        notify_minutes: Number(r.notify_minutes) || 60,
+        active: r.active !== false
+      })),
+      team_trainings: (teamTrainings || []).map(r => ({
+        ...r,
+        rule_id: r.rule_id || null,
+        notify_minutes: Number(r.notify_minutes) || 60,
+        status: r.status === 'cancelled' ? 'cancelled' : 'scheduled'
       })),
       ratings: (ratings || []).map(r => ({
         ...r,

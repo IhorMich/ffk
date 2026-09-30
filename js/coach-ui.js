@@ -1218,6 +1218,8 @@
       return renderGroupedMatchList(upcoming, activeMatchId, {showAddress: true});
     })();
     document.querySelectorAll('.js-cm-matches').forEach(el => { el.innerHTML = matchListHtml; });
+    renderTrainingsPane(session, team);
+
     renderMatchGroupSuggestions(session, team.id, !!activeMatch);
 
     const listEl = document.querySelector('#coachMatchTab .js-cm-matches');
@@ -4072,6 +4074,228 @@
     if(typeof renderParentUi === 'function') renderParentUi();
   }
 
+
+  let trainCalMonth = ''; // YYYY-MM
+  let trainFormOpen = false;
+  let trainMode = 'once';
+
+  function trainMonthKey(d){
+    const x = d instanceof Date ? d : new Date();
+    return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}`;
+  }
+  function trainMonthBounds(ym){
+    const [y, m] = String(ym || trainMonthKey()).split('-').map(Number);
+    const from = `${y}-${String(m).padStart(2, '0')}-01`;
+    const last = new Date(y, m, 0).getDate();
+    const to = `${y}-${String(m).padStart(2, '0')}-${String(last).padStart(2, '0')}`;
+    return {from, to, y, m};
+  }
+  function shiftTrainMonth(delta){
+    const [y, m] = String(trainCalMonth || trainMonthKey()).split('-').map(Number);
+    const d = new Date(y, m - 1 + delta, 1);
+    trainCalMonth = trainMonthKey(d);
+  }
+  function ensureTrainTimeSelects(){
+    fillHourMinuteSelects(
+      document.getElementById('coachTrainStartH'),
+      document.getElementById('coachTrainStartM')
+    );
+    fillHourMinuteSelects(
+      document.getElementById('coachTrainEndH'),
+      document.getElementById('coachTrainEndM')
+    );
+  }
+  function readTrainHM(hId, mId){
+    const h = document.getElementById(hId)?.value || '';
+    const m = document.getElementById(mId)?.value || '';
+    return (h !== '' && m !== '') ? `${h}:${m}` : '';
+  }
+  function setTrainFormOpen(on){
+    trainFormOpen = !!on;
+    const wrap = document.getElementById('coachTrainCreate');
+    if(wrap) wrap.hidden = !trainFormOpen;
+    if(trainFormOpen){
+      ensureTrainTimeSelects();
+      const dateEl = document.getElementById('coachTrainDate');
+      if(dateEl && !dateEl.value) dateEl.value = today();
+      syncTrainModeUi();
+    }
+  }
+  function syncTrainModeUi(){
+    document.querySelectorAll('#coachTrainMode .chip').forEach(chip => {
+      chip.classList.toggle('on', chip.dataset.trainMode === trainMode);
+    });
+    const dateWrap = document.getElementById('coachTrainDateWrap');
+    const daysWrap = document.getElementById('coachTrainWeekdaysWrap');
+    if(dateWrap) dateWrap.hidden = trainMode !== 'once';
+    if(daysWrap) daysWrap.hidden = trainMode !== 'weekly';
+  }
+  function selectedTrainWeekdays(){
+    return [...document.querySelectorAll('#coachTrainWeekdays .chip.on')]
+      .map(el => Number(el.dataset.wd))
+      .filter(n => Number.isInteger(n) && n >= 0 && n <= 6);
+  }
+  function weekdayShort(n){
+    const map = {
+      0: tt('dowSunShort', 'Sun'),
+      1: tt('dowMonShort', 'Mon'),
+      2: tt('dowTueShort', 'Tue'),
+      3: tt('dowWedShort', 'Wed'),
+      4: tt('dowThuShort', 'Thu'),
+      5: tt('dowFriShort', 'Fri'),
+      6: tt('dowSatShort', 'Sat')
+    };
+    return map[n] || String(n);
+  }
+  function renderTrainCalendar(session, team){
+    const box = document.getElementById('coachTrainCalendar');
+    const label = document.getElementById('coachTrainMonthLabel');
+    if(!box || !team) return;
+    if(!trainCalMonth) trainCalMonth = trainMonthKey(new Date());
+    const {from, to, y, m} = trainMonthBounds(trainCalMonth);
+    if(label){
+      try{
+        label.textContent = new Date(y, m - 1, 1).toLocaleDateString(undefined, {month: 'long', year: 'numeric'});
+      }catch(e){
+        label.textContent = trainCalMonth;
+      }
+    }
+    const store = global.CoachStore;
+    const items = store.listTrainingsInRange(session, team.id, from, to);
+    const byDate = new Map();
+    items.forEach(tr => {
+      const arr = byDate.get(tr.date) || [];
+      arr.push(tr);
+      byDate.set(tr.date, arr);
+    });
+    const firstDow = new Date(y, m - 1, 1).getDay(); // 0 Sun
+    // Monday-first grid
+    const offset = (firstDow + 6) % 7;
+    const daysInMonth = new Date(y, m, 0).getDate();
+    const heads = [1,2,3,4,5,6,0].map(d => `<span class="coach-train-dow">${esc(weekdayShort(d))}</span>`).join('');
+    let cells = '';
+    for(let i = 0; i < offset; i++) cells += `<span class="coach-train-cell is-empty"></span>`;
+    const todayStr = today();
+    for(let day = 1; day <= daysInMonth; day++){
+      const ymd = `${y}-${String(m).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      const hits = byDate.get(ymd) || [];
+      const cls = [
+        'coach-train-cell',
+        hits.length ? 'has-train' : '',
+        ymd === todayStr ? 'is-today' : ''
+      ].filter(Boolean).join(' ');
+      const marks = hits.slice(0, 3).map(() => '<i></i>').join('');
+      cells += `<button type="button" class="${cls}" data-train-day="${esc(ymd)}"><span>${day}</span><span class="coach-train-dots">${marks}</span></button>`;
+    }
+    box.innerHTML = `<div class="coach-train-dow-row">${heads}</div><div class="coach-train-grid">${cells}</div>`;
+  }
+  function renderTrainList(session, team){
+    const list = document.getElementById('coachTrainList');
+    const rulesBox = document.getElementById('coachTrainRules');
+    if(!list || !team) return;
+    const store = global.CoachStore;
+    const todayStr = today();
+    const to = (() => {
+      const d = new Date();
+      d.setDate(d.getDate() + 21);
+      return d.toISOString().slice(0, 10);
+    })();
+    const items = store.listTrainingsInRange(session, team.id, todayStr, to).slice(0, 12);
+    if(!items.length){
+      list.innerHTML = `<p class="hint">${esc(tt('coachTrainEmpty', 'No trainings yet. Add a date or weekly days.'))}</p>`;
+    }else{
+      list.innerHTML = items.map(tr => {
+        const when = [tr.date, tr.start_time + (tr.end_time ? `–${tr.end_time}` : '')].filter(Boolean).join(' · ');
+        const meta = [
+          tr.recurring ? tt('coachTrainRecurringShort', 'Weekly') : tt('coachTrainOnceShort', 'One-off'),
+          tr.address || '',
+          tr.notify_minutes ? tt('coachTrainNotifyShort', 'Reminder {n} min').replace('{n}', String(tr.notify_minutes)) : ''
+        ].filter(Boolean).join(' · ');
+        return `<div class="coach-player-row coach-train-row">
+          <div class="coach-player-main">
+            <b>${esc(when)}</b>
+            <span>${esc(meta)}</span>
+          </div>
+          <button type="button" class="ghost-btn coach-train-cancel" data-cancel-train="${esc(tr.id)}" data-train-json="${encodeURIComponent(JSON.stringify({
+            id: tr.id, team_id: tr.team_id, rule_id: tr.rule_id || '', date: tr.date,
+            start_time: tr.start_time, end_time: tr.end_time, address: tr.address || '',
+            title: tr.title || '', notify_minutes: tr.notify_minutes, virtual: !!tr.virtual
+          }))}">${esc(tt('coachTrainCancelOne', 'Cancel'))}</button>
+        </div>`;
+      }).join('');
+    }
+    const rules = store.listTrainingRules(session, team.id);
+    if(rulesBox){
+      if(!rules.length){
+        rulesBox.innerHTML = '';
+      }else{
+        rulesBox.innerHTML = `<div class="pro-kicker">${esc(tt('coachTrainRulesKicker', 'Weekly rules'))}</div>` +
+          rules.map(r => {
+            const days = (r.weekdays || []).map(weekdayShort).join(', ');
+            const time = r.start_time + (r.end_time ? `–${r.end_time}` : '');
+            return `<div class="coach-player-row">
+              <div class="coach-player-main">
+                <b>${esc(days)} · ${esc(time)}</b>
+                <span>${esc(r.address || tt('coachTrainNoAddress', 'No address'))}</span>
+              </div>
+              <button type="button" class="ghost-btn" data-remove-train-rule="${esc(r.id)}">${esc(tt('coachTrainRemoveRule', 'Remove'))}</button>
+            </div>`;
+          }).join('');
+      }
+    }
+  }
+  function renderTrainingsPane(session, team){
+    const box = document.getElementById('coachTrainingsBox');
+    if(!box) return;
+    if(!team){
+      box.hidden = true;
+      return;
+    }
+    box.hidden = false;
+    ensureTrainTimeSelects();
+    setTrainFormOpen(trainFormOpen);
+    renderTrainCalendar(session, team);
+    renderTrainList(session, team);
+  }
+  function onSaveTraining(){
+    const store = global.CoachStore;
+    const session = store && store.getSession();
+    const teamId = store && store.getActiveTeamId();
+    if(!session || !teamId) return;
+    const start = readTrainHM('coachTrainStartH', 'coachTrainStartM');
+    const end = readTrainHM('coachTrainEndH', 'coachTrainEndM');
+    const address = document.getElementById('coachTrainAddress')?.value || '';
+    const notify = Number(document.getElementById('coachTrainNotify')?.value || 60);
+    try{
+      if(trainMode === 'weekly'){
+        const weekdays = selectedTrainWeekdays();
+        store.createTrainingRule(session, teamId, {
+          weekdays, start_time: start, end_time: end, address, notify_minutes: notify
+        });
+        toast(tt('coachTrainSavedWeekly', 'Weekly trainings saved. Parents can see the schedule.'));
+      }else{
+        const date = document.getElementById('coachTrainDate')?.value || '';
+        store.createTrainingOneOff(session, teamId, {
+          date, start_time: start, end_time: end, address, notify_minutes: notify
+        });
+        toast(tt('coachTrainSavedOnce', 'Training saved. Parents can see it.'));
+      }
+      trainFormOpen = false;
+      document.querySelectorAll('#coachTrainWeekdays .chip').forEach(c => c.classList.remove('on'));
+      const addr = document.getElementById('coachTrainAddress');
+      if(addr) addr.value = '';
+      renderCoachUi();
+    }catch(e){
+      const map = {
+        date: tt('coachTrainErrDate', 'Pick a date.'),
+        start: tt('coachTrainErrStart', 'Set start time.'),
+        end: tt('coachTrainErrEnd', 'End time must be after start.'),
+        weekdays: tt('coachTrainErrDays', 'Pick at least one weekday.')
+      };
+      toast(map[e.message] || tt('coachErrGeneric', 'Something went wrong.'));
+    }
+  }
+
   function bindCoachUi(){
     if(global.__ffkCoachBound) return;
     global.__ffkCoachBound = true;
@@ -4519,6 +4743,76 @@
         toast(tt('coachErrGeneric', 'Something went wrong.'));
       }
     });
+
+    document.getElementById('coachTrainNewBtn')?.addEventListener('click', () => {
+      setTrainFormOpen(true);
+    });
+    document.getElementById('coachTrainCancelBtn')?.addEventListener('click', () => {
+      setTrainFormOpen(false);
+    });
+    document.getElementById('coachTrainSaveBtn')?.addEventListener('click', () => onSaveTraining());
+    document.getElementById('coachTrainMode')?.addEventListener('click', e => {
+      const chip = e.target.closest('[data-train-mode]');
+      if(!chip) return;
+      trainMode = chip.dataset.trainMode === 'weekly' ? 'weekly' : 'once';
+      syncTrainModeUi();
+    });
+    document.getElementById('coachTrainWeekdays')?.addEventListener('click', e => {
+      const chip = e.target.closest('[data-wd]');
+      if(!chip) return;
+      chip.classList.toggle('on');
+    });
+    document.getElementById('coachTrainPrevMonth')?.addEventListener('click', () => {
+      shiftTrainMonth(-1);
+      renderCoachUi();
+    });
+    document.getElementById('coachTrainNextMonth')?.addEventListener('click', () => {
+      shiftTrainMonth(1);
+      renderCoachUi();
+    });
+    document.getElementById('coachTrainCalendar')?.addEventListener('click', e => {
+      const day = e.target.closest('[data-train-day]');
+      if(!day) return;
+      trainMode = 'once';
+      setTrainFormOpen(true);
+      const dateEl = document.getElementById('coachTrainDate');
+      if(dateEl) dateEl.value = day.dataset.trainDay;
+      syncTrainModeUi();
+    });
+    document.getElementById('coachTrainList')?.addEventListener('click', e => {
+      const btn = e.target.closest('[data-cancel-train]');
+      if(!btn) return;
+      const store = global.CoachStore;
+      const session = store && store.getSession();
+      if(!session) return;
+      let payload = null;
+      try{ payload = JSON.parse(decodeURIComponent(btn.getAttribute('data-train-json') || '') || 'null'); }catch(err){}
+      if(!payload) return;
+      if(!confirm(tt('coachTrainCancelConfirm', 'Cancel this training?'))) return;
+      try{
+        store.cancelTrainingOccurrence(session, payload);
+        toast(tt('coachTrainCancelled', 'Training cancelled.'));
+        renderCoachUi();
+      }catch(err){
+        toast(tt('coachErrGeneric', 'Something went wrong.'));
+      }
+    });
+    document.getElementById('coachTrainRules')?.addEventListener('click', e => {
+      const btn = e.target.closest('[data-remove-train-rule]');
+      if(!btn) return;
+      const store = global.CoachStore;
+      const session = store && store.getSession();
+      if(!session) return;
+      if(!confirm(tt('coachTrainRemoveRuleConfirm', 'Remove this weekly rule?'))) return;
+      try{
+        store.removeTrainingRule(session, btn.dataset.removeTrainRule);
+        toast(tt('coachTrainRuleRemoved', 'Weekly rule removed.'));
+        renderCoachUi();
+      }catch(err){
+        toast(tt('coachErrGeneric', 'Something went wrong.'));
+      }
+    });
+
     document.getElementById('coachRateMinus')?.addEventListener('click', () => {
       if(!quickRate) return;
       quickRate.rating = clampQuickScore(quickRate.rating - 0.1);

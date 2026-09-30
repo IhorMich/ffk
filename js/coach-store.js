@@ -15,13 +15,15 @@
   }
   function emptyDb(){
     return {
-      version: 4,
+      version: 5,
       accounts: {},
       academies: [],
       teams: [],
       team_players: [],
       memberships: [],
       team_matches: [],
+      training_rules: [],
+      team_trainings: [],
       ratings: [],
       match_invites: [],
       parent_invites: [],
@@ -38,13 +40,15 @@
       const db = JSON.parse(raw);
       if(!db || typeof db !== 'object') return emptyDb();
       return {
-        version: 4,
+        version: 5,
         accounts: db.accounts && typeof db.accounts === 'object' ? db.accounts : {},
         academies: Array.isArray(db.academies) ? db.academies : [],
         teams: Array.isArray(db.teams) ? db.teams : [],
         team_players: Array.isArray(db.team_players) ? db.team_players : [],
         memberships: Array.isArray(db.memberships) ? db.memberships : [],
         team_matches: Array.isArray(db.team_matches) ? db.team_matches : [],
+        training_rules: Array.isArray(db.training_rules) ? db.training_rules : [],
+        team_trainings: Array.isArray(db.team_trainings) ? db.team_trainings : [],
         ratings: Array.isArray(db.ratings) ? db.ratings : [],
         match_invites: Array.isArray(db.match_invites) ? db.match_invites : [],
         parent_invites: Array.isArray(db.parent_invites) ? db.parent_invites : [],
@@ -83,6 +87,117 @@
     const buf = await crypto.subtle.digest('SHA-256', data);
     return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
   }
+
+  function normalizeWeekdays(raw){
+    const set = new Set();
+    (Array.isArray(raw) ? raw : []).forEach(v => {
+      const n = Number(v);
+      if(Number.isInteger(n) && n >= 0 && n <= 6) set.add(n);
+    });
+    return [...set].sort((a, b) => a - b);
+  }
+  function ymdAddDays(ymd, days){
+    const t0 = Date.parse(ymd + 'T12:00:00');
+    if(!Number.isFinite(t0)) return ymd;
+    const d = new Date(t0 + days * 86400000);
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  }
+  function ymdWeekday(ymd){
+    const t0 = Date.parse(ymd + 'T12:00:00');
+    if(!Number.isFinite(t0)) return -1;
+    return new Date(t0).getDay();
+  }
+  function clampNotifyMinutes(n){
+    const v = Number(n);
+    if(!Number.isFinite(v)) return 60;
+    return Math.max(0, Math.min(24 * 60, Math.round(v)));
+  }
+  function expandTrainingsForTeam(db, teamId, fromDate, toDate){
+    const from = /^\d{4}-\d{2}-\d{2}$/.test(fromDate) ? fromDate : new Date().toISOString().slice(0, 10);
+    const to = /^\d{4}-\d{2}-\d{2}$/.test(toDate) ? toDate : ymdAddDays(from, 60);
+    const rules = (db.training_rules || []).filter(r => r.team_id === teamId && r.active !== false);
+    const rows = (db.team_trainings || []).filter(r => r.team_id === teamId);
+    const overrides = new Map();
+    rows.forEach(r => {
+      if(r.rule_id) overrides.set(`${r.date}|${r.rule_id}`, r);
+    });
+    const out = [];
+    const seen = new Set();
+    rules.forEach(rule => {
+      const days = normalizeWeekdays(rule.weekdays);
+      if(!days.length) return;
+      let cur = from;
+      while(cur <= to){
+        if(days.includes(ymdWeekday(cur))){
+          const key = `${cur}|${rule.id}`;
+          const ov = overrides.get(key);
+          if(ov){
+            if(ov.status !== 'cancelled'){
+              out.push({
+                id: ov.id,
+                team_id: teamId,
+                rule_id: rule.id,
+                date: ov.date,
+                title: ov.title || rule.title || '',
+                start_time: ov.start_time || rule.start_time || '',
+                end_time: ov.end_time || rule.end_time || '',
+                address: ov.address != null ? ov.address : (rule.address || ''),
+                notify_minutes: clampNotifyMinutes(ov.notify_minutes != null ? ov.notify_minutes : rule.notify_minutes),
+                status: 'scheduled',
+                recurring: true,
+                virtual: false
+              });
+              seen.add(ov.id);
+            }
+          }else{
+            out.push({
+              id: `occ_${rule.id}_${cur}`,
+              team_id: teamId,
+              rule_id: rule.id,
+              date: cur,
+              title: rule.title || '',
+              start_time: rule.start_time || '',
+              end_time: rule.end_time || '',
+              address: rule.address || '',
+              notify_minutes: clampNotifyMinutes(rule.notify_minutes),
+              status: 'scheduled',
+              recurring: true,
+              virtual: true
+            });
+          }
+        }
+        cur = ymdAddDays(cur, 1);
+      }
+    });
+    rows.forEach(r => {
+      if(r.rule_id) return;
+      if(r.status === 'cancelled') return;
+      if(r.date < from || r.date > to) return;
+      if(seen.has(r.id)) return;
+      out.push({
+        id: r.id,
+        team_id: teamId,
+        rule_id: '',
+        date: r.date,
+        title: r.title || '',
+        start_time: r.start_time || '',
+        end_time: r.end_time || '',
+        address: r.address || '',
+        notify_minutes: clampNotifyMinutes(r.notify_minutes),
+        status: 'scheduled',
+        recurring: false,
+        virtual: false
+      });
+    });
+    return out.sort((a, b) =>
+      String(a.date).localeCompare(String(b.date)) ||
+      String(a.start_time).localeCompare(String(b.start_time))
+    );
+  }
+
   function normalizeKickoff(raw){
     const s = String(raw || '').trim();
     if(!s) return '';
@@ -409,6 +524,8 @@
       db.teams = db.teams.filter(t => t.id !== teamId);
       db.team_players = db.team_players.filter(p => p.team_id !== teamId);
       db.team_matches = db.team_matches.filter(m => m.team_id !== teamId);
+      db.training_rules = (db.training_rules || []).filter(r => r.team_id !== teamId);
+      db.team_trainings = (db.team_trainings || []).filter(r => r.team_id !== teamId);
       db.ratings = db.ratings.filter(r => !matchIds.has(r.match_id) && !playerIds.has(r.team_player_id));
       db.match_invites = db.match_invites.filter(i => i.team_id !== teamId && !matchIds.has(i.match_id));
       db.parent_invites = db.parent_invites.filter(i => i.team_id !== teamId && !playerIds.has(i.team_player_id));
@@ -1816,6 +1933,145 @@
       writeDb(db);
       return db.accounts[email];
     },
+
+    listTrainingRules(session, teamId){
+      if(!this.getTeam(session, teamId)) return [];
+      return (readDb().training_rules || [])
+        .filter(r => r.team_id === teamId && r.active !== false)
+        .slice()
+        .sort((a, b) => String(a.created_at).localeCompare(String(b.created_at)));
+    },
+    listTrainingsInRange(session, teamId, fromDate, toDate){
+      if(!this.getTeam(session, teamId)) return [];
+      return expandTrainingsForTeam(readDb(), teamId, fromDate, toDate);
+    },
+    /** Read-only for parents on the same device (no coach session required). */
+    listTrainingsForTeamPublic(teamId, fromDate, toDate){
+      teamId = String(teamId || '');
+      if(!teamId) return [];
+      const db = readDb();
+      if(!(db.teams || []).some(t => t.id === teamId)) return [];
+      return expandTrainingsForTeam(db, teamId, fromDate, toDate);
+    },
+    createTrainingOneOff(session, teamId, fields){
+      if(!this.getTeam(session, teamId)) throw new Error('forbidden');
+      const date = /^\d{4}-\d{2}-\d{2}$/.test(fields && fields.date) ? fields.date : '';
+      const start = normalizeKickoff(fields && fields.start_time);
+      const end = normalizeKickoff(fields && fields.end_time);
+      if(!date) throw new Error('date');
+      if(!start) throw new Error('start');
+      if(end && end <= start) throw new Error('end');
+      const db = readDb();
+      const row = {
+        id: uid('trn'),
+        team_id: teamId,
+        rule_id: null,
+        date,
+        title: String((fields && fields.title) || '').trim().slice(0, 48),
+        start_time: start,
+        end_time: end || '',
+        address: String((fields && fields.address) || '').trim().slice(0, 120),
+        notify_minutes: clampNotifyMinutes(fields && fields.notify_minutes != null ? fields.notify_minutes : 60),
+        status: 'scheduled',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+      db.team_trainings = db.team_trainings || [];
+      db.team_trainings.push(row);
+      writeDb(db);
+      try{ this.publishTrainingsToParents(teamId); }catch(e){}
+      return row;
+    },
+    createTrainingRule(session, teamId, fields){
+      if(!this.getTeam(session, teamId)) throw new Error('forbidden');
+      const weekdays = normalizeWeekdays(fields && fields.weekdays);
+      const start = normalizeKickoff(fields && fields.start_time);
+      const end = normalizeKickoff(fields && fields.end_time);
+      if(!weekdays.length) throw new Error('weekdays');
+      if(!start) throw new Error('start');
+      if(end && end <= start) throw new Error('end');
+      const db = readDb();
+      const row = {
+        id: uid('trule'),
+        team_id: teamId,
+        title: String((fields && fields.title) || '').trim().slice(0, 48),
+        weekdays,
+        start_time: start,
+        end_time: end || '',
+        address: String((fields && fields.address) || '').trim().slice(0, 120),
+        notify_minutes: clampNotifyMinutes(fields && fields.notify_minutes != null ? fields.notify_minutes : 60),
+        active: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+      db.training_rules = db.training_rules || [];
+      db.training_rules.push(row);
+      writeDb(db);
+      try{ this.publishTrainingsToParents(teamId); }catch(e){}
+      return row;
+    },
+    cancelTrainingOccurrence(session, trainingOrOcc){
+      const teamId = trainingOrOcc && trainingOrOcc.team_id;
+      if(!this.getTeam(session, teamId)) throw new Error('forbidden');
+      const db = readDb();
+      db.team_trainings = db.team_trainings || [];
+      const now = new Date().toISOString();
+      if(trainingOrOcc.virtual && trainingOrOcc.rule_id){
+        db.team_trainings.push({
+          id: uid('trn'),
+          team_id: teamId,
+          rule_id: trainingOrOcc.rule_id,
+          date: trainingOrOcc.date,
+          title: trainingOrOcc.title || '',
+          start_time: trainingOrOcc.start_time || '',
+          end_time: trainingOrOcc.end_time || '',
+          address: trainingOrOcc.address || '',
+          notify_minutes: clampNotifyMinutes(trainingOrOcc.notify_minutes),
+          status: 'cancelled',
+          created_at: now,
+          updated_at: now
+        });
+      }else if(trainingOrOcc.id && !String(trainingOrOcc.id).startsWith('occ_')){
+        db.team_trainings = db.team_trainings.map(r => r.id === trainingOrOcc.id
+          ? {...r, status: 'cancelled', updated_at: now}
+          : r);
+      }else{
+        throw new Error('forbidden');
+      }
+      writeDb(db);
+      try{ this.publishTrainingsToParents(teamId); }catch(e){}
+      return true;
+    },
+    removeTrainingRule(session, ruleId){
+      const db = readDb();
+      const rule = (db.training_rules || []).find(r => r.id === ruleId);
+      if(!rule || !this.getTeam(session, rule.team_id)) throw new Error('forbidden');
+      db.training_rules = db.training_rules.map(r => r.id === ruleId
+        ? {...r, active: false, updated_at: new Date().toISOString()}
+        : r);
+      writeDb(db);
+      try{ this.publishTrainingsToParents(rule.team_id); }catch(e){}
+      return true;
+    },
+    publishTrainingsToParents(teamId){
+      teamId = String(teamId || '');
+      if(!teamId) return;
+      const today = new Date().toISOString().slice(0, 10);
+      const to = ymdAddDays(today, 60);
+      const list = expandTrainingsForTeam(readDb(), teamId, today, to).slice(0, 40);
+      try{
+        if(global.ParentStore && typeof global.ParentStore.cacheTeamTrainings === 'function'){
+          global.ParentStore.cacheTeamTrainings(teamId, list);
+        }
+      }catch(e){}
+      try{
+        if(global.CoachPush && typeof global.CoachPush.resyncTrainingReminders === 'function'){
+          global.CoachPush.resyncTrainingReminders();
+        }
+      }catch(e){}
+      return list;
+    },
+
     hasCoachSub(session){
       const acc = this.getAccount(session);
       if(acc && acc.coach_sub) return true;

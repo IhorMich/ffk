@@ -345,6 +345,83 @@ window.ffkIsNative = function () {
             <button type="button" class="save-btn coach-match-new" id="coachMatchNewBtn" data-i18n="coachMatchNewBtn">+ Новый матч</button>
           </div>
 
+
+          <div id="coachTrainingsBox" class="coach-trainings">
+            <div class="coach-match-top">
+              <div>
+                <div class="pro-kicker" data-i18n="coachTrainKicker">Тренировки</div>
+                <p class="hint" data-i18n="coachTrainLead">Календарь команды. Родители увидят расписание автоматически.</p>
+              </div>
+              <button type="button" class="save-btn" id="coachTrainNewBtn" data-i18n="coachTrainNewBtn">+ Тренировка</button>
+            </div>
+            <div id="coachTrainCreate" class="coach-match-create" hidden>
+              <div class="pro-kicker" data-i18n="coachTrainCreateKicker">Новая тренировка</div>
+              <div class="period-chips coach-train-mode" id="coachTrainMode">
+                <button type="button" class="chip on" data-train-mode="once" data-i18n="coachTrainModeOnce">Одна дата</button>
+                <button type="button" class="chip" data-train-mode="weekly" data-i18n="coachTrainModeWeekly">Каждую неделю</button>
+              </div>
+              <div class="coach-match-create-grid">
+                <div class="field" id="coachTrainDateWrap">
+                  <label data-i18n="labelDate">Дата</label>
+                  <input id="coachTrainDate" type="date">
+                </div>
+                <div class="field" id="coachTrainWeekdaysWrap" hidden>
+                  <label data-i18n="coachTrainWeekdays">Дни недели</label>
+                  <div class="period-chips coach-train-days" id="coachTrainWeekdays">
+                    <button type="button" class="chip" data-wd="1" data-i18n="dowMonShort">Пн</button>
+                    <button type="button" class="chip" data-wd="2" data-i18n="dowTueShort">Вт</button>
+                    <button type="button" class="chip" data-wd="3" data-i18n="dowWedShort">Ср</button>
+                    <button type="button" class="chip" data-wd="4" data-i18n="dowThuShort">Чт</button>
+                    <button type="button" class="chip" data-wd="5" data-i18n="dowFriShort">Пт</button>
+                    <button type="button" class="chip" data-wd="6" data-i18n="dowSatShort">Сб</button>
+                    <button type="button" class="chip" data-wd="0" data-i18n="dowSunShort">Вс</button>
+                  </div>
+                </div>
+                <div class="field">
+                  <label data-i18n="coachTrainStart">Начало</label>
+                  <div class="kickoff-pair">
+                    <select id="coachTrainStartH" aria-label="start hour"></select>
+                    <span>:</span>
+                    <select id="coachTrainStartM" aria-label="start minute"></select>
+                  </div>
+                </div>
+                <div class="field">
+                  <label data-i18n="coachTrainEnd">Конец</label>
+                  <div class="kickoff-pair">
+                    <select id="coachTrainEndH" aria-label="end hour"></select>
+                    <span>:</span>
+                    <select id="coachTrainEndM" aria-label="end minute"></select>
+                  </div>
+                </div>
+                <div class="field">
+                  <label data-i18n="coachTrainAddress">Адрес / поле</label>
+                  <input id="coachTrainAddress" type="text" maxlength="120" data-i18n-placeholder="coachTrainAddressPh" placeholder="Стадион / зал">
+                </div>
+                <div class="field">
+                  <label data-i18n="coachTrainNotify">Напоминание родителям</label>
+                  <select id="coachTrainNotify">
+                    <option value="60" selected data-i18n="coachTrainNotify60">За 1 час</option>
+                    <option value="120" data-i18n="coachTrainNotify120">За 2 часа</option>
+                    <option value="30" data-i18n="coachTrainNotify30">За 30 минут</option>
+                    <option value="0" data-i18n="coachTrainNotifyOff">Без напоминания</option>
+                  </select>
+                </div>
+              </div>
+              <div class="coach-match-create-actions">
+                <button type="button" class="save-btn" id="coachTrainSaveBtn" data-i18n="coachTrainSave">Сохранить</button>
+                <button type="button" class="ghost-btn" id="coachTrainCancelBtn" data-i18n="previewCancel">Отмена</button>
+              </div>
+            </div>
+            <div class="coach-train-cal-nav">
+              <button type="button" class="ghost-btn" id="coachTrainPrevMonth" aria-label="prev">‹</button>
+              <b id="coachTrainMonthLabel">—</b>
+              <button type="button" class="ghost-btn" id="coachTrainNextMonth" aria-label="next">›</button>
+            </div>
+            <div id="coachTrainCalendar" class="coach-train-calendar" aria-label="training calendar"></div>
+            <div id="coachTrainList" class="coach-player-list coach-train-list"></div>
+            <div id="coachTrainRules" class="coach-train-rules"></div>
+          </div>
+
           <div id="coachMatchCreate" class="coach-match-create" hidden>
             <div class="pro-kicker" data-i18n="coachMatchCreateKicker">Новый матч</div>
             <div class="coach-match-create-grid">
@@ -737,6 +814,13 @@ window.ffkIsNative = function () {
       <button class="save-btn js-pro-btn" id="statsCardBtn" type="button" data-i18n="cardPeriodBtn">Карточка периода</button>
       </div>
       </div>
+
+      <div id="parentTrainingsPanel" class="parent-coach-stats parent-trainings" hidden>
+        <div class="pro-kicker" data-i18n="parentTrainKicker">Тренировки</div>
+        <p class="hint" data-i18n="parentTrainLead">Расписание от тренера. Напоминание придёт за час до начала.</p>
+        <div id="parentTrainingsBoard" class="coach-player-list"></div>
+      </div>
+
       <div id="parentCoachStatsPanel" class="parent-coach-stats" hidden>
         <div class="pro-kicker" data-i18n="parentCoachStatsKicker">Статистика от тренера</div>
         <p class="hint" data-i18n="parentCoachStatsLead">Отдельно от вашей оценки у бровки. Подтверждено академией.</p>

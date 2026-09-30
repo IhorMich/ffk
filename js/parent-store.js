@@ -7,7 +7,7 @@
     return `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
   }
   function emptyDb(){
-    return {version: 1, links: [], pendingPayload: null};
+    return {version: 2, links: [], pendingPayload: null, trainingsByTeam: {}};
   }
   function readDb(){
     try{
@@ -16,9 +16,10 @@
       const db = JSON.parse(raw);
       if(!db || typeof db !== 'object') return emptyDb();
       return {
-        version: 1,
+        version: 2,
         links: Array.isArray(db.links) ? db.links : [],
-        pendingPayload: db.pendingPayload || null
+        pendingPayload: db.pendingPayload || null,
+        trainingsByTeam: db.trainingsByTeam && typeof db.trainingsByTeam === 'object' ? db.trainingsByTeam : {}
       };
     }catch(e){
       return emptyDb();
@@ -327,6 +328,65 @@
     unreadInboxCount(personalPlayerId){
       if(!global.InboxStore) return 0;
       return global.InboxStore.unreadCountForPlayers(this.linkedPlayerIds(personalPlayerId));
+    },
+
+    cacheTeamTrainings(teamId, list){
+      teamId = String(teamId || '');
+      if(!teamId) return;
+      const db = readDb();
+      db.trainingsByTeam = db.trainingsByTeam || {};
+      db.trainingsByTeam[teamId] = (Array.isArray(list) ? list : []).slice(0, 60).map(t => ({
+        id: String(t.id || ''),
+        team_id: teamId,
+        rule_id: t.rule_id || '',
+        date: String(t.date || '').slice(0, 10),
+        title: String(t.title || '').slice(0, 48),
+        start_time: String(t.start_time || '').slice(0, 8),
+        end_time: String(t.end_time || '').slice(0, 8),
+        address: String(t.address || '').slice(0, 120),
+        notify_minutes: Number(t.notify_minutes) || 60,
+        recurring: !!t.recurring
+      }));
+      writeDb(db);
+    },
+    listTrainingsForTeam(teamId){
+      teamId = String(teamId || '');
+      const cached = ((readDb().trainingsByTeam || {})[teamId]) || [];
+      // Prefer live coach local data on the same device.
+      try{
+        if(global.CoachStore && typeof global.CoachStore.listTrainingsForTeamPublic === 'function'){
+          const today = new Date().toISOString().slice(0, 10);
+          const to = new Date(Date.now() + 60 * 86400000).toISOString().slice(0, 10);
+          const live = global.CoachStore.listTrainingsForTeamPublic(teamId, today, to);
+          if(live && live.length) return live;
+        }
+      }catch(e){}
+      return cached.slice();
+    },
+    listUpcomingTrainingsForLinks(links){
+      const today = new Date().toISOString().slice(0, 10);
+      const out = [];
+      const seen = new Set();
+      (links || []).forEach(link => {
+        const teamId = link && link.team && link.team.id;
+        if(!teamId) return;
+        this.listTrainingsForTeam(teamId).forEach(tr => {
+          if(!tr || !tr.date || tr.date < today) return;
+          const key = `${tr.team_id}|${tr.date}|${tr.start_time}|${tr.id}`;
+          if(seen.has(key)) return;
+          seen.add(key);
+          out.push({
+            ...tr,
+            team_name: (link.team && link.team.name) || '',
+            academy_name: (link.academy && link.academy.name) || '',
+            player_name: [link.player && link.player.first_name, link.player && link.player.last_name].filter(Boolean).join(' ')
+          });
+        });
+      });
+      return out.sort((a, b) =>
+        String(a.date).localeCompare(String(b.date)) ||
+        String(a.start_time).localeCompare(String(b.start_time))
+      );
     },
     syncCoachRatings(playerId, data){
       const pid = String(playerId || '');
