@@ -10,13 +10,58 @@
     return {version: 2, links: [], pendingPayload: null, trainingsByTeam: {}};
   }
   function isBrokenLabel(s){
-    return !s || s === '[object Object]';
+    if(s == null || s === '') return true;
+    if(typeof s === 'object') return true;
+    return String(s).trim() === '[object Object]';
   }
   function repairNamed(obj, fallback){
     if(!obj || typeof obj !== 'object') return obj || fallback || null;
-    if(!isBrokenLabel(obj.name)) return obj;
-    const fixed = fallback && !isBrokenLabel(fallback.name) ? fallback.name : '';
+    const fixed = textField(obj.name, fallback && fallback.name, fallback);
+    if(!isBrokenLabel(obj.name) && String(obj.name) === fixed) return obj;
     return {...obj, name: fixed};
+  }
+  function liveNamedFromCoach(link){
+    const out = {academy: null, team: null, coach: null};
+    try{
+      const coachStore = global.CoachStore;
+      if(!coachStore) return out;
+      const session = typeof coachStore.getSession === 'function' ? coachStore.getSession() : null;
+      const pid = link && link.player && link.player.id;
+      if(session && pid && typeof coachStore.playerDetail === 'function'){
+        const detail = coachStore.playerDetail(session, pid);
+        if(detail){
+          out.academy = detail.academy ? {name: textField(detail.academy.name)} : null;
+          out.team = detail.team ? {
+            name: textField(detail.team.name),
+            age_group: textField(detail.team.age_group)
+          } : null;
+          out.coach = detail.coach ? {
+            name: textField(detail.coach.name),
+            email: textField(detail.coach.email)
+          } : null;
+          return out;
+        }
+      }
+      const teamId = link && link.team && link.team.id;
+      if(session && teamId && typeof coachStore.getTeam === 'function'){
+        const team = coachStore.getTeam(session, teamId);
+        if(team) out.team = {name: textField(team.name), age_group: textField(team.age_group)};
+      }
+      if(session && typeof coachStore.myAcademy === 'function'){
+        const academy = coachStore.myAcademy(session);
+        if(academy) out.academy = {name: textField(academy.name)};
+      }
+      if(session && typeof coachStore.getProfile === 'function'){
+        const profile = coachStore.getProfile(session);
+        if(profile){
+          out.coach = {
+            name: textField([profile.first_name, profile.last_name].filter(Boolean).join(' '), profile.email, 'Coach'),
+            email: textField(profile.email)
+          };
+        }
+      }
+    }catch(e){}
+    return out;
   }
   /** Recover coach/team/academy labels ruined by double-normalize String(object). */
   function repairLink(link){
@@ -35,15 +80,20 @@
     try{
       if(invitePayload) fromInvite = normalizePayload(invitePayload);
     }catch(e){}
+    const fromLive = liveNamedFromCoach(link);
     const next = {
       ...link,
-      academy: repairNamed(link.academy, fromInvite && fromInvite.academy),
-      team: repairNamed(link.team, fromInvite && fromInvite.team),
-      coach: repairNamed(link.coach, fromInvite && fromInvite.coach)
+      academy: repairNamed(link.academy, fromLive.academy || (fromInvite && fromInvite.academy)),
+      team: repairNamed(link.team, fromLive.team || (fromInvite && fromInvite.team)),
+      coach: repairNamed(link.coach, fromLive.coach || (fromInvite && fromInvite.coach))
     };
+    if(fromLive.team && fromLive.team.age_group && next.team && isBrokenLabel(next.team.age_group)){
+      next.team = {...next.team, age_group: fromLive.team.age_group};
+    }
     const changed =
       (link.academy && link.academy.name) !== (next.academy && next.academy.name) ||
       (link.team && link.team.name) !== (next.team && next.team.name) ||
+      (link.team && link.team.age_group) !== (next.team && next.team.age_group) ||
       (link.coach && link.coach.name) !== (next.coach && next.coach.name);
     return changed ? next : link;
   }
@@ -110,9 +160,17 @@
         if(s && s !== '[object Object]') return s;
         continue;
       }
-      if(typeof c === 'object' && c.name != null && typeof c.name !== 'object'){
-        const s = String(c.name).trim();
-        if(s && s !== '[object Object]') return s;
+      if(typeof c === 'object'){
+        const nested = textField(
+          c.name,
+          c.title,
+          c.label,
+          [c.first_name, c.last_name].filter(Boolean).join(' '),
+          c.email,
+          c.display_name,
+          c.full_name
+        );
+        if(nested) return nested;
       }
     }
     return '';
@@ -461,8 +519,8 @@
           seen.add(key);
           out.push({
             ...tr,
-            team_name: (link.team && link.team.name) || '',
-            academy_name: (link.academy && link.academy.name) || '',
+            team_name: textField(link.team && link.team.name),
+            academy_name: textField(link.academy && link.academy.name),
             player_name: [link.player && link.player.first_name, link.player && link.player.last_name].filter(Boolean).join(' ')
           });
         });
@@ -489,13 +547,23 @@
         const nextTeam = {...(l.team || {})};
         if(data.team && typeof data.team === 'object'){
           if(data.team.id) nextTeam.id = String(data.team.id).slice(0, 40);
-          if(data.team.name) nextTeam.name = String(data.team.name).slice(0, 60);
-          if(data.team.age_group != null) nextTeam.age_group = String(data.team.age_group || '').slice(0, 24);
+          const teamName = textField(data.team.name);
+          if(teamName) nextTeam.name = teamName.slice(0, 60);
+          const age = textField(data.team.age_group);
+          if(data.team.age_group != null) nextTeam.age_group = age.slice(0, 24);
+        }
+        const nextCoach = {...(l.coach || {})};
+        if(data.coach && typeof data.coach === 'object'){
+          const coachName = textField(data.coach.name, data.coach);
+          if(coachName) nextCoach.name = coachName.slice(0, 80);
+          const coachEmail = textField(data.coach.email);
+          if(data.coach.email != null) nextCoach.email = coachEmail.slice(0, 80);
         }
         hit = {
           ...l,
           player: nextPlayer,
           team: nextTeam,
+          coach: nextCoach,
           ratings: Array.isArray(data.ratings) ? data.ratings.slice(0, 40) : (l.ratings || []),
           avg: data.avg != null ? data.avg : l.avg,
           games: data.games != null ? data.games : l.games,
@@ -559,12 +627,8 @@
         team_player_id: link.player.id,
         parent_link_id: link.id,
         player_name: [link.player.first_name, link.player.last_name].filter(Boolean).join(' '),
-        team_name: (link.team && typeof link.team.name === 'string' && link.team.name !== '[object Object]')
-          ? link.team.name
-          : '',
-        academy_name: (link.academy && typeof link.academy.name === 'string' && link.academy.name !== '[object Object]')
-          ? link.academy.name
-          : '',
+        team_name: textField(link.team && link.team.name),
+        academy_name: textField(link.academy && link.academy.name),
         new_club: meta && meta.new_club ? meta.new_club : '',
         new_team: meta && meta.new_team ? meta.new_team : '',
         reason: 'club_change'

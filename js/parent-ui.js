@@ -988,8 +988,12 @@
           } : null,
           team: detail.team ? {
             id: detail.team.id,
-            name: detail.team.name,
-            age_group: detail.team.age_group
+            name: labelOf(detail.team.name),
+            age_group: labelOf(detail.team.age_group)
+          } : null,
+          coach: detail.coach ? {
+            name: labelOf(detail.coach.name),
+            email: labelOf(detail.coach.email)
           } : null,
           ratings: (detail.ratings || []).slice(0, 40).map(r => ({
             date: r.date,
@@ -1049,13 +1053,17 @@
     return code || '';
   }
   function parentTeamLine(l){
-    const teamName = l && l.team && l.team.name ? String(l.team.name) : '';
-    const age = l && l.team && l.team.age_group ? String(l.team.age_group) : '';
+    const teamName = labelOf(l && l.team && l.team.name);
+    const age = labelOf(l && l.team && l.team.age_group);
     if(!teamName && !age) return '';
     const teamBit = teamName
       ? `${tt('parentInboxTeam', 'Team')}: ${teamName}`
       : '';
     return [teamBit, age].filter(Boolean).join(' · ');
+  }
+  function parentCoachLabel(l){
+    const name = labelOf(l && l.coach && l.coach.name);
+    return name ? `${tt('parentCoachLabel', 'Coach')}: ${name}` : '';
   }
   function parentPlayerMetaLine(l){
     const p = l && l.player;
@@ -1223,8 +1231,8 @@
     board.innerHTML = list.map(tr => {
       const when = [tr.date, tr.start_time + (tr.end_time ? `–${tr.end_time}` : '')].filter(Boolean).join(' · ');
       const meta = [
-        tr.team_name || tr.academy_name || '',
-        tr.address || '',
+        labelOf(tr.team_name) || labelOf(tr.academy_name) || '',
+        labelOf(tr.address) || '',
         tr.recurring ? tt('coachTrainRecurringShort', 'Weekly') : '',
         tr.notify_minutes ? tt('parentTrainRemindHint', 'Reminder {n} min before').replace('{n}', String(tr.notify_minutes)) : ''
       ].filter(Boolean).join(' · ');
@@ -1263,7 +1271,7 @@
         teamLine ? `<p class="hint parent-team-line"><b>${esc(teamLine)}</b></p>` : `<p class="hint">${esc(tt('parentTeamMissing', 'Team not set'))}</p>`,
         `<p class="hint">${esc([
           playerMeta,
-          l.coach && l.coach.name ? `${tt('parentCoachLabel', 'Coach')}: ${l.coach.name}` : ''
+          parentCoachLabel(l)
         ].filter(Boolean).join(' · '))}</p>`
       ].join('');
       return `<div class="parent-coach-block">${confirmBits}${parentCoachStatsBlockHtml(l)}</div>`;
@@ -1330,14 +1338,14 @@
           parentPosLab(payload.player.position)
         ].filter(Boolean).join(' · '))}</span>
         <p class="hint"><b>${esc([
-          payload.team && payload.team.name
-            ? `${tt('parentInboxTeam', 'Team')}: ${payload.team.name}`
+          payload.team && labelOf(payload.team.name)
+            ? `${tt('parentInboxTeam', 'Team')}: ${labelOf(payload.team.name)}`
             : '',
-          payload.team && payload.team.age_group
+          labelOf(payload.team && payload.team.age_group)
         ].filter(Boolean).join(' · ') || tt('parentTeamMissing', 'Team not set'))}</b></p>
         <p class="hint">${esc(
-          payload.coach && payload.coach.name
-            ? `${tt('parentCoachLabel', 'Coach')}: ${payload.coach.name}`
+          labelOf(payload.coach && payload.coach.name)
+            ? `${tt('parentCoachLabel', 'Coach')}: ${labelOf(payload.coach.name)}`
             : ''
         )}</p>
         <p class="hint">${esc(tt('parentClaimHint', 'Personal Matchcard stats stay yours. Coach ratings appear separately.'))}</p>
@@ -1413,7 +1421,7 @@
         : `<p class="hint">${esc(tt('parentTeamMissing', 'Team not set'))}</p>`}
       <p class="hint">${esc([
         playerMeta,
-        link.coach && link.coach.name ? `${tt('parentCoachLabel', 'Coach')}: ${link.coach.name}` : ''
+        parentCoachLabel(link)
       ].filter(Boolean).join(' · '))}</p>
       <div class="pro-kicker">${esc(tt('parentCoachStatsKicker', 'Stats from coach'))}</div>
       ${parentCoachStatsBlockHtml(link)}
@@ -1725,9 +1733,9 @@
     const link = links[0];
     if(meta){
       meta.textContent = [
-        link.team && link.team.name ? `${tt('parentInboxTeam', 'Team')}: ${link.team.name}` : '',
-        link.coach && link.coach.name ? `${tt('parentCoachLabel', 'Coach')}: ${link.coach.name}` : '',
-        link.academy && link.academy.name ? link.academy.name : ''
+        parentTeamLine(link),
+        parentCoachLabel(link),
+        labelOf(link.academy && link.academy.name)
       ].filter(Boolean).join(' · ');
     }
     const pending = link.leave_status === 'pending';

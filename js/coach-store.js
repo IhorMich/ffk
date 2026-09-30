@@ -1747,6 +1747,18 @@
     buildParentInvitePayload(session, playerId, opts){
       const detail = this.playerDetail(session, playerId);
       if(!detail) throw new Error('forbidden');
+      const label = (v, max) => {
+        if(v == null) return '';
+        if(typeof v === 'object'){
+          if(v.name != null && typeof v.name !== 'object') return String(v.name).trim().slice(0, max);
+          if(v.first_name || v.last_name){
+            return [v.first_name, v.last_name].filter(Boolean).join(' ').trim().slice(0, max);
+          }
+          return '';
+        }
+        const s = String(v).trim();
+        return (!s || s === '[object Object]') ? '' : s.slice(0, max);
+      };
       const maxR = (opts && opts.maxRatings) || 12;
       const ratings = detail.ratings.slice(0, maxR).map(r => ({
         d: r.date,
@@ -1771,14 +1783,17 @@
         v: 1,
         t: opts && opts.token ? opts.token : uid('ptk').slice(0, 24),
         code: opts && opts.code ? opts.code : inviteCode(),
-        a: {id: detail.academy ? detail.academy.id : '', name: detail.academy ? detail.academy.name : ''},
+        a: {id: detail.academy ? detail.academy.id : '', name: label(detail.academy && detail.academy.name, 80)},
         tm: {
           id: detail.team ? detail.team.id : '',
-          name: detail.team ? detail.team.name : '',
-          age_group: detail.team ? detail.team.age_group : '',
+          name: label(detail.team && detail.team.name, 60),
+          age_group: label(detail.team && detail.team.age_group, 24),
           invite_code: detail.team ? detail.team.invite_code : ''
         },
-        c: {name: detail.coach.name, email: detail.coach.email},
+        c: {
+          name: label(detail.coach && detail.coach.name, 80),
+          email: label(detail.coach && detail.coach.email, 80)
+        },
         player: {
           id: detail.player.id,
           fn: detail.player.first_name,
