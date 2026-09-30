@@ -5194,6 +5194,20 @@ function bindAppBack(){
   window.__ffkPopBound = true;
   window.addEventListener('popstate', () => { requestAppBack(); });
 }
+function isDesktopUi(){
+  try{
+    return !!(window.matchMedia
+      && window.matchMedia('(min-width:720px)').matches
+      && window.matchMedia('(pointer:fine)').matches);
+  }catch(e){
+    return window.innerWidth >= 720;
+  }
+}
+function syncDesktopUiClass(){
+  try{
+    document.documentElement.classList.toggle('pc-ui', isDesktopUi());
+  }catch(e){}
+}
 const SHEET_ANIM_MS = 280;
 const SHEET_EASE = 'cubic-bezier(.22,.61,.36,1)';
 function resetSheet(card){
@@ -5210,10 +5224,20 @@ function openSheet(card){
   if(!card) return;
   resetSheet(card);
   try{
-    card.__sheetAnim = card.animate(
-      [{transform: 'translateY(100%)'}, {transform: 'translateY(0px)'}],
-      {duration: SHEET_ANIM_MS, easing: SHEET_EASE}
-    );
+    if(isDesktopUi()){
+      card.__sheetAnim = card.animate(
+        [
+          {opacity: 0, transform: 'translateY(10px) scale(.985)'},
+          {opacity: 1, transform: 'translateY(0) scale(1)'}
+        ],
+        {duration: 200, easing: SHEET_EASE}
+      );
+    }else{
+      card.__sheetAnim = card.animate(
+        [{transform: 'translateY(100%)'}, {transform: 'translateY(0px)'}],
+        {duration: SHEET_ANIM_MS, easing: SHEET_EASE}
+      );
+    }
   }catch(e){}
 }
 /** Show a bottom-sheet card with the same drag/expand behavior as player edit. */
@@ -5288,6 +5312,8 @@ function bindSheetDrag(cardId, grabId, onClose){
     }
   };
   grab.addEventListener('pointerdown', e => {
+    if(isDesktopUi()) return;
+    if(e.button != null && e.button !== 0) return;
     dragging = true;
     startY = e.clientY;
     shift = 0;
@@ -5300,13 +5326,45 @@ function bindSheetDrag(cardId, grabId, onClose){
     try{ grab.setPointerCapture(e.pointerId); }catch(err){}
   });
   grab.addEventListener('pointermove', e => {
-    if(!dragging) return;
+    if(!dragging || isDesktopUi()) return;
     shift = e.clientY - startY;
     if(shift < -24) card.classList.add('sheet-full');
     card.style.transform = shift > 0 ? 'translateY(' + shift + 'px)' : '';
   });
   grab.addEventListener('pointerup', finish);
   grab.addEventListener('pointercancel', finish);
+}
+function bindOverlayBackdropClose(overlayId, closeFn){
+  const el = document.getElementById(overlayId);
+  if(!el || typeof closeFn !== 'function') return;
+  el.addEventListener('click', e => {
+    if(e.target !== el) return;
+    if(!isDesktopUi()) return;
+    closeFn();
+  });
+}
+function bindDesktopChrome(){
+  syncDesktopUiClass();
+  window.addEventListener('resize', () => {
+    syncDesktopUiClass();
+  });
+  window.addEventListener('keydown', e => {
+    if(e.key !== 'Escape') return;
+    if(e.defaultPrevented) return;
+    // Only dismiss overlays / sheets — do not bounce between main tabs.
+    const overlayOpen = [
+      'intro','transfer','onboard','cropModal','photoSheet','msgMenu','chatPage',
+      'coachRateSheet','coachParentInviteSheet','coachBroadcastSheet','coachTeamMenuSheet',
+      'coachSettingsSheet','coachPlayerSheet','parentClaimSheet','parentLinkSheet',
+      'parentMsgSheet','inboxSheet','previewModal','playerEdit'
+    ].some(id => isElShown(id));
+    if(!overlayOpen && !document.getElementById('app')?.classList.contains('live-on')) return;
+    if(requestAppBack()) e.preventDefault();
+  });
+  bindOverlayBackdropClose('previewModal', () => closeCardPreview());
+  bindOverlayBackdropClose('playerEdit', () => closePlayerEdit(true));
+  bindOverlayBackdropClose('cropModal', () => { if(typeof closeCrop === 'function') closeCrop(); });
+  bindOverlayBackdropClose('photoSheet', () => { if(typeof closePhotoSheet === 'function') closePhotoSheet(); });
 }
 function bindSheets(){
   bindSheetDrag('playerEditCard', 'playerEditGrab', () => closePlayerEdit(true));
@@ -6563,6 +6621,7 @@ async function shareCard(m){
       });
     }
     bindSheets();
+    bindDesktopChrome();
     bindHeroPin();
     bindCameraRestore();
     syncScoreResultHint();
