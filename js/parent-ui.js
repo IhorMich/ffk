@@ -9,14 +9,19 @@
   function labelOf(v, fallback){
     if(v == null) return fallback || '';
     if(typeof v === 'object'){
-      if(v.name != null && typeof v.name !== 'object') return labelOf(v.name, fallback);
-      if(v.first_name || v.last_name){
-        return [v.first_name, v.last_name].filter(Boolean).join(' ') || fallback || '';
+      if(Array.isArray(v)){
+        const joined = v.map(x => labelOf(x)).filter(Boolean).join(' ').trim();
+        return joined || fallback || '';
       }
-      return fallback || '';
+      const fromName = v.name != null ? labelOf(v.name) : '';
+      if(fromName) return fromName;
+      const fromPerson = [labelOf(v.first_name), labelOf(v.last_name)].filter(Boolean).join(' ').trim();
+      if(fromPerson) return fromPerson;
+      const fromAlt = labelOf(v.title || v.label || v.email || v.display_name || v.full_name);
+      return fromAlt || fallback || '';
     }
     const s = String(v).trim();
-    if(!s || s === '[object Object]') return fallback || '';
+    if(!s || s === '[object Object]' || /\[object Object\]/i.test(s)) return fallback || '';
     return s;
   }
   function toast(msg){
@@ -143,9 +148,11 @@
           out.push({
             team_player_id: player.id,
             team_id: team.id,
-            player_name: [player.first_name, player.last_name].filter(Boolean).join(' '),
-            team_name: team.name || '',
-            academy_name: academy.name || ''
+            player_name: labelOf([player.first_name, player.last_name].filter(Boolean).join(' '))
+              || [labelOf(player.first_name), labelOf(player.last_name)].filter(Boolean).join(' '),
+            team_name: labelOf(team && team.name),
+            academy_name: labelOf(academy && academy.name),
+            coach_name: ''
           });
         });
       });
@@ -193,7 +200,11 @@
     if(title) title.textContent = coachMode
       ? labelOf(activeChat.player_name, tt('chatFromPlayer', 'Player / parent'))
       : labelOf(activeChat.coach_name, tt('parentCoachLabel', 'Coach'));
-    if(meta) meta.textContent = [labelOf(activeChat.team_name), labelOf(activeChat.academy_name)].filter(Boolean).join(' · ');
+    if(meta){
+      const teamBit = labelOf(activeChat.team_name);
+      const academyBit = labelOf(activeChat.academy_name);
+      meta.textContent = [teamBit, academyBit].filter(Boolean).join(' · ');
+    }
     const messages = chatMessages(activeChat.team_player_id);
     messages.forEach(message => {
       const incoming = coachMode ? message.sender_role === 'parent' : message.sender_role === 'coach';
@@ -240,7 +251,13 @@
       toast(tt('chatUnavailable', 'Link the player and coach first.'));
       return;
     }
-    activeChat = {...target};
+    activeChat = {
+      ...target,
+      player_name: labelOf(target.player_name),
+      team_name: labelOf(target.team_name),
+      academy_name: labelOf(target.academy_name),
+      coach_name: labelOf(target.coach_name)
+    };
     const page = document.getElementById('chatPage');
     if(page) page.hidden = false;
     renderChatThread();

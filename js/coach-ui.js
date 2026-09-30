@@ -9,6 +9,23 @@
       .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
       .replace(/"/g,'&quot;');
   }
+  function labelOf(v, fallback){
+    if(v == null) return fallback || '';
+    if(typeof v === 'object'){
+      if(Array.isArray(v)){
+        const joined = v.map(x => labelOf(x)).filter(Boolean).join(' ').trim();
+        return joined || fallback || '';
+      }
+      const fromName = v.name != null ? labelOf(v.name) : '';
+      if(fromName) return fromName;
+      const fromPerson = [labelOf(v.first_name), labelOf(v.last_name)].filter(Boolean).join(' ').trim();
+      if(fromPerson) return fromPerson;
+      return labelOf(v.title || v.label || v.email || '') || fallback || '';
+    }
+    const s = String(v).trim();
+    if(!s || s === '[object Object]' || /\[object Object\]/i.test(s)) return fallback || '';
+    return s;
+  }
   function toast(msg){
     if(typeof showToast === 'function') showToast(msg);
   }
@@ -4068,17 +4085,21 @@
     const coachName = (() => {
       const profile = store.getProfile && store.getProfile(session);
       if(profile){
-        return [profile.first_name, profile.last_name].filter(Boolean).join(' ') || profile.email || '';
+        return labelOf([profile.first_name, profile.last_name].filter(Boolean).join(' '))
+          || labelOf(profile.email) || '';
       }
       const account = store.getAccount && store.getAccount(session);
       return account
-        ? [account.first_name, account.last_name].filter(Boolean).join(' ') || account.email || ''
+        ? (labelOf([account.first_name, account.last_name].filter(Boolean).join(' ')) || labelOf(account.email) || '')
         : '';
     })();
+    const teamLabel = labelOf(team && team.name);
+    const ageLabel = labelOf(team && team.age_group);
+    const academyLabel = labelOf(academy && academy.name);
     const nameEl = document.getElementById('coachBroadcastTeamName');
     const countEl = document.getElementById('coachBroadcastCount');
     const textEl = document.getElementById('coachBroadcastText');
-    if(nameEl) nameEl.textContent = team.name + (team.age_group ? ` · ${team.age_group}` : '');
+    if(nameEl) nameEl.textContent = teamLabel + (ageLabel ? ` · ${ageLabel}` : '');
     if(countEl){
       countEl.textContent = tt('coachBroadcastCount', 'Will send to {n} players')
         .replace('{n}', String(players.length));
@@ -4089,8 +4110,8 @@
     const card = document.getElementById('coachBroadcastCard');
     if(sheet){
       sheet.dataset.teamId = team.id;
-      sheet.dataset.teamName = team.name || '';
-      sheet.dataset.academyName = (academy && academy.name) || '';
+      sheet.dataset.teamName = teamLabel;
+      sheet.dataset.academyName = academyLabel;
       sheet.dataset.coachName = coachName;
     }
     if(typeof presentSheetCard === 'function') presentSheetCard(card, back);
@@ -4115,9 +4136,9 @@
     }
     const players = (store.listPlayers(session, team.id) || []).map(p => ({
       team_player_id: p.id,
-      player_name: [p.first_name, p.last_name].filter(Boolean).join(' '),
+      player_name: [labelOf(p.first_name), labelOf(p.last_name)].filter(Boolean).join(' '),
       team_id: team.id,
-      team_name: team.name || '',
+      team_name: labelOf(team.name) || (sheet && sheet.dataset.teamName) || '',
       academy_name: (sheet && sheet.dataset.academyName) || '',
       coach_name: (sheet && sheet.dataset.coachName) || ''
     }));
@@ -4125,7 +4146,7 @@
       const res = inbox.broadcastCoachMessage({
         text,
         team_id: team.id,
-        team_name: team.name || '',
+        team_name: labelOf(team.name) || (sheet && sheet.dataset.teamName) || '',
         academy_name: (sheet && sheet.dataset.academyName) || '',
         coach_name: (sheet && sheet.dataset.coachName) || '',
         players

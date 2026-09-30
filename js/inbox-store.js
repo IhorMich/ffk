@@ -46,11 +46,18 @@
     let s = '';
     if(v == null) s = '';
     else if(typeof v === 'object'){
-      if(v.name != null && typeof v.name !== 'object') s = String(v.name);
-      else if(v.first_name || v.last_name) s = [v.first_name, v.last_name].filter(Boolean).join(' ');
+      if(Array.isArray(v)){
+        s = v.map(x => safeLabel(x, max)).filter(Boolean).join(' ');
+      }else if(v.name != null){
+        s = safeLabel(v.name, max);
+      }else if(v.first_name || v.last_name){
+        s = [safeLabel(v.first_name, 40), safeLabel(v.last_name, 40)].filter(Boolean).join(' ');
+      }else{
+        s = safeLabel(v.title || v.label || v.email || '', max);
+      }
     }else s = String(v);
     s = String(s || '').trim();
-    if(s === '[object Object]') s = '';
+    if(!s || s === '[object Object]' || /\[object Object\]/i.test(s)) s = '';
     return s.slice(0, max || 80);
   }
 
