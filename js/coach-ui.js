@@ -2575,6 +2575,7 @@
       if(typeof setCoachPlan === 'function') setCoachPlan(true);
       toast(tt('coachSignedUp', 'Coach account created on this phone.'));
       renderCoachUi();
+      if(typeof syncPersonalAccountUi === 'function') syncPersonalAccountUi();
     }catch(e){
       const map = {
         bad_email: tt('coachErrEmail', 'Enter a valid email.'),
@@ -2592,6 +2593,7 @@
       if(typeof setCoachPlan === 'function') setCoachPlan(true);
       toast(tt('coachSignedIn', 'Signed in.'));
       renderCoachUi();
+      if(typeof syncPersonalAccountUi === 'function') syncPersonalAccountUi();
     }catch(e){
       toast(tt('coachErrAuth', 'Wrong email or password.'));
     }
@@ -2683,6 +2685,7 @@
     if(typeof setCoachPlan === 'function') setCoachPlan(false);
     toast(tt('coachSignedOut', 'Signed out of Coach.'));
     renderCoachUi();
+    if(typeof syncPersonalAccountUi === 'function') syncPersonalAccountUi();
     if(typeof showView === 'function') showView('new');
   }
   function onCreateAcademy(){

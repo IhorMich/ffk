@@ -383,6 +383,41 @@ async function getPersonalAccountSession(){
 function personalAccountEmail(session){
   return String((session && session.user && session.user.email) || '').trim().toLowerCase();
 }
+function coachAccountEmail(){
+  try{
+    const session = window.CoachStore && window.CoachStore.getSession && window.CoachStore.getSession();
+    return String((session && session.email) || '').trim().toLowerCase();
+  }catch(e){
+    return '';
+  }
+}
+function syncSettingsAccountFooter(personalEmail){
+  const coachEmail = coachAccountEmail();
+  const personal = String(personalEmail || '').trim().toLowerCase();
+  const status = document.getElementById('settingsAccountStatus');
+  const signOutBtn = document.getElementById('settingsSignOutBtn');
+  const coachEmailEl = document.getElementById('settingsCoachEmail');
+  const lines = [];
+  if(personal){
+    lines.push(isPro()
+      ? t('accountStatusPro', {email: personal})
+      : t('accountStatusFree', {email: personal}));
+  }
+  if(coachEmail){
+    lines.push(t('settingsAccountCoach', {email: coachEmail}));
+  }
+  if(status){
+    status.textContent = lines.length
+      ? lines.join('\n')
+      : t('settingsAccountSignedOut');
+    status.style.whiteSpace = lines.length > 1 ? 'pre-line' : '';
+  }
+  if(signOutBtn) signOutBtn.hidden = !(personal || coachEmail);
+  if(coachEmailEl){
+    coachEmailEl.hidden = !coachEmail;
+    if(coachEmail) coachEmailEl.textContent = t('settingsAccountCoach', {email: coachEmail});
+  }
+}
 async function syncPersonalAccountUi(){
   const session = await getPersonalAccountSession();
   const email = personalAccountEmail(session);
@@ -390,16 +425,47 @@ async function syncPersonalAccountUi(){
   const form = document.getElementById('personalAccountForm');
   const signOutBtn = document.getElementById('personalSignOutBtn');
   if(status){
-    status.textContent = email
-      ? (isPro()
+    if(email){
+      status.textContent = isPro()
         ? t('accountStatusPro', {email})
-        : t('accountStatusFree', {email}))
-      : t('accountHint');
+        : t('accountStatusFree', {email});
+    }else if(coachAccountEmail()){
+      status.textContent = t('accountHintCoachActive');
+    }else{
+      status.textContent = t('accountHint');
+    }
   }
-  if(form) form.hidden = !!email;
+  // Hide signup when signed in to Personal, or when Coach session already covers login.
+  const coachEmail = coachAccountEmail();
+  if(form) form.hidden = !!(email || coachEmail);
   if(signOutBtn) signOutBtn.hidden = !email;
+  syncSettingsAccountFooter(email);
   updateCloudSyncStatusUi();
   return session;
+}
+async function onSettingsSignOut(){
+  const personal = personalAccountEmail(await getPersonalAccountSession());
+  const coachEmail = coachAccountEmail();
+  if(personal){
+    try{
+      if(window.ParentCloud && typeof window.ParentCloud.signOut === 'function'){
+        await window.ParentCloud.signOut();
+      }
+    }catch(e){}
+    if(isPro()){
+      settings.isPro = false;
+      saveSettings();
+      syncProUi();
+    }
+  }
+  if(coachEmail && window.CoachStore && typeof window.CoachStore.signOut === 'function'){
+    try{ window.CoachStore.signOut(); }catch(e){}
+    if(typeof setCoachPlan === 'function') setCoachPlan(false);
+    if(typeof renderCoachUi === 'function') renderCoachUi();
+  }
+  showToast(t('accountSignedOut'));
+  await syncPersonalAccountUi();
+  if(typeof syncPlanModeButtons === 'function') syncPlanModeButtons();
 }
 function openPersonalAccount(reasonKey){
   showView('settings');
@@ -3740,6 +3806,7 @@ document.getElementById('proLockBtn')?.addEventListener('click', () => setPro(fa
 document.getElementById('personalSignUpBtn')?.addEventListener('click', () => onPersonalSignUp());
 document.getElementById('personalSignInBtn')?.addEventListener('click', () => onPersonalSignIn());
 document.getElementById('personalSignOutBtn')?.addEventListener('click', () => onPersonalSignOut());
+document.getElementById('settingsSignOutBtn')?.addEventListener('click', () => onSettingsSignOut());
 document.getElementById('personalGoogleBtn')?.addEventListener('click', () => onPersonalGoogle());
 document.getElementById('coachSubUnlockBtn')?.addEventListener('click', () => setCoachSub(true));
 document.getElementById('coachSubLockBtn')?.addEventListener('click', () => setCoachSub(false));
