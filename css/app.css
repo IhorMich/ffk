@@ -3103,7 +3103,11 @@
       margin:0;
       width:100%;
     }
-    #view-stats.active #timingBoard,
+    #view-stats.active #timingBoard{
+      max-width:none;
+      width:100%;
+      margin:0;
+    }
     #view-stats.active .hint[data-i18n="statsPeriodHint"],
     #view-stats.active #statsCardBtn{
       max-width:none;
@@ -3111,6 +3115,7 @@
       margin-left:0;
       margin-right:0;
     }
+    #view-stats.active .hint[data-i18n="statsPeriodHint"]{margin-top:4px;}
     #view-stats.active #statsCardBtn{margin-top:0;}
     #view-stats.active #parentTrainingsPanel,
     #view-stats.active #parentCoachStatsPanel{
