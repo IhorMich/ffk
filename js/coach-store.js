@@ -1802,8 +1802,9 @@
       const p = invite.payload;
       const child = [p.player.fn, p.player.ln].filter(Boolean).join(' ');
       const num = p.player.n ? `#${p.player.n} ` : '';
-      const deep = global.ParentStore ? global.ParentStore.buildLink(p) : `ffk://parent?d=`;
-      const web = global.ParentStore ? global.ParentStore.buildWebLink(p) : '';
+      const web = global.ParentStore
+        ? global.ParentStore.buildCodeWebLink(invite.code)
+        : '';
       return [
         'Matchcard — parent invite',
         `Child: ${num}${child}`,
@@ -1811,9 +1812,8 @@
         `Coach: ${p.c && p.c.name ? p.c.name : ''}`,
         `Code: MC-${invite.code}`,
         '',
-        'Open Matchcard → Player → Add via link, or open:',
-        deep,
-        web && web !== deep ? web : ''
+        'Open Matchcard → Player → Add via QR/link, or open:',
+        web || `MC-${invite.code}`
       ].filter(Boolean).join('\n');
     },
     isCloudConfigured(){

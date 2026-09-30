@@ -3862,12 +3862,13 @@
         box.innerHTML = `<p class="hint">${esc(tt('coachQrFallback', 'QR unavailable — use the link below.'))}</p>`;
         return;
       }
-      const qr = make(0, 'L');
+      const qr = make(0, 'M');
       qr.addData(String(text || ''), 'Byte');
       qr.make();
       const count = qr.getModuleCount();
       const size = 220;
-      const cell = size / count;
+      const quiet = 12;
+      const cell = (size - quiet * 2) / count;
       const canvas = document.createElement('canvas');
       canvas.width = size;
       canvas.height = size;
@@ -3878,7 +3879,14 @@
       ctx.fillStyle = '#0b1220';
       for(let r = 0; r < count; r++){
         for(let c = 0; c < count; c++){
-          if(qr.isDark(r, c)) ctx.fillRect(c * cell, r * cell, cell + 0.5, cell + 0.5);
+          if(qr.isDark(r, c)){
+            ctx.fillRect(
+              quiet + c * cell,
+              quiet + r * cell,
+              cell + 0.5,
+              cell + 0.5
+            );
+          }
         }
       }
       box.appendChild(canvas);
@@ -4031,25 +4039,22 @@
         p.tm && p.tm.age_group
       ].filter(Boolean).join(' · ');
     }
-    const deep = global.ParentStore ? global.ParentStore.buildLink(p) : '';
-    if(linkEl) linkEl.value = deep;
+    // Short code link → clean QR (full JSON payload made a dense “noisy” code).
+    const shortLink = global.ParentStore
+      ? global.ParentStore.buildCodeWebLink(invite.code)
+      : '';
+    if(linkEl) linkEl.value = shortLink || (global.ParentStore ? global.ParentStore.buildLink(p) : '');
     if(codeEl) codeEl.textContent = `MC-${invite.code}`;
     if(emailEl){
       const player = store.getPlayer(session, playerId);
       const contact = String(player && player.contact || '').trim();
       emailEl.value = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact) ? contact : '';
     }
-    // Smaller payload for QR capacity; full snapshot stays in the shareable link.
-    let qrPayload = p;
-    try{
-      qrPayload = store.buildParentInvitePayload(session, playerId, {
-        token: invite.token,
-        code: invite.code,
-        maxRatings: 6
-      });
-    }catch(e){}
-    const qrLink = global.ParentStore ? global.ParentStore.buildLink(qrPayload) : deep;
-    drawInviteQr(qrLink.length < 1800 ? qrLink : `FFKP1:${global.ParentStore.encodePayload(qrPayload)}`);
+    drawInviteQr(shortLink || `MC-${invite.code}`);
+    if(global.ParentCloud && global.ParentCloud.ready && global.ParentCloud.ready()
+      && typeof global.ParentCloud.publishInvite === 'function'){
+      Promise.resolve(global.ParentCloud.publishInvite(invite)).catch(() => {});
+    }
     const card = document.getElementById('coachParentInviteCard');
     if(typeof presentSheetCard === 'function') presentSheetCard(card, back);
     else{
