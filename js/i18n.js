@@ -3925,7 +3925,7 @@ ru:{
   const extra = {
     uk:{
       accountKicker:'Free-акаунт',
-      accountHint:'Перший матч можна зберегти без акаунта. Потім створи Free-акаунт — Pro відкриє повний доступ.',
+      accountHint:'Створи Free-акаунт — Pro відкриє повний доступ.',
       accountEmail:'Email',
       accountPassword:'Пароль',
       accountSignUp:'Створити акаунт',
@@ -3953,7 +3953,7 @@ ru:{
     },
     pl:{
       accountKicker:'Konto Free',
-      accountHint:'Pierwszy mecz możesz zapisać bez konta. Potem załóż konto Free — Pro da pełny dostęp.',
+      accountHint:'Załóż konto Free — Pro da pełny dostęp.',
       accountEmail:'Email',
       accountPassword:'Hasło',
       accountSignUp:'Utwórz konto',
@@ -3981,7 +3981,7 @@ ru:{
     },
     en:{
       accountKicker:'Free account',
-      accountHint:'You can save the first match without an account. Then create a Free account — Pro unlocks full access.',
+      accountHint:'Create a Free account — Pro unlocks full access.',
       accountEmail:'Email',
       accountPassword:'Password',
       accountSignUp:'Create account',
@@ -4009,7 +4009,7 @@ ru:{
     },
     ru:{
       accountKicker:'Free-аккаунт',
-      accountHint:'Первый матч можно сохранить без аккаунта. Потом создай Free-аккаунт — Pro откроет полный доступ.',
+      accountHint:'Создай Free-аккаунт — Pro откроет полный доступ.',
       accountEmail:'Email',
       accountPassword:'Пароль',
       accountSignUp:'Создать аккаунт',
