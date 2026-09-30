@@ -72,6 +72,170 @@
     const sb = parentClient();
     if(sb) await sb.auth.signOut();
   }
+  function isNativeShell(){
+    try{
+      if(typeof global.isNativeApp === 'function') return !!global.isNativeApp();
+      const C = global.Capacitor;
+      if(C && typeof C.isNativePlatform === 'function') return !!C.isNativePlatform();
+    }catch(e){}
+    return false;
+  }
+  function authRedirectTo(){
+    if(isNativeShell()) return 'ffk://auth-callback';
+    try{
+      if(global.location && /^https:/i.test(global.location.href)){
+        const path = String(global.location.pathname || '/');
+        const base = path.includes('/ffk') ? path.replace(/\/[^/]*$/, '/') : '/ffk/';
+        return global.location.origin + (base.endsWith('/') ? base : base + '/');
+      }
+    }catch(e){}
+    return 'https://ihormich.github.io/ffk/';
+  }
+  function capPlugin(name){
+    try{
+      const C = global.Capacitor;
+      if(!C) return null;
+      if(C.Plugins && C.Plugins[name]) return C.Plugins[name];
+      if(typeof C.registerPlugin === 'function') return C.registerPlugin(name);
+    }catch(e){}
+    return null;
+  }
+  async function openAuthUrl(url){
+    const href = String(url || '');
+    if(!href) throw new Error('auth');
+    if(isNativeShell()){
+      const Browser = capPlugin('Browser');
+      if(Browser && typeof Browser.open === 'function'){
+        await Browser.open({url: href, presentationStyle: 'popover'});
+        return;
+      }
+    }
+    global.location.href = href;
+  }
+  async function closeAuthBrowser(){
+    try{
+      const Browser = capPlugin('Browser');
+      if(Browser && typeof Browser.close === 'function') await Browser.close();
+    }catch(e){}
+  }
+  function parseAuthCallbackUrl(rawUrl){
+    const text = String(rawUrl || '');
+    if(!text) return {code: '', access_token: '', refresh_token: ''};
+    let normalized = text;
+    if(/^ffk:/i.test(normalized)) normalized = normalized.replace(/^ffk:/i, 'https://ffk.local');
+    try{
+      const u = new URL(normalized);
+      const hash = String(u.hash || '').replace(/^#/, '');
+      const hashParams = new URLSearchParams(hash);
+      return {
+        code: u.searchParams.get('code') || hashParams.get('code') || '',
+        access_token: u.searchParams.get('access_token') || hashParams.get('access_token') || '',
+        refresh_token: u.searchParams.get('refresh_token') || hashParams.get('refresh_token') || ''
+      };
+    }catch(e){
+      const code = (text.match(/[?&#]code=([^&#]+)/i) || [])[1] || '';
+      const access_token = (text.match(/[?&#]access_token=([^&#]+)/i) || [])[1] || '';
+      const refresh_token = (text.match(/[?&#]refresh_token=([^&#]+)/i) || [])[1] || '';
+      return {
+        code: decodeURIComponent(code),
+        access_token: decodeURIComponent(access_token),
+        refresh_token: decodeURIComponent(refresh_token)
+      };
+    }
+  }
+  async function handleAuthCallbackUrl(rawUrl){
+    const sb = parentClient();
+    if(!sb) throw new Error('no_cloud');
+    const parts = parseAuthCallbackUrl(rawUrl);
+    let session = null;
+    if(parts.code){
+      const {data, error} = await sb.auth.exchangeCodeForSession(parts.code);
+      if(error) throw error;
+      session = data && data.session;
+    }else if(parts.access_token && parts.refresh_token){
+      const {data, error} = await sb.auth.setSession({
+        access_token: parts.access_token,
+        refresh_token: parts.refresh_token
+      });
+      if(error) throw error;
+      session = data && data.session;
+    }
+    await closeAuthBrowser();
+    return session || null;
+  }
+  async function consumeAuthRedirectFromLocation(){
+    try{
+      if(!global.location) return null;
+      const href = String(global.location.href || '');
+      if(!/[?&#](code|access_token)=/i.test(href)) return null;
+      const session = await handleAuthCallbackUrl(href);
+      try{
+        const clean = global.location.origin + global.location.pathname + global.location.search
+          .replace(/([?&])(code|access_token|refresh_token|provider|type)=[^&]*/gi, '$1')
+          .replace(/[?&]$/, '');
+        global.history.replaceState({}, '', clean.split('#')[0]);
+      }catch(e){}
+      return session;
+    }catch(e){
+      return null;
+    }
+  }
+  async function signInWithGoogle(){
+    const sb = parentClient();
+    if(!sb) throw new Error('no_cloud');
+    const native = isNativeShell();
+    const {data, error} = await sb.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: authRedirectTo(),
+        skipBrowserRedirect: native,
+        queryParams: {
+          access_type: 'offline',
+          prompt: 'select_account'
+        }
+      }
+    });
+    if(error) throw error;
+    if(native){
+      if(!data || !data.url) throw new Error('auth');
+      await openAuthUrl(data.url);
+    }
+    return true;
+  }
+  let authDeepLinksBound = false;
+  function bindAuthDeepLinks(onSession){
+    if(authDeepLinksBound) return;
+    authDeepLinksBound = true;
+    const notify = async (session) => {
+      if(!session) return;
+      try{ if(typeof onSession === 'function') await onSession(session); }catch(e){}
+    };
+    consumeAuthRedirectFromLocation().then(notify).catch(() => {});
+    try{
+      const App = capPlugin('App');
+      if(App && typeof App.addListener === 'function'){
+        App.addListener('appUrlOpen', async (event) => {
+          const url = event && event.url ? String(event.url) : '';
+          if(!/auth-callback|access_token=|code=/i.test(url)) return;
+          try{
+            const session = await handleAuthCallbackUrl(url);
+            await notify(session);
+          }catch(e){}
+        });
+        if(typeof App.getLaunchUrl === 'function'){
+          App.getLaunchUrl().then(async (res) => {
+            const url = res && res.url ? String(res.url) : '';
+            if(!url) return;
+            if(!/auth-callback|access_token=|code=/i.test(url)) return;
+            try{
+              const session = await handleAuthCallbackUrl(url);
+              await notify(session);
+            }catch(e){}
+          }).catch(() => {});
+        }
+      }
+    }catch(e){}
+  }
   /** Parent account: anonymous when the project allows it, otherwise email + password. */
   async function signInWithEmail(email, password){
     try{
@@ -435,6 +599,10 @@
     signIn,
     signOut,
     signInWithEmail,
+    signInWithGoogle,
+    handleAuthCallbackUrl,
+    bindAuthDeepLinks,
+    consumeAuthRedirectFromLocation,
     tokenFromUrl,
     buildInviteUrl,
     coachLinks,

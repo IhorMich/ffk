@@ -822,6 +822,10 @@ window.ffkIsNative = function () {
         <div class="pro-kicker" data-i18n="accountKicker">Free-аккаунт</div>
         <p class="hint" id="personalAccountStatus" data-i18n="accountHint">Первый матч можно сохранить без аккаунта. Потом создай Free-аккаунт — Pro откроет полный доступ.</p>
         <div id="personalAccountForm">
+          <div class="row-actions" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
+            <button class="save-btn" id="personalGoogleBtn" type="button" data-i18n="accountGoogle">Войти через Google</button>
+          </div>
+          <p class="hint" data-i18n="accountOrEmail" style="margin:10px 0 4px;">или email и пароль</p>
           <label class="field">
             <span data-i18n="accountEmail">Email</span>
             <input id="personalEmail" type="email" autocomplete="username" inputmode="email">

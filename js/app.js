@@ -34,6 +34,7 @@ function isNativeApp(){
   const proto = location.protocol;
   return proto === 'capacitor:' || proto === 'ionic:';
 }
+window.isNativeApp = isNativeApp;
 function capPlugin(name){
   try{
     const C = window.Capacitor;
@@ -475,6 +476,27 @@ async function onPersonalSignOut(){
   }
   showToast(t('accountSignedOut'));
   await syncPersonalAccountUi();
+}
+async function onPersonalGoogle(){
+  if(!window.ParentCloud || typeof window.ParentCloud.signInWithGoogle !== 'function'){
+    showToast(t('accountCloudMissing'));
+    return;
+  }
+  try{
+    showToast(t('accountGoogleOpening'));
+    await window.ParentCloud.signInWithGoogle();
+  }catch(e){
+    const map = {
+      no_cloud: t('accountCloudMissing'),
+      auth: t('accountErrGeneric')
+    };
+    const msg = String((e && e.message) || '');
+    if(/provider is not enabled|validation_failed|unsupported_provider/i.test(msg)){
+      showToast(t('accountGoogleDisabled'));
+      return;
+    }
+    showToast(map[msg] || t('accountErrGeneric'));
+  }
 }
 async function setPro(on){
   if(on){
@@ -3663,6 +3685,7 @@ document.getElementById('proLockBtn')?.addEventListener('click', () => setPro(fa
 document.getElementById('personalSignUpBtn')?.addEventListener('click', () => onPersonalSignUp());
 document.getElementById('personalSignInBtn')?.addEventListener('click', () => onPersonalSignIn());
 document.getElementById('personalSignOutBtn')?.addEventListener('click', () => onPersonalSignOut());
+document.getElementById('personalGoogleBtn')?.addEventListener('click', () => onPersonalGoogle());
 document.getElementById('coachSubUnlockBtn')?.addEventListener('click', () => setCoachSub(true));
 document.getElementById('coachSubLockBtn')?.addEventListener('click', () => setCoachSub(false));
 document.getElementById('appPushOnBtn')?.addEventListener('click', async () => {
@@ -5755,6 +5778,12 @@ async function shareCard(m){
     bindAppBack();
     bindTapHaptics();
     bindBehaviorSlider();
+    if(window.ParentCloud && typeof window.ParentCloud.bindAuthDeepLinks === 'function'){
+      window.ParentCloud.bindAuthDeepLinks(async () => {
+        showToast(t('accountSignedIn'));
+        await syncPersonalAccountUi();
+      });
+    }
     bindSheets();
     bindHeroPin();
     bindCameraRestore();
