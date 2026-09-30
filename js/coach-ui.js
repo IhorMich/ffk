@@ -4154,8 +4154,11 @@
     trainFormOpen = !!on;
     if(trainFormOpen && trainFolded()){
       setTrainFolded(false);
-      syncTrainFoldUi();
     }
+    if(!trainFormOpen && opts.fold){
+      setTrainFolded(true);
+    }
+    syncTrainFoldUi();
     const wrap = document.getElementById('coachTrainCreate');
     if(wrap) wrap.hidden = !trainFormOpen;
     if(trainFormOpen){
@@ -4169,21 +4172,26 @@
       }
       if(opts.mode) trainMode = opts.mode;
       syncTrainModeUi();
-      try{ wrap.scrollIntoView({behavior: 'smooth', block: 'nearest'}); }catch(e){}
     }else if(!opts.keepDate){
       trainSelectedDate = '';
     }
     syncTrainNewBtnUi();
+    // Always refresh calendar+list with the form — one open action, not fold vs form.
+    const store = global.CoachStore;
+    const session = store && store.getSession && store.getSession();
+    const teamId = store && store.getActiveTeamId && store.getActiveTeamId();
+    const team = session && teamId ? store.getTeam(session, teamId) : null;
+    if(session && team) renderTrainingsPane(session, team);
+    if(trainFormOpen){
+      const anchor = document.getElementById('coachTrainingsBox') || document.getElementById('coachTrainBody');
+      try{ anchor && anchor.scrollIntoView({behavior: 'smooth', block: 'start'}); }catch(e){}
+    }
   }
   function openTrainDay(ymd){
     if(!/^\d{4}-\d{2}-\d{2}$/.test(String(ymd || ''))) return;
     trainSelectedDate = ymd;
     trainMode = 'once';
     setTrainFormOpen(true, {date: ymd, mode: 'once'});
-    const session = global.CoachStore && global.CoachStore.getSession();
-    const teamId = global.CoachStore && global.CoachStore.getActiveTeamId && global.CoachStore.getActiveTeamId();
-    const team = session && teamId ? global.CoachStore.getTeam(session, teamId) : null;
-    if(session && team) renderTrainCalendar(session, team);
   }
   function syncTrainModeUi(){
     document.querySelectorAll('#coachTrainMode .chip').forEach(chip => {
@@ -4821,27 +4829,31 @@
     });
 
     document.getElementById('coachTrainFoldBtn')?.addEventListener('click', () => {
-      setTrainFolded(!trainFolded());
-      if(trainFolded()) setTrainFormOpen(false, {keepDate: true});
-      renderCoachUi();
+      const nextFolded = !trainFolded();
+      setTrainFolded(nextFolded);
+      if(nextFolded){
+        trainFormOpen = false;
+        const wrap = document.getElementById('coachTrainCreate');
+        if(wrap) wrap.hidden = true;
+        syncTrainNewBtnUi();
+      }
+      syncTrainFoldUi();
+      const store = global.CoachStore;
+      const session = store && store.getSession && store.getSession();
+      const teamId = store && store.getActiveTeamId && store.getActiveTeamId();
+      const team = session && teamId ? store.getTeam(session, teamId) : null;
+      if(session && team) renderTrainingsPane(session, team);
     });
     document.getElementById('coachTrainNewBtn')?.addEventListener('click', () => {
-      if(trainFormOpen){
-        setTrainFormOpen(false);
+      if(trainFormOpen && !trainFolded()){
+        // Close whole block together (calendar + form).
+        setTrainFormOpen(false, {fold: true});
       }else{
         setTrainFormOpen(true, {date: trainSelectedDate || today(), mode: trainMode || 'once'});
-        const session = global.CoachStore && global.CoachStore.getSession();
-        const teamId = global.CoachStore && global.CoachStore.getActiveTeamId && global.CoachStore.getActiveTeamId();
-        const team = session && teamId ? global.CoachStore.getTeam(session, teamId) : null;
-        if(session && team && !trainFolded()) renderTrainCalendar(session, team);
       }
     });
     document.getElementById('coachTrainCancelBtn')?.addEventListener('click', () => {
-      setTrainFormOpen(false);
-      const session = global.CoachStore && global.CoachStore.getSession();
-      const teamId = global.CoachStore && global.CoachStore.getActiveTeamId && global.CoachStore.getActiveTeamId();
-      const team = session && teamId ? global.CoachStore.getTeam(session, teamId) : null;
-      if(session && team && !trainFolded()) renderTrainCalendar(session, team);
+      setTrainFormOpen(false, {fold: true});
     });
     document.getElementById('coachTrainSaveBtn')?.addEventListener('click', () => onSaveTraining());
     document.getElementById('coachTrainDate')?.addEventListener('change', () => {
