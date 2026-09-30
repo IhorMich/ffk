@@ -559,8 +559,12 @@
         team_player_id: link.player.id,
         parent_link_id: link.id,
         player_name: [link.player.first_name, link.player.last_name].filter(Boolean).join(' '),
-        team_name: link.team && link.team.name ? link.team.name : '',
-        academy_name: link.academy && link.academy.name ? link.academy.name : '',
+        team_name: (link.team && typeof link.team.name === 'string' && link.team.name !== '[object Object]')
+          ? link.team.name
+          : '',
+        academy_name: (link.academy && typeof link.academy.name === 'string' && link.academy.name !== '[object Object]')
+          ? link.academy.name
+          : '',
         new_club: meta && meta.new_club ? meta.new_club : '',
         new_team: meta && meta.new_team ? meta.new_team : '',
         reason: 'club_change'

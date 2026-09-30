@@ -473,14 +473,14 @@
       const unreadCls = m.status === 'read' ? '' : ' unread';
       const isCoachLeave = m.type === 'coach_leave_request';
       if(isCoachLeave){
-        const where = [m.new_club, m.new_team].filter(Boolean).join(' · ') || '—';
+        const where = [labelOf(m.new_club), labelOf(m.new_team)].filter(Boolean).join(' · ') || '—';
         const decision = m.decision === 'accepted'
           ? ` · ${tt('coachLeaveAcceptedShort', 'Accepted')}`
           : (m.decision === 'declined' ? ` · ${tt('coachLeaveDeclinedShort', 'Declined')}` : '');
         return `<button type="button" class="parent-msg-row${unreadCls}" data-parent-msg="${esc(m.id)}">
           <span class="parent-link-main">
             <b>${esc(tt('coachLeaveKicker', 'Leave request'))}${esc(decision)}</b>
-            <span>${esc([m.player_name, where].filter(Boolean).join(' · '))}</span>
+            <span>${esc([labelOf(m.player_name), where].filter(Boolean).join(' · '))}</span>
           </span>
           <span class="parent-msg-check" aria-hidden="true">✓</span>
         </button>`;
@@ -631,14 +631,22 @@
       return;
     }
     if(msg.type === 'coach_leave_request'){
-      const where = [msg.new_club, msg.new_team].filter(Boolean).join(' · ') || '—';
+      const where = [labelOf(msg.new_club), labelOf(msg.new_team)].filter(Boolean).join(' · ') || '—';
       const pending = !msg.decision;
+      let teamLabel = labelOf(msg.team_name);
+      if(!teamLabel && msg.team_id && global.CoachStore && typeof global.CoachStore.getTeam === 'function'){
+        try{
+          const session = global.CoachStore.getSession && global.CoachStore.getSession();
+          const team = session ? global.CoachStore.getTeam(session, msg.team_id) : null;
+          teamLabel = labelOf(team && team.name);
+        }catch(e){}
+      }
       body.innerHTML = `
         <div class="parent-confirm-badge">${esc(tt('coachLeaveKicker', 'Leave request'))}</div>
-        <h3 class="coach-rate-name">${esc(msg.player_name || '—')}</h3>
+        <h3 class="coach-rate-name">${esc(labelOf(msg.player_name, '—'))}</h3>
         <div class="parent-msg-details">
           <p class="parent-msg-detail"><b>${esc(tt('coachLeaveNewClub', 'New club'))}</b><span>${esc(where)}</span></p>
-          <p class="parent-msg-detail"><b>${esc(tt('parentInboxTeam', 'Team'))}</b><span>${esc(msg.team_name || '—')}</span></p>
+          <p class="parent-msg-detail"><b>${esc(tt('parentInboxTeam', 'Team'))}</b><span>${esc(teamLabel || '—')}</span></p>
         </div>
         ${pending ? `<div class="parent-rsvp parent-rsvp-footer">
           <p class="parent-rsvp-lead">${esc(tt('coachLeaveLead', 'Player asks to leave after a club change. Confirm removes them from the roster.'))}</p>
@@ -889,25 +897,59 @@
     }
   }
   function onCoachLeaveInboxDecision(btn){
-    const requestId = btn && btn.dataset.requestId;
-    const decision = btn && btn.dataset.coachLeaveDecision;
+    const requestId = btn && (btn.dataset.requestId || btn.getAttribute('data-request-id'));
+    const decision = btn && (btn.dataset.coachLeaveDecision || btn.getAttribute('data-coach-leave-decision'));
     const coach = global.CoachStore;
-    const session = coach && coach.getSession && coach.getSession();
-    if(!requestId || !session || !['accept','decline'].includes(decision)) return;
+    let session = coach && coach.getSession && coach.getSession();
+    if(!requestId || !['accept','decline'].includes(decision)){
+      toast(tt('coachErrGeneric', 'Something went wrong.'));
+      return;
+    }
+    if(!session){
+      // Same-device coach inbox can open before session hydrate; retry once from storage.
+      try{ session = coach && coach.getSession && coach.getSession(); }catch(e){}
+    }
+    if(!session){
+      toast(tt('coachNeedLogin', 'Sign in as coach first.'));
+      return;
+    }
+    const body = document.getElementById('parentMsgBody');
+    if(body && body.dataset.leaveBusy === '1') return;
+    if(body) body.dataset.leaveBusy = '1';
     try{
       coach.resolveLeaveRequest(session, requestId, decision);
       toast(decision === 'accept'
         ? tt('coachLeaveAccepted', 'Player removed from the team. Parent link cleared.')
         : tt('coachLeaveDeclined', 'Leave declined. Player stays on the team.'));
-      const msg = global.InboxStore && global.InboxStore.listForCoach
+      // Prefer the updated inbox row (decision set); fall back to patching the open sheet.
+      let msg = global.InboxStore && global.InboxStore.listForCoach
         ? global.InboxStore.listForCoach().find(m => String(m.request_id) === String(requestId))
         : null;
+      if(!msg && global.InboxStore && typeof global.InboxStore.resolveCoachLeaveRequest === 'function'){
+        msg = global.InboxStore.resolveCoachLeaveRequest(
+          requestId,
+          decision === 'accept' ? 'accepted' : 'declined'
+        );
+      }
       if(msg) fillParentMessageBody(msg);
+      else if(body){
+        // Last resort: hide action buttons so the coach is not stuck.
+        body.querySelectorAll('[data-coach-leave-decision]').forEach(el => {
+          const wrap = el.closest('.parent-rsvp');
+          if(wrap) wrap.remove();
+        });
+      }
       renderParentInbox();
       if(typeof renderCoachUi === 'function') renderCoachUi();
       if(typeof syncPlayerLeaveUi === 'function') syncPlayerLeaveUi();
     }catch(e){
+      console.warn('coach leave decision', e);
       toast(tt('coachErrGeneric', 'Something went wrong.'));
+    }finally{
+      setTimeout(() => {
+        const el = document.getElementById('parentMsgBody');
+        if(el) el.dataset.leaveBusy = '';
+      }, 400);
     }
   }
   function closeParentMsgSheet(){
@@ -1582,6 +1624,14 @@
         e.stopPropagation();
         onCoachLeaveInboxDecision(leaveBtn);
       }
+    });
+    // Backup: sheet-level capture so ✓/✕ still work if body re-render races.
+    document.getElementById('parentMsgSheet')?.addEventListener('click', e => {
+      const leaveBtn = e.target.closest('[data-coach-leave-decision]');
+      if(!leaveBtn) return;
+      e.preventDefault();
+      e.stopPropagation();
+      onCoachLeaveInboxDecision(leaveBtn);
     });
     document.getElementById('parentLinksList')?.addEventListener('click', e => {
       const btn = e.target.closest('[data-parent-link]');

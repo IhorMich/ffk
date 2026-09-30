@@ -650,6 +650,17 @@
       const db = readDb();
       const player = db.team_players.find(p => p.id === pid);
       if(!player) throw new Error('no_player');
+      const team = db.teams.find(t => t.id === player.team_id);
+      const academy = team && db.academies.find(a => a.id === team.academy_id);
+      const clean = (v, max) => {
+        if(v == null) return '';
+        if(typeof v === 'object'){
+          if(v.name != null && typeof v.name !== 'object') return String(v.name).trim().slice(0, max);
+          return '';
+        }
+        const s = String(v).trim();
+        return (!s || s === '[object Object]') ? '' : s.slice(0, max);
+      };
       const existing = (db.leave_requests || []).find(r =>
         String(r.team_player_id) === pid && String(r.status || 'pending') === 'pending'
       );
@@ -659,11 +670,11 @@
         team_player_id: pid,
         team_id: player.team_id,
         parent_link_id: linkId,
-        player_name: String(payload.player_name || [player.first_name, player.last_name].filter(Boolean).join(' ')).slice(0, 80),
-        team_name: String(payload.team_name || '').slice(0, 60),
-        academy_name: String(payload.academy_name || '').slice(0, 80),
-        new_club: String(payload.new_club || '').slice(0, 60),
-        new_team: String(payload.new_team || '').slice(0, 60),
+        player_name: clean(payload.player_name || [player.first_name, player.last_name].filter(Boolean).join(' '), 80),
+        team_name: clean(payload.team_name, 60) || clean(team && team.name, 60),
+        academy_name: clean(payload.academy_name, 80) || clean(academy && academy.name, 80),
+        new_club: clean(payload.new_club, 60),
+        new_team: clean(payload.new_team, 60),
         reason: String(payload.reason || 'club_change').slice(0, 40),
         status: 'pending',
         created_at: existing ? existing.created_at : now,
@@ -689,12 +700,43 @@
       const ok = decision === 'accept' || decision === 'decline';
       if(!id || !ok) throw new Error('bad_decision');
       const db = readDb();
-      const req = (db.leave_requests || []).find(r => r.id === id);
+      let req = (db.leave_requests || []).find(r => r.id === id);
+      // Inbox can still have the request after a sync wiped leave_requests.
+      if(!req && global.InboxStore && typeof global.InboxStore.listForCoach === 'function'){
+        const msg = global.InboxStore.listForCoach().find(m =>
+          m.type === 'coach_leave_request' && String(m.request_id || '') === id
+        );
+        if(msg){
+          req = {
+            id,
+            team_player_id: msg.team_player_id,
+            team_id: msg.team_id,
+            parent_link_id: msg.parent_link_id,
+            player_name: msg.player_name,
+            team_name: msg.team_name,
+            academy_name: msg.academy_name,
+            new_club: msg.new_club,
+            new_team: msg.new_team,
+            status: 'pending'
+          };
+          if(!Array.isArray(db.leave_requests)) db.leave_requests = [];
+          db.leave_requests.push({...req, created_at: msg.created_at || new Date().toISOString(), updated_at: new Date().toISOString()});
+          writeDb(db);
+        }
+      }
       if(!req) throw new Error('not_found');
-      if(!this.getPlayer(session, req.team_player_id)) throw new Error('forbidden');
+      const player = this.getPlayer(session, req.team_player_id);
+      // Decline can proceed even if the roster row is already gone.
+      if(decision === 'accept' && !player){
+        // Still clear the parent link / inbox so the UI does not stay stuck.
+      }else if(decision === 'decline' && !player){
+        /* ok */
+      }else if(!player){
+        throw new Error('forbidden');
+      }
       const now = new Date().toISOString();
       if(decision === 'decline'){
-        db.leave_requests = db.leave_requests.map(r =>
+        db.leave_requests = (db.leave_requests || []).map(r =>
           r.id === id ? {...r, status: 'declined', updated_at: now} : r
         );
         writeDb(db);
@@ -716,7 +758,7 @@
         return {request: {...req, status: 'declined'}, removed: false};
       }
       // Accept: unlink parent + remove player from roster.
-      db.leave_requests = db.leave_requests.map(r =>
+      db.leave_requests = (db.leave_requests || []).map(r =>
         r.id === id ? {...r, status: 'accepted', updated_at: now} : r
       );
       writeDb(db);
@@ -728,13 +770,15 @@
           global.ParentStore.removeLinksForPlayer(pid);
         }
       }catch(e){}
-      this.removePlayer(session, pid);
+      try{
+        if(player) this.removePlayer(session, pid);
+      }catch(e){}
       try{
         if(global.InboxStore && typeof global.InboxStore.resolveCoachLeaveRequest === 'function'){
           global.InboxStore.resolveCoachLeaveRequest(req.id, 'accepted');
         }
       }catch(e){}
-      return {request: {...req, status: 'accepted'}, removed: true};
+      return {request: {...req, status: 'accepted'}, removed: !!player};
     },
     getActiveMatchId(){
       return readDb().activeMatchId || '';
