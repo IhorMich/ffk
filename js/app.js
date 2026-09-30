@@ -706,14 +706,18 @@ function setCoachSub(on){
 }
 function syncCoachBillingUi(){
   const on = isCoachSub();
-  const showBilling = !!settings.devBilling;
+  // Test unlock until Play Billing / App Store IAP ships.
+  const showBilling = true;
   document.documentElement.classList.toggle('is-coach-sub', on);
   const unlock = document.getElementById('coachSubUnlockBtn');
   const lock = document.getElementById('coachSubLockBtn');
   const hint = document.getElementById('coachSubHint');
   if(unlock) unlock.hidden = !showBilling || on;
   if(lock) lock.hidden = !showBilling || !on;
-  if(hint) hint.hidden = !showBilling;
+  if(hint){
+    hint.hidden = !showBilling;
+    if(showBilling) hint.textContent = t('coachSubHint') || hint.textContent;
+  }
   const open = document.getElementById('openCoachBtn');
   if(open) open.disabled = false;
 }
@@ -736,9 +740,7 @@ function syncPushSettingsUi(){
 }
 window.syncPushSettingsUi = syncPushSettingsUi;
 function proTeaserHtml(titleKey){
-  const unlock = settings.devBilling
-    ? `<button class="save-btn pro-lock-btn" type="button">${escapeHtml(t('proUnlock'))}</button>`
-    : '';
+  const unlock = `<button class="save-btn pro-lock-btn" type="button">${escapeHtml(t('proUnlock'))}</button>`;
   return `<div class="pro-lock">
     <div class="pro-lock-kicker">Matchcard Pro</div>
     <p>${escapeHtml(t(titleKey))}</p>
@@ -752,9 +754,20 @@ function syncProUi(){
   if(body) body.textContent = isPro() ? t('proBodyOn') : t('proBodyOff');
   const unlock = document.getElementById('proUnlockBtn');
   const lock = document.getElementById('proLockBtn');
-  const showBilling = !!settings.devBilling;
-  if(unlock) unlock.hidden = !showBilling || isPro();
-  if(lock) lock.hidden = !showBilling || !isPro();
+  // Always show test purchase / cancel until real store IAP is wired.
+  if(unlock){
+    unlock.hidden = isPro();
+    unlock.disabled = false;
+  }
+  if(lock){
+    lock.hidden = !isPro();
+    lock.disabled = false;
+  }
+  const testHint = document.getElementById('proTestHint');
+  if(testHint){
+    testHint.hidden = false;
+    testHint.textContent = t('proTestHint') || 'Test unlock on this phone. Store billing comes later.';
+  }
   const cloudCard = document.getElementById('cloudSyncCard');
   if(cloudCard) cloudCard.hidden = !isPro();
   const add = document.getElementById('addPlayerBtn');
@@ -4110,10 +4123,6 @@ document.addEventListener('click', e => {
   const btn = e.target.closest('.pro-lock-btn');
   if(!btn) return;
   e.preventDefault();
-  if(!settings.devBilling){
-    offerPro();
-    return;
-  }
   setPro(true);
 });
 let versionTapCount = 0;

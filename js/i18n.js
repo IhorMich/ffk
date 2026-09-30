@@ -3613,7 +3613,8 @@ ru:{
     settingsDeleteWipeConfirm: 'Also erase match history and player cards on this phone?',
     settingsDeleteDone: 'Signed out on this device. Email support to finish cloud deletion if needed.',
     settingsSupportFallback: 'Email: ihormykhailiuk@gmail.com',
-    settingsAboutBody: 'Matchcard — match ratings for player, parent and coach.'
+    settingsAboutBody: 'Matchcard — match ratings for player, parent and coach.',
+    proTestHint: 'Test unlock on this phone. Store billing comes later.'
   };
   const extra = {
     uk:{
@@ -3631,7 +3632,8 @@ ru:{
       settingsDeleteLocalConfirm:'Очистити особисті дані Matchcard на цьому телефоні?',
       settingsDeleteWipeConfirm:'Також стерти історію матчів і картки гравців на цьому телефоні?',
       settingsDeleteDone:'Ви вийшли на цьому пристрої. Для повного видалення в хмарі напишіть у підтримку.',
-      settingsAboutBody:'Matchcard — оцінки матчів для гравця, батька і тренера.'
+      settingsAboutBody:'Matchcard — оцінки матчів для гравця, батька і тренера.',
+      proTestHint:'Тестове увімкнення на цьому телефоні. Оплата через магазин з’явиться пізніше.'
     },
     pl:{
       sVersion:'Wersja {v}', sPrivacy:'Prywatność', sTerms:'Warunki korzystania',
@@ -3658,7 +3660,8 @@ ru:{
       settingsDeleteLocalConfirm:'Очистить личные данные Matchcard на этом телефоне?',
       settingsDeleteWipeConfirm:'Также стереть историю матчей и карточки игроков на этом телефоне?',
       settingsDeleteDone:'Вы вышли на этом устройстве. Для полного удаления в облаке напишите в поддержку.',
-      settingsAboutBody:'Matchcard — оценки матчей для игрока, родителя и тренера.'
+      settingsAboutBody:'Matchcard — оценки матчей для игрока, родителя и тренера.',
+      proTestHint:'Тестовое включение на этом телефоне. Оплата через магазин появится позже.'
     },
     es:{ sVersion:'Versión {v}', sPrivacy:'Privacidad', sTerms:'Términos de uso', sIcons:'Iconos de acciones', sIconsHint:'Compáralos en la pestaña Partido.', icons_line:'Línea', icons_clear:'Siluetas', icons_bright:'Vivos', icons_solid:'Relleno', settingsSecAccount:'Cuenta', settingsDeleteAccount:'Eliminar cuenta', settingsRate:'Valorar la app', settingsSupport:'Contactar soporte' },
     de:{ sVersion:'Version {v}', sPrivacy:'Datenschutz', sTerms:'Nutzungsbedingungen', sIcons:'Aktions-Icons', sIconsHint:'Vergleiche unter Spiel.', icons_line:'Linie', icons_clear:'Silhouetten', icons_bright:'Bunt', icons_solid:'Fläche', settingsSecAccount:'Konto', settingsDeleteAccount:'Konto löschen', settingsRate:'App bewerten', settingsSupport:'Support kontaktieren' },
