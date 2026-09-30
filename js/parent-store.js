@@ -383,6 +383,20 @@
           coach.deliverPendingForPlayer(session, norm.player.id);
         }
       }catch(e){}
+      try{
+        if(global.CoachStore && typeof global.CoachStore.markParentInviteClaimed === 'function'){
+          global.CoachStore.markParentInviteClaimed({
+            token: row.token,
+            code: row.code,
+            team_player_id: row.player && row.player.id
+          });
+        }
+      }catch(e){}
+      try{
+        if(global.ParentCloud && typeof global.ParentCloud.rememberCoachLink === 'function'){
+          global.ParentCloud.rememberCoachLink(row);
+        }
+      }catch(e){}
       return row;
     },
     linkedPlayerIds(personalPlayerId){

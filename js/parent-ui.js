@@ -1330,6 +1330,12 @@
       if(global.ParentCloud && typeof global.ParentCloud.syncParentData === 'function'){
         try{ await global.ParentCloud.syncParentData(); }catch(e){}
       }
+      try{
+        if(global.ParentCloud && typeof global.ParentCloud.pullCoachData === 'function'
+          && typeof isCoachPlan === 'function' && isCoachPlan()){
+          await global.ParentCloud.pullCoachData();
+        }
+      }catch(e){}
       if(typeof renderCoachUi === 'function' && typeof isCoachPlan === 'function' && isCoachPlan()){
         try{ renderCoachUi(); }catch(e){}
       }

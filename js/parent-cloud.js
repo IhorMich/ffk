@@ -290,6 +290,41 @@
     const id = String(teamPlayerId || '');
     return !!id && coachLinks().some(link => String(link.team_player_id || '') === id);
   }
+  /** Keep coach-side link cache warm right after a same-device claim. */
+  function rememberCoachLink(link){
+    const teamPlayerId = String(link && (link.team_player_id || (link.player && link.player.id)) || '');
+    if(!teamPlayerId) return;
+    const personalPlayerId = String(link && link.personal_player_id || '');
+    let parentUserId = String(link && link.parent_user_id || '');
+    if(!parentUserId){
+      try{
+        const sb = parentClient();
+        // Best-effort: syncChats needs parent_user_id for coach→parent delivery.
+        sb && sb.auth.getSession().then(res => {
+          const uid = res && res.data && res.data.session && res.data.session.user && res.data.session.user.id;
+          if(!uid) return;
+          try{
+            const prev = coachLinks().map(row =>
+              String(row.team_player_id || '') === teamPlayerId
+                ? {...row, parent_user_id: String(uid)}
+                : row
+            );
+            localStorage.setItem(COACH_LINKS_KEY, JSON.stringify(prev));
+          }catch(e){}
+        }).catch(() => {});
+      }catch(e){}
+    }
+    try{
+      const prev = coachLinks().filter(row => String(row.team_player_id || '') !== teamPlayerId);
+      prev.push({
+        team_player_id: teamPlayerId,
+        personal_player_id: personalPlayerId,
+        parent_user_id: parentUserId,
+        status: 'active'
+      });
+      localStorage.setItem(COACH_LINKS_KEY, JSON.stringify(prev));
+    }catch(e){}
+  }
   async function publishInvite(invite){
     const sb = client('coach');
     if(!sb || !invite) throw new Error('no_cloud');
@@ -737,15 +772,23 @@
       .in('team_player_id', playerIds)
       .neq('status', 'revoked');
     if(linksRes.error) throw linksRes.error;
-    try{ localStorage.setItem(COACH_LINKS_KEY, JSON.stringify(linksRes.data || [])); }catch(e){}
-    const profileIds = [...new Set((linksRes.data || []).map(l => l.personal_player_id).filter(Boolean))];
+    const nextLinks = Array.isArray(linksRes.data) ? linksRes.data : [];
+    // Never wipe a healthy coach link cache with an empty transient result.
+    // Empty is only trusted when we also have no local players to query.
+    try{
+      const prev = coachLinks();
+      if(nextLinks.length || !prev.length || !playerIds.length){
+        localStorage.setItem(COACH_LINKS_KEY, JSON.stringify(nextLinks));
+      }
+    }catch(e){}
+    const profileIds = [...new Set(nextLinks.map(l => l.personal_player_id).filter(Boolean))];
     if(profileIds.length){
       const profilesRes = await sb.from('personal_players')
         .select('id,photo_path')
         .in('id', profileIds);
       if(profilesRes.error) throw profilesRes.error;
       const profiles = new Map((profilesRes.data || []).map(p => [String(p.id), p]));
-      for(const link of (linksRes.data || [])){
+      for(const link of nextLinks){
         const profile = profiles.get(String(link.personal_player_id));
         if(!profile || !profile.photo_path || typeof setCoachMediaPhoto !== 'function') continue;
         const signed = await sb.storage.from('player-media').createSignedUrl(profile.photo_path, 3600);
@@ -754,7 +797,7 @@
         }
       }
     }
-    await syncChats(session, linksRes.data || [], 'coach');
+    await syncChats(session, nextLinks, 'coach');
     if(typeof syncCoachChildPlayerUi === 'function'){
       try{ syncCoachChildPlayerUi(); }catch(e){}
     }
@@ -777,6 +820,7 @@
     buildInviteUrl,
     coachLinks,
     isCoachPlayerLinked,
+    rememberCoachLink,
     publishInvite,
     resolveInvite,
     resolveInviteByCode,

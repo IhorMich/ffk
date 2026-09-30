@@ -1806,6 +1806,25 @@
       if(!token) return null;
       return readDb().parent_invites.find(i => i.token === token && i.status !== 'revoked') || null;
     },
+    /** Mark local invite claimed so coach sync cannot reopen it in the cloud. */
+    markParentInviteClaimed(ref){
+      const token = String(ref && ref.token || ref || '');
+      const code = String(ref && ref.code || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+      const playerId = String(ref && (ref.team_player_id || ref.player_id) || '');
+      const db = readDb();
+      let hit = false;
+      db.parent_invites = db.parent_invites.map(inv => {
+        if(!inv || inv.status === 'revoked') return inv;
+        const match = (token && inv.token === token)
+          || (code && inv.code === code)
+          || (playerId && String(inv.team_player_id) === playerId && inv.status === 'open');
+        if(!match) return inv;
+        hit = true;
+        return {...inv, status: 'claimed', updated_at: new Date().toISOString()};
+      });
+      if(hit) writeDb(db);
+      return hit;
+    },
     parentInviteMessage(session, invite){
       if(!invite || !invite.payload) return '';
       const p = invite.payload;

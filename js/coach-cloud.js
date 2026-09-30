@@ -278,9 +278,10 @@
     const {error} = await query;
     if(error) throw error;
   }
-  async function reconcileDeletedRows(sb, table, teams, localRows){
+  async function reconcileDeletedRows(sb, table, teams, localRows, opts){
     const teamIds = [...new Set((teams || []).map(t => t && t.id).filter(Boolean))];
     if(!teamIds.length) return;
+    const protectIds = new Set((opts && opts.protectIds) || []);
     for(const teamId of teamIds){
       const keep = new Set(
         (localRows || [])
@@ -291,7 +292,7 @@
       if(error) throw error;
       const drop = (remote || [])
         .map(row => String(row.id))
-        .filter(id => id && !keep.has(id));
+        .filter(id => id && !keep.has(id) && !protectIds.has(id));
       for(let i = 0; i < drop.length; i += 80){
         const chunk = drop.slice(i, i + 80);
         await upsertChecked(sb.from(table).delete().in('id', chunk));
@@ -363,7 +364,33 @@
       }
       // Local is source of truth: remove cloud players deleted on this device,
       // otherwise the next pull resurrects them ~1s after removePlayer.
-      await reconcileDeletedRows(sb, 'team_players', db.teams || [], db.team_players || []);
+      // Never delete players that still have a parent link — CASCADE would wipe
+      // chats/memberships and break an already-confirmed parent connection.
+      let protectedPlayerIds = [];
+      try{
+        const teamIds = [...new Set((db.teams || []).map(t => t && t.id).filter(Boolean))];
+        if(teamIds.length){
+          const remotePlayers = await sb.from('team_players').select('id').in('team_id', teamIds);
+          if(remotePlayers.error) throw remotePlayers.error;
+          const remoteIds = (remotePlayers.data || []).map(r => r && r.id).filter(Boolean);
+          for(let i = 0; i < remoteIds.length; i += 80){
+            const chunk = remoteIds.slice(i, i + 80);
+            const linked = await sb.from('parent_player_links')
+              .select('team_player_id')
+              .neq('status', 'revoked')
+              .in('team_player_id', chunk);
+            if(linked.error) throw linked.error;
+            (linked.data || []).forEach(r => {
+              if(r && r.team_player_id) protectedPlayerIds.push(String(r.team_player_id));
+            });
+          }
+        }
+      }catch(e){
+        console.warn('protect linked players', e);
+      }
+      await reconcileDeletedRows(sb, 'team_players', db.teams || [], db.team_players || [], {
+        protectIds: protectedPlayerIds
+      });
       for(const m of (db.team_matches || [])){
         await upsertChecked(sb.from('team_matches').upsert({
           id: m.id,
@@ -441,7 +468,32 @@
           updated_at: r.updated_at || new Date().toISOString()
         }, {onConflict: 'id'}));
       }
-      for(const inv of (db.parent_invites || [])){
+      const inviteRows = db.parent_invites || [];
+      const remoteInviteStatus = new Map();
+      const inviteIds = inviteRows.map(inv => inv && inv.id).filter(Boolean);
+      for(let i = 0; i < inviteIds.length; i += 80){
+        const chunk = inviteIds.slice(i, i + 80);
+        try{
+          const remote = await sb.from('parent_invites').select('id,status').in('id', chunk);
+          if(!remote.error){
+            (remote.data || []).forEach(row => {
+              if(row && row.id) remoteInviteStatus.set(String(row.id), row.status);
+            });
+          }
+        }catch(e){}
+      }
+      let inviteStatusDirty = false;
+      for(const inv of inviteRows){
+        // Never reopen an invite a parent already claimed in the cloud.
+        const remoteStatus = remoteInviteStatus.get(String(inv.id));
+        let status = inv.status || 'open';
+        if(remoteStatus === 'claimed' || remoteStatus === 'revoked'){
+          status = remoteStatus;
+          if(inv.status !== status){
+            inv.status = status;
+            inviteStatusDirty = true;
+          }
+        }
         await upsertChecked(sb.from('parent_invites').upsert({
           id: inv.id,
           token: inv.token,
@@ -449,10 +501,23 @@
           team_id: inv.team_id,
           team_player_id: inv.team_player_id,
           payload: inv.payload || {},
-          status: inv.status || 'open',
+          status,
           created_at: inv.created_at || new Date().toISOString(),
           updated_at: inv.updated_at || new Date().toISOString()
         }, {onConflict: 'id'}));
+      }
+      if(inviteStatusDirty){
+        try{
+          const raw = localDb();
+          if(raw && Array.isArray(raw.parent_invites)){
+            const byId = new Map(inviteRows.map(i => [String(i.id), i.status]));
+            raw.parent_invites = raw.parent_invites.map(i => {
+              const next = byId.get(String(i.id));
+              return next && next !== i.status ? {...i, status: next} : i;
+            });
+            localStorage.setItem('ffk_coach_v1', JSON.stringify(raw));
+          }
+        }catch(e){}
       }
       await reconcileDeletedRows(sb, 'team_matches', db.teams || [], db.team_matches || []);
       await reconcileDeletedRows(sb, 'training_rules', db.teams || [], db.training_rules || []);

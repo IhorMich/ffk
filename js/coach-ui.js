@@ -684,9 +684,17 @@
       if(session && typeof store.parentLinkedForPlayer === 'function'
         && store.parentLinkedForPlayer(tp.id)) return true;
     }catch(e){}
-    if(typeof isCoachVerifiedPerson === 'function'){
-      return isCoachVerifiedPerson(tp.first_name, tp.last_name);
-    }
+    // Exact player-id match only — soft name matching caused a false "verified"
+    // glow after the real coach↔parent cloud link had already broken.
+    try{
+      const store = global.ParentStore;
+      if(store && typeof store.listLinks === 'function'){
+        const pid = String(tp.id || '');
+        if(pid && store.listLinks().some(l => l && l.player && String(l.player.id) === pid)){
+          return true;
+        }
+      }
+    }catch(e){}
     return false;
   }
   /** Copy Free/Pro profile photos onto matching coach roster players (IndexedDB — not coach LS). */
