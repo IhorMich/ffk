@@ -2789,9 +2789,11 @@
       try{
         link = await global.ParentCloud.publishInvite(invite);
       }catch(e){
-        return {ok: false, reason: 'sync'};
+        // Keep going with a short code link — email/share still need something to send.
+        link = '';
       }
-    }else if(global.ParentStore && typeof global.ParentStore.buildCodeWebLink === 'function'){
+    }
+    if(!link && global.ParentStore && typeof global.ParentStore.buildCodeWebLink === 'function'){
       link = global.ParentStore.buildCodeWebLink(invite.code || full.code || '');
     }
 
@@ -2824,6 +2826,38 @@
 
     return {ok: false, reason: 'not_configured', code, link, email};
   }
+  async function shareInviteRow(invite, opts){
+    const store = global.CoachStore;
+    const session = store && store.getSession && store.getSession();
+    if(!store || !session || !invite) return false;
+    const text = store.parentInviteMessage(session, invite);
+    const title = tt('coachParentShareTitle', 'Parent invite');
+    const quiet = !!(opts && opts.quiet);
+    try{
+      const C = global.Capacitor;
+      const Share = C && C.Plugins && C.Plugins.Share;
+      if(Share && typeof Share.share === 'function'){
+        await Share.share({title, text, dialogTitle: title});
+        if(!quiet) toast(tt('coachParentShared', 'Invite shared.'));
+        return true;
+      }
+    }catch(e){}
+    try{
+      if(navigator.share){
+        await navigator.share({title, text});
+        if(!quiet) toast(tt('coachParentShared', 'Invite shared.'));
+        return true;
+      }
+    }catch(e){}
+    try{
+      await navigator.clipboard.writeText(text);
+      if(!quiet) toast(tt('coachParentCopied', 'Invite copied.'));
+      return true;
+    }catch(e){
+      if(!quiet) toast(tt('coachErrGeneric', 'Something went wrong.'));
+      return false;
+    }
+  }
   async function inviteParentAfterPlayerCreate(playerId, contact){
     if(!isParentEmail(contact)) return null;
     const store = global.CoachStore;
@@ -2836,7 +2870,20 @@
       return {ok: false, reason: 'invite'};
     }
     const sent = await prepareParentInviteEmail(invite, contact);
-    return sent;
+    if(sent && sent.ok) return Object.assign({invite}, sent);
+    // Resend can't deliver to arbitrary addresses until a domain is verified —
+    // fall back to the system share sheet so the invite still leaves the phone.
+    const shared = await shareInviteRow(invite, {quiet: true});
+    return {
+      ok: !!shared,
+      mode: shared ? 'share' : 'fail',
+      reason: sent && sent.reason,
+      detail: sent && sent.detail,
+      code: (sent && sent.code) || `MC-${invite.code || ''}`,
+      link: sent && sent.link,
+      email: contact,
+      invite
+    };
   }
 
   async function onAddPlayer(){
@@ -2877,6 +2924,11 @@
       }
       if(inviteResult && inviteResult.ok && inviteResult.mode === 'resend'){
         toast(tt('coachPlayerAddedInviteSent', 'Player saved. Invite email sent with code {code}.').replace('{code}', inviteResult.code));
+      }else if(inviteResult && inviteResult.ok && inviteResult.mode === 'share'){
+        toast(tt(
+          'coachPlayerAddedInviteShared',
+          'Player saved. Email auto-send is unavailable — share the invite ({code}).'
+        ).replace('{code}', inviteResult.code || 'MC-…'));
       }else if(contact && inviteResult && inviteResult.reason === 'sync'){
         toast(tt('coachPlayerAddedInviteSyncFail', 'Player saved, but invite sync failed. Open the player and share the invite again.'));
       }else if(contact && inviteResult && !inviteResult.ok){
@@ -4057,32 +4109,7 @@
 
   async function shareParentInvite(){
     if(!parentInviteRow) return;
-    const store = global.CoachStore;
-    const session = store.getSession();
-    const text = store.parentInviteMessage(session, parentInviteRow);
-    const title = tt('coachParentShareTitle', 'Parent invite');
-    try{
-      const C = global.Capacitor;
-      const Share = C && C.Plugins && C.Plugins.Share;
-      if(Share && typeof Share.share === 'function'){
-        await Share.share({title, text, dialogTitle: title});
-        toast(tt('coachParentShared', 'Invite shared.'));
-        return;
-      }
-    }catch(e){}
-    try{
-      if(navigator.share){
-        await navigator.share({title, text});
-        toast(tt('coachParentShared', 'Invite shared.'));
-        return;
-      }
-    }catch(e){}
-    try{
-      await navigator.clipboard.writeText(text);
-      toast(tt('coachParentCopied', 'Invite copied.'));
-    }catch(e){
-      toast(tt('coachErrGeneric', 'Something went wrong.'));
-    }
+    await shareInviteRow(parentInviteRow);
   }
 
   function parentInviteSendFailToast(res){
@@ -4122,6 +4149,15 @@
     }
     if(res && res.reason === 'sync'){
       toast(tt('coachCloudSyncFail', 'Cloud sync failed. Check keys and schema.'));
+      return;
+    }
+    // Auto-email unavailable → open share so the invite still leaves the phone.
+    const shared = await shareInviteRow(parentInviteRow, {quiet: true});
+    if(shared){
+      toast(tt(
+        'coachParentEmailSharedFallback',
+        'Email auto-send unavailable. Share the invite instead ({code}).'
+      ).replace('{code}', (res && res.code) || `MC-${parentInviteRow.code || ''}`));
       return;
     }
     toast(parentInviteSendFailToast(res));
