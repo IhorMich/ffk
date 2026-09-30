@@ -552,6 +552,47 @@
     return row;
   }
 
+
+  async function sendParentInviteEmail(payload){
+    const sb = getClient();
+    if(!sb) return {ok: false, reason: 'no_cloud'};
+    const {data: sessData, error: sessErr} = await sb.auth.getSession();
+    if(sessErr) throw sessErr;
+    const session = sessData && sessData.session;
+    if(!session || !session.access_token) return {ok: false, reason: 'auth'};
+    const {data, error} = await sb.functions.invoke('send-parent-invite', {
+      body: {
+        to: payload && payload.to,
+        childName: payload && payload.childName,
+        code: payload && payload.code,
+        link: payload && payload.link,
+        teamName: payload && payload.teamName,
+        coachName: payload && payload.coachName
+      }
+    });
+    let body = data;
+    if(error){
+      try{
+        const ctx = error.context;
+        if(ctx && typeof ctx.json === 'function'){
+          body = await ctx.json();
+        }else if(ctx && typeof ctx.text === 'function'){
+          const raw = await ctx.text();
+          try{ body = JSON.parse(raw); }catch(e){ body = {error: raw}; }
+        }
+      }catch(e){}
+      const err = String((body && body.error) || (error && error.message) || error || '');
+      if(err === 'resend_not_configured' || /503/.test(err)){
+        return {ok: false, reason: 'not_configured', error: err};
+      }
+      return {ok: false, reason: 'send_failed', error: err, detail: body && body.detail};
+    }
+    if(body && body.ok) return {ok: true, id: body.id || null, code: body.code || payload.code, to: body.to || payload.to};
+    const err = body && body.error ? String(body.error) : 'send_failed';
+    if(err === 'resend_not_configured') return {ok: false, reason: 'not_configured'};
+    return {ok: false, reason: 'send_failed', error: err, detail: body && body.detail};
+  }
+
   const CoachCloud = {
     ready,
     getClient,
@@ -563,6 +604,7 @@
     handleAuthCallbackUrl,
     bindAuthDeepLinks,
     adoptGoogleSession,
+    sendParentInviteEmail,
     scheduleSync,
     syncNow,
     pushLocalSnapshot,

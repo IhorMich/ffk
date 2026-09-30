@@ -2757,6 +2757,8 @@
     const child = full.player
       ? [full.player.fn, full.player.ln].filter(Boolean).join(' ')
       : '';
+    const teamName = full.tm && full.tm.name ? String(full.tm.name) : '';
+    const coachName = full.c && full.c.name ? String(full.c.name) : '';
     const code = `MC-${invite.code || ''}`;
     let link = '';
     if(global.ParentCloud && global.ParentCloud.ready && global.ParentCloud.ready()){
@@ -2768,6 +2770,23 @@
     }else if(global.ParentStore && typeof global.ParentStore.buildCodeWebLink === 'function'){
       link = global.ParentStore.buildCodeWebLink(invite.code || full.code || '');
     }
+
+    if(global.CoachCloud && typeof global.CoachCloud.sendParentInviteEmail === 'function'){
+      try{
+        const sent = await global.CoachCloud.sendParentInviteEmail({
+          to: email,
+          childName: child,
+          code,
+          link,
+          teamName,
+          coachName
+        });
+        if(sent && sent.ok){
+          return {ok: true, mode: 'resend', code, link, email};
+        }
+      }catch(e){}
+    }
+
     const subject = `${tt('coachParentEmailSubject', 'Matchcard invitation')}${child ? ` — ${child}` : ''}`;
     const body = tt(
       'coachParentEmailBody',
@@ -2784,7 +2803,7 @@
     }catch(e){
       return {ok: false, reason: 'mail'};
     }
-    return {ok: true, code, link, email};
+    return {ok: true, mode: 'mailto', code, link, email};
   }
   async function inviteParentAfterPlayerCreate(playerId, contact){
     if(!isParentEmail(contact)) return null;
@@ -2837,7 +2856,9 @@
       if(created && created.id && contact){
         inviteResult = await inviteParentAfterPlayerCreate(created.id, contact);
       }
-      if(inviteResult && inviteResult.ok){
+      if(inviteResult && inviteResult.ok && inviteResult.mode === 'resend'){
+        toast(tt('coachPlayerAddedInviteSent', 'Player saved. Invite email sent with code {code}.').replace('{code}', inviteResult.code));
+      }else if(inviteResult && inviteResult.ok){
         toast(tt('coachPlayerAddedInvite', 'Player saved. Mail opened with code {code} for the parent.').replace('{code}', inviteResult.code));
       }else if(contact && inviteResult && inviteResult.reason === 'sync'){
         toast(tt('coachPlayerAddedInviteSyncFail', 'Player saved, but invite sync failed. Open the player and share the invite again.'));
@@ -3949,6 +3970,10 @@
       return;
     }
     const res = await prepareParentInviteEmail(parentInviteRow, email);
+    if(res && res.ok && res.mode === 'resend'){
+      toast(tt('coachParentEmailSent', 'Invite email sent with code {code}.').replace('{code}', res.code));
+      return;
+    }
     if(res && res.ok){
       toast(tt('coachParentEmailOpened', 'Mail app opened with code {code}.').replace('{code}', res.code));
       return;
