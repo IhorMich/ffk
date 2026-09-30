@@ -620,7 +620,7 @@
     requestLeave(linkId, meta){
       const link = this.getLink(linkId);
       if(!link || !link.player || !link.player.id) throw new Error('no_link');
-      if(link.leave_status === 'pending') return {link, request: null, already: true};
+      const resend = !!(meta && meta.resend) || link.leave_status === 'pending';
       const coach = global.CoachStore;
       if(!coach || typeof coach.requestPlayerLeave !== 'function') throw new Error('no_coach');
       const req = coach.requestPlayerLeave({
@@ -631,10 +631,12 @@
         academy_name: textField(link.academy && link.academy.name),
         new_club: meta && meta.new_club ? meta.new_club : '',
         new_team: meta && meta.new_team ? meta.new_team : '',
-        reason: 'club_change'
+        reason: 'club_change',
+        force: resend,
+        resend
       });
       const updated = this.setLeaveStatus(link.id, 'pending');
-      return {link: updated || link, request: req, already: false};
+      return {link: updated || link, request: req, already: false, resent: resend};
     }
   };
 

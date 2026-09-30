@@ -672,6 +672,7 @@
         String(r.team_player_id) === pid && String(r.status || 'pending') === 'pending'
       );
       const now = new Date().toISOString();
+      const force = !!(payload && (payload.force || payload.resend));
       const row = {
         id: existing ? existing.id : uid('leave'),
         team_player_id: pid,
@@ -684,7 +685,7 @@
         new_team: clean(payload.new_team, 60),
         reason: String(payload.reason || 'club_change').slice(0, 40),
         status: 'pending',
-        created_at: existing ? existing.created_at : now,
+        created_at: existing && !force ? existing.created_at : now,
         updated_at: now
       };
       if(existing){
@@ -696,7 +697,7 @@
       writeDb(db);
       try{
         if(global.InboxStore && typeof global.InboxStore.upsertCoachLeaveRequest === 'function'){
-          global.InboxStore.upsertCoachLeaveRequest(row);
+          global.InboxStore.upsertCoachLeaveRequest({...row, force: force || !existing});
         }
       }catch(e){}
       return row;

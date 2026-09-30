@@ -288,11 +288,18 @@
       const db = readDb();
       const requestId = String(payload.id || payload.request_id || '');
       if(!requestId) throw new Error('bad_message');
-      if(db.deleted[`coach_leave:${requestId}`]) return null;
+      const delKey = `coach_leave:${requestId}`;
+      const force = !!(payload && (payload.force || payload.resend));
+      if(db.deleted[delKey]){
+        if(!force) return null;
+        delete db.deleted[delKey];
+      }
       const existing = db.messages.find(m =>
         m.type === 'coach_leave_request' && String(m.request_id || '') === requestId
       );
       const now = new Date().toISOString();
+      const statusRaw = String(payload.status || '');
+      const decided = statusRaw === 'accepted' || statusRaw === 'declined';
       const row = {
         id: existing ? existing.id : uid('msg'),
         type: 'coach_leave_request',
@@ -305,14 +312,21 @@
         academy_name: safeLabel(payload.academy_name, 80),
         new_club: safeLabel(payload.new_club, 60),
         new_team: safeLabel(payload.new_team, 60),
-        decision: String(payload.status || '') === 'accepted'
-          ? 'accepted'
-          : (String(payload.status || '') === 'declined' ? 'declined' : (existing && existing.decision) || ''),
-        status: existing && existing.status === 'read' ? 'read' : 'delivered',
-        created_at: existing ? existing.created_at : (payload.created_at || now),
+        decision: decided
+          ? statusRaw
+          : (force ? '' : ((existing && existing.decision) || '')),
+        status: force || !existing || existing.status !== 'read' || !existing.decision
+          ? 'delivered'
+          : (existing.status === 'read' ? 'read' : 'delivered'),
+        created_at: force ? now : (existing ? existing.created_at : (payload.created_at || now)),
         updated_at: now,
-        read_at: existing && existing.status === 'read' ? (existing.read_at || '') : ''
+        read_at: force || !decided ? '' : (existing && existing.read_at) || ''
       };
+      if(force){
+        row.status = 'delivered';
+        row.decision = '';
+        row.read_at = '';
+      }
       if(existing) db.messages = db.messages.map(m => m.id === existing.id ? row : m);
       else db.messages.push(row);
       writeDb(db);

@@ -1772,10 +1772,15 @@
     const clubVal = document.getElementById('p-club')?.value || '';
     const teamVal = document.getElementById('p-team')?.value || '';
     const marked = !!(check && check.checked);
-    const canAsk = !pending && (marked || clubChangedEnough(link, clubVal, teamVal));
+    // Pending can still be resent (coach may have missed the first inbox card).
+    const canAsk = marked || clubChangedEnough(link, clubVal, teamVal) || pending;
     if(btn){
       btn.disabled = !canAsk;
       btn.dataset.linkId = link.id;
+      btn.dataset.resend = pending ? '1' : '';
+      btn.textContent = pending
+        ? tt('playerLeaveResendBtn', 'Send leave request again')
+        : tt('playerLeaveBtn', 'Unlink coach and team');
     }
   }
   function onPlayerLeaveRequest(){
@@ -1787,15 +1792,30 @@
     const check = document.getElementById('p-club-changed');
     const link = global.ParentStore && global.ParentStore.getLink(linkId);
     if(!link) return;
-    if(!(check && check.checked) && !clubChangedEnough(link, clubVal, teamVal)){
+    const pending = link.leave_status === 'pending';
+    if(!pending && !(check && check.checked) && !clubChangedEnough(link, clubVal, teamVal)){
       toast(tt('playerLeaveNeedClubChange', 'Mark club change or update club/team first.'));
       return;
     }
-    if(!confirm(tt('playerLeaveConfirm', 'Send a leave request to the coach? They must confirm before the link is removed.'))) return;
+    const confirmMsg = pending
+      ? tt('playerLeaveResendConfirm', 'Send the leave request to the coach again?')
+      : tt('playerLeaveConfirm', 'Send a leave request to the coach? They must confirm before the link is removed.');
+    if(!confirm(confirmMsg)) return;
     try{
-      global.ParentStore.requestLeave(linkId, {new_club: clubVal, new_team: teamVal});
+      const res = global.ParentStore.requestLeave(linkId, {
+        new_club: clubVal,
+        new_team: teamVal,
+        resend: pending
+      });
+      toast(res && res.resent
+        ? tt('playerLeaveResent', 'Leave request sent to the coach again.')
+        : tt('playerLeaveSent', 'Leave request sent to the coach.'));
+      if(check) check.checked = true;
       syncPlayerLeaveUi();
       renderParentUi();
+      if(typeof syncInboxBellUi === 'function'){
+        try{ syncInboxBellUi(); }catch(e){}
+      }
       if(typeof renderCoachUi === 'function'){
         try{ renderCoachUi(); }catch(e){}
       }
