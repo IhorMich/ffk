@@ -1,4 +1,4 @@
-const CACHE = 'ffk_v313';
+const CACHE = 'ffk_v314';
 const ASSETS = [
   './',
   './index.html',
@@ -105,7 +105,7 @@ self.addEventListener('fetch', event => {
   if(url.origin !== self.location.origin) return;
   event.respondWith((async () => {
     const cache = await caches.open(CACHE);
-    if(/\/js\/version\.js$/i.test(url.pathname)){
+    if(/\/js\/[^/]+\.js$/i.test(url.pathname) || /\/css\/[^/]+\.css$/i.test(url.pathname) || /index\.html$/i.test(url.pathname) || url.pathname.endsWith('/ffk/') || url.pathname.endsWith('/ffk')){
       try{
         const fresh = await fetch(event.request, {cache: 'no-store'});
         if(fresh && fresh.ok){
