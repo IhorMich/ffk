@@ -1,9 +1,9 @@
 /**
- * Wire MatchcardSync adapters for personal Pro backup.
- * Loaded after sync/*.js and before/along parent-cloud usage.
+ * MatchcardSync + CloudRepo hook.
+ * Concrete Supabase wiring lives in ParentCloud via MatchcardCloudRepo.configure.
  */
 (function (global) {
   'use strict';
-  // parent-cloud owns the concrete Supabase calls; this file is a thin re-export hook if needed.
   global.MatchcardSync = global.MatchcardSync || null;
+  global.MatchcardCloudRepo = global.MatchcardCloudRepo || null;
 })(typeof window !== 'undefined' ? window : globalThis);

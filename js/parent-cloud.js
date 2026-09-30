@@ -7,6 +7,21 @@
   let syncTimer = null;
   let personalSyncState = {status: 'idle', at: '', error: '', relation: '', conflict: null};
 
+  function cloudRepo(){
+    return global.MatchcardCloudRepo || global.CloudRepo || null;
+  }
+  function wireCloudRepo(){
+    const Cloud = cloudRepo();
+    if(!Cloud || typeof Cloud.configure !== 'function') return false;
+    Cloud.configure({
+      ready: () => ready(),
+      isPro: () => isProUser(),
+      getSession: () => getSession(),
+      getClient: () => parentClient()
+    });
+    return true;
+  }
+
   function ready(){
     return !!(global.CoachCloud && global.CoachCloud.ready && global.CoachCloud.ready());
   }
@@ -663,21 +678,41 @@
     return typeof isPro === 'function' && isPro();
   }
   function readLocalSyncAt(){
+    const Cloud = cloudRepo();
+    if(Cloud && typeof Cloud.readLocalSyncAt === 'function') return Cloud.readLocalSyncAt();
     try{ return String(localStorage.getItem(PERSONAL_SYNC_AT_KEY) || ''); }catch(e){ return ''; }
   }
   function writeLocalSyncAt(iso){
+    const Cloud = cloudRepo();
+    if(Cloud && typeof Cloud.writeLocalSyncAt === 'function'){
+      Cloud.writeLocalSyncAt(iso);
+      return;
+    }
     try{ localStorage.setItem(PERSONAL_SYNC_AT_KEY, String(iso || '')); }catch(e){}
   }
   function readPersonalDirty(){
+    const Cloud = cloudRepo();
+    if(Cloud && typeof Cloud.isDirty === 'function') return Cloud.isDirty();
     try{ return localStorage.getItem(PERSONAL_DIRTY_KEY) === '1'; }catch(e){ return false; }
   }
   function writePersonalDirty(on){
+    const Cloud = cloudRepo();
+    if(Cloud && typeof Cloud.setDirty === 'function'){
+      Cloud.setDirty(!!on);
+      return;
+    }
     try{
       if(on) localStorage.setItem(PERSONAL_DIRTY_KEY, '1');
       else localStorage.removeItem(PERSONAL_DIRTY_KEY);
     }catch(e){}
   }
   function markPersonalDirty(){
+    const Cloud = cloudRepo();
+    if(Cloud && typeof Cloud.markPersonalDirty === 'function'){
+      wireCloudRepo();
+      Cloud.markPersonalDirty();
+      return;
+    }
     writePersonalDirty(true);
     if(global.MatchcardSync && typeof global.MatchcardSync.markLocalDirty === 'function'){
       try{ global.MatchcardSync.markLocalDirty(); }catch(e){}
@@ -690,9 +725,16 @@
     }
   }
   async function pushPersonalBackup(session, payload, updatedAt){
+    wireCloudRepo();
+    const Cloud = cloudRepo();
+    const body = payload || (typeof exportPayload === 'function' ? exportPayload() : null);
+    if(Cloud && typeof Cloud.pushPersonalBackup === 'function'){
+      const out = await Cloud.pushPersonalBackup(session, body, updatedAt);
+      if(out && out.ok) setPersonalSyncState({status: 'ok', at: out.at || '', error: ''});
+      return out;
+    }
     const sb = parentClient();
     if(!sb || !session || !isProUser()) return {ok: false, reason: 'skip'};
-    const body = payload || (typeof exportPayload === 'function' ? exportPayload() : null);
     if(!body) return {ok: false, reason: 'no_export'};
     const at = updatedAt || new Date().toISOString();
     const {error} = await sb.from('personal_backups').upsert({
@@ -707,6 +749,11 @@
     return {ok: true, at: at};
   }
   async function fetchPersonalBackup(session){
+    wireCloudRepo();
+    const Cloud = cloudRepo();
+    if(Cloud && typeof Cloud.fetchPersonalBackup === 'function'){
+      return Cloud.fetchPersonalBackup(session);
+    }
     const sb = parentClient();
     if(!sb || !session || !isProUser()) return null;
     const {data, error} = await sb.from('personal_backups')
@@ -750,6 +797,20 @@
   function bindPersonalSyncEngine(){
     const Sync = global.MatchcardSync;
     if(!Sync || typeof Sync.bind !== 'function') return false;
+    wireCloudRepo();
+    const Cloud = cloudRepo();
+    if(Cloud && typeof Cloud.buildSyncAdapters === 'function'){
+      Sync.bind(Cloud.buildSyncAdapters({
+        exportLocal: () => (typeof exportPayload === 'function' ? exportPayload() : null),
+        applyRemote: (payload) => {
+          if(typeof applyImportBundle !== 'function') throw new Error('no_import');
+          applyImportBundle(payload);
+        },
+        nowIso: () => new Date().toISOString(),
+        onState: (st) => setPersonalSyncState(st)
+      }));
+      return true;
+    }
     Sync.bind({
       ready: () => ready(),
       isPro: () => isProUser(),

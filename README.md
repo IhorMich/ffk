@@ -123,6 +123,24 @@ MatchcardLocalRepo.setSettings(settings);
 
 Проверка: `node repo/local/selftest.js`.
 
+## CloudRepo
+
+Облачный personal backup (Pro) в `repo/cloud/` — dirty/sync_at, `personal_backups` pull/push, адаптеры для SyncEngine. `ParentCloud` только конфигурирует клиент и UI.
+
+```
+repo/cloud/
+  keys.js · meta.js · client.js · personal.js · adapters.js · engine.js
+```
+
+```js
+MatchcardCloudRepo.configure({ ready, isPro, getSession, getClient });
+MatchcardSync.bind(MatchcardCloudRepo.buildSyncAdapters({
+  exportLocal, applyRemote, onState
+}));
+```
+
+Проверка: `node repo/cloud/selftest.js`.
+
 ## Errors + production logging
 
 ```
@@ -243,7 +261,7 @@ const result = calculateRating({
 | | |
 | --- | --- |
 | UI | `index.html`, `css/app.css` |
-| Логика | `js/app.js`, `js/storage.js` → `repo/local/` |
+| Логика | `js/app.js`, `js/storage.js` → `repo/local/` + `repo/cloud/` |
 | Оценка | `rating/` → `calculateRating(match)` (shim: `js/rating.js`) |
 | i18n | `js/i18n.js` (+ `js/i18n-coach-*.js`) |
 | Coach / Parent | `js/coach-*.js`, `js/parent-*.js`, `js/inbox-store.js` |
