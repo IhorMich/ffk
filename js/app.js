@@ -3628,6 +3628,9 @@ function exportPlayerSnapshot(id){
   try{
     if(sid === String(roster.currentId || '')) list = Array.isArray(matches) ? matches.slice() : [];
     else list = parseMatchList(localStorage.getItem(kidMatchesKey(sid))).list;
+    if((!list || !list.length) && roster.ids.length <= 1){
+      list = parseMatchList(localStorage.getItem(STORAGE_KEY) || localStorage.getItem(LEGACY_KEY)).list;
+    }
   }catch(e){ list = []; }
   return {player: p, matches: list};
 }
@@ -3649,7 +3652,8 @@ function isBlankPlayerCard(p, matchList){
   return !hasName && !hasPhoto && !(matchList && matchList.length);
 }
 function importMatchesIntoCurrent(incoming){
-  const ids = new Set(matches.map(m => m.id));
+  const ids = new Set(matches.map(m => String(m.id)));
+  const fingerprints = new Set(matches.map(matchFingerprint));
   let stamp = Date.now();
   let added = 0;
   (incoming || []).forEach(raw => {
@@ -3657,17 +3661,40 @@ function importMatchesIntoCurrent(incoming){
     if(!m) return;
     const rawNum = Number(raw && raw.id);
     const hasStableId = Number.isFinite(rawNum) && rawNum > 0;
-    if(!hasStableId || ids.has(m.id)){
-      while(ids.has(stamp)) stamp += 1;
+    const stableId = hasStableId ? String(Math.floor(rawNum)) : '';
+    // Already on this card — keep existing row, do not clone.
+    if(stableId && ids.has(stableId)) return;
+    const finger = matchFingerprint(m);
+    if(finger && fingerprints.has(finger)) return;
+    if(!hasStableId || ids.has(String(m.id))){
+      while(ids.has(String(stamp))) stamp += 1;
       m.id = stamp++;
     }
-    if(ids.has(m.id)) return;
     matches.push(m);
-    ids.add(m.id);
+    ids.add(String(m.id));
+    if(finger) fingerprints.add(finger);
     added++;
   });
   if(added) saveMatches();
   return added;
+}
+function matchFingerprint(m){
+  if(!m || typeof m !== 'object') return '';
+  return [
+    String(m.date || ''),
+    String(m.opponent || '').trim().toLowerCase(),
+    String(m.score || '').trim(),
+    String(m.minutes || ''),
+    String(m.position || m.pitchPos || '')
+  ].join('|');
+}
+function collectEntryMatches(entry){
+  if(!entry || typeof entry !== 'object') return [];
+  if(Array.isArray(entry.matches) && entry.matches.length) return entry.matches;
+  if(entry.player && Array.isArray(entry.player.matches) && entry.player.matches.length){
+    return entry.player.matches;
+  }
+  return [];
 }
 function ensureImportedPlayer(playerData){
   const incoming = normalizePlayer(playerData || {}, playerData && playerData.id);
@@ -3685,6 +3712,13 @@ function ensureImportedPlayer(playerData){
     savePlayer();
     return {created: false, playerTouched: true};
   }
+  // Same child, new local id after reinstall: merge onto the active card.
+  if(samePlayerIdentity(player, incoming)){
+    player = normalizePlayer({...player, ...incoming, id: player.id}, player.id);
+    extraSelected = [...(player.extra || [])];
+    savePlayer();
+    return {created: false, playerTouched: true};
+  }
   if(isBlankPlayerCard(player, matches)){
     player = normalizePlayer({...player, ...incoming}, player.id);
     extraSelected = [...(player.extra || [])];
@@ -3692,7 +3726,8 @@ function ensureImportedPlayer(playerData){
     return {created: false, playerTouched: true};
   }
   if(roster.ids.length >= playerCap()){
-    return {created: false, playerTouched: false, skipped: true};
+    // Roster full: keep the active card and still restore matches onto it.
+    return {created: false, playerTouched: false, useCurrent: true};
   }
   const id = (incomingId && !roster.ids.includes(incomingId)) ? incomingId : newPlayerId();
   const next = normalizePlayer(incoming, id);
@@ -3708,6 +3743,17 @@ function ensureImportedPlayer(playerData){
   saveMatches();
   return {created: true, playerTouched: true};
 }
+function samePlayerIdentity(localPlayer, incomingPlayer){
+  if(!localPlayer || !incomingPlayer) return false;
+  const aFirst = String(localPlayer.firstName || '').trim().toLowerCase();
+  const aLast = String(localPlayer.lastName || '').trim().toLowerCase();
+  const bFirst = String(incomingPlayer.firstName || '').trim().toLowerCase();
+  const bLast = String(incomingPlayer.lastName || '').trim().toLowerCase();
+  if(!aFirst || !bFirst) return false;
+  if(aFirst !== bFirst) return false;
+  if(aLast && bLast && aLast !== bLast) return false;
+  return true;
+}
 function applyImportBundle(imported){
   const bundle = Array.isArray(imported) ? {matches: imported} : imported;
   if(!bundle || typeof bundle !== 'object') throw new Error('bad');
@@ -3715,28 +3761,41 @@ function applyImportBundle(imported){
   let added = 0;
   persistActivePlayer();
 
+  const rootMatches = Array.isArray(bundle.matches) ? bundle.matches : (Array.isArray(imported) ? imported : []);
   const rosterPlayers = Array.isArray(bundle.players) ? bundle.players : null;
   if(rosterPlayers && rosterPlayers.length){
+    let rootAssigned = false;
     rosterPlayers.forEach(entry => {
       if(!entry || typeof entry !== 'object') return;
       const ensured = ensureImportedPlayer(entry.player || entry);
       if(ensured.playerTouched) playerTouched = true;
-      if(ensured.skipped) return;
-      added += importMatchesIntoCurrent(Array.isArray(entry.matches) ? entry.matches : []);
+      let incoming = collectEntryMatches(entry);
+      // Partial v4 backups sometimes leave matches only at the root.
+      if(!incoming.length && !rootAssigned && rootMatches.length){
+        const entryId = String((entry.player && entry.player.id) || entry.id || '');
+        const isCurrent = entryId && entryId === String(bundle.currentId || '');
+        if(isCurrent || rosterPlayers.length === 1){
+          incoming = rootMatches;
+          rootAssigned = true;
+        }
+      }
+      added += importMatchesIntoCurrent(incoming);
     });
+    if(!added && rootMatches.length && !rootAssigned){
+      if(bundle.currentId && roster.ids.includes(String(bundle.currentId))){
+        switchPlayer(String(bundle.currentId), true);
+      }
+      added += importMatchesIntoCurrent(rootMatches);
+    }
     if(bundle.currentId && roster.ids.includes(String(bundle.currentId))){
       switchPlayer(String(bundle.currentId), true);
     }
   }else if(bundle.player && typeof bundle.player === 'object'){
     const ensured = ensureImportedPlayer(bundle.player);
     if(ensured.playerTouched) playerTouched = true;
-    if(!ensured.skipped){
-      const incoming = Array.isArray(bundle.matches) ? bundle.matches : (Array.isArray(imported) ? imported : []);
-      added += importMatchesIntoCurrent(incoming);
-    }
+    added += importMatchesIntoCurrent(rootMatches);
   }else{
-    const incoming = Array.isArray(bundle.matches) ? bundle.matches : (Array.isArray(imported) ? imported : []);
-    added += importMatchesIntoCurrent(incoming);
+    added += importMatchesIntoCurrent(rootMatches);
   }
 
   if(bundle.settings && typeof bundle.settings === 'object'){

@@ -354,10 +354,26 @@ function loadMatches(){
     const id = roster.currentId;
     const kidRaw = id ? localStorage.getItem(kidMatchesKey(id)) : null;
     let raw = kidRaw;
-    if(!raw && roster.ids.length <= 1) raw = localStorage.getItem(STORAGE_KEY) || localStorage.getItem(LEGACY_KEY);
-    const {list, dirty} = parseMatchList(raw);
+    let {list, dirty} = parseMatchList(raw);
+    // Empty kid key used to block legacy STORAGE_KEY forever ("[]" is truthy).
+    if((!list || !list.length) && roster.ids.length <= 1){
+      const legacyRaw = localStorage.getItem(STORAGE_KEY) || localStorage.getItem(LEGACY_KEY);
+      if(legacyRaw && legacyRaw !== raw){
+        const fallback = parseMatchList(legacyRaw);
+        if(fallback.list.length){
+          list = fallback.list;
+          dirty = true;
+          raw = legacyRaw;
+        }
+      }
+    }else if(!raw && roster.ids.length <= 1){
+      raw = localStorage.getItem(STORAGE_KEY) || localStorage.getItem(LEGACY_KEY);
+      const parsed = parseMatchList(raw);
+      list = parsed.list;
+      dirty = parsed.dirty;
+    }
     matches = list;
-    if(id && (dirty || (!kidRaw && matches.length))) saveMatches();
+    if(id && (dirty || (!kidRaw && matches.length) || (kidRaw === '[]' && matches.length))) saveMatches();
   }catch(e){ matches = []; }
 }
 function saveMatches(){
