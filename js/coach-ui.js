@@ -2808,26 +2808,21 @@
         if(sent && sent.ok){
           return {ok: true, mode: 'resend', code, link, email};
         }
-      }catch(e){}
+        // Do not open Gmail/mailto — that feels like a broken “send”.
+        return {
+          ok: false,
+          reason: (sent && sent.reason) || 'send_failed',
+          detail: sent && sent.detail,
+          code,
+          link,
+          email
+        };
+      }catch(e){
+        return {ok: false, reason: 'send_failed', code, link, email};
+      }
     }
 
-    const subject = `${tt('coachParentEmailSubject', 'Matchcard invitation')}${child ? ` — ${child}` : ''}`;
-    const body = tt(
-      'coachParentEmailBody',
-      'Parent invite for {name}.\n\nCode: {code}\n\nOpen Matchcard → Player → Add via QR/link and enter the code.\n\nOr open: {link}'
-    ).split('{name}').join(child || '—').split('{code}').join(code).split('{link}').join(link || code);
-    const href = `mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    try{
-      const a = document.createElement('a');
-      a.href = href;
-      a.style.display = 'none';
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-    }catch(e){
-      return {ok: false, reason: 'mail'};
-    }
-    return {ok: true, mode: 'mailto', code, link, email};
+    return {ok: false, reason: 'not_configured', code, link, email};
   }
   async function inviteParentAfterPlayerCreate(playerId, contact){
     if(!isParentEmail(contact)) return null;
@@ -2882,12 +2877,10 @@
       }
       if(inviteResult && inviteResult.ok && inviteResult.mode === 'resend'){
         toast(tt('coachPlayerAddedInviteSent', 'Player saved. Invite email sent with code {code}.').replace('{code}', inviteResult.code));
-      }else if(inviteResult && inviteResult.ok){
-        toast(tt('coachPlayerAddedInvite', 'Player saved. Mail opened with code {code} for the parent.').replace('{code}', inviteResult.code));
       }else if(contact && inviteResult && inviteResult.reason === 'sync'){
         toast(tt('coachPlayerAddedInviteSyncFail', 'Player saved, but invite sync failed. Open the player and share the invite again.'));
       }else if(contact && inviteResult && !inviteResult.ok){
-        toast(tt('coachPlayerAddedInviteFail', 'Player saved. Open the player card to share the parent invite.'));
+        toast(parentInviteSendFailToast(inviteResult));
       }else{
         toast(tt('coachPlayerAdded', 'Player added.'));
       }
@@ -4092,6 +4085,27 @@
     }
   }
 
+  function parentInviteSendFailToast(res){
+    const code = res && res.code ? String(res.code) : '';
+    const detail = String(res && res.detail || '').toLowerCase();
+    if(/verify a domain|own email address|testing emails/.test(detail)){
+      return tt(
+        'coachParentEmailNeedDomain',
+        'Player saved. Auto-email needs a verified Resend domain. Share code {code} meanwhile.'
+      ).replace('{code}', code || 'MC-…');
+    }
+    if(res && (res.reason === 'not_configured' || res.reason === 'auth' || res.reason === 'no_cloud')){
+      return tt(
+        'coachPlayerAddedInviteFail',
+        'Player saved. Open the player card to share the parent invite.'
+      ) + (code ? ` ${code}` : '');
+    }
+    return tt(
+      'coachParentEmailSendFail',
+      'Player saved, but email was not sent. Share code {code} with the parent.'
+    ).replace('{code}', code || 'MC-…');
+  }
+
   async function sendParentInviteEmailTest(){
     if(!parentInviteRow) return;
     const emailEl = document.getElementById('coachParentInviteEmail');
@@ -4106,15 +4120,11 @@
       toast(tt('coachParentEmailSent', 'Invite email sent with code {code}.').replace('{code}', res.code));
       return;
     }
-    if(res && res.ok){
-      toast(tt('coachParentEmailOpened', 'Mail app opened with code {code}.').replace('{code}', res.code));
-      return;
-    }
     if(res && res.reason === 'sync'){
       toast(tt('coachCloudSyncFail', 'Cloud sync failed. Check keys and schema.'));
       return;
     }
-    toast(tt('coachErrGeneric', 'Something went wrong.'));
+    toast(parentInviteSendFailToast(res));
   }
 
   function saveCoachQuickRate(){
