@@ -1020,9 +1020,10 @@ window.ffkIsNative = function () {
                   <input id="coachPlayerFirst" type="text" maxlength="40" data-i18n-placeholder="coachFirstPh" placeholder="First name">
                   <input id="coachPlayerLast" type="text" maxlength="40" data-i18n-placeholder="coachLastPh" placeholder="Last name">
                   <input id="coachPlayerNumber" type="text" maxlength="4" inputmode="numeric" placeholder="#">
-                  <input id="coachPlayerContact" type="text" maxlength="80" data-i18n-placeholder="coachContactPh" placeholder="Телефон или email родителя">
+                  <input id="coachPlayerContact" type="email" maxlength="80" inputmode="email" autocomplete="email" data-i18n-placeholder="coachContactPh" placeholder="Email родителя">
                   <select id="coachPlayerPos" class="coach-pos-select" aria-label="position"></select>
                 </div>
+                <p class="hint" data-i18n="coachContactInviteHint">Если указан email — подготовим письмо с кодом для родителя.</p>
                 <div class="coach-match-create-actions">
                   <button class="save-btn" id="coachAddPlayerBtn" type="button" data-i18n="coachAddPlayerSave">Сохранить игрока</button>
                   <button class="ghost-btn" type="button" id="coachAddPlayerCancel" data-i18n="previewCancel">Отмена</button>

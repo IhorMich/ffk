@@ -1,8 +1,8 @@
 /* Matchcard Coach UI — Phase 1+2: academy, teams, roster, matches, analytics.
    Separate from Personal Free/Pro. */
 (function(global){
-  // TEST MODE: email invitations only open a local mail composer; no server sends mail.
-  const TEST_EMAIL_INVITES = true;
+  // Parent invite email: opens the device mail app with a ready message (no server SMTP yet).
+  const PARENT_EMAIL_INVITES = true;
 
   function esc(s){
     return String(s == null ? '' : s)
@@ -2742,15 +2742,79 @@
       toast(map[e.message] || tt('coachErrGeneric', 'Could not create team.'));
     }
   }
-  function onAddPlayer(){
+
+  function isParentEmail(value){
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || '').trim());
+  }
+  async function prepareParentInviteEmail(invite, email){
+    if(!PARENT_EMAIL_INVITES || !invite) return {ok: false, reason: 'off'};
+    email = String(email || '').trim().toLowerCase();
+    if(!isParentEmail(email)) return {ok: false, reason: 'bad_email'};
+    const store = global.CoachStore;
+    const session = store && store.getSession && store.getSession();
+    if(!store || !session) return {ok: false, reason: 'auth'};
+    const full = invite.payload || {};
+    const child = full.player
+      ? [full.player.fn, full.player.ln].filter(Boolean).join(' ')
+      : '';
+    const code = `MC-${invite.code || ''}`;
+    let link = '';
+    if(global.ParentCloud && global.ParentCloud.ready && global.ParentCloud.ready()){
+      try{
+        link = await global.ParentCloud.publishInvite(invite);
+      }catch(e){
+        return {ok: false, reason: 'sync'};
+      }
+    }else if(global.ParentStore && typeof global.ParentStore.buildCodeWebLink === 'function'){
+      link = global.ParentStore.buildCodeWebLink(invite.code || full.code || '');
+    }
+    const subject = `${tt('coachParentEmailSubject', 'Matchcard invitation')}${child ? ` — ${child}` : ''}`;
+    const body = tt(
+      'coachParentEmailBody',
+      'Parent invite for {name}.\n\nCode: {code}\n\nOpen Matchcard → Player → Add via QR/link and enter the code.\n\nOr open: {link}'
+    ).split('{name}').join(child || '—').split('{code}').join(code).split('{link}').join(link || code);
+    const href = `mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    try{
+      const a = document.createElement('a');
+      a.href = href;
+      a.style.display = 'none';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    }catch(e){
+      return {ok: false, reason: 'mail'};
+    }
+    return {ok: true, code, link, email};
+  }
+  async function inviteParentAfterPlayerCreate(playerId, contact){
+    if(!isParentEmail(contact)) return null;
+    const store = global.CoachStore;
+    const session = store && store.getSession && store.getSession();
+    if(!store || !session || !playerId) return null;
+    let invite;
+    try{
+      invite = store.createParentInvite(session, playerId);
+    }catch(e){
+      return {ok: false, reason: 'invite'};
+    }
+    const sent = await prepareParentInviteEmail(invite, contact);
+    return sent;
+  }
+
+  async function onAddPlayer(){
     const session = global.CoachStore.getSession();
     const teamId = global.CoachStore.getActiveTeamId();
     if(!teamId) return;
     const first = document.getElementById('coachPlayerFirst')?.value || '';
     const last = document.getElementById('coachPlayerLast')?.value || '';
     const number = document.getElementById('coachPlayerNumber')?.value || '';
-    const contact = document.getElementById('coachPlayerContact')?.value || '';
+    const contact = String(document.getElementById('coachPlayerContact')?.value || '').trim();
     const position = document.getElementById('coachPlayerPos')?.value || '';
+    if(contact && !isParentEmail(contact)){
+      toast(tt('coachContactEmailOnly', 'Enter a parent email, or leave the field empty.'));
+      document.getElementById('coachPlayerContact')?.focus();
+      return;
+    }
     try{
       const photo = resolveCoachPlayerPhoto({first_name: first, last_name: last, photo: ''});
       const created = global.CoachStore.addPlayer(session, teamId, {
@@ -2769,7 +2833,19 @@
         if(el) el.value = '';
       });
       setPlayerFormOpen(false);
-      toast(tt('coachPlayerAdded', 'Player added.'));
+      let inviteResult = null;
+      if(created && created.id && contact){
+        inviteResult = await inviteParentAfterPlayerCreate(created.id, contact);
+      }
+      if(inviteResult && inviteResult.ok){
+        toast(tt('coachPlayerAddedInvite', 'Player saved. Mail opened with code {code} for the parent.').replace('{code}', inviteResult.code));
+      }else if(contact && inviteResult && inviteResult.reason === 'sync'){
+        toast(tt('coachPlayerAddedInviteSyncFail', 'Player saved, but invite sync failed. Open the player and share the invite again.'));
+      }else if(contact && inviteResult && !inviteResult.ok){
+        toast(tt('coachPlayerAddedInviteFail', 'Player saved. Open the player card to share the parent invite.'));
+      }else{
+        toast(tt('coachPlayerAdded', 'Player added.'));
+      }
       renderCoachUi();
     }catch(e){
       const map = {
@@ -3864,44 +3940,24 @@
   }
 
   async function sendParentInviteEmailTest(){
-    if(!TEST_EMAIL_INVITES || !parentInviteRow) return;
+    if(!parentInviteRow) return;
     const emailEl = document.getElementById('coachParentInviteEmail');
     const email = String(emailEl && emailEl.value || '').trim();
-    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
+    if(!isParentEmail(email)){
       toast(tt('coachParentEmailInvalid', 'Enter a valid email.'));
       if(emailEl) emailEl.focus();
       return;
     }
-    const store = global.CoachStore;
-    const session = store && store.getSession && store.getSession();
-    if(!store || !session) return;
-    const full = parentInviteRow.payload || {};
-    const child = full.player
-      ? [full.player.fn, full.player.ln].filter(Boolean).join(' ')
-      : '';
-    const subject = `${tt('coachParentEmailSubject', 'Matchcard invitation')}${child ? ` — ${child}` : ''}`;
-    let link = '';
-    if(global.ParentCloud && global.ParentCloud.ready && global.ParentCloud.ready()){
-      try{
-        link = await global.ParentCloud.publishInvite(parentInviteRow);
-      }catch(e){
-        toast(tt('coachCloudSyncFail', 'Cloud sync failed. Check keys and schema.'));
-        return;
-      }
-    }else if(global.ParentStore){
-      link = global.ParentStore.buildCodeWebLink(parentInviteRow.code || full.code || '');
+    const res = await prepareParentInviteEmail(parentInviteRow, email);
+    if(res && res.ok){
+      toast(tt('coachParentEmailOpened', 'Mail app opened with code {code}.').replace('{code}', res.code));
+      return;
     }
-    const body = tt(
-      'coachParentEmailBody',
-      '[TEST MODE] Confirm the player in Matchcard: {link}'
-    ).replace('{name}', child).replace('{link}', link);
-    const href = `mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    const a = document.createElement('a');
-    a.href = href;
-    a.style.display = 'none';
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
+    if(res && res.reason === 'sync'){
+      toast(tt('coachCloudSyncFail', 'Cloud sync failed. Check keys and schema.'));
+      return;
+    }
+    toast(tt('coachErrGeneric', 'Something went wrong.'));
   }
 
   function saveCoachQuickRate(){

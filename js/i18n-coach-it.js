@@ -173,7 +173,7 @@ window.FFK_COACH_I18N.it = {
   coachMatchDraw: 'Pareggio',
   coachMatchLoss: 'Sconfitta',
   coachScoreOptionalPh: 'Risultato (più tardi)',
-  coachContactPh: 'Telefono o email del genitore',
+  coachContactPh: 'Email del genitore',
   coachFirstName: 'Nome',
   coachLastName: 'Cognome',
   coachSaveProfile: 'Salva profilo',
