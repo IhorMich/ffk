@@ -160,7 +160,14 @@
       : global.InboxStore.listForPlayers([playerId]);
     return list.filter(m =>
       m.type === 'chat_message' && String(m.team_player_id || '') === String(playerId || '')
-    ).sort((a,b) => String(b.created_at || '').localeCompare(String(a.created_at || '')));
+    ).sort((a,b) => String(a.created_at || '').localeCompare(String(b.created_at || '')));
+  }
+  function scrollChatToBottom(){
+    const thread = document.getElementById('chatThread');
+    if(!thread) return;
+    requestAnimationFrame(() => {
+      thread.scrollTop = thread.scrollHeight;
+    });
   }
   function renderChatThread(){
     const page = document.getElementById('chatPage');
@@ -197,12 +204,13 @@
           </div>`;
         }).join('')
       : `<div class="inbox-empty">${esc(tt('chatEmpty', 'No messages yet. Write the first one.'))}</div>`;
-    requestAnimationFrame(() => { thread.scrollTop = 0; });
+    scrollChatToBottom();
     syncInboxBellUi();
   }
   function openPlayerCoachChat(teamPlayerId, fallback){
     const wanted = String(teamPlayerId || '');
-    const lastMessage = wanted ? chatMessages(wanted)[0] : null;
+    const thread = wanted ? chatMessages(wanted) : [];
+    const lastMessage = thread.length ? thread[thread.length - 1] : null;
     const target = chatTargets().find(t => String(t.team_player_id) === wanted)
       || fallback
       || (lastMessage ? {
@@ -306,6 +314,9 @@
     document.querySelectorAll('#inboxSheetList [data-parent-msg]').forEach(row => {
       row.classList.toggle('is-selected', selectedInbox.has(row.dataset.parentMsg));
     });
+    document.querySelectorAll('#inboxSheetList [data-parent-chat]').forEach(row => {
+      row.classList.toggle('is-selected', selectedInbox.has('chat:' + row.dataset.parentChat));
+    });
   }
   function clearInboxSelection(){
     selectedInbox = new Set();
@@ -321,12 +332,29 @@
     document.querySelectorAll('#inboxSheetList [data-parent-msg]').forEach(row => {
       selectedInbox.add(row.dataset.parentMsg);
     });
+    document.querySelectorAll('#inboxSheetList [data-parent-chat]').forEach(row => {
+      selectedInbox.add('chat:' + row.dataset.parentChat);
+    });
     syncInboxSelectionUi();
   }
   function deleteSelectedInbox(){
     if(!selectionActive() || !global.InboxStore) return;
     if(!confirm(tt('msgDeleteSelectedConfirm', 'Delete selected messages?'))) return;
-    global.InboxStore.deleteMessages([...selectedInbox]);
+    const ids = [];
+    selectedInbox.forEach(key => {
+      const value = String(key || '');
+      if(value.startsWith('chat:')){
+        const playerId = value.slice(5);
+        (global.InboxStore.listAll() || []).forEach(m => {
+          if(m.type === 'chat_message' && String(m.team_player_id || '') === playerId){
+            ids.push(m.id);
+          }
+        });
+      }else{
+        ids.push(value);
+      }
+    });
+    global.InboxStore.deleteMessages(ids);
     clearInboxSelection();
     renderParentInbox();
   }
@@ -1434,6 +1462,11 @@
       deleteChatMessage(id);
     });
     bindLongPress(document.getElementById('inboxSheetList'), node => {
+      const chatRow = node && node.closest ? node.closest('[data-parent-chat]') : null;
+      if(chatRow){
+        toggleInboxSelection('chat:' + chatRow.dataset.parentChat);
+        return chatRow;
+      }
       const row = node && node.closest ? node.closest('[data-parent-msg]') : null;
       if(row) toggleInboxSelection(row.dataset.parentMsg);
       return row;
@@ -1444,7 +1477,10 @@
     document.getElementById('inboxSheetList')?.addEventListener('click', e => {
       const chatBtn = e.target.closest('[data-parent-chat]');
       if(chatBtn){
-        if(selectionActive()) return;
+        if(selectionActive()){
+          toggleInboxSelection('chat:' + chatBtn.dataset.parentChat);
+          return;
+        }
         closeInboxSheet();
         openPlayerCoachChat(chatBtn.dataset.parentChat);
         return;
