@@ -391,20 +391,38 @@ function coachAccountEmail(){
     return '';
   }
 }
-function syncSettingsAccountFooter(personalEmail){
-  const coachEmail = coachAccountEmail();
-  const personal = String(personalEmail || '').trim().toLowerCase();
+async function getAuthSnapshot(){
+  if(window.MatchcardAuth && typeof window.MatchcardAuth.snapshot === 'function'){
+    try{
+      if(typeof window.bindMatchcardAuth === 'function') window.bindMatchcardAuth();
+      return await window.MatchcardAuth.snapshot();
+    }catch(e){}
+  }
+  const personal = personalAccountEmail(await getPersonalAccountSession());
+  const coach = coachAccountEmail();
+  return {
+    mode: isCoachPlan() ? 'coach' : 'personal',
+    personal: personal ? {email: personal} : null,
+    coach: coach ? {email: coach} : null,
+    isPro: isPro(),
+    isCoachPlan: isCoachPlan(),
+    signedIn: !!(personal || coach),
+    showPersonalLogin: !personal,
+    canSignOut: !!(personal || coach)
+  };
+}
+function syncSettingsAccountFooterFromSnap(snap){
   const status = document.getElementById('settingsAccountStatus');
   const signOutBtn = document.getElementById('settingsSignOutBtn');
   const coachEmailEl = document.getElementById('settingsCoachEmail');
   const lines = [];
-  if(personal){
-    lines.push(isPro()
-      ? t('accountStatusPro', {email: personal})
-      : t('accountStatusFree', {email: personal}));
+  if(snap.personal && snap.personal.email){
+    lines.push(snap.isPro
+      ? t('accountStatusPro', {email: snap.personal.email})
+      : t('accountStatusFree', {email: snap.personal.email}));
   }
-  if(coachEmail){
-    lines.push(t('settingsAccountCoach', {email: coachEmail}));
+  if(snap.coach && snap.coach.email){
+    lines.push(t('settingsAccountCoach', {email: snap.coach.email}));
   }
   if(status){
     status.textContent = lines.length
@@ -412,23 +430,34 @@ function syncSettingsAccountFooter(personalEmail){
       : t('settingsAccountSignedOut');
     status.style.whiteSpace = lines.length > 1 ? 'pre-line' : '';
   }
-  if(signOutBtn) signOutBtn.hidden = !(personal || coachEmail);
+  if(signOutBtn) signOutBtn.hidden = !snap.canSignOut;
   if(coachEmailEl) coachEmailEl.hidden = true;
 }
+function syncSettingsAccountFooter(personalEmail){
+  // Legacy sync path — prefer snapshot when available.
+  const coachEmail = coachAccountEmail();
+  const personal = String(personalEmail || '').trim().toLowerCase();
+  syncSettingsAccountFooterFromSnap({
+    personal: personal ? {email: personal} : null,
+    coach: coachEmail ? {email: coachEmail} : null,
+    isPro: isPro(),
+    canSignOut: !!(personal || coachEmail)
+  });
+}
 async function syncPersonalAccountUi(){
-  const session = await getPersonalAccountSession();
-  const email = personalAccountEmail(session);
+  if(typeof window.bindMatchcardAuth === 'function') window.bindMatchcardAuth();
+  const snap = await getAuthSnapshot();
+  const session = snap.personal
+    ? await getPersonalAccountSession()
+    : null;
   const status = document.getElementById('personalAccountStatus');
   const form = document.getElementById('personalAccountForm');
   const signOutBtn = document.getElementById('personalSignOutBtn');
-  const coachEmail = coachAccountEmail();
-  const onCoach = isCoachPlan();
   if(status){
-    if(email){
-      // Top status line already shows the signed-in email.
+    if(snap.personal){
       status.hidden = true;
       status.textContent = '';
-    }else if(onCoach && coachEmail){
+    }else if(snap.isCoachPlan && snap.coach){
       status.hidden = false;
       status.textContent = t('accountHintCoachActive');
     }else{
@@ -436,41 +465,43 @@ async function syncPersonalAccountUi(){
       status.textContent = t('accountHint');
     }
   }
-  // Free/Pro login must stay available even while a Coach session exists —
-  // they are separate products. Hide only when personal email is signed in.
-  if(form) form.hidden = !!email;
+  if(form) form.hidden = !snap.showPersonalLogin;
   const panel = document.getElementById('personalAccountCard');
-  if(panel) panel.hidden = !!email;
-  // One sign-out control: settingsSignOutBtn (see syncSettingsAccountFooter).
+  if(panel) panel.hidden = !snap.showPersonalLogin;
   if(signOutBtn) signOutBtn.hidden = true;
-  syncSettingsAccountFooter(email);
+  syncSettingsAccountFooterFromSnap(snap);
   updateCloudSyncStatusUi();
   return session;
 }
 async function onSettingsDeleteAccount(){
-  const personal = personalAccountEmail(await getPersonalAccountSession());
-  const coachEmail = coachAccountEmail();
+  const snap = await getAuthSnapshot();
+  const personal = snap.personal && snap.personal.email;
+  const coachEmail = snap.coach && snap.coach.email;
   if(!personal && !coachEmail){
     if(!confirm(t('settingsDeleteLocalConfirm') || 'Clear personal data on this phone?')) return;
   }else if(!confirm(t('settingsDeleteAccountConfirm') || 'Sign out and delete account access on this device?')){
     return;
   }
-  try{
-    if(window.ParentCloud && typeof window.ParentCloud.signOut === 'function'){
-      await window.ParentCloud.signOut();
+  if(window.MatchcardAuth && typeof window.MatchcardAuth.signOutAll === 'function'){
+    try{ await window.MatchcardAuth.signOutAll({personal: true, coach: true}); }catch(e){}
+  }else{
+    try{
+      if(window.ParentCloud && typeof window.ParentCloud.signOut === 'function'){
+        await window.ParentCloud.signOut();
+      }
+    }catch(e){}
+    try{
+      if(window.CoachStore && typeof window.CoachStore.signOut === 'function'){
+        const out = window.CoachStore.signOut();
+        if(out && typeof out.then === 'function') await out;
+      }
+    }catch(e){}
+    if(typeof setCoachPlan === 'function') setCoachPlan(false);
+    if(isPro()){
+      settings.isPro = false;
+      saveSettings();
+      syncProUi();
     }
-  }catch(e){}
-  try{
-    if(window.CoachStore && typeof window.CoachStore.signOut === 'function'){
-      const out = window.CoachStore.signOut();
-      if(out && typeof out.then === 'function') await out;
-    }
-  }catch(e){}
-  if(typeof setCoachPlan === 'function') setCoachPlan(false);
-  if(isPro()){
-    settings.isPro = false;
-    saveSettings();
-    syncProUi();
   }
   const wipeLocal = confirm(t('settingsDeleteWipeConfirm') || 'Also erase match history and player cards on this phone?');
   if(wipeLocal){
@@ -497,7 +528,6 @@ async function onSettingsDeleteAccount(){
         'Please delete my Matchcard cloud account.\nEmail: ' + (personal || coachEmail || '') + '\n'
       );
     if(wipeLocal || personal || coachEmail){
-      // Offer formal cloud deletion mail after local cleanup.
       setTimeout(() => {
         try{ window.location.href = mail; }catch(e){}
       }, 400);
@@ -537,28 +567,33 @@ function openSettingsRate(){
   }
 }
 async function onSettingsSignOut(){
-  const personal = personalAccountEmail(await getPersonalAccountSession());
-  const coachEmail = coachAccountEmail();
-  if(personal){
-    try{
-      if(window.ParentCloud && typeof window.ParentCloud.signOut === 'function'){
-        await window.ParentCloud.signOut();
+  if(typeof window.bindMatchcardAuth === 'function') window.bindMatchcardAuth();
+  if(window.MatchcardAuth && typeof window.MatchcardAuth.signOutAll === 'function'){
+    await window.MatchcardAuth.signOutAll();
+  }else{
+    const personal = personalAccountEmail(await getPersonalAccountSession());
+    const coachEmail = coachAccountEmail();
+    if(personal){
+      try{
+        if(window.ParentCloud && typeof window.ParentCloud.signOut === 'function'){
+          await window.ParentCloud.signOut();
+        }
+      }catch(e){}
+      if(isPro()){
+        settings.isPro = false;
+        saveSettings();
+        syncProUi();
       }
-    }catch(e){}
-    if(isPro()){
-      settings.isPro = false;
-      saveSettings();
-      syncProUi();
+    }
+    if(coachEmail && window.CoachStore && typeof window.CoachStore.signOut === 'function'){
+      try{
+        const out = window.CoachStore.signOut();
+        if(out && typeof out.then === 'function') await out;
+      }catch(e){}
+      if(typeof setCoachPlan === 'function') setCoachPlan(false);
     }
   }
-  if(coachEmail && window.CoachStore && typeof window.CoachStore.signOut === 'function'){
-    try{
-      const out = window.CoachStore.signOut();
-      if(out && typeof out.then === 'function') await out;
-    }catch(e){}
-    if(typeof setCoachPlan === 'function') setCoachPlan(false);
-    if(typeof renderCoachUi === 'function') renderCoachUi();
-  }
+  if(typeof renderCoachUi === 'function') renderCoachUi();
   showToast(t('accountSignedOut'));
   await syncPersonalAccountUi();
   if(typeof syncPlanModeButtons === 'function') syncPlanModeButtons();
@@ -636,15 +671,20 @@ async function onPersonalSignIn(){
   }
 }
 async function onPersonalSignOut(){
-  try{
-    if(window.ParentCloud && typeof window.ParentCloud.signOut === 'function'){
-      await window.ParentCloud.signOut();
+  if(typeof window.bindMatchcardAuth === 'function') window.bindMatchcardAuth();
+  if(window.MatchcardAuth && typeof window.MatchcardAuth.signOutAll === 'function'){
+    await window.MatchcardAuth.signOutAll({personal: true, coach: false, clearCoachPlan: false});
+  }else{
+    try{
+      if(window.ParentCloud && typeof window.ParentCloud.signOut === 'function'){
+        await window.ParentCloud.signOut();
+      }
+    }catch(e){}
+    if(isPro()){
+      settings.isPro = false;
+      saveSettings();
+      syncProUi();
     }
-  }catch(e){}
-  if(isPro()){
-    settings.isPro = false;
-    saveSettings();
-    syncProUi();
   }
   showToast(t('accountSignedOut'));
   await syncPersonalAccountUi();

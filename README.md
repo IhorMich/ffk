@@ -105,6 +105,28 @@ Debug APK: `cd android && ./gradlew :app:assembleDebug`.
 
 Хранилище PWA в браузере и хранилище приложения — разные. Перенос — через копию или облако.
 
+## Auth lifecycle
+
+Независимый координатор в `auth/`:
+
+```
+auth/
+  modes.js
+  lifecycle.js
+  engine.js
+```
+
+```js
+const snap = await MatchcardAuth.snapshot();
+// → { mode, personal, coach, isPro, showPersonalLogin, canSignOut, ... }
+
+await MatchcardAuth.signOutAll();           // оба продукта
+await MatchcardAuth.signOutAll({ personal:true, coach:false });
+await MatchcardAuth.setMode('coach');       // UI-режим, сессии не трогает
+```
+
+`js/auth.js` подключает адаптеры к ParentCloud / CoachStore. Проверка: `node auth/selftest.js`.
+
 ## Rating Engine
 
 Независимый модуль в `rating/` — без DOM, localStorage и settings:

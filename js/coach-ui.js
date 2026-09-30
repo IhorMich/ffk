@@ -144,7 +144,13 @@
   }
 
   function enterCoachMode(){
-    if(typeof setCoachPlan === 'function') setCoachPlan(true);
+    if(global.MatchcardAuth && typeof global.MatchcardAuth.setMode === 'function'){
+      try{ global.MatchcardAuth.setMode('coach'); }catch(e){
+        if(typeof setCoachPlan === 'function') setCoachPlan(true);
+      }
+    }else if(typeof setCoachPlan === 'function'){
+      setCoachPlan(true);
+    }
     if(typeof showView === 'function') showView('coach');
     renderCoachUi();
     syncPlanModeButtons();
@@ -155,7 +161,13 @@
     if(typeof closeCoachQuickRate === 'function') closeCoachQuickRate();
     window.coachChildView = null;
     if(typeof syncCoachChildPlayerUi === 'function') syncCoachChildPlayerUi();
-    if(typeof setCoachPlan === 'function') setCoachPlan(false);
+    if(global.MatchcardAuth && typeof global.MatchcardAuth.setMode === 'function'){
+      try{ global.MatchcardAuth.setMode('personal'); }catch(e){
+        if(typeof setCoachPlan === 'function') setCoachPlan(false);
+      }
+    }else if(typeof setCoachPlan === 'function'){
+      setCoachPlan(false);
+    }
     if(typeof showView === 'function') showView('player');
     if(typeof renderParentUi === 'function') renderParentUi();
     if(typeof applyHeader === 'function') applyHeader();
