@@ -160,7 +160,8 @@ function loadSettings(){
       coachSub: s.coachSub === true,
       pwaTransferSeen: s.pwaTransferSeen === true,
       introMark: String(s.introMark || ''),
-      accountPrompted: s.accountPrompted === true
+      accountPrompted: s.accountPrompted === true,
+      devBilling: s.devBilling === true
     };
     if(s.langManual !== true) saveSettings();
   }catch(e){}

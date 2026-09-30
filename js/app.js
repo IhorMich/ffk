@@ -536,11 +536,14 @@ function setCoachSub(on){
 }
 function syncCoachBillingUi(){
   const on = isCoachSub();
+  const showBilling = !!settings.devBilling;
   document.documentElement.classList.toggle('is-coach-sub', on);
   const unlock = document.getElementById('coachSubUnlockBtn');
   const lock = document.getElementById('coachSubLockBtn');
-  if(unlock) unlock.hidden = on;
-  if(lock) lock.hidden = !on;
+  const hint = document.getElementById('coachSubHint');
+  if(unlock) unlock.hidden = !showBilling || on;
+  if(lock) lock.hidden = !showBilling || !on;
+  if(hint) hint.hidden = !showBilling;
   const open = document.getElementById('openCoachBtn');
   if(open) open.disabled = false;
 }
@@ -563,10 +566,13 @@ function syncPushSettingsUi(){
 }
 window.syncPushSettingsUi = syncPushSettingsUi;
 function proTeaserHtml(titleKey){
+  const unlock = settings.devBilling
+    ? `<button class="save-btn pro-lock-btn" type="button">${escapeHtml(t('proUnlock'))}</button>`
+    : '';
   return `<div class="pro-lock">
     <div class="pro-lock-kicker">Matchcard Pro</div>
     <p>${escapeHtml(t(titleKey))}</p>
-    <button class="save-btn pro-lock-btn" type="button">${escapeHtml(t('proUnlock'))}</button>
+    ${unlock}
   </div>`;
 }
 function syncProUi(){
@@ -576,8 +582,9 @@ function syncProUi(){
   if(body) body.textContent = isPro() ? t('proBodyOn') : t('proBodyOff');
   const unlock = document.getElementById('proUnlockBtn');
   const lock = document.getElementById('proLockBtn');
-  if(unlock) unlock.hidden = isPro();
-  if(lock) lock.hidden = !isPro();
+  const showBilling = !!settings.devBilling;
+  if(unlock) unlock.hidden = !showBilling || isPro();
+  if(lock) lock.hidden = !showBilling || !isPro();
   const cloudCard = document.getElementById('cloudSyncCard');
   if(cloudCard) cloudCard.hidden = !isPro();
   const add = document.getElementById('addPlayerBtn');
@@ -657,7 +664,7 @@ async function runPersonalCloudSync(options){
   }
 }
 
-let settings = {club:'', player:'', position:'fwd', format:'2x30', minutes:'60', lang:'ru', seasonCloseDeclined:'', theme:'dark', iconSet:'clear', onboarded:false, onboardSkin:'', isPro:false, isCoach:false, coachSub:false, pwaTransferSeen:false, introMark:'', accountPrompted:false};
+let settings = {club:'', player:'', position:'fwd', format:'2x30', minutes:'60', lang:'ru', seasonCloseDeclined:'', theme:'dark', iconSet:'clear', onboarded:false, onboardSkin:'', isPro:false, isCoach:false, coachSub:false, pwaTransferSeen:false, introMark:'', accountPrompted:false, devBilling:false};
 let roster = {currentId:'', ids:[]};
 let player = defaultPlayer();
 let extraSelected = [];
@@ -3756,7 +3763,25 @@ document.addEventListener('click', e => {
   const btn = e.target.closest('.pro-lock-btn');
   if(!btn) return;
   e.preventDefault();
+  if(!settings.devBilling){
+    offerPro();
+    return;
+  }
   setPro(true);
+});
+let versionTapCount = 0;
+let versionTapTimer = null;
+document.getElementById('appVersionHint')?.addEventListener('click', () => {
+  versionTapCount += 1;
+  clearTimeout(versionTapTimer);
+  versionTapTimer = setTimeout(() => { versionTapCount = 0; }, 1600);
+  if(versionTapCount < 7) return;
+  versionTapCount = 0;
+  settings.devBilling = !settings.devBilling;
+  saveSettings();
+  syncProUi();
+  applyI18n();
+  showToast(settings.devBilling ? t('devBillingOn') : t('devBillingOff'));
 });
 document.getElementById('importFile').addEventListener('change', async (e) => {
   const file = e.target.files[0];

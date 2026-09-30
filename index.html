@@ -814,7 +814,7 @@ window.ffkIsNative = function () {
         <p class="hint" id="cloudSyncStatus" data-i18n="proCloudIdle">После каждого сохранённого матча данные уходят в аккаунт сами.</p>
       </div>
       <h3 class="period-head" data-i18n="coachPushKicker">Уведомления</h3>
-      <p class="hint" data-i18n="coachPushHint">Push для приглашений и карточек. Системные уведомления со звуком — даже если звонок беззвучный.</p>
+      <p class="hint" data-i18n="coachPushHint">Локальные уведомления для приглашений и карточек. Удалённый push включится после настройки FCM.</p>
       <button class="save-btn" id="appPushOnBtn" type="button" data-i18n="coachPushEnable">Включить push</button>
       <button class="ghost-btn" id="appPushOffBtn" type="button" data-i18n="coachPushDisable">Выключить</button>
       <p class="hint" id="appPushStatus"></p>
@@ -855,11 +855,10 @@ window.ffkIsNative = function () {
           <li data-i18n="proBulletSeasons">Новые сезоны без лимита после закрытия текущего</li>
           <li data-i18n="proBulletStats">График оценок, сравнение периодов и разбор по минутам</li>
           <li data-i18n="proBulletCards">Карточки сезона и периода для шеринга</li>
-          <li data-i18n="proBulletCloud">JSON-экспорт и облачный синк между устройствами</li>
-          <li data-i18n="proBulletAds">Без рекламы</li>
+          <li data-i18n="proBulletCloud">Облачный автосинк между устройствами</li>
         </ul>
-        <button class="save-btn" id="proUnlockBtn" type="button" data-i18n="proUnlock">Включить Pro (тест)</button>
-        <button class="ghost-btn" id="proLockBtn" type="button" hidden data-i18n="proLock">Выключить Pro (тест)</button>
+        <button class="save-btn" id="proUnlockBtn" type="button" hidden data-i18n="proUnlock">Включить Pro</button>
+        <button class="ghost-btn" id="proLockBtn" type="button" hidden data-i18n="proLock">Выключить Pro</button>
       </div>
       <h3 class="period-head" data-i18n="planCoachHead">Coach</h3>
       <p class="hint" data-i18n="planCoachHint">Matchcard Coach — командный продукт в облаке. Отдельное дерево: Academy → Team → игроки. Не смешивается с Free/Pro.</p>
@@ -872,9 +871,9 @@ window.ffkIsNative = function () {
           <li data-i18n="coachTeaserParents">Invite родителя к профилю ребёнка</li>
         </ul>
         <button class="save-btn" id="openCoachBtn" type="button" data-i18n="coachOpen">Matchcard Coach</button>
-        <button class="save-btn" id="coachSubUnlockBtn" type="button" data-i18n="coachSubUnlock">Включить Coach (тест)</button>
-        <button class="ghost-btn" id="coachSubLockBtn" type="button" hidden data-i18n="coachSubLock">Выключить Coach (тест)</button>
-        <p class="hint" id="coachSubHint" data-i18n="coachSubHint">Подписка Coach (тест). Store billing позже — как у Pro.</p>
+        <button class="save-btn" id="coachSubUnlockBtn" type="button" hidden data-i18n="coachSubUnlock">Включить Coach</button>
+        <button class="ghost-btn" id="coachSubLockBtn" type="button" hidden data-i18n="coachSubLock">Выключить Coach</button>
+        <p class="hint" id="coachSubHint" hidden data-i18n="coachSubHint">Тестовый доступ Coach на этом телефоне.</p>
         <button class="ghost-btn" id="enterParentModeBtn" type="button" hidden data-i18n="coachSwitchParent">Перейти в режим родителя / Free</button>
         <button class="ghost-btn" id="enterCoachModeBtn" type="button" hidden data-i18n="coachSwitchCoach">Вернуться в режим тренера</button>
       </div>
@@ -916,7 +915,7 @@ window.ffkIsNative = function () {
       <div id="coachAuth" class="coach-panel" hidden>
         <div class="coach-hero">
           <div class="pro-kicker" data-i18n="coachAuthKicker">Coach account</div>
-          <p class="coach-lead" data-i18n="coachAuthLead">Аккаунт тренера на этом телефоне. Облачный вход позже через Supabase — Personal Free/Pro не трогаем.</p>
+          <p class="coach-lead" data-i18n="coachAuthLead">Аккаунт тренера отдельно от Personal Free/Pro. Вход и команды синхронизируются через облако.</p>
           <div class="field">
             <label data-i18n="coachEmail">Email</label>
             <input id="coachEmail" type="email" autocomplete="username" inputmode="email">
@@ -1127,7 +1126,7 @@ window.ffkIsNative = function () {
         <div class="pro-kicker" data-i18n="coachCloudKicker">Облако</div>
         <p class="hint" id="coachCloudStatus"></p>
         <button class="save-btn" id="coachCloudSyncBtn" type="button" data-i18n="coachCloudSyncBtn">Синхронизировать сейчас</button>
-        <p class="hint" data-i18n="coachCloudHint">Впиши URL и anon key в js/coach-config.js и прогони supabase/schema.sql.</p>
+        <p class="hint" data-i18n="coachCloudHint">Команды, матчи и приглашения уходят в облако, когда тренер вошёл в аккаунт.</p>
       </div>
 
       <div class="coach-settings-block">
