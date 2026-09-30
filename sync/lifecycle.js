@@ -159,6 +159,9 @@
         relation: '',
         conflict: null
       });
+      if (typeof root.reportError === 'function') {
+        try { root.reportError(error, { scope: 'sync.engine', silent: true }); } catch (e) {}
+      }
       return { ok: false, error: error, state: S.getState() };
     }
   };

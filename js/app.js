@@ -540,8 +540,16 @@ async function onSettingsDeleteAccount(){
 }
 function openSettingsSupport(){
   const subject = encodeURIComponent('Matchcard support');
+  let trail = '';
+  try{
+    if(window.MatchcardLog && typeof window.MatchcardLog.getTrail === 'function'){
+      const rows = window.MatchcardLog.getTrail().slice(-12);
+      trail = rows.map(r => (r.at || '') + ' ' + (r.level || '') + ' ' + (r.event || '')).join('\n');
+    }
+  }catch(e){}
   const body = encodeURIComponent(
-    'Version: ' + (window.FFK_VERSION || '') + '\n\n'
+    'Version: ' + (window.FFK_VERSION || '') + '\n\n' +
+    (trail ? ('Recent log:\n' + trail + '\n\n') : '')
   );
   const mail = 'mailto:ihormykhailiuk@gmail.com?subject=' + subject + '&body=' + body;
   try{ window.location.href = mail; }catch(e){
@@ -865,12 +873,24 @@ async function runPersonalCloudSync(options){
   }
   if(!window.ParentCloud || typeof window.ParentCloud.syncPersonalBackup !== 'function'){
     updateCloudSyncStatusUi({status: 'error'});
+    if(typeof reportError === 'function'){
+      reportError('no_cloud', {scope: 'sync.personal', silent: true});
+    }
     return;
   }
   try{
-    await window.ParentCloud.syncPersonalBackup(options || {pull: true, push: true});
+    if(window.MatchcardLog) MatchcardLog.breadcrumb('sync.personal.start', options || {});
+    const out = await window.ParentCloud.syncPersonalBackup(options || {pull: true, push: true});
+    if(out && out.ok === false && out.reason && out.reason !== 'not_pro' && out.reason !== 'no_session'){
+      if(typeof reportError === 'function'){
+        reportError(out.error || out.reason, {scope: 'sync.personal', silent: true, data: {reason: out.reason}});
+      }
+    }else if(out && out.ok && window.MatchcardLog){
+      MatchcardLog.breadcrumb('sync.personal.ok', {relation: out.plan && out.plan.relation});
+    }
   }catch(e){
     updateCloudSyncStatusUi({status: 'error'});
+    if(typeof reportError === 'function') reportError(e, {scope: 'sync.personal', toast: t('proCloudErr')});
   }
 }
 
@@ -4090,8 +4110,11 @@ async function runRestoreFromJson(rawText){
     showToast(result.added ? t('toastAdded', {n: result.added}) : (result.playerTouched ? t('toastPlayer') : t('toastNoNew')));
     return true;
   }catch(err){
-    console.warn('restore json', err);
-    showToast(t('toastReadFail'));
+    if(typeof reportError === 'function') reportError(err, {scope: 'import.json', toast: t('toastReadFail')});
+    else {
+      console.warn('restore json', err);
+      showToast(t('toastReadFail'));
+    }
     return false;
   }
 }
@@ -6245,8 +6268,15 @@ async function shareCard(m){
       if(window.caches && caches.keys) caches.keys().then(keys => keys.forEach(key => caches.delete(key))).catch(() => {});
     }
     loadSettings();
+    if(window.MatchcardLog && typeof window.MatchcardLog.installGlobalHandlers === 'function'){
+      window.MatchcardLog.installGlobalHandlers();
+      window.MatchcardLog.breadcrumb('app.boot', {v: window.FFK_VERSION || ''});
+    }
     const ratingFail = ratingFixtureFail();
-    if(ratingFail) console.error('Matchcard rating', ratingFail);
+    if(ratingFail){
+      if(typeof reportError === 'function') reportError(ratingFail, {scope: 'rating.fixtures', silent: true});
+      else console.error('Matchcard rating', ratingFail);
+    }
     loadFilters();
     applyTheme();
     loadPlayer();

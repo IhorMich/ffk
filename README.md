@@ -105,6 +105,23 @@ Debug APK: `cd android && ./gradlew :app:assembleDebug`.
 
 Хранилище PWA в браузере и хранилище приложения — разные. Перенос — через копию или облако.
 
+## Errors + production logging
+
+```
+errors/   codes · classify · reportError
+log/      breadcrumbs · global handlers
+```
+
+```js
+reportError(err, { scope: 'sync.personal', toast: true });
+// → { code: 'network'|'auth'|..., message, retryable }
+
+MatchcardLog.breadcrumb('sync.start', { pull: true });
+FFK_LOG_TRAIL(); // last events, PII scrubbed
+```
+
+Письмо в поддержку подставляет хвост лога. Удалённый sink (Sentry и т.п.) — через `MatchcardLog.addSink(fn)`.
+
 ## Data integrity + RLS
 
 Локальная целостность в `data/`:

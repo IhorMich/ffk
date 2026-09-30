@@ -641,7 +641,8 @@
       }catch(e){}
       return {ok: true};
     }catch(error){
-      console.warn('Parent cloud sync', error);
+      if(typeof reportError === 'function') reportError(error, {scope: 'sync.parent', silent: true});
+      else console.warn('Parent cloud sync', error);
       return {ok: false, error};
     }finally{
       syncing = false;
@@ -800,6 +801,9 @@
       return {ok: true, state: personalSyncState};
     }catch(error){
       console.warn('Personal backup sync', error);
+      if(typeof reportError === 'function'){
+        reportError(error, {scope: 'sync.personal', silent: true, data: {phase: 'fallback'}});
+      }
       setPersonalSyncState({
         status: 'error',
         error: String((error && error.message) || 'sync')
