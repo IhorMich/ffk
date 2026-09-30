@@ -4096,27 +4096,14 @@
   }
   function syncTrainFoldUi(){
     const body = document.getElementById('coachTrainBody');
-    const btn = document.getElementById('coachTrainFoldBtn');
     const folded = trainFolded();
     if(body) body.hidden = folded;
-    if(btn){
-      btn.setAttribute('aria-expanded', folded ? 'false' : 'true');
-      btn.textContent = folded ? '▾' : '▴';
-      btn.title = folded
-        ? tt('coachTrainExpandHint', 'Show calendar')
-        : tt('coachTrainCollapseHint', 'Hide calendar');
-    }
   }
   function syncTrainNewBtnUi(){
     const btn = document.getElementById('coachTrainNewBtn');
     if(!btn) return;
-    if(trainFormOpen){
-      btn.textContent = tt('coachTrainCloseForm', 'Close');
-      btn.classList.add('is-open');
-    }else{
-      btn.textContent = tt('coachTrainNewBtn', '+ Training');
-      btn.classList.remove('is-open');
-    }
+    btn.textContent = tt('coachTrainNewBtn', '+ Training');
+    btn.classList.toggle('is-open', !!trainFormOpen && !trainFolded());
   }
   function trainMonthKey(d){
     const x = d instanceof Date ? d : new Date();
@@ -4182,10 +4169,6 @@
     const teamId = store && store.getActiveTeamId && store.getActiveTeamId();
     const team = session && teamId ? store.getTeam(session, teamId) : null;
     if(session && team) renderTrainingsPane(session, team);
-    if(trainFormOpen){
-      const anchor = document.getElementById('coachTrainingsBox') || document.getElementById('coachTrainBody');
-      try{ anchor && anchor.scrollIntoView({behavior: 'smooth', block: 'start'}); }catch(e){}
-    }
   }
   function openTrainDay(ymd){
     if(!/^\d{4}-\d{2}-\d{2}$/.test(String(ymd || ''))) return;
@@ -4516,12 +4499,15 @@
       shareCoachTeamMatchCard(coachHistoryMatchId);
     });
     document.getElementById('coachMatchNewBtn')?.addEventListener('click', () => {
+      const box = document.getElementById('coachMatchCreate');
+      const open = !(box && !box.hidden);
       document.querySelectorAll('#coachMatchCreate .js-cm-squad').forEach(el => { el.dataset.dirty = ''; });
-      setCoachMatchCreateOpen(true);
+      setCoachMatchCreateOpen(open);
       renderCoachUi();
     });
     document.getElementById('coachMatchCreateCancel')?.addEventListener('click', () => {
       setCoachMatchCreateOpen(false);
+      renderCoachUi();
     });
     document.getElementById('coachMatchKindSelect')?.addEventListener('change', () => {
       syncCoachCompetitionField();
@@ -4828,22 +4814,6 @@
       }
     });
 
-    document.getElementById('coachTrainFoldBtn')?.addEventListener('click', () => {
-      const nextFolded = !trainFolded();
-      setTrainFolded(nextFolded);
-      if(nextFolded){
-        trainFormOpen = false;
-        const wrap = document.getElementById('coachTrainCreate');
-        if(wrap) wrap.hidden = true;
-        syncTrainNewBtnUi();
-      }
-      syncTrainFoldUi();
-      const store = global.CoachStore;
-      const session = store && store.getSession && store.getSession();
-      const teamId = store && store.getActiveTeamId && store.getActiveTeamId();
-      const team = session && teamId ? store.getTeam(session, teamId) : null;
-      if(session && team) renderTrainingsPane(session, team);
-    });
     document.getElementById('coachTrainNewBtn')?.addEventListener('click', () => {
       if(trainFormOpen && !trainFolded()){
         // Close whole block together (calendar + form).
