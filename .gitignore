@@ -10,3 +10,4 @@ android/*.jks
 android/*.keystore
 *.jks
 *.keystore
+*.apk

@@ -866,12 +866,15 @@ function formatCloudSyncAt(iso){
 function updateCloudSyncStatusUi(state){
   const el = document.getElementById('cloudSyncStatus');
   const card = document.getElementById('cloudSyncCard');
-  if(card) card.hidden = false;
-  if(!el) return;
   const st = state || (window.ParentCloud && typeof window.ParentCloud.personalSyncState === 'function'
     ? window.ParentCloud.personalSyncState()
     : null) || {};
   const status = st.status || 'idle';
+  if(card){
+    // Visible whenever cloud UI exists; status text explains login / sync.
+    card.hidden = false;
+  }
+  if(!el) return;
   if(status === 'need_account'){
     el.textContent = t('proCloudNeedAccount');
     return;
