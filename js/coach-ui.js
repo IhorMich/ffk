@@ -4078,6 +4078,28 @@
   let trainCalMonth = ''; // YYYY-MM
   let trainFormOpen = false;
   let trainMode = 'once';
+  const TRAIN_FOLD_KEY = 'ffk_coach_train_fold';
+  function trainFolded(){
+    try{ return sessionStorage.getItem(TRAIN_FOLD_KEY) === '1'; }catch(e){ return false; }
+  }
+  function setTrainFolded(on){
+    try{ sessionStorage.setItem(TRAIN_FOLD_KEY, on ? '1' : '0'); }catch(e){}
+  }
+  function syncTrainFoldUi(){
+    const body = document.getElementById('coachTrainBody');
+    const btn = document.getElementById('coachTrainFoldBtn');
+    const lead = document.getElementById('coachTrainLead');
+    const folded = trainFolded();
+    if(body) body.hidden = folded;
+    if(lead) lead.hidden = folded;
+    if(btn){
+      btn.setAttribute('aria-expanded', folded ? 'false' : 'true');
+      btn.textContent = folded ? '▾' : '▴';
+      btn.title = folded
+        ? tt('coachTrainExpandHint', 'Show calendar')
+        : tt('coachTrainCollapseHint', 'Hide calendar');
+    }
+  }
 
   function trainMonthKey(d){
     const x = d instanceof Date ? d : new Date();
@@ -4254,8 +4276,11 @@
     box.hidden = false;
     ensureTrainTimeSelects();
     setTrainFormOpen(trainFormOpen);
-    renderTrainCalendar(session, team);
-    renderTrainList(session, team);
+    syncTrainFoldUi();
+    if(!trainFolded()){
+      renderTrainCalendar(session, team);
+      renderTrainList(session, team);
+    }
   }
   function onSaveTraining(){
     const store = global.CoachStore;
@@ -4744,7 +4769,15 @@
       }
     });
 
+    document.getElementById('coachTrainFoldBtn')?.addEventListener('click', () => {
+      setTrainFolded(!trainFolded());
+      renderCoachUi();
+    });
     document.getElementById('coachTrainNewBtn')?.addEventListener('click', () => {
+      if(trainFolded()){
+        setTrainFolded(false);
+        syncTrainFoldUi();
+      }
       setTrainFormOpen(true);
     });
     document.getElementById('coachTrainCancelBtn')?.addEventListener('click', () => {

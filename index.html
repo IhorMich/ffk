@@ -350,9 +350,12 @@ window.ffkIsNative = function () {
             <div class="coach-match-top">
               <div>
                 <div class="pro-kicker" data-i18n="coachTrainKicker">Тренировки</div>
-                <p class="hint" data-i18n="coachTrainLead">Календарь команды. Родители увидят расписание автоматически.</p>
+                <p class="hint" id="coachTrainLead" data-i18n="coachTrainLead">Календарь команды. Родители увидят расписание автоматически.</p>
               </div>
-              <button type="button" class="save-btn" id="coachTrainNewBtn" data-i18n="coachTrainNewBtn">+ Тренировка</button>
+              <div class="coach-train-top-actions">
+                <button type="button" class="ghost-btn coach-fold-btn" id="coachTrainFoldBtn" aria-expanded="true" data-i18n-aria="coachTrainFoldAria" aria-label="Свернуть календарь">▾</button>
+                <button type="button" class="save-btn" id="coachTrainNewBtn" data-i18n="coachTrainNewBtn">+ Тренировка</button>
+              </div>
             </div>
             <div id="coachTrainCreate" class="coach-match-create" hidden>
               <div class="pro-kicker" data-i18n="coachTrainCreateKicker">Новая тренировка</div>
@@ -365,7 +368,7 @@ window.ffkIsNative = function () {
                   <label data-i18n="labelDate">Дата</label>
                   <input id="coachTrainDate" type="date">
                 </div>
-                <div class="field" id="coachTrainWeekdaysWrap" hidden>
+                <div class="field coach-match-create-wide" id="coachTrainWeekdaysWrap" hidden>
                   <label data-i18n="coachTrainWeekdays">Дни недели</label>
                   <div class="period-chips coach-train-days" id="coachTrainWeekdays">
                     <button type="button" class="chip" data-wd="1" data-i18n="dowMonShort">Пн</button>
@@ -379,25 +382,25 @@ window.ffkIsNative = function () {
                 </div>
                 <div class="field">
                   <label data-i18n="coachTrainStart">Начало</label>
-                  <div class="kickoff-pair">
+                  <div class="coach-kickoff-row">
                     <select id="coachTrainStartH" aria-label="start hour"></select>
-                    <span>:</span>
+                    <span class="coach-kickoff-colon" aria-hidden="true">:</span>
                     <select id="coachTrainStartM" aria-label="start minute"></select>
                   </div>
                 </div>
                 <div class="field">
                   <label data-i18n="coachTrainEnd">Конец</label>
-                  <div class="kickoff-pair">
+                  <div class="coach-kickoff-row">
                     <select id="coachTrainEndH" aria-label="end hour"></select>
-                    <span>:</span>
+                    <span class="coach-kickoff-colon" aria-hidden="true">:</span>
                     <select id="coachTrainEndM" aria-label="end minute"></select>
                   </div>
                 </div>
-                <div class="field">
+                <div class="field coach-match-create-wide">
                   <label data-i18n="coachTrainAddress">Адрес / поле</label>
                   <input id="coachTrainAddress" type="text" maxlength="120" data-i18n-placeholder="coachTrainAddressPh" placeholder="Стадион / зал">
                 </div>
-                <div class="field">
+                <div class="field coach-match-create-wide">
                   <label data-i18n="coachTrainNotify">Напоминание родителям</label>
                   <select id="coachTrainNotify">
                     <option value="60" selected data-i18n="coachTrainNotify60">За 1 час</option>
@@ -412,14 +415,16 @@ window.ffkIsNative = function () {
                 <button type="button" class="ghost-btn" id="coachTrainCancelBtn" data-i18n="previewCancel">Отмена</button>
               </div>
             </div>
-            <div class="coach-train-cal-nav">
-              <button type="button" class="ghost-btn" id="coachTrainPrevMonth" aria-label="prev">‹</button>
-              <b id="coachTrainMonthLabel">—</b>
-              <button type="button" class="ghost-btn" id="coachTrainNextMonth" aria-label="next">›</button>
+            <div id="coachTrainBody" class="coach-train-body">
+              <div class="coach-train-cal-nav">
+                <button type="button" class="ghost-btn coach-fold-btn" id="coachTrainPrevMonth" aria-label="prev">‹</button>
+                <b id="coachTrainMonthLabel">—</b>
+                <button type="button" class="ghost-btn coach-fold-btn" id="coachTrainNextMonth" aria-label="next">›</button>
+              </div>
+              <div id="coachTrainCalendar" class="coach-train-calendar" aria-label="training calendar"></div>
+              <div id="coachTrainList" class="coach-player-list coach-train-list"></div>
+              <div id="coachTrainRules" class="coach-train-rules"></div>
             </div>
-            <div id="coachTrainCalendar" class="coach-train-calendar" aria-label="training calendar"></div>
-            <div id="coachTrainList" class="coach-player-list coach-train-list"></div>
-            <div id="coachTrainRules" class="coach-train-rules"></div>
           </div>
 
           <div id="coachMatchCreate" class="coach-match-create" hidden>
