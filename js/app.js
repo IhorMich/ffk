@@ -196,7 +196,13 @@ function posSelectHtml(short){
   return `<optgroup label="${escapeHtml(t('posBasic'))}">${roles}</optgroup><optgroup label="${escapeHtml(t('posExtended'))}">${details}</optgroup>`;
 }
 function fillPitchSelect(sel, preferred, short){
+  if(!sel) return;
+  // Rebuilding <option>s while the native picker is open makes it jump/close on mobile.
+  if(document.activeElement === sel) return;
   const want = isPitchCode(preferred) ? preferred : (isPitchCode(sel.value) ? sel.value : defaultPitch());
+  const already = sel.options && sel.options.length > 1;
+  const same = already && isPitchCode(want) && sel.value === want;
+  if(same) return;
   sel.innerHTML = posSelectHtml(short !== false);
   sel.value = isPitchCode(want) ? want : defaultPitch();
 }

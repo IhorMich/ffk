@@ -495,6 +495,10 @@
     if(wrap) wrap.hidden = !on;
     if(showBtn) showBtn.hidden = !!on;
     if(on){
+      const posSel = document.getElementById('coachPlayerPos');
+      if(posSel && typeof fillPitchSelect === 'function'){
+        fillPitchSelect(posSel, posSel.value || 'RW', true);
+      }
       try{ document.getElementById('coachPlayerFirst')?.focus(); }catch(e){}
     }
   }
@@ -503,9 +507,8 @@
     const title = document.getElementById('coachTeamTitle');
     if(title) title.textContent = team.name + (team.age_group ? ` · ${team.age_group}` : '');
     const posSel = document.getElementById('coachPlayerPos');
-    if(posSel && typeof fillPitchSelect === 'function'){
-      const keep = posSel.value;
-      fillPitchSelect(posSel, keep || 'RW', true);
+    if(posSel && typeof fillPitchSelect === 'function' && !(posSel.options && posSel.options.length > 1)){
+      fillPitchSelect(posSel, posSel.value || 'RW', true);
     }
 
     const players = store.listPlayers(session, team.id);

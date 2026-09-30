@@ -526,7 +526,14 @@
       if(global.ParentCloud && typeof global.ParentCloud.pullCoachData === 'function'){
         await global.ParentCloud.pullCoachData();
       }
-      if(typeof renderCoachUi === 'function') renderCoachUi();
+      if(typeof renderCoachUi === 'function'){
+        const ae = document.activeElement;
+        const picking = ae && (
+          ae.tagName === 'SELECT' ||
+          (ae.closest && (ae.closest('#coachPlayerFormWrap') || ae.closest('#coachPlayerBody') || ae.closest('#playerEdit')))
+        );
+        if(!picking) renderCoachUi();
+      }
       return {ok: true};
     }catch(e){
       console.warn('Coach cloud sync', e);
