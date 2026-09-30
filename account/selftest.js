@@ -18,7 +18,7 @@ assert(Acc.LIMITS.FREE_MAX_PLAYERS === 1, 'free cap');
 assert(Acc.LIMITS.PRO_MAX_PLAYERS === 32, 'pro cap');
 
 const freeE = Acc.deriveEntitlements({ isPro: false });
-assert(freeE.product === 'free' && freeE.maxPlayers === 1 && !freeE.personalBackup, 'free entitlements');
+assert(freeE.product === 'free' && freeE.maxPlayers === 1 && freeE.personalBackup, 'free entitlements');
 
 const proE = Acc.deriveEntitlements({ isPro: true, isCoachSub: true });
 assert(proE.product === 'pro' && proE.maxPlayers === 32 && proE.personalBackup && proE.coachSub, 'pro entitlements');
@@ -57,7 +57,7 @@ Acc.bind({
 });
 assert(Acc.isPro() && Acc.playerCap() === 32 && Acc.canSyncPersonal(), 'live pro');
 pro = false;
-assert(!Acc.isPro() && Acc.playerCap() === 1 && !Acc.canSyncPersonal(), 'live free');
+assert(!Acc.isPro() && Acc.playerCap() === 1 && Acc.canSyncPersonal(), 'live free');
 
 (async () => {
   const snap = await Acc.snapshot();

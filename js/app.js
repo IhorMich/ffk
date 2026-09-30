@@ -503,7 +503,7 @@ async function onSettingsDeleteAccount(){
   const coachEmail = snap.coach && snap.coach.email;
   if(!personal && !coachEmail){
     if(!confirm(t('settingsDeleteLocalConfirm') || 'Clear personal data on this phone?')) return;
-  }else if(!confirm(t('settingsDeleteAccountConfirm') || 'Sign out and delete account access on this device?')){
+  }else if(!confirm(t('settingsDeleteAccountConfirm') || 'Sign out on this device? Cloud account stays.')){
     return;
   }
   if(window.MatchcardAuth && typeof window.MatchcardAuth.signOutAll === 'function'){
@@ -527,7 +527,7 @@ async function onSettingsDeleteAccount(){
       syncProUi();
     }
   }
-  const wipeLocal = confirm(t('settingsDeleteWipeConfirm') || 'Also erase match history and player cards on this phone?');
+  const wipeLocal = confirm(t('settingsDeleteWipeConfirm') || 'Also erase match history and player cards on this device?');
   if(wipeLocal){
     try{
       const keys = [];
@@ -541,22 +541,10 @@ async function onSettingsDeleteAccount(){
       keys.forEach(k => { try{ localStorage.removeItem(k); }catch(e){} });
     }catch(e){}
   }
-  showToast(t('settingsDeleteDone') || 'Account signed out on this device.');
+  showToast(t('settingsDeleteDone') || 'Signed out on this device.');
   await syncPersonalAccountUi();
   if(typeof renderCoachUi === 'function') renderCoachUi();
   if(typeof renderParentUi === 'function') renderParentUi();
-  try{
-    const mail = 'mailto:ihormykhailiuk@gmail.com?subject=' +
-      encodeURIComponent('Matchcard delete account') +
-      '&body=' + encodeURIComponent(
-        'Please delete my Matchcard cloud account.\nEmail: ' + (personal || coachEmail || '') + '\n'
-      );
-    if(wipeLocal || personal || coachEmail){
-      setTimeout(() => {
-        try{ window.location.href = mail; }catch(e){}
-      }, 400);
-    }
-  }catch(e){}
   if(typeof showView === 'function') showView('settings');
   if(wipeLocal && typeof location !== 'undefined'){
     setTimeout(() => { try{ location.reload(); }catch(e){} }, 800);
@@ -667,7 +655,7 @@ async function onPersonalSignUp(){
     await window.ParentCloud.signUp(email, pass);
     showToast(t('accountCreated'));
     await syncPersonalAccountUi();
-    if(isPro()) runPersonalCloudSync({pull: true, push: true});
+    await runPersonalCloudSync({pull: true, push: true});
   }catch(e){
     const map = {
       bad_email: t('accountErrEmail'),
@@ -688,9 +676,18 @@ async function onPersonalSignIn(){
   const pass = document.getElementById('personalPassword')?.value || '';
   try{
     await window.ParentCloud.signIn(email, pass);
-    showToast(t('accountSignedIn'));
     await syncPersonalAccountUi();
-    if(isPro()) runPersonalCloudSync({pull: true, push: true});
+    await runPersonalCloudSync({pull: true, push: true});
+    const st = window.ParentCloud && typeof window.ParentCloud.personalSyncState === 'function'
+      ? window.ParentCloud.personalSyncState()
+      : null;
+    if(st && st.status === 'ok'){
+      showToast(t('accountSynced') || t('accountSignedIn'));
+    }else if(st && st.status === 'error'){
+      showToast(t('proCloudErr'));
+    }else{
+      showToast(t('accountSignedIn'));
+    }
   }catch(e){
     const map = {
       bad_email: t('accountErrEmail'),
@@ -833,7 +830,10 @@ function syncProUi(){
     lock.disabled = false;
   }
   const cloudCard = document.getElementById('cloudSyncCard');
-  if(cloudCard) cloudCard.hidden = !isPro();
+  if(cloudCard){
+    // Shown for any signed-in personal account (Free or Pro).
+    cloudCard.hidden = false;
+  }
   const add = document.getElementById('addPlayerBtn');
   if(add){
     if(roster.ids.length >= MAX_PLAYERS) add.hidden = true;
@@ -866,12 +866,8 @@ function formatCloudSyncAt(iso){
 function updateCloudSyncStatusUi(state){
   const el = document.getElementById('cloudSyncStatus');
   const card = document.getElementById('cloudSyncCard');
-  if(card) card.hidden = !isPro();
+  if(card) card.hidden = false;
   if(!el) return;
-  if(!isPro()){
-    el.textContent = t('proCloudIdle');
-    return;
-  }
   const st = state || (window.ParentCloud && typeof window.ParentCloud.personalSyncState === 'function'
     ? window.ParentCloud.personalSyncState()
     : null) || {};
@@ -896,10 +892,6 @@ function updateCloudSyncStatusUi(state){
 }
 window.updateCloudSyncStatusUi = updateCloudSyncStatusUi;
 async function runPersonalCloudSync(options){
-  if(!isPro()){
-    updateCloudSyncStatusUi({status: 'free'});
-    return;
-  }
   if(!window.ParentCloud || typeof window.ParentCloud.syncPersonalBackup !== 'function'){
     updateCloudSyncStatusUi({status: 'error'});
     if(typeof reportError === 'function'){
@@ -910,16 +902,18 @@ async function runPersonalCloudSync(options){
   try{
     if(window.MatchcardLog) MatchcardLog.breadcrumb('sync.personal.start', options || {});
     const out = await window.ParentCloud.syncPersonalBackup(options || {pull: true, push: true});
-    if(out && out.ok === false && out.reason && out.reason !== 'not_pro' && out.reason !== 'no_session'){
+    if(out && out.ok === false && out.reason && out.reason !== 'not_pro' && out.reason !== 'no_session' && out.reason !== 'no_sync'){
       if(typeof reportError === 'function'){
         reportError(out.error || out.reason, {scope: 'sync.personal', silent: true, data: {reason: out.reason}});
       }
-    }else if(out && out.ok && window.MatchcardLog){
-      MatchcardLog.breadcrumb('sync.personal.ok', {relation: out.plan && out.plan.relation});
     }
+    updateCloudSyncStatusUi(out && out.state);
+    return out;
   }catch(e){
     updateCloudSyncStatusUi({status: 'error'});
-    if(typeof reportError === 'function') reportError(e, {scope: 'sync.personal', toast: t('proCloudErr')});
+    if(typeof reportError === 'function'){
+      reportError(e, {scope: 'sync.personal', silent: true});
+    }
   }
 }
 
@@ -6607,7 +6601,7 @@ async function shareCard(m){
       window.ParentCloud.bindAuthDeepLinks(async () => {
         showToast(t('accountSignedIn'));
         await syncPersonalAccountUi();
-        if(isPro()) runPersonalCloudSync({pull: true, push: true});
+        runPersonalCloudSync({pull: true, push: true});
       });
     }
     if(window.CoachCloud && typeof window.CoachCloud.bindAuthDeepLinks === 'function'){
@@ -6651,7 +6645,7 @@ async function shareCard(m){
           const task = isCoachPlan()
             ? window.ParentCloud.pullCoachData()
             : window.ParentCloud.syncParentData().then(() => {
-                if(isPro()) return runPersonalCloudSync({pull: true, push: true});
+                return runPersonalCloudSync({pull: true, push: true});
               });
           Promise.resolve(task).catch(() => {});
         }catch(e){}

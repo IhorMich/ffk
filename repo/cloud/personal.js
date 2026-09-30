@@ -12,7 +12,6 @@
    */
   R.fetchPersonalBackup = async function (session) {
     if (!session || !ownerId(session)) return null;
-    if (!R.isPro()) return null;
 
     var transport = R.getTransport();
     if (transport && typeof transport.fetchPersonal === 'function') {
@@ -38,7 +37,6 @@
    */
   R.pushPersonalBackup = async function (session, payload, updatedAt) {
     if (!session || !ownerId(session)) return { ok: false, reason: 'no_session' };
-    if (!R.isPro()) return { ok: false, reason: 'not_pro' };
     if (!payload) return { ok: false, reason: 'no_export' };
     var at = updatedAt || new Date().toISOString();
 

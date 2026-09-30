@@ -18,7 +18,7 @@
       maxPlayers: pro
         ? (L.PRO_MAX_PLAYERS || 32)
         : (L.FREE_MAX_PLAYERS || 1),
-      personalBackup: pro,
+      personalBackup: true,
       unlimitedSeasons: pro,
       charts: pro,
       coachMaxAcademies: L.COACH_MAX_ACADEMIES || 1,

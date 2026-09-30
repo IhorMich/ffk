@@ -675,12 +675,13 @@
     }, 1200);
   }
   function isProUser(){
+    // Historical name: gates personal cloud sync. Free + Pro accounts may sync.
     try{
       if(global.MatchcardAccount && typeof global.MatchcardAccount.canSyncPersonal === 'function'){
         return !!global.MatchcardAccount.canSyncPersonal();
       }
     }catch(e){}
-    return typeof isPro === 'function' && isPro();
+    return true;
   }
   function readLocalSyncAt(){
     const Cloud = cloudRepo();
@@ -739,7 +740,7 @@
       return out;
     }
     const sb = parentClient();
-    if(!sb || !session || !isProUser()) return {ok: false, reason: 'skip'};
+    if(!sb || !session) return {ok: false, reason: 'skip'};
     if(!body) return {ok: false, reason: 'no_export'};
     const at = updatedAt || new Date().toISOString();
     const {error} = await sb.from('personal_backups').upsert({
@@ -760,7 +761,7 @@
       return Cloud.fetchPersonalBackup(session);
     }
     const sb = parentClient();
-    if(!sb || !session || !isProUser()) return null;
+    if(!sb || !session) return null;
     const {data, error} = await sb.from('personal_backups')
       .select('payload,updated_at')
       .eq('owner_user_id', session.user.id)
@@ -852,8 +853,8 @@
     // Fallback without SyncEngine
     if(!ready()) return {ok: false, reason: 'no_cloud'};
     if(!isProUser()){
-      setPersonalSyncState({status: 'free', at: '', error: ''});
-      return {ok: false, reason: 'not_pro'};
+      setPersonalSyncState({status: 'need_account', at: '', error: ''});
+      return {ok: false, reason: 'no_sync'};
     }
     setPersonalSyncState({status: 'syncing', error: ''});
     try{
