@@ -4145,7 +4145,7 @@
   }
   function syncTrainModeUi(){
     document.querySelectorAll('#coachTrainMode .chip').forEach(chip => {
-      chip.classList.toggle('on', chip.dataset.trainMode === trainMode);
+      chip.classList.toggle('active', chip.dataset.trainMode === trainMode);
     });
     const dateWrap = document.getElementById('coachTrainDateWrap');
     const daysWrap = document.getElementById('coachTrainWeekdaysWrap');
@@ -4153,7 +4153,7 @@
     if(daysWrap) daysWrap.hidden = trainMode !== 'weekly';
   }
   function selectedTrainWeekdays(){
-    return [...document.querySelectorAll('#coachTrainWeekdays .chip.on')]
+    return [...document.querySelectorAll('#coachTrainWeekdays .chip.active')]
       .map(el => Number(el.dataset.wd))
       .filter(n => Number.isInteger(n) && n >= 0 && n <= 6);
   }
@@ -4290,7 +4290,8 @@
     const start = readTrainHM('coachTrainStartH', 'coachTrainStartM');
     const end = readTrainHM('coachTrainEndH', 'coachTrainEndM');
     const address = document.getElementById('coachTrainAddress')?.value || '';
-    const notify = Number(document.getElementById('coachTrainNotify')?.value || 60);
+    const notifyChip = document.querySelector('#coachTrainNotify .chip.active');
+    const notify = Number(notifyChip && notifyChip.dataset.notify != null ? notifyChip.dataset.notify : 60);
     try{
       if(trainMode === 'weekly'){
         const weekdays = selectedTrainWeekdays();
@@ -4306,7 +4307,10 @@
         toast(tt('coachTrainSavedOnce', 'Training saved. Parents can see it.'));
       }
       trainFormOpen = false;
-      document.querySelectorAll('#coachTrainWeekdays .chip').forEach(c => c.classList.remove('on'));
+      document.querySelectorAll('#coachTrainWeekdays .chip').forEach(c => c.classList.remove('active'));
+      document.querySelectorAll('#coachTrainNotify .chip').forEach(c => {
+        c.classList.toggle('active', c.dataset.notify === '60');
+      });
       const addr = document.getElementById('coachTrainAddress');
       if(addr) addr.value = '';
       renderCoachUi();
@@ -4793,7 +4797,15 @@
     document.getElementById('coachTrainWeekdays')?.addEventListener('click', e => {
       const chip = e.target.closest('[data-wd]');
       if(!chip) return;
-      chip.classList.toggle('on');
+      e.preventDefault();
+      chip.classList.toggle('active');
+    });
+    document.getElementById('coachTrainNotify')?.addEventListener('click', e => {
+      const chip = e.target.closest('[data-notify]');
+      if(!chip) return;
+      e.preventDefault();
+      document.querySelectorAll('#coachTrainNotify .chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
     });
     document.getElementById('coachTrainPrevMonth')?.addEventListener('click', () => {
       shiftTrainMonth(-1);

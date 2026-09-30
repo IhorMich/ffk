@@ -360,7 +360,7 @@ window.ffkIsNative = function () {
             <div id="coachTrainCreate" class="coach-match-create" hidden>
               <div class="pro-kicker" data-i18n="coachTrainCreateKicker">Новая тренировка</div>
               <div class="period-chips coach-train-mode" id="coachTrainMode">
-                <button type="button" class="chip on" data-train-mode="once" data-i18n="coachTrainModeOnce">Одна дата</button>
+                <button type="button" class="chip active" data-train-mode="once" data-i18n="coachTrainModeOnce">Одна дата</button>
                 <button type="button" class="chip" data-train-mode="weekly" data-i18n="coachTrainModeWeekly">Каждую неделю</button>
               </div>
               <div class="coach-match-create-grid">
@@ -402,12 +402,12 @@ window.ffkIsNative = function () {
                 </div>
                 <div class="field coach-match-create-wide">
                   <label data-i18n="coachTrainNotify">Напоминание родителям</label>
-                  <select id="coachTrainNotify">
-                    <option value="60" selected data-i18n="coachTrainNotify60">За 1 час</option>
-                    <option value="120" data-i18n="coachTrainNotify120">За 2 часа</option>
-                    <option value="30" data-i18n="coachTrainNotify30">За 30 минут</option>
-                    <option value="0" data-i18n="coachTrainNotifyOff">Без напоминания</option>
-                  </select>
+                  <div class="period-chips coach-train-notify" id="coachTrainNotify">
+                    <button type="button" class="chip" data-notify="30" data-i18n="coachTrainNotify30">За 30 минут</button>
+                    <button type="button" class="chip active" data-notify="60" data-i18n="coachTrainNotify60">За 1 час</button>
+                    <button type="button" class="chip" data-notify="120" data-i18n="coachTrainNotify120">За 2 часа</button>
+                    <button type="button" class="chip" data-notify="0" data-i18n="coachTrainNotifyOff">Без напоминания</button>
+                  </div>
                 </div>
               </div>
               <div class="coach-match-create-actions">
