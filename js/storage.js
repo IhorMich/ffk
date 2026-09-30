@@ -274,8 +274,17 @@ function loadPlayer(){
   try{
     const stored = JSON.parse(localStorage.getItem(ROSTER_KEY) || 'null');
     if(stored && Array.isArray(stored.ids) && stored.ids.length){
-      roster.ids = stored.ids.map(String).filter(Boolean).slice(0, MAX_PLAYERS);
-      roster.currentId = roster.ids.includes(String(stored.currentId)) ? String(stored.currentId) : roster.ids[0];
+      const repaired = (typeof repairRoster === 'function')
+        ? repairRoster(stored, MAX_PLAYERS)
+        : {roster: {
+            ids: stored.ids.map(String).filter(Boolean).slice(0, MAX_PLAYERS),
+            currentId: stored.ids.map(String).includes(String(stored.currentId))
+              ? String(stored.currentId)
+              : String(stored.ids[0])
+          }, changed: false};
+      roster.ids = repaired.roster.ids;
+      roster.currentId = repaired.roster.currentId;
+      if(repaired.changed) saveRoster();
       player = readPlayerRecord(roster.currentId);
       if(!player){
         try{
@@ -379,6 +388,13 @@ function loadMatches(){
       dirty = parsed.dirty;
     }
     matches = list;
+    if(typeof repairMatchList === 'function'){
+      const fixed = repairMatchList(matches);
+      if(fixed.changed){
+        matches = fixed.matches;
+        dirty = true;
+      }
+    }
     if(id && (dirty || (!kidRaw && matches.length) || (kidRaw === '[]' && matches.length))) saveMatches();
   }catch(e){ matches = []; }
 }

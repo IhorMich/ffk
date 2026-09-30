@@ -3915,13 +3915,25 @@ function samePlayerIdentity(localPlayer, incomingPlayer){
   return true;
 }
 function applyImportBundle(imported){
-  const bundle = Array.isArray(imported) ? {matches: imported} : imported;
+  let source = imported;
+  if(typeof migrateBackupPayload === 'function'){
+    const mig = migrateBackupPayload(imported);
+    if(!mig.ok) throw new Error(mig.reason || 'bad');
+    source = mig.payload;
+  }
+  if(typeof MatchcardData !== 'undefined' && typeof MatchcardData.validateBackupPayload === 'function'){
+    const check = MatchcardData.validateBackupPayload(source);
+    if(!check.ok && check.issues && check.issues.some(i => i.code === 'backup_empty' || i.code === 'backup_not_object' || i.code === 'backup_no_data')){
+      throw new Error('bad');
+    }
+  }
+  const bundle = Array.isArray(source) ? {matches: source} : source;
   if(!bundle || typeof bundle !== 'object') throw new Error('bad');
   let playerTouched = false;
   let added = 0;
   persistActivePlayer();
 
-  const rootMatches = Array.isArray(bundle.matches) ? bundle.matches : (Array.isArray(imported) ? imported : []);
+  const rootMatches = Array.isArray(bundle.matches) ? bundle.matches : (Array.isArray(source) ? source : []);
   const rosterPlayers = Array.isArray(bundle.players) ? bundle.players : null;
   if(rosterPlayers && rosterPlayers.length){
     let rootAssigned = false;

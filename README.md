@@ -105,6 +105,29 @@ Debug APK: `cd android && ./gradlew :app:assembleDebug`.
 
 Хранилище PWA в браузере и хранилище приложения — разные. Перенос — через копию или облако.
 
+## Data integrity + RLS
+
+Локальная целостность в `data/`:
+
+```
+data/
+  schema.js
+  validate.js
+  migrate.js
+  engine.js
+```
+
+```js
+repairRoster(roster, 32)
+repairMatchList(matches)
+migrateBackupPayload(raw)   // → v4 bundle
+MatchcardData.validateBackupPayload(bundle)
+```
+
+При загрузке roster/матчей чинятся orphan currentId и дубли id. Импорт JSON проходит через migrate+validate.
+
+RLS: миграция `supabase/migrations/20260930_rls_harden.sql` уже применена на Matchcard project — anon больше не вызывает helper SECURITY DEFINER (`is_team_coach` и т.п.). Invite resolve по-прежнему доступен anon для превью. Чеклист: `supabase/rls-audit-checks.sql`.
+
 ## Sync Engine
 
 Независимый планировщик Pro-бэкапа в `sync/`:
