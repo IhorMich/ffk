@@ -1,8 +1,10 @@
 /* Matchcard parent/player cross-device sync through Supabase. */
 (function(global){
   const COACH_LINKS_KEY = 'ffk_cloud_parent_links_v1';
+  const PERSONAL_SYNC_AT_KEY = 'ffk_personal_backup_sync_at';
   let syncing = false;
   let syncTimer = null;
+  let personalSyncState = {status: 'idle', at: '', error: ''};
 
   function ready(){
     return !!(global.CoachCloud && global.CoachCloud.ready && global.CoachCloud.ready());
@@ -532,8 +534,94 @@
     clearTimeout(syncTimer);
     syncTimer = setTimeout(() => {
       const coachMode = typeof isCoachPlan === 'function' && isCoachPlan();
-      (coachMode ? pullCoachData() : syncParentData()).catch(() => {});
+      const task = coachMode
+        ? pullCoachData()
+        : syncParentData().then(() => syncPersonalBackup({pull: false, push: true}));
+      Promise.resolve(task).catch(() => {});
     }, 1200);
+  }
+  function isProUser(){
+    return typeof isPro === 'function' && isPro();
+  }
+  function readLocalSyncAt(){
+    try{ return String(localStorage.getItem(PERSONAL_SYNC_AT_KEY) || ''); }catch(e){ return ''; }
+  }
+  function writeLocalSyncAt(iso){
+    try{ localStorage.setItem(PERSONAL_SYNC_AT_KEY, String(iso || '')); }catch(e){}
+  }
+  function setPersonalSyncState(next){
+    personalSyncState = Object.assign({}, personalSyncState, next || {});
+    if(typeof global.updateCloudSyncStatusUi === 'function'){
+      try{ global.updateCloudSyncStatusUi(personalSyncState); }catch(e){}
+    }
+  }
+  async function pushPersonalBackup(session){
+    const sb = parentClient();
+    if(!sb || !session || !isProUser()) return {ok: false, reason: 'skip'};
+    if(typeof exportPayload !== 'function') return {ok: false, reason: 'no_export'};
+    const payload = exportPayload();
+    const updatedAt = new Date().toISOString();
+    const {error} = await sb.from('personal_backups').upsert({
+      owner_user_id: session.user.id,
+      payload,
+      updated_at: updatedAt
+    }, {onConflict: 'owner_user_id'});
+    if(error) throw error;
+    writeLocalSyncAt(updatedAt);
+    setPersonalSyncState({status: 'ok', at: updatedAt, error: ''});
+    return {ok: true, at: updatedAt};
+  }
+  async function pullPersonalBackup(session){
+    const sb = parentClient();
+    if(!sb || !session || !isProUser()) return {ok: false, reason: 'skip'};
+    const {data, error} = await sb.from('personal_backups')
+      .select('payload,updated_at')
+      .eq('owner_user_id', session.user.id)
+      .maybeSingle();
+    if(error) throw error;
+    if(!data || !data.payload) return {ok: true, empty: true};
+    const remoteAt = String(data.updated_at || '');
+    const localAt = readLocalSyncAt();
+    if(remoteAt && localAt && remoteAt <= localAt) return {ok: true, skipped: true};
+    if(typeof applyImportBundle === 'function'){
+      try{ applyImportBundle(data.payload); }catch(e){
+        console.warn('Personal backup import', e);
+        return {ok: false, error: e};
+      }
+    }
+    if(remoteAt) writeLocalSyncAt(remoteAt);
+    setPersonalSyncState({status: 'ok', at: remoteAt || new Date().toISOString(), error: ''});
+    return {ok: true, pulled: true, at: remoteAt};
+  }
+  async function syncPersonalBackup(options){
+    const opts = options || {};
+    if(!ready()) return {ok: false, reason: 'no_cloud'};
+    if(!isProUser()){
+      setPersonalSyncState({status: 'free', at: '', error: ''});
+      return {ok: false, reason: 'not_pro'};
+    }
+    setPersonalSyncState({status: 'syncing', error: ''});
+    try{
+      const session = await getSession();
+      if(!session || !session.user){
+        setPersonalSyncState({status: 'need_account', at: '', error: ''});
+        return {ok: false, reason: 'no_session'};
+      }
+      if(opts.pull !== false){
+        await pullPersonalBackup(session);
+      }
+      if(opts.push !== false){
+        await pushPersonalBackup(session);
+      }
+      return {ok: true, state: personalSyncState};
+    }catch(error){
+      console.warn('Personal backup sync', error);
+      setPersonalSyncState({
+        status: 'error',
+        error: String((error && error.message) || 'sync')
+      });
+      return {ok: false, error};
+    }
   }
   async function pullCoachData(){
     const sb = client('coach');
@@ -613,8 +701,10 @@
     codeFromText,
     claimInvite,
     syncParentData,
+    syncPersonalBackup,
     scheduleSync,
     pullCoachData,
-    status(){ return {configured: ready(), syncing}; }
+    personalSyncState(){ return personalSyncState; },
+    status(){ return {configured: ready(), syncing, personal: personalSyncState}; }
   };
 })(window);

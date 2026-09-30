@@ -392,6 +392,7 @@ async function syncPersonalAccountUi(){
   }
   if(form) form.hidden = !!email;
   if(signOutBtn) signOutBtn.hidden = !email;
+  updateCloudSyncStatusUi();
   return session;
 }
 function openPersonalAccount(reasonKey){
@@ -430,6 +431,7 @@ async function onPersonalSignUp(){
     await window.ParentCloud.signUp(email, pass);
     showToast(t('accountCreated'));
     await syncPersonalAccountUi();
+    if(isPro()) runPersonalCloudSync({pull: true, push: true});
   }catch(e){
     const map = {
       bad_email: t('accountErrEmail'),
@@ -452,6 +454,7 @@ async function onPersonalSignIn(){
     await window.ParentCloud.signIn(email, pass);
     showToast(t('accountSignedIn'));
     await syncPersonalAccountUi();
+    if(isPro()) runPersonalCloudSync({pull: true, push: true});
   }catch(e){
     const map = {
       bad_email: t('accountErrEmail'),
@@ -509,6 +512,7 @@ async function setPro(on){
   applyI18n();
   syncPersonalAccountUi();
   showToast(on ? t('proOn') : t('proOff'));
+  if(on) runPersonalCloudSync({pull: true, push: true});
 }
 function isCoachSub(){
   if(settings.coachSub === true) return true;
@@ -574,6 +578,8 @@ function syncProUi(){
   const lock = document.getElementById('proLockBtn');
   if(unlock) unlock.hidden = isPro();
   if(lock) lock.hidden = !isPro();
+  const cloudCard = document.getElementById('cloudSyncCard');
+  if(cloudCard) cloudCard.hidden = !isPro();
   const add = document.getElementById('addPlayerBtn');
   if(add){
     if(roster.ids.length >= MAX_PLAYERS) add.hidden = true;
@@ -590,6 +596,65 @@ function syncProUi(){
   syncCoachTabUi();
   if(typeof syncPlanModeButtons === 'function') syncPlanModeButtons();
   if(typeof syncCoachBillingUi === 'function') syncCoachBillingUi();
+  updateCloudSyncStatusUi();
+}
+function formatCloudSyncAt(iso){
+  const raw = String(iso || '');
+  if(!raw) return '';
+  try{
+    const d = new Date(raw);
+    if(Number.isNaN(d.getTime())) return raw;
+    return d.toLocaleString();
+  }catch(e){
+    return raw;
+  }
+}
+function updateCloudSyncStatusUi(state){
+  const el = document.getElementById('cloudSyncStatus');
+  const card = document.getElementById('cloudSyncCard');
+  if(card) card.hidden = !isPro();
+  if(!el) return;
+  if(!isPro()){
+    el.textContent = t('proCloudIdle');
+    return;
+  }
+  const st = state || (window.ParentCloud && typeof window.ParentCloud.personalSyncState === 'function'
+    ? window.ParentCloud.personalSyncState()
+    : null) || {};
+  const status = st.status || 'idle';
+  if(status === 'need_account'){
+    el.textContent = t('proCloudNeedAccount');
+    return;
+  }
+  if(status === 'syncing'){
+    el.textContent = t('proCloudSyncing');
+    return;
+  }
+  if(status === 'error'){
+    el.textContent = t('proCloudErr');
+    return;
+  }
+  if(status === 'ok' && st.at){
+    el.textContent = t('proCloudOk', {time: formatCloudSyncAt(st.at)});
+    return;
+  }
+  el.textContent = t('proCloudIdle');
+}
+window.updateCloudSyncStatusUi = updateCloudSyncStatusUi;
+async function runPersonalCloudSync(options){
+  if(!isPro()){
+    updateCloudSyncStatusUi({status: 'free'});
+    return;
+  }
+  if(!window.ParentCloud || typeof window.ParentCloud.syncPersonalBackup !== 'function'){
+    updateCloudSyncStatusUi({status: 'error'});
+    return;
+  }
+  try{
+    await window.ParentCloud.syncPersonalBackup(options || {pull: true, push: true});
+  }catch(e){
+    updateCloudSyncStatusUi({status: 'error'});
+  }
 }
 
 let settings = {club:'', player:'', position:'fwd', format:'2x30', minutes:'60', lang:'ru', seasonCloseDeclined:'', theme:'dark', iconSet:'clear', onboarded:false, onboardSkin:'', isPro:false, isCoach:false, coachSub:false, pwaTransferSeen:false, introMark:'', accountPrompted:false};
@@ -3267,7 +3332,8 @@ function showToast(msg){
 }
 
 function refreshBackupBanner(){
-  const stale = matches.length > 0 && !localStorage.getItem(EXPORT_KEY);
+  const sessionHint = isPro();
+  const stale = !sessionHint && matches.length > 0 && !localStorage.getItem(EXPORT_KEY);
   const settingsEl = document.getElementById('backupBanner');
   if(settingsEl) settingsEl.hidden = !stale;
   const hist = document.getElementById('historyBackup');
@@ -3631,26 +3697,6 @@ function downloadMatches(){
     triggerDownload(blob, filename);
   }).catch(() => triggerDownload(blob, filename));
 }
-function sendCopy(){
-  if(!matches.length && !player.firstName){ showToast(t('toastNothingExport')); return; }
-  const {blob, filename} = exportBlob();
-  nativeShareBlob(blob, filename, 'Matchcard').then(ok => {
-    if(ok){
-      markExportDone();
-      showToast(t('toastCopySent'));
-      return;
-    }
-    const file = new File([blob], filename, {type:'application/json'});
-    if(navigator.canShare && navigator.canShare({files:[file]})){
-      navigator.share({files:[file], title:'Matchcard'}).then(() => {
-        markExportDone();
-        showToast(t('toastCopySent'));
-      }).catch(() => triggerDownload(blob, filename));
-      return;
-    }
-    triggerDownload(blob, filename);
-  }).catch(() => triggerDownload(blob, filename));
-}
 function markExportDone(){
   localStorage.setItem(EXPORT_KEY, todayStr());
   refreshBackupBanner();
@@ -3666,7 +3712,6 @@ function triggerDownload(blob, filename){
 }
 
 document.getElementById('exportBtn').addEventListener('click', downloadMatches);
-document.getElementById('sendBtn')?.addEventListener('click', sendCopy);
 document.getElementById('importBtn').addEventListener('click', () => document.getElementById('importFile').click());
 document.getElementById('copyBtn').addEventListener('click', async () => {
   if(!requirePro('export')) return;
@@ -3675,10 +3720,6 @@ document.getElementById('copyBtn').addEventListener('click', async () => {
     markExportDone();
     showToast(t('toastCopied'));
   }catch(e){ showToast(t('toastCopyFail')); }
-});
-document.getElementById('cloudSyncBtn')?.addEventListener('click', () => {
-  if(!requirePro('cloud')) return;
-  showToast(t('proCloudSoon'));
 });
 document.getElementById('proUnlockBtn')?.addEventListener('click', () => setPro(true));
 document.getElementById('proLockBtn')?.addEventListener('click', () => setPro(false));
@@ -5782,6 +5823,7 @@ async function shareCard(m){
       window.ParentCloud.bindAuthDeepLinks(async () => {
         showToast(t('accountSignedIn'));
         await syncPersonalAccountUi();
+        if(isPro()) runPersonalCloudSync({pull: true, push: true});
       });
     }
     bindSheets();
@@ -5813,10 +5855,13 @@ async function shareCard(m){
         try{
           const task = isCoachPlan()
             ? window.ParentCloud.pullCoachData()
-            : window.ParentCloud.syncParentData();
+            : window.ParentCloud.syncParentData().then(() => {
+                if(isPro()) return runPersonalCloudSync({pull: true, push: true});
+              });
           Promise.resolve(task).catch(() => {});
         }catch(e){}
       }
+      updateCloudSyncStatusUi();
       if(typeof renderCoachUi === 'function' && typeof isCoachPlan === 'function' && isCoachPlan()){
         try{ renderCoachUi(); }catch(e){}
       }

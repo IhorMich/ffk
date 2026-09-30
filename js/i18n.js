@@ -42,7 +42,7 @@ uk:{
   secActions:'Ігрові дії', secBehavior:'Як грав (1–5)',
   grpAttack:'Атака', grpDefense:'Оборона', grpDiscipline:'Дисципліна',
   saveMatch:'Зберегти матч', saveChanges:'Зберегти зміни', cancelEdit:'Скасувати правку',
-  backupBanner:'Дані лише на цьому телефоні. Зробіть експорт, щоб не втратити сезон.',
+  backupBanner:'Дані лише на цьому телефоні. «На телефон» кладе файл у Завантаження / Matchcard.',
   export:'Експорт', import:'Імпорт', copy:'Копіювати',
   periodLast10:'Останні 10', periodWeek:'Тиждень', period10d:'10 днів', periodMonth:'Місяць', periodYear:'Рік', periodAll:'Весь час',
   chartTitle:'Динаміка оцінки', chartLastN:'Останні {n} матчів', chart10:'10 матчів', chart100:'100 матчів', chartAria:'Графік оцінок', chartEmpty:'Поки немає даних', chartNeed:'Потрібно {n} матчі для графіка',
@@ -272,7 +272,7 @@ pl:{
   secActions:'Akcje meczowe', secBehavior:'Jak grał (1–5)',
   grpAttack:'Atak', grpDefense:'Obrona', grpDiscipline:'Dyscyplina',
   saveMatch:'Zapisz mecz', saveChanges:'Zapisz zmiany', cancelEdit:'Anuluj edycję',
-  backupBanner:'Dane są tylko na tym telefonie. Zrób eksport, żeby nie stracić sezonu.',
+  backupBanner:'Dane są tylko na tym telefonie. «Na telefon» zapisuje plik w Pobrane / Matchcard.',
   export:'Eksport', import:'Importuj', copy:'Kopiuj',
   periodLast10:'Ostatnie 10', periodWeek:'Tydzień', period10d:'10 dni', periodMonth:'Miesiąc', periodYear:'Rok', periodAll:'Cały czas',
   chartTitle:'Dynamika oceny', chartLastN:'Ostatnie {n} meczów', chart10:'10 meczów', chart100:'100 meczów', chartAria:'Wykres ocen', chartEmpty:'Brak danych', chartNeed:'Potrzeba {n} meczów do wykresu',
@@ -502,7 +502,7 @@ en:{
   secActions:'Match actions', secBehavior:'How he played (1–5)',
   grpAttack:'Attack', grpDefense:'Defence', grpDiscipline:'Discipline',
   saveMatch:'Save match', saveChanges:'Save changes', cancelEdit:'Cancel edit',
-  backupBanner:'Data stays on this phone. Export so you do not lose the season.',
+  backupBanner:'Data stays on this phone. “On this phone” writes the file to Downloads / Matchcard.',
   export:'Export', import:'Import', copy:'Copy',
   periodLast10:'Last 10', periodWeek:'Week', period10d:'10 days', periodMonth:'Month', periodYear:'Year', periodAll:'All time',
   chartTitle:'Rating trend', chartLastN:'Last {n} matches', chart10:'10 matches', chart100:'100 matches', chartAria:'Rating chart', chartEmpty:'No data yet', chartNeed:'Need {n} matches for the chart',
@@ -797,7 +797,7 @@ es:{
   saveMatch:'Guardar partido',
   saveChanges:'Guardar cambios',
   cancelEdit:'Cancelar edición',
-  backupBanner:'Los datos se quedan en este teléfono. Exporta para no perder la temporada.',
+  backupBanner:'Los datos se quedan en este teléfono. «Al teléfono» guarda el archivo en Descargas / Matchcard.',
   export:'Exportar',
   import:'Importar',
   copy:'Copiar',
@@ -1275,7 +1275,7 @@ de:{
   saveMatch:'Spiel speichern',
   saveChanges:'Änderungen speichern',
   cancelEdit:'Bearbeitung abbrechen',
-  backupBanner:'Die Daten bleiben auf diesem Telefon. Exportiere sie, damit die Saison nicht verloren geht.',
+  backupBanner:'Die Daten bleiben auf diesem Telefon. «Aufs Telefon» speichert die Datei in Downloads / Matchcard.',
   export:'Exportieren',
   import:'Importieren',
   copy:'Kopieren',
@@ -1753,7 +1753,7 @@ it:{
   saveMatch:'Salva partita',
   saveChanges:'Salva modifiche',
   cancelEdit:'Annulla modifica',
-  backupBanner:'I dati restano su questo telefono. Esporta per non perdere la stagione.',
+  backupBanner:'I dati restano su questo telefono. «Sul telefono» salva il file in Download / Matchcard.',
   export:'Esporta',
   import:'Importa',
   copy:'Copia',
@@ -2231,7 +2231,7 @@ fr:{
   saveMatch:'Enregistrer le match',
   saveChanges:'Enregistrer les modifications',
   cancelEdit:'Annuler la modification',
-  backupBanner:'Les données restent sur ce téléphone. Exporte pour ne pas perdre la saison.',
+  backupBanner:'Les données restent sur ce téléphone. « Sur le téléphone » enregistre le fichier dans Téléchargements / Matchcard.',
   export:'Exporter',
   import:'Importer',
   copy:'Copier',
@@ -2709,7 +2709,7 @@ pt:{
   saveMatch:'Guardar jogo',
   saveChanges:'Guardar alterações',
   cancelEdit:'Cancelar edição',
-  backupBanner:'Os dados ficam neste telemóvel. Exporta para não perderes a época.',
+  backupBanner:'Os dados ficam neste telemóvel. «No telemóvel» grava o ficheiro em Transferências / Matchcard.',
   export:'Exportar',
   import:'Importar',
   copy:'Copiar',
@@ -3123,7 +3123,7 @@ ru:{
   secActions:'Игровые действия', secBehavior:'Как играл (1–5)',
   grpAttack:'Атака', grpDefense:'Оборона', grpDiscipline:'Дисциплина',
   saveMatch:'Сохранить матч', saveChanges:'Сохранить изменения', cancelEdit:'Отменить правку',
-  backupBanner:'Данные только на этом телефоне. Сделайте экспорт, чтобы не потерять сезон.',
+  backupBanner:'Данные только на этом телефоне. «На телефон» кладёт файл в Загрузки / Matchcard.',
   export:'Экспорт', import:'Импорт', copy:'Копировать',
   periodLast10:'Последние 10', periodWeek:'Неделя', period10d:'10 дней', periodMonth:'Месяц', periodYear:'Год', periodAll:'Всё время',
   chartTitle:'Динамика оценки', chartLastN:'Последние {n} матчей', chart10:'10 матчей', chart100:'100 матчей', chartAria:'График оценок', chartEmpty:'Пока нет данных', chartNeed:'Нужно {n} матча для графика',
@@ -3618,7 +3618,7 @@ ru:{
       toastCopySaved:'Копію збережено.',
       toastCopyOnPhone:'Файл лежить у {folder}.',
       toastCopySent:'Оберіть Drive, пошту або чат — так копія піде з телефону.',
-      onboard3Body:'Дані лише на телефоні. У налаштуваннях збережіть копію на телефон або надішліть у хмару.',
+      onboard3Body:'Дані лише на телефоні. У налаштуваннях збережіть копію на телефон. Pro синхронізує їх у хмару сам.',
       toastSeasonClosed:'Сезон {s} закрито. Далі — картка року.'
     },
     pl:{
@@ -3628,7 +3628,7 @@ ru:{
       toastCopySaved:'Kopia zapisana.',
       toastCopyOnPhone:'Plik jest w {folder}.',
       toastCopySent:'Wybierz Drive, mail albo czat — wtedy kopia wyjdzie z telefonu.',
-      onboard3Body:'Dane są tylko na telefonie. W ustawieniach zapisz kopię na telefon albo wyślij do chmury.',
+      onboard3Body:'Dane są tylko na telefonie. W ustawieniach zapisz kopię na telefon. Pro synchronizuje je w chmurze sam.',
       toastSeasonClosed:'Sezon {s} zamknięty. Teraz karta sezonu.'
     },
     en:{
@@ -3638,7 +3638,7 @@ ru:{
       toastCopySaved:'Copy saved.',
       toastCopyOnPhone:'The file is in {folder}.',
       toastCopySent:'Pick Drive, mail or chat so the copy leaves this phone.',
-      onboard3Body:'Data lives only on this phone. In Settings, save a copy to the phone or send it to the cloud.',
+      onboard3Body:'Data lives only on this phone. In Settings, save a copy to the phone. Pro syncs to the cloud automatically.',
       toastSeasonClosed:'Season {s} closed. Here is the year card.'
     },
     ru:{
@@ -3648,7 +3648,7 @@ ru:{
       toastCopySaved:'Копия сохранена.',
       toastCopyOnPhone:'Файл лежит в {folder}.',
       toastCopySent:'Выберите Drive, почту или чат — так копия уйдёт с телефона.',
-      onboard3Body:'Данные только на телефоне. В настройках сохраните копию на телефон или отправьте в облако.',
+      onboard3Body:'Данные только на телефоне. В настройках сохраните копию на телефон. Pro сам синхронизирует их в облако.',
       toastSeasonClosed:'Сезон {s} закрыт. Дальше — карточка года.'
     },
     es:{
@@ -3658,7 +3658,7 @@ ru:{
       toastCopySaved:'Copia guardada.',
       toastCopyOnPhone:'El archivo está en {folder}.',
       toastCopySent:'Elige Drive, correo o un chat para que la copia salga del teléfono.',
-      onboard3Body:'Los datos están solo en el teléfono. En Ajustes guarda una copia en el teléfono o envíala a la nube.',
+      onboard3Body:'Los datos están solo en el teléfono. En Ajustes guarda una copia en el teléfono. Pro sincroniza en la nube solo.',
       toastSeasonClosed:'Temporada {s} cerrada. Aquí está la carta del año.'
     },
     de:{
@@ -3668,7 +3668,7 @@ ru:{
       toastCopySaved:'Kopie gespeichert.',
       toastCopyOnPhone:'Die Datei liegt in {folder}.',
       toastCopySent:'Wähle Drive, Mail oder Chat, damit die Kopie das Telefon verlässt.',
-      onboard3Body:'Daten liegen nur auf dem Telefon. Unter Einstellungen eine Kopie aufs Telefon speichern oder in die Cloud schicken.',
+      onboard3Body:'Daten liegen nur auf dem Telefon. Unter Einstellungen eine Kopie speichern. Pro synchronisiert selbst in die Cloud.',
       toastSeasonClosed:'Saison {s} geschlossen. Als Nächstes die Jahreskarte.'
     },
     it:{
@@ -3678,7 +3678,7 @@ ru:{
       toastCopySaved:'Copia salvata.',
       toastCopyOnPhone:'Il file è in {folder}.',
       toastCopySent:'Scegli Drive, mail o chat perché la copia esca dal telefono.',
-      onboard3Body:'I dati stanno solo sul telefono. Nelle Impostazioni salva una copia sul telefono o inviala nel cloud.',
+      onboard3Body:'I dati stanno solo sul telefono. Nelle Impostazioni salva una copia sul telefono. Pro sincronizza da solo nel cloud.',
       toastSeasonClosed:'Stagione {s} chiusa. Ecco la carta dell’anno.'
     },
     fr:{
@@ -3688,7 +3688,7 @@ ru:{
       toastCopySaved:'Copie enregistrée.',
       toastCopyOnPhone:'Le fichier est dans {folder}.',
       toastCopySent:'Choisissez Drive, mail ou un chat pour que la copie quitte le téléphone.',
-      onboard3Body:'Les données sont seulement sur le téléphone. Dans Réglages, enregistrez une copie sur le téléphone ou envoyez-la dans le cloud.',
+      onboard3Body:'Les données sont seulement sur le téléphone. Dans Réglages, enregistrez une copie. Pro synchronise tout seul dans le cloud.',
       toastSeasonClosed:'Saison {s} close. Voici la carte de l’année.'
     },
     pt:{
@@ -3698,7 +3698,7 @@ ru:{
       toastCopySaved:'Cópia guardada.',
       toastCopyOnPhone:'O ficheiro está em {folder}.',
       toastCopySent:'Escolhe Drive, mail ou um chat para a cópia sair do telemóvel.',
-      onboard3Body:'Os dados ficam só no telefone. Nas Definições guarda uma cópia no telemóvel ou envia-a para a nuvem.',
+      onboard3Body:'Os dados ficam só no telefone. Nas Definições guarda uma cópia no telemóvel. O Pro sincroniza sozinho na nuvem.',
       toastSeasonClosed:'Época {s} fechada. Segue-se o cartão do ano.'
     }
   };
@@ -3744,8 +3744,13 @@ ru:{
       proFeatureChart:'Графік оцінок у Pro',
       proFeatureCompare:'Порівняння періодів у Pro',
       proFeatureTiming:'Звіт за хвилинами в Pro',
-      proCloudBtn:'Хмара і синхронізація',
-      proCloudSoon:'Хмарний синк ще в роботі. Pro вже відкриває решту.'
+      proCloudBtn:'Хмара Pro',
+      proCloudIdle:'Після кожного збереженого матчу дані самі йдуть в акаунт.',
+      proCloudNeedAccount:'Увійди в акаунт — тоді Pro синхронізує матчі між телефонами.',
+      proCloudSyncing:'Синхронізуємо…',
+      proCloudOk:'Синхронізовано · {time}',
+      proCloudErr:'Не вдалося синхронізувати. Спробуємо знову після наступного матчу.',
+      proCloudSoon:'Після кожного збереженого матчу дані самі йдуть в акаунт.'
     },
     pl:{
       proNeed:'To Matchcard Pro',
@@ -3765,8 +3770,13 @@ ru:{
       proFeatureChart:'Wykres ocen w Pro',
       proFeatureCompare:'Porównanie okresów w Pro',
       proFeatureTiming:'Raport minutowy w Pro',
-      proCloudBtn:'Chmura i synchronizacja',
-      proCloudSoon:'Sync w chmurze jeszcze w drodze. Pro już otwiera resztę.'
+      proCloudBtn:'Chmura Pro',
+      proCloudIdle:'Po każdym zapisanym meczu dane same idą na konto.',
+      proCloudNeedAccount:'Zaloguj się — wtedy Pro zsynchronizuje mecze między telefonami.',
+      proCloudSyncing:'Synchronizacja…',
+      proCloudOk:'Zsynchronizowano · {time}',
+      proCloudErr:'Nie udało się zsynchronizować. Spróbujemy po następnym meczu.',
+      proCloudSoon:'Po każdym zapisanym meczu dane same idą na konto.'
     },
     en:{
       proNeed:'That’s Matchcard Pro',
@@ -3786,8 +3796,13 @@ ru:{
       proFeatureChart:'Rating chart is Pro',
       proFeatureCompare:'Period comparison is Pro',
       proFeatureTiming:'Minute report is Pro',
-      proCloudBtn:'Cloud and sync',
-      proCloudSoon:'Cloud sync is still coming. Pro already unlocks the rest.'
+      proCloudBtn:'Pro cloud',
+      proCloudIdle:'After every saved match, data goes to your account on its own.',
+      proCloudNeedAccount:'Sign in — then Pro syncs matches across your phones.',
+      proCloudSyncing:'Syncing…',
+      proCloudOk:'Synced · {time}',
+      proCloudErr:'Could not sync. We\'ll try again after the next match.',
+      proCloudSoon:'After every saved match, data goes to your account on its own.'
     },
     ru:{
       proNeed:'Это Matchcard Pro',
@@ -3807,8 +3822,13 @@ ru:{
       proFeatureChart:'График оценок в Pro',
       proFeatureCompare:'Сравнение периодов в Pro',
       proFeatureTiming:'Отчёт по минутам в Pro',
-      proCloudBtn:'Облако и синхронизация',
-      proCloudSoon:'Облачный синк ещё в работе. Pro уже открывает остальное.'
+      proCloudBtn:'Облако Pro',
+      proCloudIdle:'После каждого сохранённого матча данные сами уходят в аккаунт.',
+      proCloudNeedAccount:'Войди в аккаунт — тогда Pro синхронизирует матчи между телефонами.',
+      proCloudSyncing:'Синхронизируем…',
+      proCloudOk:'Синхронизировано · {time}',
+      proCloudErr:'Не удалось синхронизировать. Попробуем снова после следующего матча.',
+      proCloudSoon:'После каждого сохранённого матча данные сами уходят в аккаунт.'
     },
     es:{
       proNeed:'Eso es Matchcard Pro',
@@ -3828,8 +3848,13 @@ ru:{
       proFeatureChart:'El gráfico es Pro',
       proFeatureCompare:'La comparación es Pro',
       proFeatureTiming:'El informe por minutos es Pro',
-      proCloudBtn:'Nube y sincronización',
-      proCloudSoon:'La sync en la nube aún llega. Pro ya abre el resto.'
+      proCloudBtn:'Nube Pro',
+      proCloudIdle:'Tras cada partido guardado, los datos van solos a tu cuenta.',
+      proCloudNeedAccount:'Inicia sesión — así Pro sincroniza partidos entre teléfonos.',
+      proCloudSyncing:'Sincronizando…',
+      proCloudOk:'Sincronizado · {time}',
+      proCloudErr:'No se pudo sincronizar. Lo intentaremos tras el próximo partido.',
+      proCloudSoon:'Tras cada partido guardado, los datos van solos a tu cuenta.'
     },
     de:{
       proNeed:'Das ist Matchcard Pro',
@@ -3849,8 +3874,13 @@ ru:{
       proFeatureChart:'Notendiagramm ist Pro',
       proFeatureCompare:'Zeitraumvergleich ist Pro',
       proFeatureTiming:'Minutenbericht ist Pro',
-      proCloudBtn:'Cloud und Sync',
-      proCloudSoon:'Cloud-Sync kommt noch. Pro öffnet den Rest schon.'
+      proCloudBtn:'Pro-Cloud',
+      proCloudIdle:'Nach jedem gespeicherten Spiel gehen die Daten von allein aufs Konto.',
+      proCloudNeedAccount:'Anmelden — dann synchronisiert Pro Spiele zwischen Telefonen.',
+      proCloudSyncing:'Synchronisiere…',
+      proCloudOk:'Synchronisiert · {time}',
+      proCloudErr:'Sync fehlgeschlagen. Wir versuchen es nach dem nächsten Spiel erneut.',
+      proCloudSoon:'Nach jedem gespeicherten Spiel gehen die Daten von allein aufs Konto.'
     },
     it:{
       proNeed:'Questo è Matchcard Pro',
@@ -3870,8 +3900,13 @@ ru:{
       proFeatureChart:'Il grafico è Pro',
       proFeatureCompare:'Il confronto è Pro',
       proFeatureTiming:'Il report minuti è Pro',
-      proCloudBtn:'Cloud e sincronizzazione',
-      proCloudSoon:'Il sync cloud arriva ancora. Pro apre già il resto.'
+      proCloudBtn:'Cloud Pro',
+      proCloudIdle:'Dopo ogni partita salvata i dati vanno da soli sull\'account.',
+      proCloudNeedAccount:'Accedi — così Pro sincronizza le partite tra telefoni.',
+      proCloudSyncing:'Sincronizzazione…',
+      proCloudOk:'Sincronizzato · {time}',
+      proCloudErr:'Sincronizzazione non riuscita. Riproveremo dopo la prossima partita.',
+      proCloudSoon:'Dopo ogni partita salvata i dati vanno da soli sull\'account.'
     },
     fr:{
       proNeed:'C’est Matchcard Pro',
@@ -3891,8 +3926,13 @@ ru:{
       proFeatureChart:'Le graphique est Pro',
       proFeatureCompare:'La comparaison est Pro',
       proFeatureTiming:'Le rapport minutes est Pro',
-      proCloudBtn:'Cloud et synchronisation',
-      proCloudSoon:'Le sync cloud arrive encore. Pro ouvre déjà le reste.'
+      proCloudBtn:'Cloud Pro',
+      proCloudIdle:'Après chaque match enregistré, les données partent toutes seules sur le compte.',
+      proCloudNeedAccount:'Connectez-vous — Pro synchronisera alors les matchs entre téléphones.',
+      proCloudSyncing:'Synchronisation…',
+      proCloudOk:'Synchronisé · {time}',
+      proCloudErr:'Échec de la sync. On réessaie après le prochain match.',
+      proCloudSoon:'Après chaque match enregistré, les données partent toutes seules sur le compte.'
     },
     pt:{
       proNeed:'Isto é Matchcard Pro',
@@ -3912,8 +3952,13 @@ ru:{
       proFeatureChart:'O gráfico é Pro',
       proFeatureCompare:'A comparação é Pro',
       proFeatureTiming:'O relatório por minutos é Pro',
-      proCloudBtn:'Nuvem e sincronização',
-      proCloudSoon:'O sync na nuvem ainda vem. Pro já abre o resto.'
+      proCloudBtn:'Nuvem Pro',
+      proCloudIdle:'Depois de cada jogo guardado, os dados vão sozinhos para a conta.',
+      proCloudNeedAccount:'Inicia sessão — o Pro sincroniza jogos entre telemóveis.',
+      proCloudSyncing:'A sincronizar…',
+      proCloudOk:'Sincronizado · {time}',
+      proCloudErr:'Falha na sincronização. Tentamos outra vez após o próximo jogo.',
+      proCloudSoon:'Depois de cada jogo guardado, os dados vão sozinhos para a conta.'
     }
   };
   LANGS.forEach(lang => {
