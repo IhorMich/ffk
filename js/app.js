@@ -501,9 +501,12 @@ async function onSettingsDeleteAccount(){
   const snap = await getAuthSnapshot();
   const personal = snap.personal && snap.personal.email;
   const coachEmail = snap.coach && snap.coach.email;
-  if(!personal && !coachEmail){
-    if(!confirm(t('settingsDeleteLocalConfirm') || 'Clear personal data on this phone?')) return;
-  }else if(!confirm(t('settingsDeleteAccountConfirm') || 'Sign out on this device? Cloud account stays.')){
+  const signedIn = !!(personal || coachEmail);
+  if(signedIn){
+    if(!confirm(t('settingsDeleteAccountConfirm') || 'Sign out of your account on this device? Cloud data stays.')){
+      return;
+    }
+  }else if(!confirm(t('settingsDeleteLocalConfirm') || 'Clear personal data on this phone?')){
     return;
   }
   if(window.MatchcardAuth && typeof window.MatchcardAuth.signOutAll === 'function'){
@@ -527,7 +530,7 @@ async function onSettingsDeleteAccount(){
       syncProUi();
     }
   }
-  const wipeLocal = confirm(t('settingsDeleteWipeConfirm') || 'Also erase match history and player cards on this device?');
+  const wipeLocal = !signedIn;
   if(wipeLocal){
     try{
       const keys = [];
@@ -541,7 +544,7 @@ async function onSettingsDeleteAccount(){
       keys.forEach(k => { try{ localStorage.removeItem(k); }catch(e){} });
     }catch(e){}
   }
-  showToast(t('settingsDeleteDone') || 'Signed out on this device.');
+  showToast(t('settingsDeleteDone') || 'Signed out of account.');
   await syncPersonalAccountUi();
   if(typeof renderCoachUi === 'function') renderCoachUi();
   if(typeof renderParentUi === 'function') renderParentUi();

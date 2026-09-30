@@ -3605,11 +3605,11 @@ ru:{
     settingsSupport: 'Contact support',
     settingsRate: 'Rate the app',
     settingsFeedback: 'Report a problem',
-    settingsDeleteAccount: 'Clear this device',
-    settingsDeleteAccountConfirm: 'Sign out on this device? Your cloud login stays — use Sign out for a normal logout.',
-    settingsDeleteLocalConfirm: 'Clear personal Matchcard data on this device?',
+    settingsDeleteAccount: 'Sign out of account',
+    settingsDeleteAccountConfirm: 'Sign out of your account on this device? Your cloud data stays — you can sign in again anytime.',
+    settingsDeleteLocalConfirm: 'You are not signed in. Clear personal Matchcard data on this device?',
     settingsDeleteWipeConfirm: 'Also erase match history and player cards on this device?',
-    settingsDeleteDone: 'Signed out on this device. Cloud account is unchanged.',
+    settingsDeleteDone: 'Signed out of account. Cloud data is unchanged.',
     settingsSupportFallback: 'Email: ihormykhailiuk@gmail.com'
   };
   const extra = {
@@ -3621,11 +3621,11 @@ ru:{
       settingsSecData:'Дані', settingsSecPlans:'Підписка', settingsSecSupport:'Допомога',
       settingsSecAbout:'Про застосунок',
       settingsSupport:'Написати в підтримку', settingsRate:'Оцінити застосунок', settingsFeedback:'Повідомити про проблему',
-      settingsDeleteAccount:'Очистити цей пристрій',
-      settingsDeleteAccountConfirm:'Вийти на цьому пристрої? Хмарний вхід залишиться — звичайний вихід через «Вийти».',
-      settingsDeleteLocalConfirm:'Очистити особисті дані Matchcard на цьому пристрої?',
+      settingsDeleteAccount:'Вийти з акаунта',
+      settingsDeleteAccountConfirm:'Вийти з акаунта на цьому пристрої? Дані в хмарі збережуться — можна увійти знову будь-коли.',
+      settingsDeleteLocalConfirm:'Ви не увійшли. Очистити особисті дані Matchcard на цьому пристрої?',
       settingsDeleteWipeConfirm:'Також стерти історію матчів і картки гравців на цьому пристрої?',
-      settingsDeleteDone:'Ви вийшли на цьому пристрої. Хмарний акаунт не видалено.'
+      settingsDeleteDone:'Ви вийшли з акаунта. Дані в хмарі не змінено.'
     },
     pl:{
       sVersion:'Wersja {v}', sPrivacy:'Prywatność', sTerms:'Warunki korzystania',
@@ -3635,9 +3635,9 @@ ru:{
       settingsSecData:'Dane', settingsSecPlans:'Subskrypcja', settingsSecSupport:'Pomoc',
       settingsSecAbout:'O aplikacji',
       settingsSupport:'Napisz do wsparcia', settingsRate:'Oceń aplikację', settingsFeedback:'Zgłoś problem',
-      settingsDeleteAccount:'Wyczyść to urządzenie',
-      settingsDeleteAccountConfirm:'Wylogować na tym urządzeniu? Konto w chmurze zostaje — zwykłe wylogowanie przez «Wyloguj».',
-      settingsDeleteDone:'Wylogowano na tym urządzeniu. Konto w chmurze nie zostało usunięte.'
+      settingsDeleteAccount:'Wyloguj z konta',
+      settingsDeleteAccountConfirm:'Wylogować z konta na tym urządzeniu? Dane w chmurze zostaną — możesz zalogować się ponownie w każdej chwili.',
+      settingsDeleteDone:'Wylogowano z konta. Dane w chmurze bez zmian.'
     },
     ru:{
       sVersion:'Версия {v}', sPrivacy:'Конфиденциальность', sTerms:'Условия использования',
@@ -3647,17 +3647,17 @@ ru:{
       settingsSecData:'Данные', settingsSecPlans:'Подписка', settingsSecSupport:'Помощь',
       settingsSecAbout:'О приложении',
       settingsSupport:'Написать в поддержку', settingsRate:'Оценить приложение', settingsFeedback:'Сообщить о проблеме',
-      settingsDeleteAccount:'Очистить это устройство',
-      settingsDeleteAccountConfirm:'Выйти на этом устройстве? Облачный вход останется — обычный выход через «Выйти».',
-      settingsDeleteLocalConfirm:'Очистить личные данные Matchcard на этом устройстве?',
+      settingsDeleteAccount:'Выйти из аккаунта',
+      settingsDeleteAccountConfirm:'Выйти из аккаунта на этом устройстве? Данные в облаке сохранятся — можно войти снова в любой момент.',
+      settingsDeleteLocalConfirm:'Вы не вошли. Очистить личные данные Matchcard на этом устройстве?',
       settingsDeleteWipeConfirm:'Также стереть историю матчей и карточки игроков на этом устройстве?',
-      settingsDeleteDone:'Вы вышли на этом устройстве. Облачный аккаунт не удалён.'
+      settingsDeleteDone:'Вы вышли из аккаунта. Данные в облаке не изменены.'
     },
-    es:{ sVersion:'Versión {v}', sPrivacy:'Privacidad', sTerms:'Términos de uso', sIcons:'Iconos de acciones', icons_line:'Línea', icons_clear:'Siluetas', icons_bright:'Vivos', icons_solid:'Relleno', settingsSecAccount:'Cuenta', settingsSecPlans:'Suscripción', settingsSecSupport:'Ayuda', settingsSecData:'Datos', settingsDeleteAccount:'Borrar este dispositivo', settingsRate:'Valorar la app', settingsSupport:'Contactar soporte' },
-    de:{ sVersion:'Version {v}', sPrivacy:'Datenschutz', sTerms:'Nutzungsbedingungen', sIcons:'Aktions-Icons', icons_line:'Linie', icons_clear:'Silhouetten', icons_bright:'Bunt', icons_solid:'Fläche', settingsSecAccount:'Konto', settingsSecPlans:'Abo', settingsSecSupport:'Hilfe', settingsSecData:'Daten', settingsDeleteAccount:'Dieses Gerät leeren', settingsRate:'App bewerten', settingsSupport:'Support kontaktieren' },
-    it:{ sVersion:'Versione {v}', sPrivacy:'Privacy', sTerms:'Termini di utilizzo', sIcons:'Icone azioni', icons_line:'Linea', icons_clear:'Silhouette', icons_bright:'Vividi', icons_solid:'Pieno', settingsSecAccount:'Account', settingsSecPlans:'Abbonamento', settingsSecSupport:'Aiuto', settingsSecData:'Dati', settingsDeleteAccount:'Svuota questo dispositivo', settingsRate:'Valuta l’app', settingsSupport:'Contatta il supporto' },
-    fr:{ sVersion:'Version {v}', sPrivacy:'Confidentialité', sTerms:'Conditions d’utilisation', sIcons:'Icônes d’actions', icons_line:'Ligne', icons_clear:'Silhouettes', icons_bright:'Vifs', icons_solid:'Plein', settingsSecAccount:'Compte', settingsSecPlans:'Abonnement', settingsSecSupport:'Aide', settingsSecData:'Données', settingsDeleteAccount:'Effacer cet appareil', settingsRate:'Noter l’app', settingsSupport:'Contacter le support' },
-    pt:{ sVersion:'Versão {v}', sPrivacy:'Privacidade', sTerms:'Termos de utilização', sIcons:'Ícones de ações', icons_line:'Linha', icons_clear:'Silhuetas', icons_bright:'Vivos', icons_solid:'Preenchido', settingsSecAccount:'Conta', settingsSecPlans:'Subscrição', settingsSecSupport:'Ajuda', settingsSecData:'Dados', settingsDeleteAccount:'Limpar este dispositivo', settingsRate:'Avaliar a app', settingsSupport:'Contactar suporte' }
+    es:{ sVersion:'Versión {v}', sPrivacy:'Privacidad', sTerms:'Términos de uso', sIcons:'Iconos de acciones', icons_line:'Línea', icons_clear:'Siluetas', icons_bright:'Vivos', icons_solid:'Relleno', settingsSecAccount:'Cuenta', settingsSecPlans:'Suscripción', settingsSecSupport:'Ayuda', settingsSecData:'Datos', settingsDeleteAccount:'Cerrar sesión', settingsRate:'Valorar la app', settingsSupport:'Contactar soporte' },
+    de:{ sVersion:'Version {v}', sPrivacy:'Datenschutz', sTerms:'Nutzungsbedingungen', sIcons:'Aktions-Icons', icons_line:'Linie', icons_clear:'Silhouetten', icons_bright:'Bunt', icons_solid:'Fläche', settingsSecAccount:'Konto', settingsSecPlans:'Abo', settingsSecSupport:'Hilfe', settingsSecData:'Daten', settingsDeleteAccount:'Abmelden', settingsRate:'App bewerten', settingsSupport:'Support kontaktieren' },
+    it:{ sVersion:'Versione {v}', sPrivacy:'Privacy', sTerms:'Termini di utilizzo', sIcons:'Icone azioni', icons_line:'Linea', icons_clear:'Silhouette', icons_bright:'Vividi', icons_solid:'Pieno', settingsSecAccount:'Account', settingsSecPlans:'Abbonamento', settingsSecSupport:'Aiuto', settingsSecData:'Dati', settingsDeleteAccount:'Esci dall’account', settingsRate:'Valuta l’app', settingsSupport:'Contatta il supporto' },
+    fr:{ sVersion:'Version {v}', sPrivacy:'Confidentialité', sTerms:'Conditions d’utilisation', sIcons:'Icônes d’actions', icons_line:'Ligne', icons_clear:'Silhouettes', icons_bright:'Vifs', icons_solid:'Plein', settingsSecAccount:'Compte', settingsSecPlans:'Abonnement', settingsSecSupport:'Aide', settingsSecData:'Données', settingsDeleteAccount:'Se déconnecter', settingsRate:'Noter l’app', settingsSupport:'Contacter le support' },
+    pt:{ sVersion:'Versão {v}', sPrivacy:'Privacidade', sTerms:'Termos de utilização', sIcons:'Ícones de ações', icons_line:'Linha', icons_clear:'Silhuetas', icons_bright:'Vivos', icons_solid:'Preenchido', settingsSecAccount:'Conta', settingsSecPlans:'Subscrição', settingsSecSupport:'Ajuda', settingsSecData:'Dados', settingsDeleteAccount:'Terminar sessão', settingsRate:'Avaliar a app', settingsSupport:'Contactar suporte' }
   };
   extra.en = Object.assign({
     sVersion:'Version {v}', sPrivacy:'Privacy', sTerms:'Terms of use',
