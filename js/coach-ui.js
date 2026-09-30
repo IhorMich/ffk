@@ -921,6 +921,13 @@
       ensureCoachMeetupSelects();
       syncCoachFeeAmountWrap();
     }
+    syncCoachMatchNewBtnUi();
+  }
+  function syncCoachMatchNewBtnUi(){
+    const btn = document.getElementById('coachMatchNewBtn');
+    const box = document.getElementById('coachMatchCreate');
+    if(!btn) return;
+    btn.classList.toggle('is-open', !!(box && !box.hidden));
   }
   function fillHourMinuteSelects(hSel, mSel){
     if(!hSel || !mSel) return;
@@ -1228,6 +1235,7 @@
     if(listEl) listEl.hidden = !!activeMatch;
     if(newBtn) newBtn.hidden = !!activeMatch;
     if(createBox && activeMatch) createBox.hidden = true;
+    syncCoachMatchNewBtnUi();
 
     const detail = document.getElementById('coachMatchDetail');
     const upcomingBox = document.getElementById('coachMatchUpcomingBox');
@@ -4082,6 +4090,8 @@
   let trainFormOpen = false;
   let trainMode = 'once';
   let trainSelectedDate = '';
+  // null | {kind:'oneoff'|'rule'|'occ', id, rule_id?, date?, team_id?}
+  let trainEdit = null;
   const TRAIN_FOLD_KEY = 'ffk_coach_train_fold';
   function trainFolded(){
     // Default folded on first visit — expand only after the coach taps ▾ / +Training.
@@ -4104,6 +4114,72 @@
     if(!btn) return;
     btn.textContent = tt('coachTrainNewBtn', '+ Training');
     btn.classList.toggle('is-open', !!trainFormOpen && !trainFolded());
+  }
+  function syncTrainFormKicker(){
+    const el = document.querySelector('#coachTrainCreate .pro-kicker');
+    if(!el) return;
+    el.textContent = trainEdit
+      ? tt('coachTrainEditKicker', 'Edit training')
+      : tt('coachTrainCreateKicker', 'New training');
+  }
+  function clearTrainEdit(){
+    trainEdit = null;
+    syncTrainFormKicker();
+  }
+  function fillTrainFormFrom(data, mode){
+    trainMode = mode === 'weekly' ? 'weekly' : 'once';
+    ensureTrainTimeSelects();
+    const dateEl = document.getElementById('coachTrainDate');
+    if(dateEl) dateEl.value = data.date || trainSelectedDate || today();
+    trainSelectedDate = dateEl ? dateEl.value : (data.date || '');
+    const start = String(data.start_time || '').split(':');
+    const end = String(data.end_time || '').split(':');
+    const sh = document.getElementById('coachTrainStartH');
+    const sm = document.getElementById('coachTrainStartM');
+    const eh = document.getElementById('coachTrainEndH');
+    const em = document.getElementById('coachTrainEndM');
+    if(sh && start[0] != null) sh.value = String(start[0]).padStart(2, '0');
+    if(sm && start[1] != null) sm.value = String(start[1]).padStart(2, '0');
+    if(eh) eh.value = end[0] != null && end[0] !== '' ? String(end[0]).padStart(2, '0') : '';
+    if(em) em.value = end[1] != null && end[1] !== '' ? String(end[1]).padStart(2, '0') : '';
+    const addr = document.getElementById('coachTrainAddress');
+    if(addr) addr.value = data.address || '';
+    const notify = String(data.notify_minutes != null ? data.notify_minutes : 60);
+    document.querySelectorAll('#coachTrainNotify .chip').forEach(c => {
+      c.classList.toggle('active', c.dataset.notify === notify);
+    });
+    document.querySelectorAll('#coachTrainWeekdays .chip').forEach(c => {
+      const on = Array.isArray(data.weekdays) && data.weekdays.map(Number).includes(Number(c.dataset.wd));
+      c.classList.toggle('active', !!on);
+    });
+    syncTrainModeUi();
+    syncTrainFormKicker();
+  }
+  function openTrainEdit(kind, payload){
+    if(!payload) return;
+    if(kind === 'rule'){
+      trainEdit = {kind: 'rule', id: payload.id, team_id: payload.team_id};
+      fillTrainFormFrom(payload, 'weekly');
+      setTrainFormOpen(true, {mode: 'weekly', keepDate: true});
+      return;
+    }
+    if(kind === 'occ' || payload.virtual || payload.rule_id){
+      trainEdit = {
+        kind: payload.virtual ? 'occ' : (payload.rule_id ? 'occ' : 'oneoff'),
+        id: payload.id,
+        rule_id: payload.rule_id || '',
+        date: payload.date,
+        team_id: payload.team_id,
+        virtual: !!payload.virtual
+      };
+      // Occurrences edit as one date (override), not the whole weekly rule.
+      fillTrainFormFrom(payload, 'once');
+      setTrainFormOpen(true, {date: payload.date, mode: 'once'});
+      return;
+    }
+    trainEdit = {kind: 'oneoff', id: payload.id, team_id: payload.team_id};
+    fillTrainFormFrom(payload, 'once');
+    setTrainFormOpen(true, {date: payload.date, mode: 'once'});
   }
   function trainMonthKey(d){
     const x = d instanceof Date ? d : new Date();
@@ -4145,25 +4221,30 @@
     if(!trainFormOpen && opts.fold){
       setTrainFolded(true);
     }
+    if(!trainFormOpen || opts.clearEdit){
+      trainEdit = null;
+    }
     syncTrainFoldUi();
     const wrap = document.getElementById('coachTrainCreate');
     if(wrap) wrap.hidden = !trainFormOpen;
     if(trainFormOpen){
       ensureTrainTimeSelects();
-      const dateEl = document.getElementById('coachTrainDate');
-      if(opts.date && dateEl){
-        dateEl.value = opts.date;
-        trainSelectedDate = opts.date;
-      }else if(dateEl && !dateEl.value){
-        dateEl.value = trainSelectedDate || today();
+      if(!trainEdit){
+        const dateEl = document.getElementById('coachTrainDate');
+        if(opts.date && dateEl){
+          dateEl.value = opts.date;
+          trainSelectedDate = opts.date;
+        }else if(dateEl && !dateEl.value){
+          dateEl.value = trainSelectedDate || today();
+        }
+        if(opts.mode) trainMode = opts.mode;
+        syncTrainModeUi();
       }
-      if(opts.mode) trainMode = opts.mode;
-      syncTrainModeUi();
+      syncTrainFormKicker();
     }else if(!opts.keepDate){
       trainSelectedDate = '';
     }
     syncTrainNewBtnUi();
-    // Always refresh calendar+list with the form — one open action, not fold vs form.
     const store = global.CoachStore;
     const session = store && store.getSession && store.getSession();
     const teamId = store && store.getActiveTeamId && store.getActiveTeamId();
@@ -4174,7 +4255,8 @@
     if(!/^\d{4}-\d{2}-\d{2}$/.test(String(ymd || ''))) return;
     trainSelectedDate = ymd;
     trainMode = 'once';
-    setTrainFormOpen(true, {date: ymd, mode: 'once'});
+    trainEdit = null;
+    setTrainFormOpen(true, {date: ymd, mode: 'once', clearEdit: true});
   }
   function syncTrainModeUi(){
     document.querySelectorAll('#coachTrainMode .chip').forEach(chip => {
@@ -4271,11 +4353,19 @@
             <b>${esc(when)}</b>
             <span>${esc(meta)}</span>
           </div>
-          <button type="button" class="ghost-btn coach-train-cancel" data-cancel-train="${esc(tr.id)}" data-train-json="${encodeURIComponent(JSON.stringify({
-            id: tr.id, team_id: tr.team_id, rule_id: tr.rule_id || '', date: tr.date,
-            start_time: tr.start_time, end_time: tr.end_time, address: tr.address || '',
-            title: tr.title || '', notify_minutes: tr.notify_minutes, virtual: !!tr.virtual
-          }))}">${esc(tt('coachTrainCancelOne', 'Cancel'))}</button>
+          <div class="coach-train-row-actions">
+            <button type="button" class="ghost-btn coach-train-icon-btn" data-edit-train="${esc(tr.id)}" data-train-json="${encodeURIComponent(JSON.stringify({
+              id: tr.id, team_id: tr.team_id, rule_id: tr.rule_id || '', date: tr.date,
+              start_time: tr.start_time, end_time: tr.end_time, address: tr.address || '',
+              title: tr.title || '', notify_minutes: tr.notify_minutes, virtual: !!tr.virtual,
+              recurring: !!tr.recurring
+            }))}" aria-label="${esc(tt('coachTrainEdit', 'Edit'))}" title="${esc(tt('coachTrainEdit', 'Edit'))}">✎</button>
+            <button type="button" class="ghost-btn coach-train-cancel" data-cancel-train="${esc(tr.id)}" data-train-json="${encodeURIComponent(JSON.stringify({
+              id: tr.id, team_id: tr.team_id, rule_id: tr.rule_id || '', date: tr.date,
+              start_time: tr.start_time, end_time: tr.end_time, address: tr.address || '',
+              title: tr.title || '', notify_minutes: tr.notify_minutes, virtual: !!tr.virtual
+            }))}">${esc(tt('coachTrainCancelOne', 'Cancel'))}</button>
+          </div>
         </div>`;
       }).join('');
     }
@@ -4293,7 +4383,10 @@
                 <b>${esc(days)} · ${esc(time)}</b>
                 <span>${esc(r.address || tt('coachTrainNoAddress', 'No address'))}</span>
               </div>
-              <button type="button" class="ghost-btn" data-remove-train-rule="${esc(r.id)}">${esc(tt('coachTrainRemoveRule', 'Remove'))}</button>
+              <div class="coach-train-row-actions">
+                <button type="button" class="ghost-btn coach-train-icon-btn" data-edit-train-rule="${esc(r.id)}" aria-label="${esc(tt('coachTrainEdit', 'Edit'))}" title="${esc(tt('coachTrainEdit', 'Edit'))}">✎</button>
+                <button type="button" class="ghost-btn" data-remove-train-rule="${esc(r.id)}">${esc(tt('coachTrainRemoveRule', 'Remove'))}</button>
+              </div>
             </div>`;
           }).join('');
       }
@@ -4330,7 +4423,30 @@
     const notifyChip = document.querySelector('#coachTrainNotify .chip.active');
     const notify = Number(notifyChip && notifyChip.dataset.notify != null ? notifyChip.dataset.notify : 60);
     try{
-      if(trainMode === 'weekly'){
+      if(trainEdit && trainEdit.kind === 'rule'){
+        const weekdays = selectedTrainWeekdays();
+        store.updateTrainingRule(session, trainEdit.id, {
+          weekdays, start_time: start, end_time: end, address, notify_minutes: notify
+        });
+        toast(tt('coachTrainUpdated', 'Training updated.'));
+      }else if(trainEdit && trainEdit.kind === 'oneoff'){
+        const date = document.getElementById('coachTrainDate')?.value || '';
+        store.updateTrainingOneOff(session, trainEdit.id, {
+          date, start_time: start, end_time: end, address, notify_minutes: notify
+        });
+        toast(tt('coachTrainUpdated', 'Training updated.'));
+      }else if(trainEdit && trainEdit.kind === 'occ'){
+        const date = document.getElementById('coachTrainDate')?.value || trainEdit.date || '';
+        store.upsertTrainingOccurrence(session, {
+          id: trainEdit.id,
+          team_id: trainEdit.team_id || teamId,
+          rule_id: trainEdit.rule_id,
+          date,
+          address,
+          notify_minutes: notify
+        }, {start_time: start, end_time: end, address, notify_minutes: notify});
+        toast(tt('coachTrainUpdated', 'Training updated.'));
+      }else if(trainMode === 'weekly'){
         const weekdays = selectedTrainWeekdays();
         store.createTrainingRule(session, teamId, {
           weekdays, start_time: start, end_time: end, address, notify_minutes: notify
@@ -4343,6 +4459,7 @@
         });
         toast(tt('coachTrainSavedOnce', 'Training saved. Parents can see it.'));
       }
+      trainEdit = null;
       trainFormOpen = false;
       trainSelectedDate = '';
       document.querySelectorAll('#coachTrainWeekdays .chip').forEach(c => c.classList.remove('active'));
@@ -4351,6 +4468,10 @@
       });
       const addr = document.getElementById('coachTrainAddress');
       if(addr) addr.value = '';
+      setTrainFolded(true);
+      syncTrainFoldUi();
+      syncTrainNewBtnUi();
+      syncTrainFormKicker();
       renderCoachUi();
     }catch(e){
       const map = {
@@ -4816,10 +4937,17 @@
 
     document.getElementById('coachTrainNewBtn')?.addEventListener('click', () => {
       if(trainFormOpen && !trainFolded()){
-        // Close whole block together (calendar + form).
         setTrainFormOpen(false, {fold: true});
       }else{
-        setTrainFormOpen(true, {date: trainSelectedDate || today(), mode: trainMode || 'once'});
+        trainEdit = null;
+        // reset form fields for a fresh create
+        document.querySelectorAll('#coachTrainWeekdays .chip').forEach(c => c.classList.remove('active'));
+        document.querySelectorAll('#coachTrainNotify .chip').forEach(c => {
+          c.classList.toggle('active', c.dataset.notify === '60');
+        });
+        const addr = document.getElementById('coachTrainAddress');
+        if(addr) addr.value = '';
+        setTrainFormOpen(true, {date: trainSelectedDate || today(), mode: 'once', clearEdit: true});
       }
     });
     document.getElementById('coachTrainCancelBtn')?.addEventListener('click', () => {
@@ -4868,6 +4996,14 @@
       openTrainDay(day.getAttribute('data-train-day') || day.dataset.trainDay || '');
     });
     document.getElementById('coachTrainList')?.addEventListener('click', e => {
+      const editBtn = e.target.closest('[data-edit-train]');
+      if(editBtn){
+        let payload = null;
+        try{ payload = JSON.parse(decodeURIComponent(editBtn.getAttribute('data-train-json') || '') || 'null'); }catch(err){}
+        if(!payload) return;
+        openTrainEdit(payload.virtual || payload.rule_id ? 'occ' : 'oneoff', payload);
+        return;
+      }
       const btn = e.target.closest('[data-cancel-train]');
       if(!btn) return;
       const store = global.CoachStore;
@@ -4886,6 +5022,17 @@
       }
     });
     document.getElementById('coachTrainRules')?.addEventListener('click', e => {
+      const editBtn = e.target.closest('[data-edit-train-rule]');
+      if(editBtn){
+        const store = global.CoachStore;
+        const session = store && store.getSession();
+        const teamId = store && store.getActiveTeamId && store.getActiveTeamId();
+        if(!session || !teamId) return;
+        const rule = (store.listTrainingRules(session, teamId) || []).find(r => r.id === editBtn.dataset.editTrainRule);
+        if(!rule) return;
+        openTrainEdit('rule', rule);
+        return;
+      }
       const btn = e.target.closest('[data-remove-train-rule]');
       if(!btn) return;
       const store = global.CoachStore;

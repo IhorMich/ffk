@@ -2010,6 +2010,95 @@
       try{ this.publishTrainingsToParents(teamId); }catch(e){}
       return row;
     },
+    updateTrainingOneOff(session, trainingId, fields){
+      const db = readDb();
+      const row = (db.team_trainings || []).find(r => r.id === trainingId);
+      if(!row || row.rule_id || !this.getTeam(session, row.team_id)) throw new Error('forbidden');
+      const date = /^\d{4}-\d{2}-\d{2}$/.test(fields && fields.date) ? fields.date : row.date;
+      const start = normalizeKickoff(fields && fields.start_time);
+      const end = normalizeKickoff(fields && fields.end_time);
+      if(!date) throw new Error('date');
+      if(!start) throw new Error('start');
+      if(end && end <= start) throw new Error('end');
+      const now = new Date().toISOString();
+      db.team_trainings = db.team_trainings.map(r => r.id === trainingId ? {
+        ...r,
+        date,
+        start_time: start,
+        end_time: end || '',
+        address: String((fields && fields.address) != null ? fields.address : r.address || '').trim().slice(0, 120),
+        notify_minutes: clampNotifyMinutes(fields && fields.notify_minutes != null ? fields.notify_minutes : r.notify_minutes),
+        updated_at: now
+      } : r);
+      writeDb(db);
+      try{ this.publishTrainingsToParents(row.team_id); }catch(e){}
+      return true;
+    },
+    updateTrainingRule(session, ruleId, fields){
+      const db = readDb();
+      const rule = (db.training_rules || []).find(r => r.id === ruleId);
+      if(!rule || rule.active === false || !this.getTeam(session, rule.team_id)) throw new Error('forbidden');
+      const weekdays = normalizeWeekdays(fields && fields.weekdays);
+      const start = normalizeKickoff(fields && fields.start_time);
+      const end = normalizeKickoff(fields && fields.end_time);
+      if(!weekdays.length) throw new Error('weekdays');
+      if(!start) throw new Error('start');
+      if(end && end <= start) throw new Error('end');
+      const now = new Date().toISOString();
+      db.training_rules = db.training_rules.map(r => r.id === ruleId ? {
+        ...r,
+        weekdays,
+        start_time: start,
+        end_time: end || '',
+        address: String((fields && fields.address) != null ? fields.address : r.address || '').trim().slice(0, 120),
+        notify_minutes: clampNotifyMinutes(fields && fields.notify_minutes != null ? fields.notify_minutes : r.notify_minutes),
+        updated_at: now
+      } : r);
+      writeDb(db);
+      try{ this.publishTrainingsToParents(rule.team_id); }catch(e){}
+      return true;
+    },
+    /** Create/update a concrete occurrence override for a weekly rule day. */
+    upsertTrainingOccurrence(session, occ, fields){
+      const teamId = occ && occ.team_id;
+      const ruleId = occ && occ.rule_id;
+      const date = occ && occ.date;
+      if(!this.getTeam(session, teamId) || !ruleId || !/^\d{4}-\d{2}-\d{2}$/.test(String(date || ''))){
+        throw new Error('forbidden');
+      }
+      const start = normalizeKickoff(fields && fields.start_time);
+      const end = normalizeKickoff(fields && fields.end_time);
+      if(!start) throw new Error('start');
+      if(end && end <= start) throw new Error('end');
+      const db = readDb();
+      db.team_trainings = db.team_trainings || [];
+      const now = new Date().toISOString();
+      const existing = db.team_trainings.find(r => r.team_id === teamId && r.rule_id === ruleId && r.date === date);
+      const patch = {
+        start_time: start,
+        end_time: end || '',
+        address: String((fields && fields.address) != null ? fields.address : (occ.address || '')).trim().slice(0, 120),
+        notify_minutes: clampNotifyMinutes(fields && fields.notify_minutes != null ? fields.notify_minutes : occ.notify_minutes),
+        status: 'scheduled',
+        updated_at: now
+      };
+      if(existing){
+        db.team_trainings = db.team_trainings.map(r => r.id === existing.id ? {...r, ...patch} : r);
+      }else{
+        db.team_trainings.push({
+          id: uid('trn'),
+          team_id: teamId,
+          rule_id: ruleId,
+          date,
+          title: String((occ && occ.title) || '').trim().slice(0, 48),
+          ...patch,
+          created_at: now
+        });
+      }
+      writeDb(db);
+      try{ this.publishTrainingsToParents(teamId); }catch(e){}
+      return true;
+    },
     cancelTrainingOccurrence(session, trainingOrOcc){
       const teamId = trainingOrOcc && trainingOrOcc.team_id;
       if(!this.getTeam(session, teamId)) throw new Error('forbidden');

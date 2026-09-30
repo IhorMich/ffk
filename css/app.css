@@ -2810,8 +2810,18 @@
   }
   .coach-train-top-actions{display:flex;align-items:center;gap:8px;flex-shrink:0;}
   .coach-train-top-actions .save-btn{margin:0;width:auto;padding:10px 12px;white-space:nowrap;}
-  .coach-train-top-actions .save-btn.is-open{
+  .coach-train-top-actions .save-btn.is-open,
+  .coach-match-new.is-open,
+  #coachTrainNewBtn.is-open,
+  #coachMatchNewBtn.is-open{
     background:transparent;color:var(--card-ink);border:1px solid var(--card-line);
+    box-shadow:none;opacity:.72;
+  }
+  .coach-train-row-actions{
+    display:flex;align-items:center;gap:6px;flex-shrink:0;
+  }
+  .coach-train-icon-btn{
+    min-width:40px;padding:8px 10px;font-size:1rem;line-height:1;
   }
   .coach-train-body[hidden]{display:none !important;}
   .coach-train-cal-block{
