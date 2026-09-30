@@ -3862,30 +3862,28 @@
         box.innerHTML = `<p class="hint">${esc(tt('coachQrFallback', 'QR unavailable — use the link below.'))}</p>`;
         return;
       }
+      const payload = String(text || '');
       const qr = make(0, 'M');
-      qr.addData(String(text || ''), 'Byte');
+      qr.addData(payload, 'Byte');
       qr.make();
       const count = qr.getModuleCount();
-      const size = 220;
-      const quiet = 12;
-      const cell = (size - quiet * 2) / count;
+      const quietMods = 2;
+      const cell = Math.max(4, Math.floor(148 / (count + quietMods * 2)));
+      const quiet = quietMods * cell;
+      const size = count * cell + quiet * 2;
       const canvas = document.createElement('canvas');
       canvas.width = size;
       canvas.height = size;
       canvas.className = 'coach-parent-qr-canvas';
       const ctx = canvas.getContext('2d');
+      ctx.imageSmoothingEnabled = false;
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(0, 0, size, size);
-      ctx.fillStyle = '#0b1220';
+      ctx.fillStyle = '#111111';
       for(let r = 0; r < count; r++){
         for(let c = 0; c < count; c++){
           if(qr.isDark(r, c)){
-            ctx.fillRect(
-              quiet + c * cell,
-              quiet + r * cell,
-              cell + 0.5,
-              cell + 0.5
-            );
+            ctx.fillRect(quiet + c * cell, quiet + r * cell, cell, cell);
           }
         }
       }

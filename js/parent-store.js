@@ -236,7 +236,8 @@
     },
     buildCodeWebLink(code){
       const value = String(code || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8);
-      return value ? `https://ihormich.github.io/ffk/open.html?code=${value}` : '';
+      // Short URL → compact QR (open.html still accepts older shares).
+      return value ? `https://ihormich.github.io/ffk/?code=${value}` : '';
     },
     buildWebLink(payload){
       const data = this.encodePayload(payload);
