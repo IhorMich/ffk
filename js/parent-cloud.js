@@ -2,9 +2,10 @@
 (function(global){
   const COACH_LINKS_KEY = 'ffk_cloud_parent_links_v1';
   const PERSONAL_SYNC_AT_KEY = 'ffk_personal_backup_sync_at';
+  const PERSONAL_DIRTY_KEY = 'ffk_personal_backup_dirty';
   let syncing = false;
   let syncTimer = null;
-  let personalSyncState = {status: 'idle', at: '', error: ''};
+  let personalSyncState = {status: 'idle', at: '', error: '', relation: '', conflict: null};
 
   function ready(){
     return !!(global.CoachCloud && global.CoachCloud.ready && global.CoachCloud.ready());
@@ -666,52 +667,122 @@
   function writeLocalSyncAt(iso){
     try{ localStorage.setItem(PERSONAL_SYNC_AT_KEY, String(iso || '')); }catch(e){}
   }
+  function readPersonalDirty(){
+    try{ return localStorage.getItem(PERSONAL_DIRTY_KEY) === '1'; }catch(e){ return false; }
+  }
+  function writePersonalDirty(on){
+    try{
+      if(on) localStorage.setItem(PERSONAL_DIRTY_KEY, '1');
+      else localStorage.removeItem(PERSONAL_DIRTY_KEY);
+    }catch(e){}
+  }
+  function markPersonalDirty(){
+    writePersonalDirty(true);
+    if(global.MatchcardSync && typeof global.MatchcardSync.markLocalDirty === 'function'){
+      try{ global.MatchcardSync.markLocalDirty(); }catch(e){}
+    }
+  }
   function setPersonalSyncState(next){
     personalSyncState = Object.assign({}, personalSyncState, next || {});
     if(typeof global.updateCloudSyncStatusUi === 'function'){
       try{ global.updateCloudSyncStatusUi(personalSyncState); }catch(e){}
     }
   }
-  async function pushPersonalBackup(session){
+  async function pushPersonalBackup(session, payload, updatedAt){
     const sb = parentClient();
     if(!sb || !session || !isProUser()) return {ok: false, reason: 'skip'};
-    if(typeof exportPayload !== 'function') return {ok: false, reason: 'no_export'};
-    const payload = exportPayload();
-    const updatedAt = new Date().toISOString();
+    const body = payload || (typeof exportPayload === 'function' ? exportPayload() : null);
+    if(!body) return {ok: false, reason: 'no_export'};
+    const at = updatedAt || new Date().toISOString();
     const {error} = await sb.from('personal_backups').upsert({
       owner_user_id: session.user.id,
-      payload,
-      updated_at: updatedAt
+      payload: body,
+      updated_at: at
     }, {onConflict: 'owner_user_id'});
     if(error) throw error;
-    writeLocalSyncAt(updatedAt);
-    setPersonalSyncState({status: 'ok', at: updatedAt, error: ''});
-    return {ok: true, at: updatedAt};
+    writeLocalSyncAt(at);
+    writePersonalDirty(false);
+    setPersonalSyncState({status: 'ok', at: at, error: ''});
+    return {ok: true, at: at};
   }
-  async function pullPersonalBackup(session){
+  async function fetchPersonalBackup(session){
     const sb = parentClient();
-    if(!sb || !session || !isProUser()) return {ok: false, reason: 'skip'};
+    if(!sb || !session || !isProUser()) return null;
     const {data, error} = await sb.from('personal_backups')
       .select('payload,updated_at')
       .eq('owner_user_id', session.user.id)
       .maybeSingle();
     if(error) throw error;
-    if(!data || !data.payload) return {ok: true, empty: true};
-    const remoteAt = String(data.updated_at || '');
+    if(!data || !data.payload) return null;
+    return {payload: data.payload, updatedAt: String(data.updated_at || '')};
+  }
+  async function pullPersonalBackup(session){
+    const remote = await fetchPersonalBackup(session);
+    if(!remote) return {ok: true, empty: true};
+    const remoteAt = remote.updatedAt;
     const localAt = readLocalSyncAt();
-    if(remoteAt && localAt && remoteAt <= localAt) return {ok: true, skipped: true};
+    const plan = (global.MatchcardSync && typeof global.MatchcardSync.planPersonalSync === 'function')
+      ? global.MatchcardSync.planPersonalSync({
+          pull: true, push: false,
+          localAt, remoteAt, hasRemote: true,
+          localDirty: readPersonalDirty(),
+          ready: true, isPro: true, hasSession: true
+        })
+      : null;
+    if(plan && plan.steps.every(s => s.action !== 'pull_merge')){
+      return {ok: true, skipped: true, plan};
+    }
+    if(localAt && remoteAt && remoteAt <= localAt && !(plan && plan.conflict)){
+      return {ok: true, skipped: true};
+    }
     if(typeof applyImportBundle === 'function'){
-      try{ applyImportBundle(data.payload); }catch(e){
+      try{ applyImportBundle(remote.payload); }catch(e){
         console.warn('Personal backup import', e);
         return {ok: false, error: e};
       }
     }
     if(remoteAt) writeLocalSyncAt(remoteAt);
+    writePersonalDirty(true);
     setPersonalSyncState({status: 'ok', at: remoteAt || new Date().toISOString(), error: ''});
     return {ok: true, pulled: true, at: remoteAt};
   }
+  function bindPersonalSyncEngine(){
+    const Sync = global.MatchcardSync;
+    if(!Sync || typeof Sync.bind !== 'function') return false;
+    Sync.bind({
+      ready: () => ready(),
+      isPro: () => isProUser(),
+      getSession: () => getSession(),
+      readLocalAt: async () => readLocalSyncAt(),
+      writeLocalAt: async (iso) => writeLocalSyncAt(iso),
+      isDirty: async () => readPersonalDirty(),
+      setDirty: async (on) => writePersonalDirty(!!on),
+      fetchRemote: async (session) => fetchPersonalBackup(session),
+      applyRemote: async (payload) => {
+        if(typeof applyImportBundle !== 'function') throw new Error('no_import');
+        applyImportBundle(payload);
+      },
+      exportLocal: async () => {
+        if(typeof exportPayload !== 'function') return null;
+        return exportPayload();
+      },
+      pushRemote: async (session, payload, at) => {
+        const out = await pushPersonalBackup(session, payload, at);
+        if(!out || !out.ok) throw new Error((out && out.reason) || 'push');
+      },
+      nowIso: () => new Date().toISOString(),
+      onState: (st) => setPersonalSyncState(st)
+    });
+    return true;
+  }
   async function syncPersonalBackup(options){
     const opts = options || {};
+    if(bindPersonalSyncEngine() && global.MatchcardSync && typeof global.MatchcardSync.runPersonalSync === 'function'){
+      const out = await global.MatchcardSync.runPersonalSync(opts);
+      personalSyncState = Object.assign({}, personalSyncState, (out && out.state) || {});
+      return out;
+    }
+    // Fallback without SyncEngine
     if(!ready()) return {ok: false, reason: 'no_cloud'};
     if(!isProUser()){
       setPersonalSyncState({status: 'free', at: '', error: ''});
@@ -724,12 +795,8 @@
         setPersonalSyncState({status: 'need_account', at: '', error: ''});
         return {ok: false, reason: 'no_session'};
       }
-      if(opts.pull !== false){
-        await pullPersonalBackup(session);
-      }
-      if(opts.push !== false){
-        await pushPersonalBackup(session);
-      }
+      if(opts.pull !== false) await pullPersonalBackup(session);
+      if(opts.push !== false) await pushPersonalBackup(session);
       return {ok: true, state: personalSyncState};
     }catch(error){
       console.warn('Personal backup sync', error);
@@ -828,6 +895,7 @@
     claimInvite,
     syncParentData,
     syncPersonalBackup,
+    markPersonalDirty,
     scheduleSync,
     pullCoachData,
     personalSyncState(){ return personalSyncState; },

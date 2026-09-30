@@ -3800,6 +3800,14 @@ function isBlankPlayerCard(p, matchList){
   return !hasName && !hasPhoto && !(matchList && matchList.length);
 }
 function importMatchesIntoCurrent(incoming){
+  if(typeof mergeMatchLists === 'function'){
+    const merged = mergeMatchLists(matches, incoming || []);
+    if(merged.added){
+      matches = merged.matches;
+      saveMatches();
+    }
+    return merged.added;
+  }
   const ids = new Set(matches.map(m => String(m.id)));
   const fingerprints = new Set(matches.map(matchFingerprint));
   let stamp = Date.now();
@@ -3810,7 +3818,6 @@ function importMatchesIntoCurrent(incoming){
     const rawNum = Number(raw && raw.id);
     const hasStableId = Number.isFinite(rawNum) && rawNum > 0;
     const stableId = hasStableId ? String(Math.floor(rawNum)) : '';
-    // Already on this card — keep existing row, do not clone.
     if(stableId && ids.has(stableId)) return;
     const finger = matchFingerprint(m);
     if(finger && fingerprints.has(finger)) return;

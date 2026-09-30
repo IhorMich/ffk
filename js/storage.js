@@ -348,6 +348,11 @@ function savePlayer(){
   }catch(e){
     showToast(t('toastSaveFail'));
   }
+  try{
+    if(window.ParentCloud && typeof window.ParentCloud.markPersonalDirty === 'function'){
+      window.ParentCloud.markPersonalDirty();
+    }
+  }catch(e){}
 }
 
 function loadMatches(){
@@ -383,6 +388,11 @@ function saveMatches(){
     if(roster.currentId) localStorage.setItem(kidMatchesKey(roster.currentId), json);
     localStorage.setItem(STORAGE_KEY, json);
   }catch(e){ showToast(t('toastSaveFail')); }
+  try{
+    if(window.ParentCloud && typeof window.ParentCloud.markPersonalDirty === 'function'){
+      window.ParentCloud.markPersonalDirty();
+    }
+  }catch(e){}
 }
 
 function normalizeMatch(m){

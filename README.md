@@ -105,6 +105,30 @@ Debug APK: `cd android && ./gradlew :app:assembleDebug`.
 
 Хранилище PWA в браузере и хранилище приложения — разные. Перенос — через копию или облако.
 
+## Sync Engine
+
+Независимый планировщик Pro-бэкапа в `sync/`:
+
+```
+sync/
+  plan.js
+  merge.js
+  lifecycle.js
+  engine.js
+```
+
+```js
+const plan = planPersonalSync({
+  localAt, remoteAt, hasRemote, localDirty, pull: true, push: true, isPro: true, hasSession: true
+});
+// → { relation, conflict, steps: [{action:'pull_merge'|'push'|'skip_pull', reason}] }
+
+const merged = mergeMatchLists(localMatches, remoteMatches);
+await MatchcardSync.runPersonalSync({ pull: true, push: true });
+```
+
+Локальные правки ставят dirty-флаг; конфликт `local_dirty_and_remote_present` виден в плане. Проверка: `node sync/selftest.js`.
+
 ## Auth lifecycle
 
 Независимый координатор в `auth/`:
