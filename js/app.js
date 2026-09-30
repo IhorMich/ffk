@@ -288,9 +288,19 @@ function applyI18n(){
 }
 
 function isPro(){
+  try{
+    if(window.MatchcardAccount && typeof window.MatchcardAccount.isPro === 'function'){
+      return !!window.MatchcardAccount.isPro();
+    }
+  }catch(e){}
   return settings.isPro === true;
 }
 function isCoachPlan(){
+  try{
+    if(window.MatchcardAccount && typeof window.MatchcardAccount.isCoachPlan === 'function'){
+      return !!window.MatchcardAccount.isCoachPlan();
+    }
+  }catch(e){}
   return settings.isCoach === true;
 }
 function setCoachPlan(on){
@@ -354,6 +364,11 @@ window.setCoachPlan = setCoachPlan;
 window.isCoachPlan = isCoachPlan;
 window.syncCoachTabUi = syncCoachTabUi;
 function playerCap(){
+  try{
+    if(window.MatchcardAccount && typeof window.MatchcardAccount.playerCap === 'function'){
+      return window.MatchcardAccount.playerCap();
+    }
+  }catch(e){}
   return isPro() ? PRO_MAX_PLAYERS : FREE_MAX_PLAYERS;
 }
 function offerPro(feature){
@@ -392,6 +407,13 @@ function coachAccountEmail(){
   }
 }
 async function getAuthSnapshot(){
+  if(window.MatchcardAccount && typeof window.MatchcardAccount.snapshot === 'function'){
+    try{
+      if(typeof window.bindMatchcardAccount === 'function') window.bindMatchcardAccount();
+      if(typeof window.bindMatchcardAuth === 'function') window.bindMatchcardAuth();
+      return await window.MatchcardAccount.snapshot();
+    }catch(e){}
+  }
   if(window.MatchcardAuth && typeof window.MatchcardAuth.snapshot === 'function'){
     try{
       if(typeof window.bindMatchcardAuth === 'function') window.bindMatchcardAuth();
@@ -732,6 +754,11 @@ async function setPro(on){
   if(on) runPersonalCloudSync({pull: true, push: true});
 }
 function isCoachSub(){
+  try{
+    if(window.MatchcardAccount && typeof window.MatchcardAccount.isCoachSub === 'function'){
+      return !!window.MatchcardAccount.isCoachSub();
+    }
+  }catch(e){}
   if(settings.coachSub === true) return true;
   try{
     const store = window.CoachStore;

@@ -8,12 +8,18 @@ const FILTER_KEY = 'ffk_filters_v1';
 const PLAYER_KEY = 'ffk_player_v1';
 const ROSTER_KEY = 'ffk_roster_v1';
 const MAX_PLAYERS = 32;
-const FREE_MAX_PLAYERS = 1;
-const PRO_MAX_PLAYERS = 32;
-const COACH_MAX_ACADEMIES = 1;
-const COACH_MAX_TEAMS = 10;
-const COACH_MAX_PLAYERS_PER_TEAM = 50;
-const COACH_MAX_ASSISTANTS = 5;
+const FREE_MAX_PLAYERS = (typeof MatchcardAccount !== 'undefined' && MatchcardAccount.LIMITS)
+  ? MatchcardAccount.LIMITS.FREE_MAX_PLAYERS : 1;
+const PRO_MAX_PLAYERS = (typeof MatchcardAccount !== 'undefined' && MatchcardAccount.LIMITS)
+  ? MatchcardAccount.LIMITS.PRO_MAX_PLAYERS : 32;
+const COACH_MAX_ACADEMIES = (typeof MatchcardAccount !== 'undefined' && MatchcardAccount.LIMITS)
+  ? MatchcardAccount.LIMITS.COACH_MAX_ACADEMIES : 1;
+const COACH_MAX_TEAMS = (typeof MatchcardAccount !== 'undefined' && MatchcardAccount.LIMITS)
+  ? MatchcardAccount.LIMITS.COACH_MAX_TEAMS : 10;
+const COACH_MAX_PLAYERS_PER_TEAM = (typeof MatchcardAccount !== 'undefined' && MatchcardAccount.LIMITS)
+  ? MatchcardAccount.LIMITS.COACH_MAX_PLAYERS_PER_TEAM : 50;
+const COACH_MAX_ASSISTANTS = (typeof MatchcardAccount !== 'undefined' && MatchcardAccount.LIMITS)
+  ? MatchcardAccount.LIMITS.COACH_MAX_ASSISTANTS : 5;
 
 function localRepo(){
   return (typeof MatchcardLocalRepo !== 'undefined' && MatchcardLocalRepo)

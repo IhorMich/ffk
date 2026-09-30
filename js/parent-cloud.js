@@ -675,6 +675,11 @@
     }, 1200);
   }
   function isProUser(){
+    try{
+      if(global.MatchcardAccount && typeof global.MatchcardAccount.canSyncPersonal === 'function'){
+        return !!global.MatchcardAccount.canSyncPersonal();
+      }
+    }catch(e){}
     return typeof isPro === 'function' && isPro();
   }
   function readLocalSyncAt(){

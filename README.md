@@ -227,6 +227,33 @@ await MatchcardAuth.setMode('coach');       // UI-режим, сессии не 
 
 `js/auth.js` подключает адаптеры к ParentCloud / CoachStore. Проверка: `node auth/selftest.js`.
 
+## Account model
+
+Единая модель Free / Pro / Coach в `account/` — entitlements, caps и gates. Auth даёт сессии; Account — права продукта.
+
+```
+account/
+  products.js
+  entitlements.js
+  model.js
+  engine.js
+```
+
+```js
+const acc = MatchcardAccount.buildAccount({
+  personal: { email: 'a@b.c' },
+  isPro: true,
+  isCoachPlan: false,
+  isCoachSub: false
+});
+// → { product:'pro', entitlements, gates, playerCap, ... }
+
+await MatchcardAccount.snapshot(); // live flags + Auth sessions
+MatchcardAccount.canSyncPersonal();
+```
+
+Проверка: `node account/selftest.js`.
+
 ## Rating Engine
 
 Независимый модуль в `rating/` — без DOM, localStorage и settings:
@@ -262,6 +289,7 @@ const result = calculateRating({
 | --- | --- |
 | UI | `index.html`, `css/app.css` |
 | Логика | `js/app.js`, `js/storage.js` → `repo/local/` + `repo/cloud/` |
+| Аккаунт | `account/` → entitlements/gates (shim: `js/account.js`) |
 | Оценка | `rating/` → `calculateRating(match)` (shim: `js/rating.js`) |
 | i18n | `js/i18n.js` (+ `js/i18n-coach-*.js`) |
 | Coach / Parent | `js/coach-*.js`, `js/parent-*.js`, `js/inbox-store.js` |

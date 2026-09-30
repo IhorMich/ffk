@@ -4,7 +4,7 @@ const path = require('path');
 const root = path.join(__dirname, '..');
 const dest = path.join(root, 'www');
 const files = ['index.html', 'open.html', 'manifest.webmanifest', 'sw.js', 'privacy.html', 'terms.html'];
-const dirs = ['css', 'js', 'fonts', 'icons', 'rating', 'auth', 'sync', 'data', 'errors', 'log', 'repo'];
+const dirs = ['css', 'js', 'fonts', 'icons', 'rating', 'auth', 'sync', 'data', 'errors', 'log', 'repo', 'account'];
 
 function copyDir(src, dst){
   fs.mkdirSync(dst, {recursive: true});
