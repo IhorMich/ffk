@@ -818,6 +818,25 @@ window.ffkIsNative = function () {
       <p class="hint" id="appPushStatus"></p>
       <h3 class="period-head" data-i18n="planPersonalHead">Personal</h3>
       <p class="hint" data-i18n="planPersonalHint">Личный Matchcard: один игрок или ваш состав на этом телефоне. Free и Pro не связаны с командой.</p>
+      <div class="pro-card" id="personalAccountCard">
+        <div class="pro-kicker" data-i18n="accountKicker">Free-аккаунт</div>
+        <p class="hint" id="personalAccountStatus" data-i18n="accountHint">Первый матч можно сохранить без аккаунта. Потом создай Free-аккаунт — Pro откроет полный доступ.</p>
+        <div id="personalAccountForm">
+          <label class="field">
+            <span data-i18n="accountEmail">Email</span>
+            <input id="personalEmail" type="email" autocomplete="username" inputmode="email">
+          </label>
+          <label class="field">
+            <span data-i18n="accountPassword">Пароль</span>
+            <input id="personalPassword" type="password" autocomplete="new-password">
+          </label>
+          <div class="row-actions" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
+            <button class="save-btn" id="personalSignUpBtn" type="button" data-i18n="accountSignUp">Создать аккаунт</button>
+            <button class="ghost-btn" id="personalSignInBtn" type="button" data-i18n="accountSignIn">Войти</button>
+          </div>
+        </div>
+        <button class="ghost-btn" id="personalSignOutBtn" type="button" hidden data-i18n="accountSignOut">Выйти</button>
+      </div>
       <div class="pro-card" id="proCard">
         <div class="pro-kicker">Matchcard Pro</div>
         <p id="proBody"></p>

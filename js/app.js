@@ -277,6 +277,7 @@ function applyI18n(){
   if(typeof syncPushSettingsUi === 'function') syncPushSettingsUi();
   if(typeof renderCoachUi === 'function') renderCoachUi();
   if(typeof renderParentUi === 'function') renderParentUi();
+  if(typeof syncPersonalAccountUi === 'function') syncPersonalAccountUi();
 }
 
 function isPro(){
@@ -363,11 +364,128 @@ function requirePro(feature){
   if(isPro()) return true;
   return offerPro(feature);
 }
-function setPro(on){
+async function getPersonalAccountSession(){
+  try{
+    if(!window.ParentCloud || typeof window.ParentCloud.getSession !== 'function') return null;
+    if(window.ParentCloud.ready && !window.ParentCloud.ready()) return null;
+    return await window.ParentCloud.getSession();
+  }catch(e){
+    return null;
+  }
+}
+function personalAccountEmail(session){
+  return String((session && session.user && session.user.email) || '').trim().toLowerCase();
+}
+async function syncPersonalAccountUi(){
+  const session = await getPersonalAccountSession();
+  const email = personalAccountEmail(session);
+  const status = document.getElementById('personalAccountStatus');
+  const form = document.getElementById('personalAccountForm');
+  const signOutBtn = document.getElementById('personalSignOutBtn');
+  if(status){
+    status.textContent = email
+      ? (isPro()
+        ? t('accountStatusPro', {email})
+        : t('accountStatusFree', {email}))
+      : t('accountHint');
+  }
+  if(form) form.hidden = !!email;
+  if(signOutBtn) signOutBtn.hidden = !email;
+  return session;
+}
+function openPersonalAccount(reasonKey){
+  showView('settings');
+  const card = document.getElementById('personalAccountCard');
+  if(card && typeof card.scrollIntoView === 'function'){
+    setTimeout(() => card.scrollIntoView({behavior: 'smooth', block: 'center'}), 60);
+  }
+  document.getElementById('personalEmail')?.focus();
+  if(reasonKey) showToast(t(reasonKey));
+}
+async function requirePersonalAccount(reasonKey){
+  const session = await getPersonalAccountSession();
+  if(session && personalAccountEmail(session)) return session;
+  openPersonalAccount(reasonKey || 'accountNeed');
+  return null;
+}
+async function maybePromptAccountAfterFirstMatch(){
+  if(settings.accountPrompted) return;
+  const session = await getPersonalAccountSession();
+  if(session && personalAccountEmail(session)) return;
+  settings.accountPrompted = true;
+  saveSettings();
+  if(confirm(t('accountAfterFirstMatch'))){
+    openPersonalAccount();
+  }
+}
+async function onPersonalSignUp(){
+  if(!window.ParentCloud || typeof window.ParentCloud.signUp !== 'function'){
+    showToast(t('accountCloudMissing'));
+    return;
+  }
+  const email = document.getElementById('personalEmail')?.value || '';
+  const pass = document.getElementById('personalPassword')?.value || '';
+  try{
+    await window.ParentCloud.signUp(email, pass);
+    showToast(t('accountCreated'));
+    await syncPersonalAccountUi();
+  }catch(e){
+    const map = {
+      bad_email: t('accountErrEmail'),
+      bad_password: t('accountErrPass'),
+      exists: t('accountErrExists'),
+      confirm_email: t('accountErrConfirm'),
+      no_cloud: t('accountCloudMissing')
+    };
+    showToast(map[e && e.message] || t('accountErrGeneric'));
+  }
+}
+async function onPersonalSignIn(){
+  if(!window.ParentCloud || typeof window.ParentCloud.signIn !== 'function'){
+    showToast(t('accountCloudMissing'));
+    return;
+  }
+  const email = document.getElementById('personalEmail')?.value || '';
+  const pass = document.getElementById('personalPassword')?.value || '';
+  try{
+    await window.ParentCloud.signIn(email, pass);
+    showToast(t('accountSignedIn'));
+    await syncPersonalAccountUi();
+  }catch(e){
+    const map = {
+      bad_email: t('accountErrEmail'),
+      bad_password: t('accountErrPass'),
+      confirm_email: t('accountErrConfirm'),
+      auth: t('accountErrAuth'),
+      no_cloud: t('accountCloudMissing')
+    };
+    showToast(map[e && e.message] || t('accountErrGeneric'));
+  }
+}
+async function onPersonalSignOut(){
+  try{
+    if(window.ParentCloud && typeof window.ParentCloud.signOut === 'function'){
+      await window.ParentCloud.signOut();
+    }
+  }catch(e){}
+  if(isPro()){
+    settings.isPro = false;
+    saveSettings();
+    syncProUi();
+  }
+  showToast(t('accountSignedOut'));
+  await syncPersonalAccountUi();
+}
+async function setPro(on){
+  if(on){
+    const session = await requirePersonalAccount('accountNeedForPro');
+    if(!session) return;
+  }
   settings.isPro = !!on;
   saveSettings();
   syncProUi();
   applyI18n();
+  syncPersonalAccountUi();
   showToast(on ? t('proOn') : t('proOff'));
 }
 function isCoachSub(){
@@ -452,7 +570,7 @@ function syncProUi(){
   if(typeof syncCoachBillingUi === 'function') syncCoachBillingUi();
 }
 
-let settings = {club:'', player:'', position:'fwd', format:'2x30', minutes:'60', lang:'ru', seasonCloseDeclined:'', theme:'dark', iconSet:'clear', onboarded:false, onboardSkin:'', isPro:false, isCoach:false, coachSub:false, pwaTransferSeen:false, introMark:''};
+let settings = {club:'', player:'', position:'fwd', format:'2x30', minutes:'60', lang:'ru', seasonCloseDeclined:'', theme:'dark', iconSet:'clear', onboarded:false, onboardSkin:'', isPro:false, isCoach:false, coachSub:false, pwaTransferSeen:false, introMark:'', accountPrompted:false};
 let roster = {currentId:'', ids:[]};
 let player = defaultPlayer();
 let extraSelected = [];
@@ -3053,6 +3171,7 @@ function saveCurrentMatch(){
     openSeason(s, true);
     row.season = s;
   }
+  const firstPersonalSave = !editingId && matches.length === 0;
   if(editingId) matches = matches.map(m => m.id === editingId ? row : m);
   else matches.push(row);
   if(!editingId) historyPage = 1;
@@ -3074,6 +3193,9 @@ function saveCurrentMatch(){
   renderStats();
   renderOppList();
   showView('report');
+  if(firstPersonalSave){
+    setTimeout(() => { maybePromptAccountAfterFirstMatch(); }, 350);
+  }
   return true;
 }
 document.getElementById('saveBtn').addEventListener('click', saveCurrentMatch);
@@ -3538,6 +3660,9 @@ document.getElementById('cloudSyncBtn')?.addEventListener('click', () => {
 });
 document.getElementById('proUnlockBtn')?.addEventListener('click', () => setPro(true));
 document.getElementById('proLockBtn')?.addEventListener('click', () => setPro(false));
+document.getElementById('personalSignUpBtn')?.addEventListener('click', () => onPersonalSignUp());
+document.getElementById('personalSignInBtn')?.addEventListener('click', () => onPersonalSignIn());
+document.getElementById('personalSignOutBtn')?.addEventListener('click', () => onPersonalSignOut());
 document.getElementById('coachSubUnlockBtn')?.addEventListener('click', () => setCoachSub(true));
 document.getElementById('coachSubLockBtn')?.addEventListener('click', () => setCoachSub(false));
 document.getElementById('appPushOnBtn')?.addEventListener('click', async () => {
@@ -3567,7 +3692,7 @@ document.addEventListener('click', e => {
   const btn = e.target.closest('.pro-lock-btn');
   if(!btn) return;
   e.preventDefault();
-  offerPro('lock');
+  setPro(true);
 });
 document.getElementById('importFile').addEventListener('change', async (e) => {
   const file = e.target.files[0];

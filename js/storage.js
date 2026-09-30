@@ -159,7 +159,8 @@ function loadSettings(){
       isCoach: s.isCoach === true,
       coachSub: s.coachSub === true,
       pwaTransferSeen: s.pwaTransferSeen === true,
-      introMark: String(s.introMark || '')
+      introMark: String(s.introMark || ''),
+      accountPrompted: s.accountPrompted === true
     };
     if(s.langManual !== true) saveSettings();
   }catch(e){}

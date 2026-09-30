@@ -3921,6 +3921,110 @@ ru:{
   });
 })();
 
+(function mergeAccountI18n(){
+  const extra = {
+    uk:{
+      accountKicker:'Free-акаунт',
+      accountHint:'Перший матч можна зберегти без акаунта. Потім створи Free-акаунт — Pro відкриє повний доступ.',
+      accountEmail:'Email',
+      accountPassword:'Пароль',
+      accountSignUp:'Створити акаунт',
+      accountSignIn:'Увійти',
+      accountSignOut:'Вийти',
+      accountCreated:'Free-акаунт створено.',
+      accountSignedIn:'Ви увійшли.',
+      accountSignedOut:'Ви вийшли з акаунта.',
+      accountNeed:'Спочатку створи Free-акаунт.',
+      accountNeedForPro:'Pro доступний після Free-акаунта.',
+      accountAfterFirstMatch:'Матч збережено. Створити Free-акаунт, щоб не втратити прогрес і відкрити Pro пізніше?',
+      accountStatusFree:'Free-акаунт: {email}',
+      accountStatusPro:'Pro-акаунт: {email}',
+      accountErrEmail:'Вкажи коректний email.',
+      accountErrPass:'Пароль: щонайменше 6 символів.',
+      accountErrExists:'Цей email уже зареєстровано.',
+      accountErrConfirm:'Підтверди email у листі, потім увійди.',
+      accountErrAuth:'Невірний email або пароль.',
+      accountErrGeneric:'Не вдалося увійти.',
+      accountCloudMissing:'Хмара не налаштована. Перевір підключення.'
+    },
+    pl:{
+      accountKicker:'Konto Free',
+      accountHint:'Pierwszy mecz możesz zapisać bez konta. Potem załóż konto Free — Pro da pełny dostęp.',
+      accountEmail:'Email',
+      accountPassword:'Hasło',
+      accountSignUp:'Utwórz konto',
+      accountSignIn:'Zaloguj się',
+      accountSignOut:'Wyloguj',
+      accountCreated:'Konto Free utworzone.',
+      accountSignedIn:'Zalogowano.',
+      accountSignedOut:'Wylogowano.',
+      accountNeed:'Najpierw utwórz konto Free.',
+      accountNeedForPro:'Pro wymaga konta Free.',
+      accountAfterFirstMatch:'Mecz zapisany. Utworzyć konto Free, by nie stracić postępu i później włączyć Pro?',
+      accountStatusFree:'Konto Free: {email}',
+      accountStatusPro:'Konto Pro: {email}',
+      accountErrEmail:'Podaj poprawny email.',
+      accountErrPass:'Hasło: co najmniej 6 znaków.',
+      accountErrExists:'Ten email jest już zarejestrowany.',
+      accountErrConfirm:'Potwierdź email w wiadomości, potem zaloguj się.',
+      accountErrAuth:'Błędny email lub hasło.',
+      accountErrGeneric:'Nie udało się zalogować.',
+      accountCloudMissing:'Chmura nie jest skonfigurowana. Sprawdź połączenie.'
+    },
+    en:{
+      accountKicker:'Free account',
+      accountHint:'You can save the first match without an account. Then create a Free account — Pro unlocks full access.',
+      accountEmail:'Email',
+      accountPassword:'Password',
+      accountSignUp:'Create account',
+      accountSignIn:'Sign in',
+      accountSignOut:'Sign out',
+      accountCreated:'Free account created.',
+      accountSignedIn:'Signed in.',
+      accountSignedOut:'Signed out.',
+      accountNeed:'Create a Free account first.',
+      accountNeedForPro:'Pro needs a Free account first.',
+      accountAfterFirstMatch:'Match saved. Create a Free account so you keep progress and can unlock Pro later?',
+      accountStatusFree:'Free account: {email}',
+      accountStatusPro:'Pro account: {email}',
+      accountErrEmail:'Enter a valid email.',
+      accountErrPass:'Password: at least 6 characters.',
+      accountErrExists:'This email is already registered.',
+      accountErrConfirm:'Confirm your email from the message, then sign in.',
+      accountErrAuth:'Wrong email or password.',
+      accountErrGeneric:'Could not sign in.',
+      accountCloudMissing:'Cloud is not configured. Check connection.'
+    },
+    ru:{
+      accountKicker:'Free-аккаунт',
+      accountHint:'Первый матч можно сохранить без аккаунта. Потом создай Free-аккаунт — Pro откроет полный доступ.',
+      accountEmail:'Email',
+      accountPassword:'Пароль',
+      accountSignUp:'Создать аккаунт',
+      accountSignIn:'Войти',
+      accountSignOut:'Выйти',
+      accountCreated:'Free-аккаунт создан.',
+      accountSignedIn:'Вы вошли.',
+      accountSignedOut:'Вы вышли из аккаунта.',
+      accountNeed:'Сначала создай Free-аккаунт.',
+      accountNeedForPro:'Pro доступен после Free-аккаунта.',
+      accountAfterFirstMatch:'Матч сохранён. Создать Free-аккаунт, чтобы не потерять прогресс и позже открыть Pro?',
+      accountStatusFree:'Free-аккаунт: {email}',
+      accountStatusPro:'Pro-аккаунт: {email}',
+      accountErrEmail:'Укажи корректный email.',
+      accountErrPass:'Пароль: минимум 6 символов.',
+      accountErrExists:'Этот email уже зарегистрирован.',
+      accountErrConfirm:'Подтверди email в письме, затем войди.',
+      accountErrAuth:'Неверный email или пароль.',
+      accountErrGeneric:'Не удалось войти.',
+      accountCloudMissing:'Облако не настроено. Проверь подключение.'
+    }
+  };
+  LANGS.forEach(lang => {
+    Object.assign(I18N[lang], extra.en, extra[lang] || {});
+  });
+})();
+
 (function mergeCoachI18n(){
   const extra = {
     uk:{

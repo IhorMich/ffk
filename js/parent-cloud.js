@@ -27,22 +27,61 @@
     }catch(e){}
     return fallback || key;
   }
-  /** Parent account: anonymous when the project allows it, otherwise email + password. */
-  async function signInWithEmail(email, password){
-    const sb = parentClient();
-    if(!sb) throw new Error('no_cloud');
+  function normalizeCredentials(email, password){
     const credentials = {
       email: String(email || '').trim().toLowerCase(),
       password: String(password || '')
     };
     if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(credentials.email)) throw new Error('bad_email');
     if(credentials.password.length < 6) throw new Error('bad_password');
-    const signedIn = await sb.auth.signInWithPassword(credentials);
-    if(signedIn.data && signedIn.data.session) return signedIn.data.session;
-    const signedUp = await sb.auth.signUp(credentials);
-    if(signedUp.error) throw signedUp.error;
-    if(signedUp.data && signedUp.data.session) return signedUp.data.session;
+    return credentials;
+  }
+  async function getSession(){
+    const sb = parentClient();
+    if(!sb) return null;
+    const {data, error} = await sb.auth.getSession();
+    if(error) throw error;
+    return (data && data.session) || null;
+  }
+  /** Free personal account (also used for parent cloud links). */
+  async function signUp(email, password){
+    const sb = parentClient();
+    if(!sb) throw new Error('no_cloud');
+    const credentials = normalizeCredentials(email, password);
+    const {data, error} = await sb.auth.signUp(credentials);
+    if(error){
+      if(/already|exists|registered/i.test(String(error.message || ''))) throw new Error('exists');
+      throw error;
+    }
+    if(data && data.session) return data.session;
     throw new Error('confirm_email');
+  }
+  async function signIn(email, password){
+    const sb = parentClient();
+    if(!sb) throw new Error('no_cloud');
+    const credentials = normalizeCredentials(email, password);
+    const {data, error} = await sb.auth.signInWithPassword(credentials);
+    if(error){
+      if(/not.?confirmed|confirm/i.test(String(error.message || error.code || ''))) throw new Error('confirm_email');
+      throw new Error('auth');
+    }
+    if(data && data.session) return data.session;
+    throw new Error('auth');
+  }
+  async function signOut(){
+    const sb = parentClient();
+    if(sb) await sb.auth.signOut();
+  }
+  /** Parent account: anonymous when the project allows it, otherwise email + password. */
+  async function signInWithEmail(email, password){
+    try{
+      return await signIn(email, password);
+    }catch(e){
+      if(e && e.message === 'auth'){
+        return signUp(email, password);
+      }
+      throw e;
+    }
   }
   async function promptEmailSession(){
     if(typeof prompt !== 'function') throw new Error('auth');
@@ -55,9 +94,8 @@
   async function ensureSession(interactive){
     const sb = parentClient();
     if(!sb) throw new Error('no_cloud');
-    const {data, error} = await sb.auth.getSession();
-    if(error) throw error;
-    if(data && data.session) return data.session;
+    const existing = await getSession();
+    if(existing) return existing;
     if(typeof sb.auth.signInAnonymously === 'function'){
       const anon = await sb.auth.signInAnonymously();
       if(anon.data && anon.data.session) return anon.data.session;
@@ -391,7 +429,11 @@
 
   global.ParentCloud = {
     ready,
+    getSession,
     ensureSession,
+    signUp,
+    signIn,
+    signOut,
     signInWithEmail,
     tokenFromUrl,
     buildInviteUrl,
