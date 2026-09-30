@@ -385,7 +385,7 @@ function normalizeMatch(m){
   const action = actionScore(counts, pos, minutes, matchLen);
   const effort = effortScore(behaviors);
   return {
-    id: Number(m.id) || Date.now(),
+    id: (Number(m.id) > 0 ? Math.floor(Number(m.id)) : 0) || Date.now(),
     player: String(m.player || displayName()),
     date,
     season: String(m.season || '').trim().slice(0,16) || seasonFromDate(date),

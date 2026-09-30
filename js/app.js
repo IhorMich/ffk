@@ -3329,49 +3329,141 @@ function restoreView(){
   showView(name);
 }
 
+function exportPlayerSnapshot(id){
+  const sid = String(id || '');
+  if(!sid) return null;
+  const p = sid === String(roster.currentId || '') ? player : readPlayerRecord(sid);
+  if(!p) return null;
+  let list = [];
+  try{
+    if(sid === String(roster.currentId || '')) list = Array.isArray(matches) ? matches.slice() : [];
+    else list = parseMatchList(localStorage.getItem(kidMatchesKey(sid))).list;
+  }catch(e){ list = []; }
+  return {player: p, matches: list};
+}
 function exportPayload(){
+  const players = (roster.ids || []).map(exportPlayerSnapshot).filter(Boolean);
   return {
-    version: 3,
+    version: 4,
     exportedAt: new Date().toISOString(),
+    currentId: roster.currentId || '',
     player,
+    players,
     settings: {lang: settings.lang, format: settings.format, minutes: settings.minutes, position: settings.position, theme: settings.theme},
     matches
   };
+}
+function isBlankPlayerCard(p, matchList){
+  const hasName = !!(p && String(p.firstName || '').trim()) || !!(p && String(p.lastName || '').trim());
+  const hasPhoto = !!(p && isUsablePhoto(p.photo));
+  return !hasName && !hasPhoto && !(matchList && matchList.length);
+}
+function importMatchesIntoCurrent(incoming){
+  const ids = new Set(matches.map(m => m.id));
+  let stamp = Date.now();
+  let added = 0;
+  (incoming || []).forEach(raw => {
+    const m = normalizeMatch(raw);
+    if(!m) return;
+    const rawNum = Number(raw && raw.id);
+    const hasStableId = Number.isFinite(rawNum) && rawNum > 0;
+    if(!hasStableId || ids.has(m.id)){
+      while(ids.has(stamp)) stamp += 1;
+      m.id = stamp++;
+    }
+    if(ids.has(m.id)) return;
+    matches.push(m);
+    ids.add(m.id);
+    added++;
+  });
+  if(added) saveMatches();
+  return added;
+}
+function ensureImportedPlayer(playerData){
+  const incoming = normalizePlayer(playerData || {}, playerData && playerData.id);
+  const incomingId = String(incoming.id || '');
+  if(incomingId && roster.ids.includes(incomingId)){
+    if(incomingId !== String(roster.currentId || '')) switchPlayer(incomingId, true);
+    player = normalizePlayer({...player, ...incoming}, incomingId);
+    extraSelected = [...(player.extra || [])];
+    savePlayer();
+    return {created: false, playerTouched: true};
+  }
+  if(incomingId && incomingId === String(player.id || '')){
+    player = normalizePlayer({...player, ...incoming}, player.id);
+    extraSelected = [...(player.extra || [])];
+    savePlayer();
+    return {created: false, playerTouched: true};
+  }
+  if(isBlankPlayerCard(player, matches)){
+    player = normalizePlayer({...player, ...incoming}, player.id);
+    extraSelected = [...(player.extra || [])];
+    savePlayer();
+    return {created: false, playerTouched: true};
+  }
+  if(roster.ids.length >= playerCap()){
+    return {created: false, playerTouched: false, skipped: true};
+  }
+  const id = (incomingId && !roster.ids.includes(incomingId)) ? incomingId : newPlayerId();
+  const next = normalizePlayer(incoming, id);
+  next.id = id;
+  writePlayerRecord(id, next);
+  try{ localStorage.setItem(kidMatchesKey(id), '[]'); }catch(e){}
+  roster.ids.push(id);
+  roster.currentId = id;
+  saveRoster();
+  player = next;
+  matches = [];
+  savePlayer();
+  saveMatches();
+  return {created: true, playerTouched: true};
 }
 function applyImportBundle(imported){
   const bundle = Array.isArray(imported) ? {matches: imported} : imported;
   if(!bundle || typeof bundle !== 'object') throw new Error('bad');
   let playerTouched = false;
-  if(bundle.player && typeof bundle.player === 'object'){
-    player = normalizePlayer({...player, ...bundle.player}, player.id);
-    extraSelected = [...(player.extra || [])];
-    savePlayer();
-    syncSettingsFromPlayer();
-    if(bundle.settings && typeof bundle.settings === 'object'){
-      if(LANGS.includes(bundle.settings.lang)){
-        settings.lang = bundle.settings.lang;
-        settings.langManual = true;
-      }
-      if(bundle.settings.format) settings.format = bundle.settings.format;
-      if(bundle.settings.minutes) settings.minutes = String(bundle.settings.minutes);
-      if(bundle.settings.theme){
-        const th = bundle.settings.theme === 'light' ? 'day' : bundle.settings.theme;
-        if(THEME_ORDER.includes(th)) settings.theme = th;
-      }
+  let added = 0;
+  persistActivePlayer();
+
+  const rosterPlayers = Array.isArray(bundle.players) ? bundle.players : null;
+  if(rosterPlayers && rosterPlayers.length){
+    rosterPlayers.forEach(entry => {
+      if(!entry || typeof entry !== 'object') return;
+      const ensured = ensureImportedPlayer(entry.player || entry);
+      if(ensured.playerTouched) playerTouched = true;
+      if(ensured.skipped) return;
+      added += importMatchesIntoCurrent(Array.isArray(entry.matches) ? entry.matches : []);
+    });
+    if(bundle.currentId && roster.ids.includes(String(bundle.currentId))){
+      switchPlayer(String(bundle.currentId), true);
+    }
+  }else if(bundle.player && typeof bundle.player === 'object'){
+    const ensured = ensureImportedPlayer(bundle.player);
+    if(ensured.playerTouched) playerTouched = true;
+    if(!ensured.skipped){
+      const incoming = Array.isArray(bundle.matches) ? bundle.matches : (Array.isArray(imported) ? imported : []);
+      added += importMatchesIntoCurrent(incoming);
+    }
+  }else{
+    const incoming = Array.isArray(bundle.matches) ? bundle.matches : (Array.isArray(imported) ? imported : []);
+    added += importMatchesIntoCurrent(incoming);
+  }
+
+  if(bundle.settings && typeof bundle.settings === 'object'){
+    if(LANGS.includes(bundle.settings.lang)){
+      settings.lang = bundle.settings.lang;
+      settings.langManual = true;
+    }
+    if(bundle.settings.format) settings.format = bundle.settings.format;
+    if(bundle.settings.minutes) settings.minutes = String(bundle.settings.minutes);
+    if(bundle.settings.theme){
+      const th = bundle.settings.theme === 'light' ? 'day' : bundle.settings.theme;
+      if(THEME_ORDER.includes(th)) settings.theme = th;
     }
     saveSettings();
-    playerTouched = true;
   }
-  const incoming = Array.isArray(bundle.matches) ? bundle.matches : (Array.isArray(imported) ? imported : []);
-  if(!incoming.length && !playerTouched) throw new Error('bad');
-  const ids = new Set(matches.map(m => m.id));
-  let added = 0;
-  incoming.forEach(raw => {
-    const m = normalizeMatch(raw);
-    if(!m || ids.has(m.id)) return;
-    matches.push(m); ids.add(m.id); added++;
-  });
-  saveMatches();
+
+  if(!added && !playerTouched) throw new Error('bad');
   applyI18n();
   applyTheme();
   applyPlayerContext();

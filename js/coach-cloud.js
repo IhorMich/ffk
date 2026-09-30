@@ -69,6 +69,13 @@
     try{ return JSON.parse(localStorage.getItem('ffk_coach_v1') || '{}'); }
     catch(e){ return {}; }
   }
+  function isUuid(value){
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value || ''));
+  }
+  async function upsertChecked(query){
+    const {error} = await query;
+    if(error) throw error;
+  }
 
   async function pushLocalSnapshot(){
     const sb = getClient();
@@ -77,115 +84,124 @@
     if(!session) return {ok: false, reason: 'no_session'};
     const db = localDb();
     const uid = session.user.id;
+    const localUserId = (global.CoachStore.getSession() || {}).userId;
 
-    // Academies owned by this user
-    const academies = (db.academies || []).filter(a => a.owner_user_id === uid || a.owner_user_id === (global.CoachStore.getSession() || {}).userId);
-    for(const a of academies){
-      await sb.from('academies').upsert({
-        id: a.id,
-        name: a.name,
-        owner_user_id: uid,
-        created_at: a.created_at || new Date().toISOString()
-      }, {onConflict: 'id'});
+    try{
+      // Academies owned by this user
+      const academies = (db.academies || []).filter(a => a.owner_user_id === uid || a.owner_user_id === localUserId);
+      for(const a of academies){
+        await upsertChecked(sb.from('academies').upsert({
+          id: a.id,
+          name: a.name,
+          owner_user_id: uid,
+          created_at: a.created_at || new Date().toISOString()
+        }, {onConflict: 'id'}));
+      }
+      for(const m of (db.memberships || [])){
+        if(!m.academy_id && !m.team_id) continue;
+        const userId = m.user_id === localUserId ? uid : m.user_id;
+        // Pending assistant invites keep placeholder ids like ast_* until claim.
+        if(!isUuid(userId)) continue;
+        await upsertChecked(sb.from('memberships').upsert({
+          id: m.id,
+          user_id: userId,
+          academy_id: m.academy_id || null,
+          team_id: m.team_id || null,
+          team_player_id: m.team_player_id || null,
+          role: m.role,
+          email: m.email || '',
+          invite_code: m.invite_code || '',
+          status: m.status || 'active',
+          created_at: m.created_at || new Date().toISOString()
+        }, {onConflict: 'id'}));
+      }
+      for(const t of (db.teams || [])){
+        await upsertChecked(sb.from('teams').upsert({
+          id: t.id,
+          academy_id: t.academy_id,
+          name: t.name,
+          age_group: t.age_group || '',
+          invite_code: t.invite_code,
+          created_at: t.created_at || new Date().toISOString()
+        }, {onConflict: 'id'}));
+      }
+      for(const p of (db.team_players || [])){
+        await upsertChecked(sb.from('team_players').upsert({
+          id: p.id,
+          team_id: p.team_id,
+          first_name: p.first_name,
+          last_name: p.last_name || '',
+          number: p.number || '',
+          position: p.position || '',
+          birth_date: p.birth_date || '',
+          contact: p.contact || '',
+          coach_notes: String(p.coach_notes || '').slice(0, 2000),
+          created_at: p.created_at || new Date().toISOString()
+        }, {onConflict: 'id'}));
+      }
+      for(const m of (db.team_matches || [])){
+        await upsertChecked(sb.from('team_matches').upsert({
+          id: m.id,
+          team_id: m.team_id,
+          date: m.date,
+          opponent: m.opponent,
+          address: m.address || '',
+          score: m.score || '',
+          venue: m.venue || 'home',
+          kind: m.kind || 'league',
+          status: m.status || (m.score ? 'played' : 'upcoming'),
+          squad: m.squad || [],
+          meetup: m.meetup || '',
+          kickoff: m.kickoff || '',
+          fee_type: m.fee_type === 'paid' ? 'paid' : 'free',
+          fee: m.fee_type === 'paid' ? (m.fee || '') : '',
+          tournament: m.tournament || '',
+          event_id: m.event_id || '',
+          comment: m.comment || '',
+          created_at: m.created_at || new Date().toISOString()
+        }, {onConflict: 'id'}));
+      }
+      for(const r of (db.ratings || [])){
+        await upsertChecked(sb.from('ratings').upsert({
+          id: r.id,
+          match_id: r.match_id,
+          team_id: r.team_id,
+          team_player_id: r.team_player_id,
+          player_name: r.player_name || '',
+          pitch_pos: r.pitchPos || r.pitch_pos || '',
+          position: r.position || 'fwd',
+          minutes: r.minutes || 60,
+          format: r.format || '2x30',
+          match_len: r.matchLen || r.match_len || 60,
+          role: r.role || 'start',
+          comment: r.comment || '',
+          counts: r.counts || {},
+          behaviors: r.behaviors || {},
+          timeline: r.timeline || [],
+          action_rating: r.actionRating || r.action_rating || 6,
+          effort_rating: r.effortRating || r.effort_rating || 6,
+          rating: r.rating || 6,
+          updated_at: r.updated_at || new Date().toISOString()
+        }, {onConflict: 'id'}));
+      }
+      for(const inv of (db.parent_invites || [])){
+        await upsertChecked(sb.from('parent_invites').upsert({
+          id: inv.id,
+          token: inv.token,
+          code: inv.code,
+          team_id: inv.team_id,
+          team_player_id: inv.team_player_id,
+          payload: inv.payload || {},
+          status: inv.status || 'open',
+          created_at: inv.created_at || new Date().toISOString(),
+          updated_at: inv.updated_at || new Date().toISOString()
+        }, {onConflict: 'id'}));
+      }
+      return {ok: true};
+    }catch(error){
+      console.warn('Coach cloud push', error);
+      return {ok: false, error};
     }
-    for(const m of (db.memberships || [])){
-      if(!m.academy_id && !m.team_id) continue;
-      await sb.from('memberships').upsert({
-        id: m.id,
-        user_id: m.user_id === (global.CoachStore.getSession() || {}).userId ? uid : m.user_id,
-        academy_id: m.academy_id || null,
-        team_id: m.team_id || null,
-        team_player_id: m.team_player_id || null,
-        role: m.role,
-        email: m.email || '',
-        invite_code: m.invite_code || '',
-        status: m.status || 'active',
-        created_at: m.created_at || new Date().toISOString()
-      }, {onConflict: 'id'});
-    }
-    for(const t of (db.teams || [])){
-      await sb.from('teams').upsert({
-        id: t.id,
-        academy_id: t.academy_id,
-        name: t.name,
-        age_group: t.age_group || '',
-        invite_code: t.invite_code,
-        created_at: t.created_at || new Date().toISOString()
-      }, {onConflict: 'id'});
-    }
-    for(const p of (db.team_players || [])){
-      await sb.from('team_players').upsert({
-        id: p.id,
-        team_id: p.team_id,
-        first_name: p.first_name,
-        last_name: p.last_name || '',
-        number: p.number || '',
-        position: p.position || '',
-        birth_date: p.birth_date || '',
-        contact: p.contact || '',
-        coach_notes: String(p.coach_notes || '').slice(0, 2000),
-        created_at: p.created_at || new Date().toISOString()
-      }, {onConflict: 'id'});
-    }
-    for(const m of (db.team_matches || [])){
-      await sb.from('team_matches').upsert({
-        id: m.id,
-        team_id: m.team_id,
-        date: m.date,
-        opponent: m.opponent,
-        address: m.address || '',
-        score: m.score || '',
-        venue: m.venue || 'home',
-        kind: m.kind || 'league',
-        status: m.status || (m.score ? 'played' : 'upcoming'),
-        squad: m.squad || [],
-        meetup: m.meetup || '',
-        kickoff: m.kickoff || '',
-        fee_type: m.fee_type === 'paid' ? 'paid' : 'free',
-        fee: m.fee_type === 'paid' ? (m.fee || '') : '',
-        tournament: m.tournament || '',
-        event_id: m.event_id || '',
-        comment: m.comment || '',
-        created_at: m.created_at || new Date().toISOString()
-      }, {onConflict: 'id'});
-    }
-    for(const r of (db.ratings || [])){
-      await sb.from('ratings').upsert({
-        id: r.id,
-        match_id: r.match_id,
-        team_id: r.team_id,
-        team_player_id: r.team_player_id,
-        player_name: r.player_name || '',
-        pitch_pos: r.pitchPos || r.pitch_pos || '',
-        position: r.position || 'fwd',
-        minutes: r.minutes || 60,
-        format: r.format || '2x30',
-        match_len: r.matchLen || r.match_len || 60,
-        role: r.role || 'start',
-        comment: r.comment || '',
-        counts: r.counts || {},
-        behaviors: r.behaviors || {},
-        timeline: r.timeline || [],
-        action_rating: r.actionRating || r.action_rating || 6,
-        effort_rating: r.effortRating || r.effort_rating || 6,
-        rating: r.rating || 6,
-        updated_at: r.updated_at || new Date().toISOString()
-      }, {onConflict: 'id'});
-    }
-    for(const inv of (db.parent_invites || [])){
-      await sb.from('parent_invites').upsert({
-        id: inv.id,
-        token: inv.token,
-        code: inv.code,
-        team_id: inv.team_id,
-        team_player_id: inv.team_player_id,
-        payload: inv.payload || {},
-        status: inv.status || 'open',
-        created_at: inv.created_at || new Date().toISOString(),
-        updated_at: inv.updated_at || new Date().toISOString()
-      }, {onConflict: 'id'});
-    }
-    return {ok: true};
   }
 
   async function pullRemoteIntoLocal(){
@@ -200,8 +216,10 @@
     const academyIds = [...new Set((mems || []).map(m => m.academy_id).filter(Boolean))];
     if(!academyIds.length) return {ok: true, empty: true};
 
-    const {data: academies} = await sb.from('academies').select('*').in('id', academyIds);
-    const {data: teams} = await sb.from('teams').select('*').in('academy_id', academyIds);
+    const {data: academies, error: academyErr} = await sb.from('academies').select('*').in('id', academyIds);
+    if(academyErr) throw academyErr;
+    const {data: teams, error: teamErr} = await sb.from('teams').select('*').in('academy_id', academyIds);
+    if(teamErr) throw teamErr;
     const teamIds = (teams || []).map(t => t.id);
     let players = [];
     let matches = [];
@@ -209,21 +227,31 @@
     let parentInvites = [];
     if(teamIds.length){
       const p = await sb.from('team_players').select('*').in('team_id', teamIds);
+      if(p.error) throw p.error;
       players = p.data || [];
       const m = await sb.from('team_matches').select('*').in('team_id', teamIds);
+      if(m.error) throw m.error;
       matches = m.data || [];
       const matchIds = matches.map(x => x.id);
       if(matchIds.length){
         const r = await sb.from('ratings').select('*').in('match_id', matchIds);
+        if(r.error) throw r.error;
         ratings = r.data || [];
       }
       const pi = await sb.from('parent_invites').select('*').in('team_id', teamIds);
+      if(pi.error) throw pi.error;
       parentInvites = pi.data || [];
     }
 
     const raw = localDb();
+    const remoteMems = mems || [];
+    // Keep local pending assistant invites (placeholder user ids) that are not in remote yet.
+    const remoteMemIds = new Set(remoteMems.map(m => String(m.id)));
+    const pendingLocalMems = (raw.memberships || []).filter(m =>
+      m && !remoteMemIds.has(String(m.id)) && !isUuid(m.user_id)
+    );
     const db = {
-      version: 3,
+      version: 4,
       accounts: raw.accounts || {},
       academies: academies || [],
       teams: teams || [],
@@ -232,7 +260,7 @@
         contact: p.contact || '',
         coach_notes: String(p.coach_notes || '').slice(0, 2000)
       })),
-      memberships: mems || [],
+      memberships: remoteMems.concat(pendingLocalMems),
       team_matches: (matches || []).map(m => ({
         ...m,
         squad: Array.isArray(m.squad) ? m.squad : (m.squad || []),
@@ -253,7 +281,7 @@
       })),
       match_invites: raw.match_invites || [],
       parent_invites: parentInvites || [],
-      assistants: raw.assistants || [],
+      leave_requests: Array.isArray(raw.leave_requests) ? raw.leave_requests : [],
       device_tokens: raw.device_tokens || [],
       activeTeamId: raw.activeTeamId || (teams && teams[0] && teams[0].id) || '',
       activeMatchId: raw.activeMatchId || ''
@@ -288,7 +316,10 @@
     if(!ready() || syncing) return {ok: false};
     syncing = true;
     try{
-      await pushLocalSnapshot();
+      const pushed = await pushLocalSnapshot();
+      if(!pushed || !pushed.ok){
+        throw pushed && pushed.error || new Error(pushed && pushed.reason || 'push');
+      }
       await pullRemoteIntoLocal();
       if(global.ParentCloud && typeof global.ParentCloud.pullCoachData === 'function'){
         await global.ParentCloud.pullCoachData();
