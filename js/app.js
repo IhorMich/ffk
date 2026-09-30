@@ -3536,12 +3536,6 @@ function matchcardShareUrl(){
 function matchcardShareText(){
   return t('shareInviteText', {url: matchcardShareUrl()});
 }
-function drawCardViralFooter(ctx, w, h, theme){
-  ctx.fillStyle = theme.muted;
-  ctx.textAlign = 'center';
-  fitText(ctx, 'MATCHCARD  ·  ' + matchcardShareUrl().replace(/^https?:\/\//, ''), w / 2, h - 42, w - 120, '700', 18, 12);
-  ctx.textAlign = 'left';
-}
 
 let afterCardPreviewHooks = [];
 function runAfterCardPreviewHooks(){
@@ -6176,8 +6170,7 @@ async function drawFutCardCanvas(list, period, mode){
   ctx.textAlign = 'center';
   const foot = [period, player.team || player.club, matchCountLabel(list.length)]
     .map(x => String(x || '').trim()).filter(Boolean).join('  ·  ');
-  fitText(ctx, foot, w / 2, h - 96, w - 200, '600', 20, 13);
-  drawCardViralFooter(ctx, w, h, theme);
+  fitText(ctx, foot, w / 2, h - 84, w - 200, '600', 20, 13);
   ctx.textAlign = 'left';
   return canvas;
 }
@@ -6251,7 +6244,7 @@ async function drawMatchCardCanvas(m, mode){
   const sumY = listTop + (rows - 1) * 50 + 96;
   const commentText = String(m.comment || '').trim().slice(0, 220);
   const commentBlock = commentText ? 110 : 0;
-  const h = Math.round(sumY + 104 + commentBlock + 36);
+  const h = Math.round(sumY + 104 + commentBlock);
   const {canvas, ctx} = makeHiCanvas(w, h);
 
   ctx.fillStyle = mode === 'light' ? '#FFF8D6' : '#070B14';
@@ -6355,7 +6348,6 @@ async function drawMatchCardCanvas(m, mode){
     ctx.textAlign = 'left';
     wrapText(ctx, commentText, left, cy + 72, right - left, 34);
   }
-  drawCardViralFooter(ctx, w, h, theme);
   return canvas;
 }
 async function shareCard(m){
