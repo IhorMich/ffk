@@ -1382,6 +1382,11 @@
   .coach-price{
     padding:12px 12px 10px;border-radius:14px;border:1px solid var(--card-line);
     background:color-mix(in srgb, var(--card-paper) 88%, var(--card-accent));
+    width:100%;text-align:left;cursor:pointer;font:inherit;color:inherit;
+  }
+  .coach-price:active{transform:scale(.98);}
+  .coach-price.is-selected{
+    box-shadow:inset 0 0 0 2px var(--card-accent);
   }
   .coach-price b{
     display:block;font-size:.98rem;font-weight:800;color:var(--card-ink);margin:0 0 4px;
@@ -1394,7 +1399,13 @@
   #coachStartBtn{width:100%;margin:0 0 10px;}
   #coachSoonHint,#coachModeHint{margin:0;}
   .coach-panel{margin-top:12px;}
-  .coach-auth-actions{display:grid;gap:8px;margin-top:4px;}
+  .coach-auth-actions{
+    display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px;
+  }
+  .coach-auth-actions .save-btn,
+  .coach-auth-actions .ghost-btn{
+    width:auto;flex:1 1 0;min-width:0;margin:0;padding:12px 14px;font-size:.9rem;
+  }
   .coach-session-bar{
     display:flex;align-items:center;justify-content:space-between;gap:10px;
     margin:0 0 12px;padding:10px 12px;border-radius:14px;

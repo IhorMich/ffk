@@ -185,6 +185,7 @@
   async function signInWithGoogle(){
     const sb = parentClient();
     if(!sb) throw new Error('no_cloud');
+    try{ localStorage.setItem('ffk_oauth_role', 'parent'); }catch(e){}
     const native = isNativeShell();
     const {data, error} = await sb.auth.signInWithOAuth({
       provider: 'google',
@@ -219,6 +220,9 @@
         App.addListener('appUrlOpen', async (event) => {
           const url = event && event.url ? String(event.url) : '';
           if(!/auth-callback|access_token=|code=/i.test(url)) return;
+          let role = '';
+          try{ role = localStorage.getItem('ffk_oauth_role') || ''; }catch(e){}
+          if(role === 'coach') return;
           try{
             const session = await handleAuthCallbackUrl(url);
             await notify(session);
@@ -229,6 +233,9 @@
             const url = res && res.url ? String(res.url) : '';
             if(!url) return;
             if(!/auth-callback|access_token=|code=/i.test(url)) return;
+            let role = '';
+            try{ role = localStorage.getItem('ffk_oauth_role') || ''; }catch(e){}
+            if(role === 'coach') return;
             try{
               const session = await handleAuthCallbackUrl(url);
               await notify(session);

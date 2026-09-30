@@ -78,6 +78,195 @@
     if(sb) await sb.auth.signOut();
   }
 
+  const OAUTH_ROLE_KEY = 'ffk_oauth_role';
+  function isNativeShell(){
+    try{
+      return !!(global.Capacitor && typeof global.Capacitor.isNativePlatform === 'function' && global.Capacitor.isNativePlatform());
+    }catch(e){ return false; }
+  }
+  function authRedirectTo(){
+    if(isNativeShell()) return 'ffk://auth-callback';
+    try{
+      if(global.location && /^https?:/i.test(global.location.origin || '')){
+        return global.location.origin + (global.location.pathname || '/').replace(/\/?$/, '/') ;
+      }
+    }catch(e){}
+    return 'https://ihormich.github.io/ffk/';
+  }
+  function capPlugin(name){
+    try{
+      const C = global.Capacitor;
+      if(!C) return null;
+      if(C.Plugins && C.Plugins[name]) return C.Plugins[name];
+      if(typeof C.registerPlugin === 'function') return C.registerPlugin(name);
+    }catch(e){}
+    return null;
+  }
+  async function openAuthUrl(url){
+    const href = String(url || '');
+    if(!href) throw new Error('auth');
+    if(isNativeShell()){
+      const Browser = capPlugin('Browser');
+      if(Browser && typeof Browser.open === 'function'){
+        await Browser.open({url: href, presentationStyle: 'popover'});
+        return;
+      }
+    }
+    global.location.href = href;
+  }
+  async function closeAuthBrowser(){
+    try{
+      const Browser = capPlugin('Browser');
+      if(Browser && typeof Browser.close === 'function') await Browser.close();
+    }catch(e){}
+  }
+  function parseAuthCallbackUrl(rawUrl){
+    const text = String(rawUrl || '');
+    if(!text) return {code: '', access_token: '', refresh_token: ''};
+    let normalized = text;
+    if(/^ffk:/i.test(normalized)) normalized = normalized.replace(/^ffk:/i, 'https://ffk.local');
+    try{
+      const u = new URL(normalized);
+      const hash = String(u.hash || '').replace(/^#/, '');
+      const hashParams = new URLSearchParams(hash);
+      return {
+        code: u.searchParams.get('code') || hashParams.get('code') || '',
+        access_token: u.searchParams.get('access_token') || hashParams.get('access_token') || '',
+        refresh_token: u.searchParams.get('refresh_token') || hashParams.get('refresh_token') || ''
+      };
+    }catch(e){
+      const code = (text.match(/[?&#]code=([^&#]+)/i) || [])[1] || '';
+      const access_token = (text.match(/[?&#]access_token=([^&#]+)/i) || [])[1] || '';
+      const refresh_token = (text.match(/[?&#]refresh_token=([^&#]+)/i) || [])[1] || '';
+      return {
+        code: decodeURIComponent(code),
+        access_token: decodeURIComponent(access_token),
+        refresh_token: decodeURIComponent(refresh_token)
+      };
+    }
+  }
+  async function handleAuthCallbackUrl(rawUrl){
+    const sb = getClient();
+    if(!sb) throw new Error('no_cloud');
+    const parts = parseAuthCallbackUrl(rawUrl);
+    let session = null;
+    if(parts.code){
+      const {data, error} = await sb.auth.exchangeCodeForSession(parts.code);
+      if(error) throw error;
+      session = data && data.session;
+    }else if(parts.access_token && parts.refresh_token){
+      const {data, error} = await sb.auth.setSession({
+        access_token: parts.access_token,
+        refresh_token: parts.refresh_token
+      });
+      if(error) throw error;
+      session = data && data.session;
+    }
+    await closeAuthBrowser();
+    try{ localStorage.removeItem(OAUTH_ROLE_KEY); }catch(e){}
+    return session || null;
+  }
+  async function signInWithGoogle(){
+    const sb = getClient();
+    if(!sb) throw new Error('no_cloud');
+    try{ localStorage.setItem(OAUTH_ROLE_KEY, 'coach'); }catch(e){}
+    const native = isNativeShell();
+    const {data, error} = await sb.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: authRedirectTo(),
+        skipBrowserRedirect: native,
+        queryParams: {
+          access_type: 'offline',
+          prompt: 'select_account'
+        }
+      }
+    });
+    if(error) throw error;
+    if(native){
+      if(!data || !data.url) throw new Error('auth');
+      await openAuthUrl(data.url);
+    }
+    return true;
+  }
+  async function adoptGoogleSession(session){
+    const user = session && session.user;
+    if(!user) throw new Error('auth');
+    const email = String(user.email || '').trim().toLowerCase();
+    if(!email) throw new Error('auth');
+    const db = localDb();
+    if(!db.accounts) db.accounts = {};
+    const paid = !!(global.settings && global.settings.coachSub === true);
+    db.accounts[email] = Object.assign({}, db.accounts[email] || {}, {
+      id: user.id,
+      email,
+      passHash: '',
+      first_name: (user.user_metadata && (user.user_metadata.full_name || user.user_metadata.name) || '').toString().slice(0, 40),
+      last_name: '',
+      photo: '',
+      cover: '',
+      coach_sub: paid || !!(db.accounts[email] && db.accounts[email].coach_sub),
+      createdAt: (db.accounts[email] && db.accounts[email].createdAt) || new Date().toISOString()
+    });
+    try{ localStorage.setItem('ffk_coach_v1', JSON.stringify(db)); }catch(e){}
+    const coachSession = {userId: user.id, email, cloud: true};
+    try{
+      if(global.CoachStore && typeof global.CoachStore.writeSessionExternal === 'function'){
+        global.CoachStore.writeSessionExternal(coachSession);
+      }else{
+        localStorage.setItem('ffk_coach_session_v1', JSON.stringify(coachSession));
+      }
+    }catch(e){
+      try{ localStorage.setItem('ffk_coach_session_v1', JSON.stringify(coachSession)); }catch(err){}
+    }
+    try{ await pullRemoteIntoLocal(); }catch(e){}
+    return coachSession;
+  }
+  let authDeepLinksBound = false;
+  function bindAuthDeepLinks(onSession){
+    if(authDeepLinksBound) return;
+    authDeepLinksBound = true;
+    const notify = async (session) => {
+      if(!session) return;
+      try{
+        const adopted = await adoptGoogleSession(session);
+        if(typeof onSession === 'function') await onSession(adopted);
+      }catch(e){}
+    };
+    const maybeHandle = async (url) => {
+      if(!/auth-callback|access_token=|code=/i.test(url)) return;
+      let role = '';
+      try{ role = localStorage.getItem(OAUTH_ROLE_KEY) || ''; }catch(e){}
+      if(role && role !== 'coach') return;
+      try{
+        const session = await handleAuthCallbackUrl(url);
+        await notify(session);
+      }catch(e){}
+    };
+    try{
+      if(global.location && /[?&#](code|access_token)=/i.test(String(global.location.href || ''))){
+        let role = '';
+        try{ role = localStorage.getItem(OAUTH_ROLE_KEY) || ''; }catch(e){}
+        if(!role || role === 'coach'){
+          handleAuthCallbackUrl(global.location.href).then(notify).catch(() => {});
+        }
+      }
+    }catch(e){}
+    try{
+      const App = capPlugin('App');
+      if(App && typeof App.addListener === 'function'){
+        App.addListener('appUrlOpen', async (event) => {
+          await maybeHandle(event && event.url ? String(event.url) : '');
+        });
+        if(typeof App.getLaunchUrl === 'function'){
+          App.getLaunchUrl().then(async (res) => {
+            await maybeHandle(res && res.url ? String(res.url) : '');
+          }).catch(() => {});
+        }
+      }
+    }catch(e){}
+  }
+
   function localDb(){
     try{ return JSON.parse(localStorage.getItem('ffk_coach_v1') || '{}'); }
     catch(e){ return {}; }
@@ -370,6 +559,10 @@
     cloudSignUp,
     cloudSignIn,
     cloudSignOut,
+    signInWithGoogle,
+    handleAuthCallbackUrl,
+    bindAuthDeepLinks,
+    adoptGoogleSession,
     scheduleSync,
     syncNow,
     pushLocalSnapshot,

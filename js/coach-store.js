@@ -136,6 +136,21 @@
         }
       }catch(e){}
     },
+    writeSessionExternal(session){
+      writeSession(session || null);
+    },
+    async signInWithGoogle(){
+      if(!global.CoachCloud || typeof global.CoachCloud.signInWithGoogle !== 'function'){
+        throw new Error('no_cloud');
+      }
+      return global.CoachCloud.signInWithGoogle();
+    },
+    async adoptCloudAuthSession(authSession){
+      if(global.CoachCloud && typeof global.CoachCloud.adoptGoogleSession === 'function'){
+        return global.CoachCloud.adoptGoogleSession(authSession);
+      }
+      throw new Error('auth');
+    },
     async signUp(email, password){
       email = String(email || '').trim().toLowerCase();
       password = String(password || '');
@@ -155,7 +170,7 @@
             last_name: '',
             photo: '',
             cover: '',
-            coach_sub: true,
+            coach_sub: !!(global.settings && global.settings.coachSub === true),
             createdAt: new Date().toISOString()
           };
           writeDb(db);
@@ -181,7 +196,7 @@
         last_name: '',
         photo: '',
         cover: '',
-        coach_sub: false,
+        coach_sub: !!(global.settings && global.settings.coachSub === true),
         createdAt: new Date().toISOString()
       };
       writeDb(db);
@@ -205,9 +220,12 @@
               last_name: '',
               photo: '',
               cover: '',
-              coach_sub: true,
+              coach_sub: !!(global.settings && global.settings.coachSub === true),
               createdAt: new Date().toISOString()
             };
+            writeDb(db);
+          }else if(global.settings && global.settings.coachSub === true){
+            db.accounts[email] = {...db.accounts[email], coach_sub: true};
             writeDb(db);
           }
           writeSession(session);

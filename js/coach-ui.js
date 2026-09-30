@@ -161,12 +161,7 @@
   global.syncPlanModeButtons = syncPlanModeButtons;
 
   function syncModeHint(){
-    const hint = document.getElementById('coachModeHint');
-    if(!hint) return;
-    const cloud = global.CoachStore && global.CoachStore.isCloudConfigured();
-    hint.textContent = cloud
-      ? tt('coachModeCloud', 'Cloud mode ready — Supabase keys found.')
-      : tt('coachModeLocal', 'Local mode: academy data stays on this phone until Supabase is connected.');
+    syncCoachPriceUi();
   }
 
   function renderAssistantsBlock(session){
@@ -2591,6 +2586,74 @@
       toast(tt('coachErrAuth', 'Wrong email or password.'));
     }
   }
+  async function onGoogleSignIn(){
+    if(!global.CoachStore || typeof global.CoachStore.signInWithGoogle !== 'function'){
+      toast(tt('accountCloudMissing', 'Cloud is not configured.'));
+      return;
+    }
+    try{
+      toast(tt('accountGoogleOpening', 'Opening Google…'));
+      await global.CoachStore.signInWithGoogle();
+    }catch(e){
+      const msg = String((e && e.message) || '');
+      if(/provider is not enabled|validation_failed|unsupported_provider/i.test(msg)){
+        toast(tt('accountGoogleDisabled', 'Google sign-in is not enabled yet.'));
+        return;
+      }
+      if(msg === 'no_cloud'){
+        toast(tt('accountCloudMissing', 'Cloud is not configured.'));
+        return;
+      }
+      toast(tt('coachErrGeneric', 'Could not sign in.'));
+    }
+  }
+  function syncCoachPriceUi(){
+    const plan = (global.settings && global.settings.coachSubPlan) || '';
+    const monthBtn = document.getElementById('coachBuyMonthBtn');
+    const yearBtn = document.getElementById('coachBuyYearBtn');
+    if(monthBtn) monthBtn.classList.toggle('is-selected', plan === 'month');
+    if(yearBtn) yearBtn.classList.toggle('is-selected', plan === 'year');
+    const hint = document.getElementById('coachModeHint');
+    if(hint){
+      if(typeof isCoachSub === 'function' && isCoachSub()){
+        hint.textContent = plan === 'year'
+          ? tt('coachPaidYear', 'Yearly plan active (test).')
+          : plan === 'month'
+            ? tt('coachPaidMonth', 'Monthly plan active (test).')
+            : tt('coachPaidActive', 'Coach access active.');
+      }else{
+        hint.textContent = tt('coachPickPlan', 'Choose a plan to continue.');
+      }
+    }
+  }
+  function purchaseCoachPlan(plan){
+    const value = plan === 'year' ? 'year' : 'month';
+    try{
+      if(global.settings){
+        global.settings.coachSub = true;
+        global.settings.coachSubPlan = value;
+        if(typeof saveSettings === 'function') saveSettings();
+      }
+    }catch(e){}
+    try{
+      const store = global.CoachStore;
+      const session = store && store.getSession && store.getSession();
+      if(session && store.setCoachSub) store.setCoachSub(session, true);
+    }catch(e){}
+    if(typeof syncCoachBillingUi === 'function') syncCoachBillingUi();
+    toast(value === 'year'
+      ? tt('coachPayYearOk', 'Yearly payment accepted (test). Coach is unlocked.')
+      : tt('coachPayMonthOk', 'Monthly payment accepted (test). Coach is unlocked.'));
+    syncCoachPriceUi();
+    if(global.CoachStore.getSession()){
+      document.getElementById('coachWorkspace').dataset.started = '1';
+      if(typeof setCoachPlan === 'function') setCoachPlan(true);
+      renderCoachUi();
+      if(typeof showView === 'function') showView('coach');
+      return;
+    }
+    openAuth();
+  }
   function onSignOut(){
     global.CoachStore.signOut();
     const auth = document.getElementById('coachAuth');
@@ -3916,6 +3979,11 @@
     if(global.__ffkCoachBound) return;
     global.__ffkCoachBound = true;
     document.getElementById('coachStartBtn')?.addEventListener('click', () => {
+      if(typeof isCoachSub === 'function' && !isCoachSub()){
+        toast(tt('coachPickPlan', 'Choose a plan to continue.'));
+        syncCoachPriceUi();
+        return;
+      }
       if(global.CoachStore.getSession()){
         document.getElementById('coachWorkspace').dataset.started = '1';
         if(typeof setCoachPlan === 'function') setCoachPlan(true);
@@ -3923,8 +3991,11 @@
         if(typeof showView === 'function') showView('coach');
       }else openAuth();
     });
+    document.getElementById('coachBuyMonthBtn')?.addEventListener('click', () => { purchaseCoachPlan('month'); });
+    document.getElementById('coachBuyYearBtn')?.addEventListener('click', () => { purchaseCoachPlan('year'); });
     document.getElementById('coachSignUpBtn')?.addEventListener('click', () => { onSignUp(); });
     document.getElementById('coachSignInBtn')?.addEventListener('click', () => { onSignIn(); });
+    document.getElementById('coachGoogleBtn')?.addEventListener('click', () => { onGoogleSignIn(); });
     document.getElementById('coachSignOutBtn')?.addEventListener('click', () => { onSignOut(); });
     document.getElementById('coachEnterParentBtn')?.addEventListener('click', () => { enterParentMode(); });
     document.getElementById('enterParentModeBtn')?.addEventListener('click', () => { enterParentMode(); });

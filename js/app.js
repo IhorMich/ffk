@@ -664,7 +664,7 @@ async function runPersonalCloudSync(options){
   }
 }
 
-let settings = {club:'', player:'', position:'fwd', format:'2x30', minutes:'60', lang:'ru', seasonCloseDeclined:'', theme:'dark', iconSet:'clear', onboarded:false, onboardSkin:'', isPro:false, isCoach:false, coachSub:false, pwaTransferSeen:false, introMark:'', accountPrompted:false, devBilling:false};
+let settings = {club:'', player:'', position:'fwd', format:'2x30', minutes:'60', lang:'ru', seasonCloseDeclined:'', theme:'dark', iconSet:'clear', onboarded:false, onboardSkin:'', isPro:false, isCoach:false, coachSub:false, coachSubPlan:'', pwaTransferSeen:false, introMark:'', accountPrompted:false, devBilling:false};
 let roster = {currentId:'', ids:[]};
 let player = defaultPlayer();
 let extraSelected = [];
@@ -3745,9 +3745,6 @@ document.getElementById('appPushOffBtn')?.addEventListener('click', () => {
   syncPushSettingsUi();
 });
 document.getElementById('openCoachBtn')?.addEventListener('click', () => {
-  if(!isCoachSub()){
-    setCoachSub(true);
-  }
   if(typeof enterCoachMode === 'function') enterCoachMode();
   else showView('coach');
 });
@@ -5849,6 +5846,16 @@ async function shareCard(m){
         showToast(t('accountSignedIn'));
         await syncPersonalAccountUi();
         if(isPro()) runPersonalCloudSync({pull: true, push: true});
+      });
+    }
+    if(window.CoachCloud && typeof window.CoachCloud.bindAuthDeepLinks === 'function'){
+      window.CoachCloud.bindAuthDeepLinks(async () => {
+        showToast(t('accountSignedIn'));
+        if(isCoachSub()){
+          if(typeof setCoachPlan === 'function') setCoachPlan(true);
+        }
+        if(typeof renderCoachUi === 'function') renderCoachUi();
+        if(typeof showView === 'function') showView('coach');
       });
     }
     bindSheets();
