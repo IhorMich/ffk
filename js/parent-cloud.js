@@ -7,8 +7,16 @@
   function ready(){
     return !!(global.CoachCloud && global.CoachCloud.ready && global.CoachCloud.ready());
   }
-  function client(){
+  function coachClient(){
     return ready() && global.CoachCloud.getClient ? global.CoachCloud.getClient() : null;
+  }
+  function parentClient(){
+    if(!ready()) return null;
+    if(global.CoachCloud.getParentClient) return global.CoachCloud.getParentClient();
+    return coachClient();
+  }
+  function client(role){
+    return role === 'coach' ? coachClient() : parentClient();
   }
   function tt(key, fallback){
     try{
@@ -21,7 +29,7 @@
   }
   /** Parent account: anonymous when the project allows it, otherwise email + password. */
   async function signInWithEmail(email, password){
-    const sb = client();
+    const sb = parentClient();
     if(!sb) throw new Error('no_cloud');
     const credentials = {
       email: String(email || '').trim().toLowerCase(),
@@ -45,7 +53,7 @@
     return signInWithEmail(email, password);
   }
   async function ensureSession(interactive){
-    const sb = client();
+    const sb = parentClient();
     if(!sb) throw new Error('no_cloud');
     const {data, error} = await sb.auth.getSession();
     if(error) throw error;
@@ -77,7 +85,7 @@
     return !!id && coachLinks().some(link => String(link.team_player_id || '') === id);
   }
   async function publishInvite(invite){
-    const sb = client();
+    const sb = client('coach');
     if(!sb || !invite) throw new Error('no_cloud');
     if(global.CoachCloud && typeof global.CoachCloud.pushLocalSnapshot === 'function'){
       const pushed = await global.CoachCloud.pushLocalSnapshot();
@@ -98,7 +106,7 @@
     return buildInviteUrl(invite.token);
   }
   async function resolveInvite(token){
-    const sb = client();
+    const sb = client('parent');
     if(!sb || !token) throw new Error('no_cloud');
     const {data, error} = await sb.rpc('resolve_parent_invite', {invite_token: token});
     if(error) throw error;
@@ -116,7 +124,7 @@
     return null;
   }
   async function claimInvite(token){
-    const sb = client();
+    const sb = client('parent');
     const profile = activeProfile();
     if(!sb || !token || !profile) throw new Error('bad_invite');
     await ensureSession(true);
@@ -139,7 +147,7 @@
     return new Blob([bytes], {type: m[1] || 'image/jpeg'});
   }
   async function pushProfile(link, profile, session){
-    const sb = client();
+    const sb = client('parent');
     if(!sb || !link || !profile || !session) return;
     let photoPath = '';
     const blob = dataUrlBlob(profile.photo);
@@ -177,7 +185,7 @@
     }
   }
   async function syncChats(session, links, senderRole){
-    const sb = client();
+    const sb = client(senderRole === 'coach' ? 'coach' : 'parent');
     if(!sb || !session || !global.InboxStore) return;
     const byPlayer = new Map((links || []).map(link => [
       String(link.team_player_id || link.player && link.player.id || ''),
@@ -304,7 +312,7 @@
     }, 1200);
   }
   async function pullCoachData(){
-    const sb = client();
+    const sb = client('coach');
     const coach = global.CoachStore;
     const coachSession = coach && coach.getSession && coach.getSession();
     const academy = coachSession && coach.myAcademy && coach.myAcademy(coachSession);

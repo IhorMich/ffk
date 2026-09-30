@@ -13,6 +13,7 @@
     h1{margin:0 0 10px;font-size:1.7rem}
     p{margin:0 0 20px;color:#b8bdd0;line-height:1.45}
     a{display:block;padding:14px 18px;border-radius:14px;background:#d7ff3f;color:#111500;font-weight:800;text-decoration:none}
+    a.secondary{margin-top:12px;background:transparent;color:#f7f8ff;border:1px solid #3a4058}
     small{display:block;margin-top:16px;color:#858ba3}
   </style>
 </head>
@@ -21,16 +22,17 @@
     <h1>Matchcard</h1>
     <p id="message">Tap the button to open the invitation in the app.</p>
     <a id="openApp" href="#">Open Matchcard</a>
+    <a id="openWeb" class="secondary" href="#" hidden>Open in browser</a>
     <small id="hint">Android requires a tap before a website can open an app.</small>
   </main>
   <script>
   (function(){
     const lang = (navigator.language || 'en').toLowerCase();
     const text = lang.startsWith('ru')
-      ? {opening:'Нажмите кнопку, чтобы открыть приглашение в приложении.', button:'Открыть Matchcard', hint:'Android требует нажатия перед переходом из сайта в приложение.', bad:'Неверная ссылка-приглашение.'}
+      ? {opening:'Нажмите кнопку, чтобы открыть приглашение в приложении.', button:'Открыть Matchcard', web:'Открыть в браузере', hint:'Если приложение не установлено — откройте в браузере.', bad:'Неверная ссылка-приглашение.'}
       : lang.startsWith('uk')
-        ? {opening:'Натисніть кнопку, щоб відкрити запрошення в застосунку.', button:'Відкрити Matchcard', hint:'Android вимагає натискання перед переходом із сайту в застосунок.', bad:'Невірне посилання-запрошення.'}
-        : {opening:'Tap the button to open the invitation in the app.', button:'Open Matchcard', hint:'Android requires a tap before a website can open an app.', bad:'Invalid invitation link.'};
+        ? {opening:'Натисніть кнопку, щоб відкрити запрошення в застосунку.', button:'Відкрити Matchcard', web:'Відкрити в браузері', hint:'Якщо застосунок не встановлено — відкрийте в браузері.', bad:'Невірне посилання-запрошення.'}
+        : {opening:'Tap the button to open the invitation in the app.', button:'Open Matchcard', web:'Open in browser', hint:'If the app is not installed, open the invite in the browser.', bad:'Invalid invitation link.'};
     const params = new URLSearchParams(location.search);
     const code = params.get('code') || '';
     const token = params.get('token') || '';
@@ -38,6 +40,7 @@
     const validToken = /^[A-Z0-9_-]{12,64}$/i.test(token);
     const message = document.getElementById('message');
     const button = document.getElementById('openApp');
+    const webBtn = document.getElementById('openWeb');
     const hint = document.getElementById('hint');
     document.documentElement.lang = lang.slice(0, 2);
     if(!validCode && !validToken){
@@ -47,13 +50,20 @@
     const query = validToken
       ? 'token=' + encodeURIComponent(token)
       : 'code=' + encodeURIComponent(code.toUpperCase());
+    const web = new URL('./', location.href);
+    web.search = query;
     const deep = 'ffk://parent?' + query;
     const androidIntent = 'intent://parent?' + query
-      + '#Intent;scheme=ffk;package=app.ffk.rating;end';
+      + '#Intent;scheme=ffk;package=app.ffk.rating;S.browser_fallback_url='
+      + encodeURIComponent(web.href)
+      + ';end';
     const target = /Android/i.test(navigator.userAgent) ? androidIntent : deep;
     message.textContent = text.opening;
     button.textContent = text.button;
     button.href = target;
+    webBtn.hidden = false;
+    webBtn.textContent = text.web;
+    webBtn.href = web.href;
     hint.textContent = text.hint;
   })();
   </script>

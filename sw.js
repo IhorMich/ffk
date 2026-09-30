@@ -1,4 +1,4 @@
-const CACHE = 'ffk_v299';
+const CACHE = 'ffk_v300';
 const ASSETS = [
   './',
   './index.html',
@@ -106,9 +106,20 @@ self.addEventListener('fetch', event => {
   event.respondWith((async () => {
     const cache = await caches.open(CACHE);
     if(event.request.mode === 'navigate'){
-      if(url.pathname.endsWith('/open.html')){
-        const opener = await cache.match(new URL('./open.html', self.location).href);
-        if(opener) return opener;
+      const path = url.pathname || '';
+      const isPrivacy = path.endsWith('/privacy.html');
+      const isOpen = path.endsWith('/open.html');
+      if(isPrivacy || isOpen){
+        const exact = await cache.match(event.request)
+          || await cache.match(new URL(isPrivacy ? './privacy.html' : './open.html', self.location).href);
+        if(exact) return exact;
+        try{
+          const res = await fetch(event.request);
+          if(res && res.ok){
+            cache.put(event.request, res.clone());
+            return res;
+          }
+        }catch(e){}
       }
       const page = await cache.match(new URL('./index.html', self.location).href) || await cache.match(new URL('./', self.location).href);
       if(page) return page;

@@ -1,6 +1,6 @@
 /* Matchcard Coach ↔ Supabase. No-op when URL/key empty; local CoachStore stays source of truth on device. */
 (function(global){
-  let client = null;
+  let clients = {coach: null, parent: null};
   let syncTimer = null;
   let syncing = false;
 
@@ -19,14 +19,27 @@
       && typeof global.supabase.createClient === 'function'
     );
   }
+  function makeClient(storageKey){
+    const c = cfg();
+    const auth = {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: false
+    };
+    if(storageKey) auth.storageKey = storageKey;
+    return global.supabase.createClient(c.supabaseUrl, c.supabaseAnonKey, {auth});
+  }
   function getClient(){
     if(!ready()) return null;
-    if(client) return client;
-    const c = cfg();
-    client = global.supabase.createClient(c.supabaseUrl, c.supabaseAnonKey, {
-      auth: {persistSession: true, autoRefreshToken: true, detectSessionInUrl: false}
-    });
-    return client;
+    // Keep default storage key so existing coach logins survive the update.
+    if(!clients.coach) clients.coach = makeClient();
+    return clients.coach;
+  }
+  function getParentClient(){
+    if(!ready()) return null;
+    // Separate key so parent sync never reuses the coach account session.
+    if(!clients.parent) clients.parent = makeClient('ffk-parent-auth');
+    return clients.parent;
   }
 
   function toast(msg){
@@ -353,6 +366,7 @@
   const CoachCloud = {
     ready,
     getClient,
+    getParentClient,
     cloudSignUp,
     cloudSignIn,
     cloudSignOut,
