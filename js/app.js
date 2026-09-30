@@ -3924,7 +3924,7 @@ function exportPlayerSnapshot(id){
       list = parseMatchList(localStorage.getItem(STORAGE_KEY) || localStorage.getItem(LEGACY_KEY)).list;
     }
   }catch(e){ list = []; }
-  return {player: p, matches: list};
+  return {player: withExportableMedia(p, sid), matches: list};
 }
 function exportPayload(){
   const players = (roster.ids || []).map(exportPlayerSnapshot).filter(Boolean);
@@ -3932,12 +3932,19 @@ function exportPayload(){
     version: 4,
     exportedAt: new Date().toISOString(),
     currentId: roster.currentId || '',
-    player,
+    player: withExportableMedia(player, player && player.id),
     players,
     settings: {lang: settings.lang, format: settings.format, minutes: settings.minutes, position: settings.position, theme: settings.theme},
     matches
   };
 }
+async function exportPayloadForCloud(){
+  try{
+    if(typeof hydrateAllMedia === 'function') await hydrateAllMedia();
+  }catch(e){}
+  return exportPayload();
+}
+window.exportPayloadForCloud = exportPayloadForCloud;
 function isBlankPlayerCard(p, matchList){
   const hasName = !!(p && String(p.firstName || '').trim()) || !!(p && String(p.lastName || '').trim());
   const hasPhoto = !!(p && isUsablePhoto(p.photo));

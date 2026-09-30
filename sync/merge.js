@@ -75,6 +75,67 @@
     return n;
   };
 
+  /** True when backup embeds at least one data-url photo/cover. */
+  S.backupHasMedia = function (payload) {
+    if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return false;
+    function has(p) {
+      if (!p || typeof p !== 'object') return false;
+      var photo = String(p.photo || '');
+      var cover = String(p.cover || '');
+      return (photo.indexOf('data:image/') === 0 && photo.length > 64)
+        || (cover.indexOf('data:image/') === 0 && cover.length > 64);
+    }
+    if (has(payload.player)) return true;
+    if (Array.isArray(payload.players)) {
+      for (var i = 0; i < payload.players.length; i++) {
+        var entry = payload.players[i];
+        if (has(entry) || has(entry && entry.player)) return true;
+      }
+    }
+    return false;
+  };
+
+  /** Copy photo/cover from richer remote into a local export that lost media. */
+  S.mergeBackupMedia = function (localPayload, remotePayload) {
+    if (!localPayload || typeof localPayload !== 'object' || Array.isArray(localPayload)) return localPayload;
+    if (!remotePayload || typeof remotePayload !== 'object' || Array.isArray(remotePayload)) return localPayload;
+    function pick(localP, remoteP) {
+      var out = Object.assign({}, localP || {});
+      var rp = remoteP || {};
+      var photo = String(out.photo || '');
+      var cover = String(out.cover || '');
+      if (!(photo.indexOf('data:image/') === 0 && photo.length > 64)) {
+        var rpPhoto = String(rp.photo || '');
+        if (rpPhoto.indexOf('data:image/') === 0 && rpPhoto.length > 64) out.photo = rpPhoto;
+      }
+      if (!(cover.indexOf('data:image/') === 0 && cover.length > 64)) {
+        var rpCover = String(rp.cover || '');
+        if (rpCover.indexOf('data:image/') === 0 && rpCover.length > 64) out.cover = rpCover;
+      }
+      return out;
+    }
+    var next = Object.assign({}, localPayload);
+    if (remotePayload.player) next.player = pick(next.player, remotePayload.player);
+    if (Array.isArray(next.players) && Array.isArray(remotePayload.players) && remotePayload.players.length) {
+      var remoteById = {};
+      remotePayload.players.forEach(function (entry) {
+        var p = entry && (entry.player || entry);
+        var id = p && p.id ? String(p.id) : '';
+        if (id) remoteById[id] = p;
+      });
+      var remoteFirst = remotePayload.players[0] && (remotePayload.players[0].player || remotePayload.players[0]);
+      next.players = next.players.map(function (entry, idx) {
+        var localP = entry && (entry.player || entry);
+        var id = localP && localP.id ? String(localP.id) : '';
+        var remoteP = (id && remoteById[id]) || (idx === 0 ? remoteFirst : null);
+        var merged = pick(localP, remoteP);
+        if (entry && entry.player) return Object.assign({}, entry, { player: merged });
+        return merged;
+      });
+    }
+    return next;
+  };
+
   /** True when backup has no matches worth protecting over a richer remote. */
   S.isSparseBackup = function (payload) {
     return S.backupMatchCount(payload) === 0;

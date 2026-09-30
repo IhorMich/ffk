@@ -99,6 +99,8 @@
       var remoteMatches = hasRemote && S.backupMatchCount ? S.backupMatchCount(remote.payload) : 0;
       var localSparse = !!(S.isSparseBackup && S.isSparseBackup(localExport));
       var remoteRicher = remoteMatches > localMatches;
+      var localHasMedia = !!(S.backupHasMedia && S.backupHasMedia(localExport));
+      var remoteHasMedia = !!(hasRemote && S.backupHasMedia && S.backupHasMedia(remote.payload));
 
       var plan = S.planPersonalSync({
         pull: opts.pull,
@@ -110,6 +112,8 @@
         force: !!opts.force,
         localSparse: localSparse,
         remoteRicher: remoteRicher,
+        localHasMedia: localHasMedia,
+        remoteHasMedia: remoteHasMedia,
         ready: true,
         isPro: true,
         hasSession: true
@@ -145,10 +149,19 @@
             results.push({ step: step, ok: false, reason: 'no_export' });
             throw new Error('no_export');
           }
+          if (hasRemote && S.mergeBackupMedia) {
+            payload = S.mergeBackupMedia(payload, remote.payload);
+          }
           var pushMatches = S.backupMatchCount ? S.backupMatchCount(payload) : 0;
+          var pushHasMedia = !!(S.backupHasMedia && S.backupHasMedia(payload));
           // Never clobber a richer cloud backup with an empty/sparser device.
           if (!opts.force && hasRemote && remoteMatches > pushMatches) {
             results.push({ step: step, ok: true, skipped: true, reason: 'keep_richer_remote' });
+            continue;
+          }
+          // Never strip photo/cover from cloud when this device has none.
+          if (!opts.force && hasRemote && remoteHasMedia && !pushHasMedia) {
+            results.push({ step: step, ok: true, skipped: true, reason: 'keep_remote_media' });
             continue;
           }
           var nowIso = (typeof a.nowIso === 'function' ? a.nowIso() : new Date().toISOString());

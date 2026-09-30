@@ -60,8 +60,10 @@
       conflict = 'local_dirty_and_remote_present';
     }
 
-    var localSparse = !!i.localSparse;
+      var localSparse = !!i.localSparse;
     var remoteRicher = !!i.remoteRicher;
+    var remoteHasMedia = !!i.remoteHasMedia;
+    var localHasMedia = !!i.localHasMedia;
 
     var shouldPull = false;
     if (wantPull && hasRemote) {
@@ -70,6 +72,8 @@
       else if (conflict === 'local_dirty_and_remote_present' && relation === 'remote_newer') shouldPull = true;
       // Empty/sparse PC must pull even if a stale local sync clock looks newer.
       else if (localSparse || remoteRicher) shouldPull = true;
+      // Cloud has photo/cover that this device is missing.
+      else if (remoteHasMedia && !localHasMedia) shouldPull = true;
     }
 
     if (shouldPull) {

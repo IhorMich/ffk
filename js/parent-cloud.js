@@ -733,7 +733,11 @@
   async function pushPersonalBackup(session, payload, updatedAt){
     wireCloudRepo();
     const Cloud = cloudRepo();
-    const body = payload || (typeof exportPayload === 'function' ? exportPayload() : null);
+    let body = payload;
+    if(!body){
+      if(typeof exportPayloadForCloud === 'function') body = await exportPayloadForCloud();
+      else if(typeof exportPayload === 'function') body = exportPayload();
+    }
     if(Cloud && typeof Cloud.pushPersonalBackup === 'function'){
       const out = await Cloud.pushPersonalBackup(session, body, updatedAt);
       if(out && out.ok) setPersonalSyncState({status: 'ok', at: out.at || '', error: ''});
@@ -807,7 +811,10 @@
     const Cloud = cloudRepo();
     if(Cloud && typeof Cloud.buildSyncAdapters === 'function'){
       Sync.bind(Cloud.buildSyncAdapters({
-        exportLocal: () => (typeof exportPayload === 'function' ? exportPayload() : null),
+        exportLocal: async () => {
+          if(typeof exportPayloadForCloud === 'function') return exportPayloadForCloud();
+          return (typeof exportPayload === 'function' ? exportPayload() : null);
+        },
         applyRemote: (payload) => {
           if(typeof applyImportBundle !== 'function') throw new Error('no_import');
           applyImportBundle(payload);
@@ -831,6 +838,7 @@
         applyImportBundle(payload);
       },
       exportLocal: async () => {
+        if(typeof exportPayloadForCloud === 'function') return exportPayloadForCloud();
         if(typeof exportPayload !== 'function') return null;
         return exportPayload();
       },

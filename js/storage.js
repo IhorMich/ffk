@@ -84,6 +84,26 @@ function isUsablePhoto(src){
   if(/^https?:\/\//i.test(p)) return true;
   return false;
 }
+function exportableDataUrl(src){
+  const p = String(src || '');
+  return (p.startsWith('data:image/') && p.length > 64) ? p : '';
+}
+/** Attach IDB/mediaCache photo+cover so cloud backup never ships empty media. */
+function withExportableMedia(playerLike, id){
+  const row = Object.assign({}, playerLike || {});
+  const sid = String(id || row.id || '');
+  let photo = exportableDataUrl(row.photo);
+  let cover = exportableDataUrl(row.cover);
+  try{
+    const cached = sid && mediaCache[sid];
+    if(!photo) photo = exportableDataUrl(cached && cached.photo);
+    if(!cover) cover = exportableDataUrl(cached && cached.cover);
+  }catch(e){}
+  row.photo = photo;
+  row.cover = cover;
+  return row;
+}
+window.withExportableMedia = withExportableMedia;
 function coachMediaKey(id){
   const repo = localRepo();
   if(repo && typeof repo.coachMediaKey === 'function') return repo.coachMediaKey(id);
