@@ -14,52 +14,64 @@ const COACH_MAX_ACADEMIES = 1;
 const COACH_MAX_TEAMS = 10;
 const COACH_MAX_PLAYERS_PER_TEAM = 50;
 const COACH_MAX_ASSISTANTS = 5;
-const IDB_NAME = 'ffk';
-const IDB_STORE = 'media';
-const mediaCache = {};
 
-function idbOpen(){
-  return new Promise((resolve, reject) => {
-    if(typeof indexedDB === 'undefined'){ reject(new Error('no idb')); return; }
-    const req = indexedDB.open(IDB_NAME, 1);
-    req.onupgradeneeded = () => {
-      const db = req.result;
-      if(!db.objectStoreNames.contains(IDB_STORE)) db.createObjectStore(IDB_STORE);
-    };
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error);
-  });
+function localRepo(){
+  return (typeof MatchcardLocalRepo !== 'undefined' && MatchcardLocalRepo)
+    || (typeof window !== 'undefined' && window.MatchcardLocalRepo)
+    || null;
 }
+
+const mediaCache = new Proxy({}, {
+  get(_t, prop){
+    if(typeof prop === 'symbol') return undefined;
+    const repo = localRepo();
+    if(repo && typeof repo.getMediaCached === 'function'){
+      return repo.getMediaCached(String(prop)) || undefined;
+    }
+    return undefined;
+  },
+  set(_t, prop, value){
+    const repo = localRepo();
+    if(repo && typeof repo.putMedia === 'function'){
+      const v = value || {photo:'', cover:''};
+      repo.putMedia(String(prop), v.photo || '', v.cover || '');
+    }
+    return true;
+  },
+  deleteProperty(_t, prop){
+    const repo = localRepo();
+    if(repo && typeof repo.deleteMedia === 'function') repo.deleteMedia(String(prop));
+    return true;
+  },
+  has(_t, prop){
+    const repo = localRepo();
+    return !!(repo && repo.getMediaCached && repo.getMediaCached(String(prop)));
+  }
+});
+
 function idbGetMedia(id){
-  return idbOpen().then(db => new Promise((resolve, reject) => {
-    const tx = db.transaction(IDB_STORE, 'readonly');
-    const req = tx.objectStore(IDB_STORE).get(String(id));
-    req.onsuccess = () => resolve(req.result || null);
-    req.onerror = () => reject(req.error);
-  })).catch(() => null);
+  const repo = localRepo();
+  if(repo && typeof repo.getMedia === 'function') return repo.getMedia(id);
+  return Promise.resolve(null);
 }
 function idbPutMedia(id, photo, cover){
-  mediaCache[id] = {photo: photo || '', cover: cover || ''};
-  return idbOpen().then(db => new Promise((resolve, reject) => {
-    const tx = db.transaction(IDB_STORE, 'readwrite');
-    tx.objectStore(IDB_STORE).put({photo: photo || '', cover: cover || ''}, String(id));
-    tx.oncomplete = () => resolve();
-    tx.onerror = () => reject(tx.error);
-  })).catch(() => {});
+  const repo = localRepo();
+  if(repo && typeof repo.putMedia === 'function') return repo.putMedia(id, photo, cover);
+  return Promise.resolve();
 }
 function idbDeleteMedia(id){
-  delete mediaCache[id];
-  return idbOpen().then(db => new Promise((resolve, reject) => {
-    const tx = db.transaction(IDB_STORE, 'readwrite');
-    tx.objectStore(IDB_STORE).delete(String(id));
-    tx.oncomplete = () => resolve();
-    tx.onerror = () => reject(tx.error);
-  })).catch(() => {});
+  const repo = localRepo();
+  if(repo && typeof repo.deleteMedia === 'function') return repo.deleteMedia(id);
+  return Promise.resolve();
 }
 function playerRecordForLs(p){
+  const repo = localRepo();
+  if(repo && typeof repo.playerRecordForLs === 'function') return repo.playerRecordForLs(p);
   return {...p, photo: '', cover: ''};
 }
 function isUsablePhoto(src){
+  const repo = localRepo();
+  if(repo && typeof repo.isUsablePhoto === 'function') return repo.isUsablePhoto(src);
   const p = String(src || '');
   if(p.startsWith('data:image/') && p.length > 64) return true;
   if(p.startsWith('blob:') && p.length > 8) return true;
@@ -67,6 +79,8 @@ function isUsablePhoto(src){
   return false;
 }
 function coachMediaKey(id){
+  const repo = localRepo();
+  if(repo && typeof repo.coachMediaKey === 'function') return repo.coachMediaKey(id);
   return 'coach:' + String(id || '');
 }
 function getCoachMediaPhoto(id){
@@ -76,10 +90,8 @@ function getCoachMediaPhoto(id){
 }
 function setCoachMediaPhoto(id, photo){
   const key = coachMediaKey(id);
-  const prev = mediaCache[key] || {photo: '', cover: ''};
   const nextPhoto = isUsablePhoto(photo) ? String(photo) : '';
-  mediaCache[key] = {photo: nextPhoto, cover: prev.cover || ''};
-  return idbPutMedia(key, nextPhoto, prev.cover || '');
+  return idbPutMedia(key, nextPhoto, '');
 }
 async function hydrateAllMedia(){
   const ids = roster.ids.length ? roster.ids : (player && player.id ? [player.id] : []);
@@ -141,7 +153,10 @@ async function hydrateCoachMedia(){
 
 function loadSettings(){
   try{
-    const s = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}');
+    const repo = localRepo();
+    const s = (repo && typeof repo.getSettings === 'function')
+      ? (repo.getSettings() || {})
+      : JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}');
     settings = {
       club: String(s.club || '').slice(0,40),
       player: String(s.player || '').slice(0,40),
@@ -168,16 +183,43 @@ function loadSettings(){
   }catch(e){}
 }
 function saveSettings(){
+  const repo = localRepo();
+  if(repo && typeof repo.setSettings === 'function'){
+    repo.setSettings(settings);
+    return;
+  }
   localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
 }
 
-function kidPlayerKey(id){ return 'ffk_kid_' + id; }
-function kidMatchesKey(id){ return 'ffk_kid_m_' + id; }
-function draftStorageKey(id){ return DRAFT_KEY + '_' + (id || roster.currentId || 'x'); }
+function kidPlayerKey(id){
+  const repo = localRepo();
+  if(repo && typeof repo.playerKey === 'function') return repo.playerKey(id);
+  return 'ffk_kid_' + id;
+}
+function kidMatchesKey(id){
+  const repo = localRepo();
+  if(repo && typeof repo.matchesKey === 'function') return repo.matchesKey(id);
+  return 'ffk_kid_m_' + id;
+}
+function draftStorageKey(id){
+  const repo = localRepo();
+  if(repo && typeof repo.draftKey === 'function') return repo.draftKey(id || roster.currentId || 'x');
+  return DRAFT_KEY + '_' + (id || roster.currentId || 'x');
+}
 function saveRoster(){
+  const repo = localRepo();
+  if(repo && typeof repo.setRoster === 'function'){
+    repo.setRoster({currentId: roster.currentId, ids: roster.ids});
+    return;
+  }
   try{ localStorage.setItem(ROSTER_KEY, JSON.stringify({currentId: roster.currentId, ids: roster.ids})); }catch(e){}
 }
 function writePlayerRecord(id, p){
+  const repo = localRepo();
+  if(repo && typeof repo.setPlayer === 'function'){
+    repo.setPlayer(id, p);
+    return;
+  }
   const row = {...p, id};
   mediaCache[id] = {photo: row.photo || '', cover: row.cover || ''};
   try{
@@ -188,6 +230,12 @@ function writePlayerRecord(id, p){
   idbPutMedia(id, row.photo, row.cover);
 }
 function readPlayerRecord(id, rawLs){
+  const repo = localRepo();
+  if(repo && typeof repo.getPlayer === 'function'){
+    const row = repo.getPlayer(id, {rawLs: !!rawLs});
+    if(!row) return null;
+    return rawLs ? row : normalizePlayer(row, id);
+  }
   try{
     const raw = localStorage.getItem(kidPlayerKey(id));
     if(!raw) return null;
@@ -205,24 +253,27 @@ function readPlayerRecord(id, rawLs){
 function listPersonalPlayersWithMedia(){
   const out = [];
   const seen = new Set();
+  const repo = localRepo();
   let ids = [];
   try{
-    const stored = JSON.parse(localStorage.getItem(ROSTER_KEY) || 'null');
-    if(stored && Array.isArray(stored.ids)) ids = stored.ids.map(String).filter(Boolean);
-  }catch(e){}
-  try{
-    const cur = JSON.parse(localStorage.getItem(PLAYER_KEY) || 'null');
-    if(cur && cur.id){
-      const cid = String(cur.id);
-      if(!ids.includes(cid)) ids.unshift(cid);
-    }
-  }catch(e){}
-  try{
-    for(let i = 0; i < localStorage.length; i++){
-      const k = localStorage.key(i);
-      if(!k || !k.startsWith('ffk_kid_') || k.startsWith('ffk_kid_m_')) continue;
-      const id = k.slice('ffk_kid_'.length);
-      if(id && !ids.includes(id)) ids.push(id);
+    if(repo && typeof repo.listPlayerIds === 'function'){
+      ids = repo.listPlayerIds().map(String).filter(Boolean);
+    }else{
+      const stored = JSON.parse(localStorage.getItem(ROSTER_KEY) || 'null');
+      if(stored && Array.isArray(stored.ids)) ids = stored.ids.map(String).filter(Boolean);
+      try{
+        const cur = JSON.parse(localStorage.getItem(PLAYER_KEY) || 'null');
+        if(cur && cur.id){
+          const cid = String(cur.id);
+          if(!ids.includes(cid)) ids.unshift(cid);
+        }
+      }catch(e){}
+      for(let i = 0; i < localStorage.length; i++){
+        const k = localStorage.key(i);
+        if(!k || !k.startsWith('ffk_kid_') || k.startsWith('ffk_kid_m_')) continue;
+        const id = k.slice('ffk_kid_'.length);
+        if(id && !ids.includes(id)) ids.push(id);
+      }
     }
   }catch(e){}
   ids.forEach(id => {
@@ -246,12 +297,15 @@ function listPersonalPlayersWithMedia(){
 /** Personal profiles plus full match history for parent → coach synchronization. */
 function listPersonalPlayerHistories(){
   const profiles = listPersonalPlayersWithMedia();
+  const repo = localRepo();
   return profiles.map(profile => {
     let list = [];
     try{
       if(typeof roster !== 'undefined' && String(roster.currentId || '') === String(profile.id)
         && typeof matches !== 'undefined' && Array.isArray(matches)){
         list = matches.slice();
+      }else if(repo && typeof repo.getMatches === 'function'){
+        list = (repo.getMatches(profile.id) || []).map(normalizeMatch).filter(Boolean);
       }else{
         list = parseMatchList(localStorage.getItem(kidMatchesKey(profile.id))).list;
       }
@@ -272,7 +326,10 @@ function parseMatchList(raw){
 
 function loadPlayer(){
   try{
-    const stored = JSON.parse(localStorage.getItem(ROSTER_KEY) || 'null');
+    const repo = localRepo();
+    const stored = (repo && typeof repo.getRoster === 'function')
+      ? repo.getRoster()
+      : JSON.parse(localStorage.getItem(ROSTER_KEY) || 'null');
     if(stored && Array.isArray(stored.ids) && stored.ids.length){
       const repaired = (typeof repairRoster === 'function')
         ? repairRoster(stored, MAX_PLAYERS)
@@ -288,8 +345,11 @@ function loadPlayer(){
       player = readPlayerRecord(roster.currentId);
       if(!player){
         try{
-          const raw = localStorage.getItem(PLAYER_KEY);
-          player = raw ? normalizePlayer(JSON.parse(raw), roster.currentId) : normalizePlayer(defaultPlayer(), roster.currentId);
+          const raw = (repo && repo.getJson)
+            ? JSON.stringify(repo.getJson(PLAYER_KEY, null))
+            : localStorage.getItem(PLAYER_KEY);
+          const parsed = raw && raw !== 'null' ? JSON.parse(raw) : null;
+          player = parsed ? normalizePlayer(parsed, roster.currentId) : normalizePlayer(defaultPlayer(), roster.currentId);
         }catch(e){ player = normalizePlayer(defaultPlayer(), roster.currentId); }
         writePlayerRecord(roster.currentId, player);
       }
@@ -353,7 +413,12 @@ function savePlayer(){
   }
   writePlayerRecord(player.id, player);
   try{
-    localStorage.setItem(PLAYER_KEY, JSON.stringify(playerRecordForLs(player)));
+    const repo = localRepo();
+    if(repo && typeof repo.setActivePlayerMirror === 'function'){
+      repo.setActivePlayerMirror(player);
+    }else{
+      localStorage.setItem(PLAYER_KEY, JSON.stringify(playerRecordForLs(player)));
+    }
   }catch(e){
     showToast(t('toastSaveFail'));
   }
@@ -367,25 +432,30 @@ function savePlayer(){
 function loadMatches(){
   try{
     const id = roster.currentId;
-    const kidRaw = id ? localStorage.getItem(kidMatchesKey(id)) : null;
-    let raw = kidRaw;
-    let {list, dirty} = parseMatchList(raw);
-    // Empty kid key used to block legacy STORAGE_KEY forever ("[]" is truthy).
-    if((!list || !list.length) && roster.ids.length <= 1){
-      const legacyRaw = localStorage.getItem(STORAGE_KEY) || localStorage.getItem(LEGACY_KEY);
-      if(legacyRaw && legacyRaw !== raw){
-        const fallback = parseMatchList(legacyRaw);
-        if(fallback.list.length){
-          list = fallback.list;
-          dirty = true;
-          raw = legacyRaw;
-        }
-      }
-    }else if(!raw && roster.ids.length <= 1){
-      raw = localStorage.getItem(STORAGE_KEY) || localStorage.getItem(LEGACY_KEY);
+    const repo = localRepo();
+    let list = [];
+    let dirty = false;
+    if(repo && typeof repo.getMatches === 'function'){
+      list = (repo.getMatches(id) || []).map(rawMatch => {
+        if(rawMatch && typeof rawMatch === 'object' && !String(rawMatch.season || '').trim()) dirty = true;
+        return normalizeMatch(rawMatch);
+      }).filter(Boolean);
+    }else{
+      const kidRaw = id ? localStorage.getItem(kidMatchesKey(id)) : null;
+      let raw = kidRaw;
       const parsed = parseMatchList(raw);
       list = parsed.list;
       dirty = parsed.dirty;
+      if((!list || !list.length) && roster.ids.length <= 1){
+        const legacyRaw = localStorage.getItem(STORAGE_KEY) || localStorage.getItem(LEGACY_KEY);
+        if(legacyRaw && legacyRaw !== raw){
+          const fallback = parseMatchList(legacyRaw);
+          if(fallback.list.length){
+            list = fallback.list;
+            dirty = true;
+          }
+        }
+      }
     }
     matches = list;
     if(typeof repairMatchList === 'function'){
@@ -395,14 +465,19 @@ function loadMatches(){
         dirty = true;
       }
     }
-    if(id && (dirty || (!kidRaw && matches.length) || (kidRaw === '[]' && matches.length))) saveMatches();
+    if(id && dirty) saveMatches();
   }catch(e){ matches = []; }
 }
 function saveMatches(){
   try{
-    const json = JSON.stringify(matches);
-    if(roster.currentId) localStorage.setItem(kidMatchesKey(roster.currentId), json);
-    localStorage.setItem(STORAGE_KEY, json);
+    const repo = localRepo();
+    if(repo && typeof repo.setMatches === 'function'){
+      if(!repo.setMatches(roster.currentId, matches)) showToast(t('toastSaveFail'));
+    }else{
+      const json = JSON.stringify(matches);
+      if(roster.currentId) localStorage.setItem(kidMatchesKey(roster.currentId), json);
+      localStorage.setItem(STORAGE_KEY, json);
+    }
   }catch(e){ showToast(t('toastSaveFail')); }
   try{
     if(window.ParentCloud && typeof window.ParentCloud.markPersonalDirty === 'function'){

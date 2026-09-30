@@ -105,6 +105,24 @@ Debug APK: `cd android && ./gradlew :app:assembleDebug`.
 
 Хранилище PWA в браузере и хранилище приложения — разные. Перенос — через копию или облако.
 
+## LocalRepo
+
+Локальное хранилище в `repo/local/` — ключи, kv, media (IDB), игроки, матчи, settings, export-bundle. `js/storage.js` — тонкий фасад с нормализацией под UI.
+
+```
+repo/local/
+  keys.js · kv.js · media.js · players.js · matches.js
+  settings.js · bundle.js · engine.js
+```
+
+```js
+MatchcardLocalRepo.setPlayer(id, player);
+MatchcardLocalRepo.getMatches(playerId);
+MatchcardLocalRepo.setSettings(settings);
+```
+
+Проверка: `node repo/local/selftest.js`.
+
 ## Errors + production logging
 
 ```
@@ -225,7 +243,7 @@ const result = calculateRating({
 | | |
 | --- | --- |
 | UI | `index.html`, `css/app.css` |
-| Логика | `js/app.js`, `js/storage.js` |
+| Логика | `js/app.js`, `js/storage.js` → `repo/local/` |
 | Оценка | `rating/` → `calculateRating(match)` (shim: `js/rating.js`) |
 | i18n | `js/i18n.js` (+ `js/i18n-coach-*.js`) |
 | Coach / Parent | `js/coach-*.js`, `js/parent-*.js`, `js/inbox-store.js` |
