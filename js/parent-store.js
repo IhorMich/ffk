@@ -595,6 +595,68 @@
       writeDb(db);
       return before - db.links.length;
     },
+    /**
+     * Temporary escape hatch: drop parent↔coach links without coach confirm.
+     * Also clears related leave requests / inbox cards on this device.
+     */
+    forceUnlinkAll(opts){
+      const db = readDb();
+      const links = (db.links || []).slice();
+      if(!links.length && !(opts && opts.force)){
+        return {removed: 0, playerIds: [], linkIds: []};
+      }
+      const linkIds = links.map(l => String(l.id || '')).filter(Boolean);
+      const playerIds = [...new Set(links.map(l => l && l.player && String(l.player.id || '')).filter(Boolean))];
+      db.links = [];
+      db.pendingPayload = null;
+      writeDb(db);
+      try{
+        const raw = localStorage.getItem('ffk_coach_v1');
+        if(raw){
+          const coachDb = JSON.parse(raw);
+          if(coachDb && typeof coachDb === 'object'){
+            const beforeLeave = Array.isArray(coachDb.leave_requests) ? coachDb.leave_requests.length : 0;
+            coachDb.leave_requests = (coachDb.leave_requests || []).filter(r => {
+              const pid = String(r && r.team_player_id || '');
+              const lid = String(r && r.parent_link_id || '');
+              // Drop leave rows for the unlinked test child only.
+              if(playerIds.includes(pid) || linkIds.includes(lid)) return false;
+              return true;
+            });
+            // Keep roster players; only drop leave noise tied to the test link.
+            if((coachDb.leave_requests || []).length !== beforeLeave){
+              localStorage.setItem('ffk_coach_v1', JSON.stringify(coachDb));
+            }
+          }
+        }
+      }catch(e){}
+      try{
+        const raw = localStorage.getItem('ffk_inbox_v1');
+        if(raw){
+          const inbox = JSON.parse(raw);
+          if(inbox && typeof inbox === 'object'){
+            const before = Array.isArray(inbox.messages) ? inbox.messages.length : 0;
+            inbox.messages = (inbox.messages || []).filter(m => {
+              if(!m) return false;
+              if(m.type === 'coach_leave_request' || m.type === 'player_leave_decision'){
+                const pid = String(m.team_player_id || '');
+                const lid = String(m.parent_link_id || '');
+                const rid = String(m.request_id || '');
+                if(playerIds.includes(pid) || linkIds.includes(lid)) return false;
+                if(rid && (inbox.deleted || {})[`coach_leave:${rid}`]) return false;
+              }
+              return true;
+            });
+            if(!inbox.deleted || typeof inbox.deleted !== 'object') inbox.deleted = {};
+            linkIds.forEach(id => { inbox.deleted[`parent_link:${id}`] = new Date().toISOString(); });
+            if((inbox.messages || []).length !== before){
+              localStorage.setItem('ffk_inbox_v1', JSON.stringify(inbox));
+            }
+          }
+        }
+      }catch(e){}
+      return {removed: links.length, playerIds, linkIds};
+    },
     setLeaveStatus(linkId, status){
       const id = String(linkId || '');
       const st = status === 'pending' || status === 'declined' || status === 'accepted' ? status : '';
@@ -641,4 +703,12 @@
   };
 
   global.ParentStore = ParentStore;
+  // Temporary console helper while leave-confirm is stuck after test links.
+  global.ffkForceUnlinkCoachLinks = function(){
+    try{
+      return ParentStore.forceUnlinkAll({force: true});
+    }catch(e){
+      return {removed: 0, error: String(e && e.message || e)};
+    }
+  };
 })(window);

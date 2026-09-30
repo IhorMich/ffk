@@ -6485,6 +6485,27 @@ async function shareCard(m){
       if(window.caches && caches.keys) caches.keys().then(keys => keys.forEach(key => caches.delete(key))).catch(() => {});
     }
     loadSettings();
+    // One-shot: clear stuck test parent↔coach links that cannot be leave-confirmed.
+    try{
+      const unlinkFlag = 'ffk_tmp_force_unlink_v276';
+      if(!localStorage.getItem(unlinkFlag) && window.ParentStore && typeof window.ParentStore.forceUnlinkAll === 'function'){
+        const before = (window.ParentStore.listLinks && window.ParentStore.listLinks()) || [];
+        if(before.length){
+          const res = window.ParentStore.forceUnlinkAll();
+          localStorage.setItem(unlinkFlag, JSON.stringify({at: new Date().toISOString(), removed: res.removed || 0}));
+          setTimeout(() => {
+            try{
+              showToast(t('parentUnlinked') || 'Coach link removed.');
+              if(typeof syncPlayerLeaveUi === 'function') syncPlayerLeaveUi();
+              if(typeof renderParentUi === 'function') renderParentUi();
+              if(typeof applyHeader === 'function') applyHeader();
+            }catch(e){}
+          }, 600);
+        }else{
+          localStorage.setItem(unlinkFlag, JSON.stringify({at: new Date().toISOString(), removed: 0}));
+        }
+      }
+    }catch(e){}
     if(window.MatchcardLog && typeof window.MatchcardLog.installGlobalHandlers === 'function'){
       window.MatchcardLog.installGlobalHandlers();
       window.MatchcardLog.breadcrumb('app.boot', {v: window.FFK_VERSION || ''});
