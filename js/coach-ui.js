@@ -193,10 +193,15 @@
   function renderCloudPushStatus(){
     const cloudEl = document.getElementById('coachCloudStatus');
     if(cloudEl){
-      const st = global.CoachCloud && global.CoachCloud.status ? global.CoachCloud.status() : {configured: false, mode: 'local'};
-      cloudEl.textContent = st.configured
-        ? tt('coachCloudReady', 'Supabase connected — sync available.')
-        : tt('coachCloudOffline', 'Local mode. Add Supabase URL + key to enable cloud.');
+      const session = global.CoachStore && global.CoachStore.getSession && global.CoachStore.getSession();
+      const ready = !!(global.CoachCloud && global.CoachCloud.ready && global.CoachCloud.ready());
+      if(!session){
+        cloudEl.textContent = tt('coachCloudNeedAccount', 'Sign in to the coach account — then teams sync across phones.');
+      }else if(ready){
+        cloudEl.textContent = tt('coachCloudHint', 'Teams, matches and ratings sync to the coach account after changes.');
+      }else{
+        cloudEl.textContent = tt('coachCloudOffline', 'Cloud is not configured on this build.');
+      }
     }
     if(typeof syncPushSettingsUi === 'function') syncPushSettingsUi();
   }
@@ -4180,18 +4185,6 @@
         };
         toast(map[e.message] || tt('coachErrGeneric', 'Something went wrong.'));
       }
-    });
-    document.getElementById('coachCloudSyncBtn')?.addEventListener('click', async () => {
-      if(!global.CoachCloud || !global.CoachCloud.ready || !global.CoachCloud.ready()){
-        toast(tt('coachCloudOffline', 'Local mode. Add Supabase URL + key to enable cloud.'));
-        return;
-      }
-      toast(tt('coachCloudSyncing', 'Syncing…'));
-      const res = await global.CoachCloud.syncNow();
-      toast(res && res.ok
-        ? tt('coachCloudSynced', 'Cloud sync done.')
-        : tt('coachCloudSyncFail', 'Cloud sync failed. Check keys and schema.'));
-      renderCoachUi();
     });
     document.addEventListener('click', e => {
       const delAst = e.target.closest('[data-del-assistant]');
