@@ -3618,7 +3618,7 @@ function saveCurrentMatch(){
     });
     window.setTimeout(() => {
       if(lastReportMatch) shareCard(lastReportMatch).catch(() => runAfterCardPreviewHooks());
-    }, 320);
+    }, 480);
   }else if(firstPersonalSave){
     setTimeout(() => { maybePromptAccountAfterFirstMatch(); }, 350);
   }
@@ -5390,10 +5390,22 @@ document.getElementById('previewTheme').addEventListener('click', e => {
   refreshCardPreview().catch(() => {});
 });
 document.getElementById('previewShare').addEventListener('click', async () => {
-  if(!previewState || !previewState.canvas) return;
-  const ok = await exportPngFile(previewState.canvas, previewState.filename);
-  ffkLog('card_shared', {ok: !!ok, kind: previewState.kind || 'match'});
-  if(ok) closeCardPreview();
+  const btn = document.getElementById('previewShare');
+  if(!previewState || !previewState.canvas || !btn || btn.disabled) return;
+  btn.disabled = true;
+  const prev = btn.textContent;
+  btn.textContent = t('previewSharing');
+  let ok = false;
+  try{
+    ok = await exportPngFile(previewState.canvas, previewState.filename);
+    ffkLog('card_shared', {ok: !!ok, kind: previewState.kind || 'match'});
+  }catch(e){}
+  if(ok){
+    closeCardPreview();
+    return;
+  }
+  btn.disabled = false;
+  btn.textContent = prev || t('previewShare');
 });
 document.getElementById('previewSave').addEventListener('click', async () => {
   const btn = document.getElementById('previewSave');
@@ -5579,7 +5591,12 @@ document.getElementById('reportHistoryBtn')?.addEventListener('click', () => {
   scrollMainToTop();
 });
 document.getElementById('reportShareBtn').addEventListener('click', () => {
-  if(lastReportMatch) shareCard(lastReportMatch);
+  if(!lastReportMatch) return;
+  if(shareBusy){
+    showToast(t('previewPreparing'));
+    return;
+  }
+  shareCard(lastReportMatch).catch(() => {});
 });
 document.getElementById('reportStoryBtn').addEventListener('click', () => {
   if(!requirePro('story')) return;
@@ -5831,31 +5848,51 @@ function fitText(ctx, text, x, y, maxWidth, weight, size, minSize){
 // The photo on its own layer so the bottom can fade to nothing and the player
 // looks cut out of the card instead of pasted on it.
 function photoLayer(img, w, h, fade, focusY, radius){
-  const layer = makeHiCanvas(w, h);
+  // Intermediate layer stays 1× — it is drawn into the share canvas anyway.
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.max(1, Math.round(w));
+  canvas.height = Math.max(1, Math.round(h));
+  const ctx = canvas.getContext('2d');
   if(radius){
-    layer.ctx.save();
-    pathRoundRect(layer.ctx, 0, 0, w, h + radius, radius);
-    layer.ctx.clip();
+    ctx.save();
+    pathRoundRect(ctx, 0, 0, w, h + radius, radius);
+    ctx.clip();
   }
-  if(img) drawCovered(layer.ctx, img, 0, 0, w, h, focusY);
-  if(radius) layer.ctx.restore();
-  const cut = layer.ctx.createLinearGradient(0, h - fade, 0, h);
+  if(img) drawCovered(ctx, img, 0, 0, w, h, focusY);
+  if(radius) ctx.restore();
+  const cut = ctx.createLinearGradient(0, h - fade, 0, h);
   cut.addColorStop(0, 'rgba(0,0,0,0)');
   cut.addColorStop(1, 'rgba(0,0,0,1)');
-  layer.ctx.globalCompositeOperation = 'destination-out';
-  layer.ctx.fillStyle = cut;
-  layer.ctx.fillRect(0, h - fade, w, fade);
-  layer.ctx.globalCompositeOperation = 'source-over';
-  return layer.canvas;
+  ctx.globalCompositeOperation = 'destination-out';
+  ctx.fillStyle = cut;
+  ctx.fillRect(0, h - fade, w, fade);
+  ctx.globalCompositeOperation = 'source-over';
+  return canvas;
 }
 function makeHiCanvas(w, h){
   const canvas = document.createElement('canvas');
-  const dpr = 2;
-  canvas.width = Math.round(w * dpr);
-  canvas.height = Math.round(h * dpr);
+  // Preview is shown scaled down on phone; 1× keeps share sharp enough and
+  // avoids multi-second freezes from 2× PNG encode on mid-range Androids.
+  const dpr = 1;
+  canvas.width = Math.max(1, Math.round(w * dpr));
+  canvas.height = Math.max(1, Math.round(h * dpr));
   const ctx = canvas.getContext('2d');
-  ctx.scale(dpr, dpr);
+  if(dpr !== 1) ctx.scale(dpr, dpr);
   return {canvas, ctx, w, h};
+}
+function nextPaint(){
+  return new Promise(resolve => {
+    requestAnimationFrame(() => requestAnimationFrame(resolve));
+  });
+}
+function canvasToBlob(canvas, type, quality){
+  return new Promise(resolve => {
+    try{
+      canvas.toBlob(blob => resolve(blob || null), type || 'image/png', quality);
+    }catch(e){
+      resolve(null);
+    }
+  });
 }
 function fifaOvr(list){
   const a = avgRating(list);
@@ -5926,7 +5963,17 @@ function futStatRows(list, pos){
   ];
 }
 async function exportPngFile(canvas, filename){
-  const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
+  await nextPaint();
+  let blob = await canvasToBlob(canvas, 'image/png');
+  if(!blob){
+    try{
+      const dataUrl = canvas.toDataURL('image/png');
+      const res = await fetch(dataUrl);
+      blob = await res.blob();
+    }catch(e){
+      return false;
+    }
+  }
   const invite = matchcardShareText();
   try{
     if(await nativeShareBlob(blob, filename, 'Matchcard', invite)) return true;
@@ -5980,8 +6027,26 @@ async function savePngFile(canvas, filename){
 
 let shareBusy = false;
 let previewState = null;
+let previewObjectUrl = '';
 function defaultCardMode(){
   return 'dark';
+}
+function revokePreviewObjectUrl(){
+  if(!previewObjectUrl) return;
+  try{ URL.revokeObjectURL(previewObjectUrl); }catch(e){}
+  previewObjectUrl = '';
+}
+function setPreviewLoading(on){
+  const card = document.getElementById('previewCard');
+  const loading = document.getElementById('previewLoading');
+  const text = document.getElementById('previewLoadingText');
+  const shareBtn = document.getElementById('previewShare');
+  const saveBtn = document.getElementById('previewSave');
+  if(card) card.classList.toggle('is-loading', !!on);
+  if(loading) loading.hidden = !on;
+  if(text && on) text.textContent = t('previewPreparing');
+  if(shareBtn) shareBtn.disabled = !!on;
+  if(saveBtn) saveBtn.disabled = !!on;
 }
 function syncPreviewPeriodChips(range){
   const wrap = document.getElementById('previewPeriod');
@@ -6013,6 +6078,7 @@ function syncPreviewLegend(){
 }
 async function refreshCardPreview(){
   if(!previewState) return;
+  setPreviewLoading(true);
   syncPreviewLegend();
   if(previewState.kind === 'period'){
     const range = RANGE_KEYS.includes(previewState.range) ? previewState.range : currentRange;
@@ -6026,44 +6092,79 @@ async function refreshCardPreview(){
   } else {
     syncPreviewPeriodChips('');
   }
+  // Let the loading sheet paint before the heavy canvas work blocks the thread.
+  await nextPaint();
   const canvas = await previewState.build(previewState.mode);
+  if(!previewState) return;
   previewState.canvas = canvas;
+  await nextPaint();
+  let url = '';
+  const blob = await canvasToBlob(canvas, 'image/png');
+  if(blob){
+    url = URL.createObjectURL(blob);
+  } else {
+    try{ url = canvas.toDataURL('image/png'); }catch(e){ url = ''; }
+  }
+  if(!previewState){
+    if(blob && url) try{ URL.revokeObjectURL(url); }catch(e){}
+    return;
+  }
   const img = document.getElementById('previewImg');
-  img.src = canvas.toDataURL('image/png');
+  revokePreviewObjectUrl();
+  if(blob && url) previewObjectUrl = url;
+  if(url) img.src = url;
   img.alt = t('previewTitle');
   document.querySelectorAll('#previewTheme .chip').forEach(c => {
     c.classList.toggle('active', c.dataset.card === previewState.mode);
   });
+  setPreviewLoading(false);
 }
 async function openCardPreview(state){
-  if(shareBusy) return;
+  if(shareBusy){
+    showToast(t('previewPreparing'));
+    return;
+  }
   shareBusy = true;
   previewState = {mode: 'dark', lockTheme: true, ...state};
   if(previewState.lockTheme !== false) previewState.mode = 'dark';
+  const themeEl = document.getElementById('previewTheme');
+  if(themeEl) themeEl.hidden = previewState.lockTheme !== false;
+  const img = document.getElementById('previewImg');
+  if(img) img.removeAttribute('src');
+  setPreviewLoading(true);
+  document.getElementById('previewModal').hidden = false;
+  openSheet(document.getElementById('previewCard'));
+  pushAppState('layer');
   try{
     await refreshCardPreview();
-    const themeEl = document.getElementById('previewTheme');
-    if(themeEl) themeEl.hidden = previewState.lockTheme !== false;
-    document.getElementById('previewModal').hidden = false;
-    openSheet(document.getElementById('previewCard'));
-    pushAppState('layer');
     ffkLog('card_opened', {kind: previewState.kind || 'match'});
   }catch(e){
-    shareBusy = false;
-    previewState = null;
-    runAfterCardPreviewHooks();
+    closeCardPreview();
+    showToast(t('toastReadFail'));
     throw e;
   }
 }
 function closeCardPreview(){
   document.getElementById('previewModal').hidden = true;
   resetSheet(document.getElementById('previewCard'));
+  setPreviewLoading(false);
   const period = document.getElementById('previewPeriod');
   if(period) period.hidden = true;
   const themeEl = document.getElementById('previewTheme');
   if(themeEl) themeEl.hidden = false;
   const img = document.getElementById('previewImg');
   img.removeAttribute('src');
+  revokePreviewObjectUrl();
+  const shareBtn = document.getElementById('previewShare');
+  if(shareBtn){
+    shareBtn.disabled = false;
+    shareBtn.textContent = t('previewShare');
+  }
+  const saveBtn = document.getElementById('previewSave');
+  if(saveBtn){
+    saveBtn.disabled = false;
+    saveBtn.textContent = t('previewSave');
+  }
   previewState = null;
   shareBusy = false;
   runAfterCardPreviewHooks();
@@ -6232,10 +6333,11 @@ async function drawMatchCardCanvas(m, mode){
   const photo = await loadCanvasImage(photoSrc);
   const ovr = Math.round(Math.min(99, Math.max(45, Number(m.rating) * 10)));
   const theme = futTheme(ovr, mode);
-  const w = 1280;
-  const left = 52, right = w - 52, textX = 248;
-  const headX = right - 330;
-  const headW = headX - textX - 32;
+  // 1080 keeps the card sharp on phones without the old 1280×2 encode freeze.
+  const w = 1080;
+  const left = 44, right = w - 44, textX = 220;
+  const headX = right - 280;
+  const headW = headX - textX - 28;
   const kickoff = m.kickoffClock ? t('kickoffLine', {clock: m.kickoffClock}) : '';
   const metaBase = kickoff ? 268 : 232;
   const headBottom = Math.max(262, metaBase + 22);
@@ -6306,8 +6408,8 @@ async function drawMatchCardCanvas(m, mode){
   ctx.lineTo(right, headBottom + 28);
   ctx.stroke();
 
-  const col2 = 664;
-  const colW = 520;
+  const col2 = Math.round(w * 0.52);
+  const colW = right - col2;
   if(!lines.length){
     ctx.fillStyle = theme.plate;
     fitText(ctx, t('plusEven'), left, listTop, right - left, '700', 32, 20);

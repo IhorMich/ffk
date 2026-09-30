@@ -6493,6 +6493,8 @@ ru:{
       reportShareHint:'Send the card to your family chat',
       shareInviteText:'Make a Matchcard for your match\n{url}',
       milestoneShareAsk:'You have {n} matches this season. Share the season card?',
+      previewPreparing:'Preparing card…',
+      previewSharing:'Sharing…',
       onboard3Title:'Share the card after the match',
       onboard3Body:'Save the match, open the card, send it to the family chat. Friends can try Matchcard from the link.',
       onboardDone:'Record first match'
@@ -6502,6 +6504,8 @@ ru:{
       reportShareHint:'Надішли картку в сімейний чат',
       shareInviteText:'Зроби картку свого матчу в Matchcard\n{url}',
       milestoneShareAsk:'У сезоні вже {n} матчів. Поділитися карткою сезону?',
+      previewPreparing:'Готуємо картку…',
+      previewSharing:'Надсилаю…',
       onboard3Title:'Поділіться карткою після матчу',
       onboard3Body:'Збережіть матч, відкрийте картку й надішліть у сімейний чат. Друзі зможуть спробувати Matchcard за посиланням.',
       onboardDone:'Записати перший матч'
@@ -6511,6 +6515,8 @@ ru:{
       reportShareHint:'Wyślij kartę na czat rodzinny',
       shareInviteText:'Zrób kartę swojego meczu w Matchcard\n{url}',
       milestoneShareAsk:'Masz już {n} meczów w sezonie. Udostępnić kartę sezonu?',
+      previewPreparing:'Przygotowuję kartę…',
+      previewSharing:'Udostępniam…',
       onboard3Title:'Udostępnij kartę po meczu',
       onboard3Body:'Zapisz mecz, otwórz kartę i wyślij na czat rodzinny. Znajomi mogą wypróbować Matchcard z linku.',
       onboardDone:'Zapisz pierwszy mecz'
@@ -6520,6 +6526,8 @@ ru:{
       reportShareHint:'Отправь карточку в семейный чат',
       shareInviteText:'Сделай карточку своего матча в Matchcard\n{url}',
       milestoneShareAsk:'В сезоне уже {n} матчей. Поделиться карточкой сезона?',
+      previewPreparing:'Готовим карточку…',
+      previewSharing:'Отправляю…',
       onboard3Title:'Поделись карточкой после матча',
       onboard3Body:'Сохрани матч, открой карточку и отправь в семейный чат. Друзья смогут попробовать Matchcard по ссылке.',
       onboardDone:'Записать первый матч'
@@ -6529,6 +6537,8 @@ ru:{
       reportShareHint:'Envía la carta al chat familiar',
       shareInviteText:'Haz la carta de tu partido en Matchcard\n{url}',
       milestoneShareAsk:'Ya tienes {n} partidos esta temporada. ¿Compartir la carta de temporada?',
+      previewPreparing:'Preparando la carta…',
+      previewSharing:'Compartiendo…',
       onboard3Title:'Comparte la carta tras el partido',
       onboard3Body:'Guarda el partido, abre la carta y envíala al chat familiar. Tus amigos pueden probar Matchcard con el enlace.',
       onboardDone:'Registrar el primer partido'
@@ -6538,6 +6548,8 @@ ru:{
       reportShareHint:'Schick die Karte in den Familienchat',
       shareInviteText:'Mach deine Matchkarte in Matchcard\n{url}',
       milestoneShareAsk:'Du hast schon {n} Spiele in der Saison. Saisonkarte teilen?',
+      previewPreparing:'Karte wird vorbereitet…',
+      previewSharing:'Teilen…',
       onboard3Title:'Karte nach dem Spiel teilen',
       onboard3Body:'Spiel speichern, Karte öffnen und in den Familienchat senden. Freunde können Matchcard über den Link testen.',
       onboardDone:'Erstes Spiel eintragen'
@@ -6547,6 +6559,8 @@ ru:{
       reportShareHint:'Invia la carta alla chat di famiglia',
       shareInviteText:'Crea la carta della tua partita su Matchcard\n{url}',
       milestoneShareAsk:'Hai già {n} partite in stagione. Condividere la carta stagione?',
+      previewPreparing:'Preparazione carta…',
+      previewSharing:'Condivisione…',
       onboard3Title:'Condividi la carta dopo la partita',
       onboard3Body:'Salva la partita, apri la carta e inviala in chat. Gli amici possono provare Matchcard dal link.',
       onboardDone:'Registra la prima partita'
@@ -6556,6 +6570,8 @@ ru:{
       reportShareHint:'Envoie la carte dans le chat familial',
       shareInviteText:'Fais la carte de ton match sur Matchcard\n{url}',
       milestoneShareAsk:'Tu as déjà {n} matchs cette saison. Partager la carte de saison ?',
+      previewPreparing:'Préparation de la carte…',
+      previewSharing:'Partage…',
       onboard3Title:'Partage la carte après le match',
       onboard3Body:'Enregistre le match, ouvre la carte et envoie-la au chat familial. Les amis peuvent essayer Matchcard via le lien.',
       onboardDone:'Enregistrer le premier match'
@@ -6565,6 +6581,8 @@ ru:{
       reportShareHint:'Envia o cartão para o chat da família',
       shareInviteText:'Faz o cartão do teu jogo no Matchcard\n{url}',
       milestoneShareAsk:'Já tens {n} jogos esta época. Partilhar o cartão da época?',
+      previewPreparing:'A preparar o cartão…',
+      previewSharing:'A partilhar…',
       onboard3Title:'Partilha o cartão depois do jogo',
       onboard3Body:'Guarda o jogo, abre o cartão e envia para o chat da família. Os amigos podem experimentar o Matchcard pelo link.',
       onboardDone:'Registar o primeiro jogo'

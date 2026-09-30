@@ -1669,6 +1669,10 @@ window.ffkIsNative = function () {
   <div class="preview-modal" id="previewModal" hidden>
     <div class="preview-card" id="previewCard">
       <div class="sheet-grab" id="previewGrab" aria-hidden="true"><span></span></div>
+      <div class="preview-loading" id="previewLoading" hidden>
+        <span class="preview-loading-spin" aria-hidden="true"></span>
+        <p id="previewLoadingText" data-i18n="previewPreparing">Готовим карточку…</p>
+      </div>
       <img id="previewImg" alt="">
       <div class="card-legend" id="previewLegend" hidden></div>
       <div class="period-chips period-switch" id="previewPeriod" hidden>
