@@ -413,10 +413,7 @@ function syncSettingsAccountFooter(personalEmail){
     status.style.whiteSpace = lines.length > 1 ? 'pre-line' : '';
   }
   if(signOutBtn) signOutBtn.hidden = !(personal || coachEmail);
-  if(coachEmailEl){
-    coachEmailEl.hidden = !coachEmail;
-    if(coachEmail) coachEmailEl.textContent = t('settingsAccountCoach', {email: coachEmail});
-  }
+  if(coachEmailEl) coachEmailEl.hidden = true;
 }
 async function syncPersonalAccountUi(){
   const session = await getPersonalAccountSession();
@@ -428,22 +425,24 @@ async function syncPersonalAccountUi(){
   const onCoach = isCoachPlan();
   if(status){
     if(email){
-      status.textContent = isPro()
-        ? t('accountStatusPro', {email})
-        : t('accountStatusFree', {email});
+      // Top status line already shows the signed-in email.
+      status.hidden = true;
+      status.textContent = '';
     }else if(onCoach && coachEmail){
-      // Only claim "Coach mode" when the Coach plan tab is actually active.
+      status.hidden = false;
       status.textContent = t('accountHintCoachActive');
     }else{
-      // Parent / Free mode: never say "you are in Coach" just because a coach
-      // session still exists for switching back later.
+      status.hidden = false;
       status.textContent = t('accountHint');
     }
   }
   // Free/Pro login must stay available even while a Coach session exists —
   // they are separate products. Hide only when personal email is signed in.
   if(form) form.hidden = !!email;
-  if(signOutBtn) signOutBtn.hidden = !email;
+  const panel = document.getElementById('personalAccountCard');
+  if(panel) panel.hidden = !!email;
+  // One sign-out control: settingsSignOutBtn (see syncSettingsAccountFooter).
+  if(signOutBtn) signOutBtn.hidden = true;
   syncSettingsAccountFooter(email);
   updateCloudSyncStatusUi();
   return session;
@@ -711,13 +710,8 @@ function syncCoachBillingUi(){
   document.documentElement.classList.toggle('is-coach-sub', on);
   const unlock = document.getElementById('coachSubUnlockBtn');
   const lock = document.getElementById('coachSubLockBtn');
-  const hint = document.getElementById('coachSubHint');
   if(unlock) unlock.hidden = !showBilling || on;
   if(lock) lock.hidden = !showBilling || !on;
-  if(hint){
-    hint.hidden = !showBilling;
-    if(showBilling) hint.textContent = t('coachSubHint') || hint.textContent;
-  }
   const open = document.getElementById('openCoachBtn');
   if(open) open.disabled = false;
 }
@@ -732,9 +726,7 @@ function syncPushSettingsUi(){
   if(unlock) unlock.hidden = on;
   if(lock) lock.hidden = !on;
   if(st){
-    st.textContent = on
-      ? t('coachPushOn')
-      : t('coachPushHint');
+    st.textContent = on ? t('coachPushOn') : t('coachPushOff');
   }
   if(typeof syncInboxBellUi === 'function') syncInboxBellUi();
 }
@@ -762,11 +754,6 @@ function syncProUi(){
   if(lock){
     lock.hidden = !isPro();
     lock.disabled = false;
-  }
-  const testHint = document.getElementById('proTestHint');
-  if(testHint){
-    testHint.hidden = false;
-    testHint.textContent = t('proTestHint') || 'Test unlock on this phone. Store billing comes later.';
   }
   const cloudCard = document.getElementById('cloudSyncCard');
   if(cloudCard) cloudCard.hidden = !isPro();

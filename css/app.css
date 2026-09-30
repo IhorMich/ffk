@@ -1330,31 +1330,60 @@
   .save-btn:disabled,.ghost-btn:disabled,.backup-btn:disabled,.live-start:disabled{
     opacity:.42;filter:saturate(.3);cursor:default;
   }
-  .settings-page{display:grid;gap:22px;padding-bottom:28px;}
+  .settings-page{display:grid;gap:0;padding-bottom:32px;}
   .settings-block{
-    display:grid;gap:10px;
-    padding:14px 0 4px;
+    display:grid;gap:12px;
+    padding:18px 0;
     border-top:1px solid var(--line, rgba(255,255,255,.08));
   }
-  .settings-block:first-child{border-top:0;padding-top:0;}
-  .settings-subhead{margin-top:6px;}
-  .settings-links{display:grid;gap:2px;margin:4px 0 10px;}
+  .settings-block:first-child{border-top:0;padding-top:4px;}
+  .settings-block > .period-head{margin:0;}
+  .settings-status{
+    margin:0;font-size:.95rem;font-weight:600;line-height:1.45;
+    color:var(--text, inherit);
+  }
+  .settings-status-sub{
+    font-size:.86rem;font-weight:600;opacity:.72;
+  }
+  .settings-panel{
+    display:grid;gap:10px;
+    padding:14px 14px 12px;
+    border-radius:16px;
+    background:var(--card-paper, rgba(255,255,255,.04));
+    border:1px solid var(--card-line, rgba(255,255,255,.08));
+  }
+  .settings-actions{
+    display:flex;flex-wrap:wrap;gap:8px;align-items:center;
+  }
+  .settings-actions .save-btn,
+  .settings-actions .ghost-btn{margin:0;}
+  .settings-links{display:grid;gap:0;margin:0;}
   .settings-link{
     display:block;width:100%;box-sizing:border-box;text-align:left;
     background:transparent;border:0;border-radius:10px;
-    padding:12px 4px;margin:0;
+    padding:11px 2px;margin:0;
     font:inherit;font-weight:700;font-size:.95rem;
     color:var(--accent, var(--gold, #E8C56A));
     text-decoration:none;cursor:pointer;
   }
   .settings-link:hover,.settings-link:focus-visible{opacity:.88;}
-  .settings-block .danger-btn{margin-top:4px;}
-  .settings-block-about .save-btn{margin-top:8px;}
+  .settings-block-about .save-btn{margin-top:2px;}
+  .settings-block-danger{
+    border-top:1px solid rgba(220,80,80,.28);
+    padding-top:16px;
+  }
+  .settings-block-danger .danger-btn{margin:0;justify-self:start;}
   #view-settings .pro-card{margin:0;}
-  #view-settings .backup-row{margin:4px 0 8px;}
+  #view-settings .pro-card .settings-actions{margin-top:2px;}
+  #view-settings .pro-card .ghost-btn{margin-top:0;}
+  #view-settings .backup-row{margin:0;}
   #view-settings .field{margin:0;}
+  #view-settings .field .period-chips{margin-top:6px;}
   html.theme-day .settings-block{
     border-top-color:rgba(0,0,0,.08);
+  }
+  html.theme-day .settings-panel{
+    background:rgba(255,255,255,.72);
   }
   .pro-card{
     margin:0 0 16px;padding:16px 16px 14px 18px;border-radius:18px;
