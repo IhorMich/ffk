@@ -4078,6 +4078,7 @@
   let trainCalMonth = ''; // YYYY-MM
   let trainFormOpen = false;
   let trainMode = 'once';
+  let trainSelectedDate = '';
   const TRAIN_FOLD_KEY = 'ffk_coach_train_fold';
   function trainFolded(){
     try{ return sessionStorage.getItem(TRAIN_FOLD_KEY) === '1'; }catch(e){ return false; }
@@ -4088,10 +4089,8 @@
   function syncTrainFoldUi(){
     const body = document.getElementById('coachTrainBody');
     const btn = document.getElementById('coachTrainFoldBtn');
-    const lead = document.getElementById('coachTrainLead');
     const folded = trainFolded();
     if(body) body.hidden = folded;
-    if(lead) lead.hidden = folded;
     if(btn){
       btn.setAttribute('aria-expanded', folded ? 'false' : 'true');
       btn.textContent = folded ? '▾' : '▴';
@@ -4100,7 +4099,17 @@
         : tt('coachTrainCollapseHint', 'Hide calendar');
     }
   }
-
+  function syncTrainNewBtnUi(){
+    const btn = document.getElementById('coachTrainNewBtn');
+    if(!btn) return;
+    if(trainFormOpen){
+      btn.textContent = tt('coachTrainCloseForm', 'Close');
+      btn.classList.add('is-open');
+    }else{
+      btn.textContent = tt('coachTrainNewBtn', '+ Training');
+      btn.classList.remove('is-open');
+    }
+  }
   function trainMonthKey(d){
     const x = d instanceof Date ? d : new Date();
     return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}`;
@@ -4132,16 +4141,41 @@
     const m = document.getElementById(mId)?.value || '';
     return (h !== '' && m !== '') ? `${h}:${m}` : '';
   }
-  function setTrainFormOpen(on){
+  function setTrainFormOpen(on, opts){
+    opts = opts || {};
     trainFormOpen = !!on;
+    if(trainFormOpen && trainFolded()){
+      setTrainFolded(false);
+      syncTrainFoldUi();
+    }
     const wrap = document.getElementById('coachTrainCreate');
     if(wrap) wrap.hidden = !trainFormOpen;
     if(trainFormOpen){
       ensureTrainTimeSelects();
       const dateEl = document.getElementById('coachTrainDate');
-      if(dateEl && !dateEl.value) dateEl.value = today();
+      if(opts.date && dateEl){
+        dateEl.value = opts.date;
+        trainSelectedDate = opts.date;
+      }else if(dateEl && !dateEl.value){
+        dateEl.value = trainSelectedDate || today();
+      }
+      if(opts.mode) trainMode = opts.mode;
       syncTrainModeUi();
+      try{ wrap.scrollIntoView({behavior: 'smooth', block: 'nearest'}); }catch(e){}
+    }else if(!opts.keepDate){
+      trainSelectedDate = '';
     }
+    syncTrainNewBtnUi();
+  }
+  function openTrainDay(ymd){
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(String(ymd || ''))) return;
+    trainSelectedDate = ymd;
+    trainMode = 'once';
+    setTrainFormOpen(true, {date: ymd, mode: 'once'});
+    const session = global.CoachStore && global.CoachStore.getSession();
+    const teamId = global.CoachStore && global.CoachStore.getActiveTeamId && global.CoachStore.getActiveTeamId();
+    const team = session && teamId ? global.CoachStore.getTeam(session, teamId) : null;
+    if(session && team) renderTrainCalendar(session, team);
   }
   function syncTrainModeUi(){
     document.querySelectorAll('#coachTrainMode .chip').forEach(chip => {
@@ -4190,13 +4224,12 @@
       arr.push(tr);
       byDate.set(tr.date, arr);
     });
-    const firstDow = new Date(y, m - 1, 1).getDay(); // 0 Sun
-    // Monday-first grid
+    const firstDow = new Date(y, m - 1, 1).getDay();
     const offset = (firstDow + 6) % 7;
     const daysInMonth = new Date(y, m, 0).getDate();
     const heads = [1,2,3,4,5,6,0].map(d => `<span class="coach-train-dow">${esc(weekdayShort(d))}</span>`).join('');
     let cells = '';
-    for(let i = 0; i < offset; i++) cells += `<span class="coach-train-cell is-empty"></span>`;
+    for(let i = 0; i < offset; i++) cells += `<span class="coach-train-cell is-empty" aria-hidden="true"></span>`;
     const todayStr = today();
     for(let day = 1; day <= daysInMonth; day++){
       const ymd = `${y}-${String(m).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
@@ -4204,10 +4237,11 @@
       const cls = [
         'coach-train-cell',
         hits.length ? 'has-train' : '',
-        ymd === todayStr ? 'is-today' : ''
+        ymd === todayStr ? 'is-today' : '',
+        ymd === trainSelectedDate ? 'is-selected' : ''
       ].filter(Boolean).join(' ');
       const marks = hits.slice(0, 3).map(() => '<i></i>').join('');
-      cells += `<button type="button" class="${cls}" data-train-day="${esc(ymd)}"><span>${day}</span><span class="coach-train-dots">${marks}</span></button>`;
+      cells += `<button type="button" class="${cls}" data-train-day="${ymd}" aria-label="${ymd}"><span>${day}</span><span class="coach-train-dots">${marks}</span></button>`;
     }
     box.innerHTML = `<div class="coach-train-dow-row">${heads}</div><div class="coach-train-grid">${cells}</div>`;
   }
@@ -4275,13 +4309,17 @@
     }
     box.hidden = false;
     ensureTrainTimeSelects();
-    setTrainFormOpen(trainFormOpen);
     syncTrainFoldUi();
+    const wrap = document.getElementById('coachTrainCreate');
+    if(wrap) wrap.hidden = !trainFormOpen;
+    syncTrainNewBtnUi();
+    syncTrainModeUi();
     if(!trainFolded()){
       renderTrainCalendar(session, team);
       renderTrainList(session, team);
     }
   }
+
   function onSaveTraining(){
     const store = global.CoachStore;
     const session = store && store.getSession();
@@ -4307,6 +4345,7 @@
         toast(tt('coachTrainSavedOnce', 'Training saved. Parents can see it.'));
       }
       trainFormOpen = false;
+      trainSelectedDate = '';
       document.querySelectorAll('#coachTrainWeekdays .chip').forEach(c => c.classList.remove('active'));
       document.querySelectorAll('#coachTrainNotify .chip').forEach(c => {
         c.classList.toggle('active', c.dataset.notify === '60');
@@ -4775,19 +4814,36 @@
 
     document.getElementById('coachTrainFoldBtn')?.addEventListener('click', () => {
       setTrainFolded(!trainFolded());
+      if(trainFolded()) setTrainFormOpen(false, {keepDate: true});
       renderCoachUi();
     });
     document.getElementById('coachTrainNewBtn')?.addEventListener('click', () => {
-      if(trainFolded()){
-        setTrainFolded(false);
-        syncTrainFoldUi();
+      if(trainFormOpen){
+        setTrainFormOpen(false);
+      }else{
+        setTrainFormOpen(true, {date: trainSelectedDate || today(), mode: trainMode || 'once'});
+        const session = global.CoachStore && global.CoachStore.getSession();
+        const teamId = global.CoachStore && global.CoachStore.getActiveTeamId && global.CoachStore.getActiveTeamId();
+        const team = session && teamId ? global.CoachStore.getTeam(session, teamId) : null;
+        if(session && team && !trainFolded()) renderTrainCalendar(session, team);
       }
-      setTrainFormOpen(true);
     });
     document.getElementById('coachTrainCancelBtn')?.addEventListener('click', () => {
       setTrainFormOpen(false);
+      const session = global.CoachStore && global.CoachStore.getSession();
+      const teamId = global.CoachStore && global.CoachStore.getActiveTeamId && global.CoachStore.getActiveTeamId();
+      const team = session && teamId ? global.CoachStore.getTeam(session, teamId) : null;
+      if(session && team && !trainFolded()) renderTrainCalendar(session, team);
     });
     document.getElementById('coachTrainSaveBtn')?.addEventListener('click', () => onSaveTraining());
+    document.getElementById('coachTrainDate')?.addEventListener('change', () => {
+      const v = document.getElementById('coachTrainDate')?.value || '';
+      trainSelectedDate = v;
+      const session = global.CoachStore && global.CoachStore.getSession();
+      const teamId = global.CoachStore && global.CoachStore.getActiveTeamId && global.CoachStore.getActiveTeamId();
+      const team = session && teamId ? global.CoachStore.getTeam(session, teamId) : null;
+      if(session && team && !trainFolded()) renderTrainCalendar(session, team);
+    });
     document.getElementById('coachTrainMode')?.addEventListener('click', e => {
       const chip = e.target.closest('[data-train-mode]');
       if(!chip) return;
@@ -4815,14 +4871,11 @@
       shiftTrainMonth(1);
       renderCoachUi();
     });
-    document.getElementById('coachTrainCalendar')?.addEventListener('click', e => {
+    document.getElementById('coachTrainingsBox')?.addEventListener('click', e => {
       const day = e.target.closest('[data-train-day]');
-      if(!day) return;
-      trainMode = 'once';
-      setTrainFormOpen(true);
-      const dateEl = document.getElementById('coachTrainDate');
-      if(dateEl) dateEl.value = day.dataset.trainDay;
-      syncTrainModeUi();
+      if(!day || !document.getElementById('coachTrainingsBox')?.contains(day)) return;
+      e.preventDefault();
+      openTrainDay(day.getAttribute('data-train-day') || day.dataset.trainDay || '');
     });
     document.getElementById('coachTrainList')?.addEventListener('click', e => {
       const btn = e.target.closest('[data-cancel-train]');

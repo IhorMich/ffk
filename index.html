@@ -337,27 +337,28 @@ window.ffkIsNative = function () {
 
       <div id="coachMatchTab" class="coach-tab-panel" hidden>
         <div class="coach-hero">
-          <div class="coach-match-top">
-            <div>
-              <div class="pro-kicker" data-i18n="coachMatchKicker">Предстоящие</div>
-              <h3 class="coach-team-heading" id="coachMatchTabTeam">—</h3>
-            </div>
-            <button type="button" class="save-btn coach-match-new" id="coachMatchNewBtn" data-i18n="coachMatchNewBtn">+ Новый матч</button>
-          </div>
-
-
-          <div id="coachTrainingsBox" class="coach-trainings">
-            <div class="coach-match-top">
+          <div id="coachTrainingsBox" class="coach-section coach-trainings">
+            <div class="coach-section-head">
               <div>
                 <div class="pro-kicker" data-i18n="coachTrainKicker">Тренировки</div>
-                <p class="hint" id="coachTrainLead" data-i18n="coachTrainLead">Календарь команды. Родители увидят расписание автоматически.</p>
+                <p class="hint" id="coachTrainLead" data-i18n="coachTrainLead">Календарь команды. Нажми день или «+ Тренировка».</p>
               </div>
               <div class="coach-train-top-actions">
-                <button type="button" class="ghost-btn coach-fold-btn" id="coachTrainFoldBtn" aria-expanded="true" data-i18n-aria="coachTrainFoldAria" aria-label="Свернуть календарь">▾</button>
+                <button type="button" class="ghost-btn coach-fold-btn" id="coachTrainFoldBtn" aria-expanded="true" data-i18n-aria="coachTrainFoldAria" aria-label="Свернуть">▴</button>
                 <button type="button" class="save-btn" id="coachTrainNewBtn" data-i18n="coachTrainNewBtn">+ Тренировка</button>
               </div>
             </div>
-            <div id="coachTrainCreate" class="coach-match-create" hidden>
+            <div id="coachTrainBody" class="coach-train-body">
+              <div class="coach-train-cal-block">
+                <div class="coach-train-cal-nav">
+                  <button type="button" class="ghost-btn coach-fold-btn" id="coachTrainPrevMonth" aria-label="prev">‹</button>
+                  <b id="coachTrainMonthLabel">—</b>
+                  <button type="button" class="ghost-btn coach-fold-btn" id="coachTrainNextMonth" aria-label="next">›</button>
+                </div>
+                <div id="coachTrainCalendar" class="coach-train-calendar" aria-label="training calendar"></div>
+                <p class="hint coach-train-cal-hint" data-i18n="coachTrainCalHint">Нажми день в календаре, чтобы поставить тренировку.</p>
+              </div>
+<div id="coachTrainCreate" class="coach-match-create" hidden>
               <div class="pro-kicker" data-i18n="coachTrainCreateKicker">Новая тренировка</div>
               <div class="period-chips coach-train-mode" id="coachTrainMode">
                 <button type="button" class="chip active" data-train-mode="once" data-i18n="coachTrainModeOnce">Одна дата</button>
@@ -415,17 +416,22 @@ window.ffkIsNative = function () {
                 <button type="button" class="ghost-btn" id="coachTrainCancelBtn" data-i18n="previewCancel">Отмена</button>
               </div>
             </div>
-            <div id="coachTrainBody" class="coach-train-body">
-              <div class="coach-train-cal-nav">
-                <button type="button" class="ghost-btn coach-fold-btn" id="coachTrainPrevMonth" aria-label="prev">‹</button>
-                <b id="coachTrainMonthLabel">—</b>
-                <button type="button" class="ghost-btn coach-fold-btn" id="coachTrainNextMonth" aria-label="next">›</button>
+              <div class="coach-train-upcoming">
+                <div class="pro-kicker" data-i18n="coachTrainUpcomingKicker">Ближайшие</div>
+                <div id="coachTrainList" class="coach-player-list coach-train-list"></div>
+                <div id="coachTrainRules" class="coach-train-rules"></div>
               </div>
-              <div id="coachTrainCalendar" class="coach-train-calendar" aria-label="training calendar"></div>
-              <div id="coachTrainList" class="coach-player-list coach-train-list"></div>
-              <div id="coachTrainRules" class="coach-train-rules"></div>
             </div>
           </div>
+
+          <div class="coach-section coach-matches-section">
+            <div class="coach-section-head">
+              <div>
+                <div class="pro-kicker" data-i18n="coachMatchKicker">Матчи</div>
+                <h3 class="coach-team-heading" id="coachMatchTabTeam">—</h3>
+              </div>
+              <button type="button" class="save-btn coach-match-new" id="coachMatchNewBtn" data-i18n="coachMatchNewBtn">+ Новый матч</button>
+            </div>
 
           <div id="coachMatchCreate" class="coach-match-create" hidden>
             <div class="pro-kicker" data-i18n="coachMatchCreateKicker">Новый матч</div>
