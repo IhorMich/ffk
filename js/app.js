@@ -3253,9 +3253,15 @@ function scoresNow(){
   const pos = currentPos();
   const minutes = Number(document.getElementById('f-minutes').value) || 60;
   const matchLen = formatLength(document.getElementById('f-format').value, document.getElementById('f-matchlen').value);
-  const action = actionScore(form.counts, pos, minutes, matchLen);
-  const effort = effortScore(form.behaviors);
-  return {action, effort, overall: overallScore(form.counts, form.behaviors, pos, minutes, matchLen), pos, minutes, matchLen};
+  const scored = calculateRating({
+    counts: form.counts,
+    behaviors: form.behaviors,
+    position: pos,
+    pitchPos: currentPitch(),
+    minutes,
+    matchLen
+  });
+  return {action: scored.action, effort: scored.effort, overall: scored.overall, pos: scored.position, minutes, matchLen};
 }
 function updateHero(){
   const s = scoresNow();
@@ -3386,22 +3392,25 @@ function fillForm(m){
 }
 
 function collectMatch(){
-  const pos = currentPos();
-  const counts = {...form.counts};
-  const behaviors = {...form.behaviors};
   const minutes = Math.min(120, Math.max(1, Number(document.getElementById('f-minutes').value) || formatLength(document.getElementById('f-format').value, document.getElementById('f-matchlen').value)));
   const format = document.getElementById('f-format').value;
   const matchLen = formatLength(format, document.getElementById('f-matchlen').value);
-  const action = actionScore(counts, pos, minutes, matchLen);
-  const effort = effortScore(behaviors);
+  const scored = calculateRating({
+    counts: form.counts,
+    behaviors: form.behaviors,
+    position: currentPos(),
+    pitchPos: currentPitch(),
+    minutes,
+    matchLen
+  });
   return {
     id: editingId || Date.now(),
     player: isCoachRateMode() ? (coachRateCtx.playerName || displayName()) : displayName(),
     date: document.getElementById('f-date').value || todayStr(),
     opponent: document.getElementById('f-opponent').value.trim(),
     score: scoreFromFields(),
-    pitchPos: currentPitch(),
-    position: pos,
+    pitchPos: scored.pitchPos,
+    position: scored.position,
     tournament: document.getElementById('f-kind').value === 'friendly' ? '' : document.getElementById('f-tournament').value.trim().slice(0,48),
     venue: document.getElementById('f-venue').value === 'away' ? 'away' : 'home',
     role: document.getElementById('f-role').value === 'sub' ? 'sub' : 'start',
@@ -3414,13 +3423,14 @@ function collectMatch(){
     team: isCoachRateMode()
       ? ((window.CoachStore?.getTeam(window.CoachStore.getSession(), coachRateCtx.teamId) || {}).name || '')
       : ((editingId && matches.find(x => x.id === editingId)?.team) || player.team || player.club || ''),
-    counts, behaviors,
+    counts: {...scored.counts},
+    behaviors: {...scored.behaviorValues},
     timeline: matchClock.events.slice(),
     kickoffAt: matchClock.startedAt || 0,
     kickoffClock: matchClock.startedAt ? [localClock(matchClock.startedAt), tzShort()].filter(Boolean).join(' · ') : '',
-    actionRating: action,
-    effortRating: effort,
-    rating: overallScore(counts, behaviors, pos, minutes, matchLen)
+    actionRating: scored.action,
+    effortRating: scored.effort,
+    rating: scored.overall
   };
 }
 

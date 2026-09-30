@@ -387,22 +387,19 @@ function saveMatches(){
 
 function normalizeMatch(m){
   if(!m || typeof m !== 'object') return null;
-  const pitchPos = isPitchCode(m.pitchPos) ? m.pitchPos : (isPitchCode(m.position) ? m.position : (ratingPosOf(m.position) || 'fwd'));
-  const pos = ratingPosOf(m.pitchPos || m.position);
-  const counts = {};
-  METRICS.forEach(x => counts[x.key] = Math.max(0, Number(m.counts?.[x.key]) || 0));
-  const behaviors = {};
-  BEHAVIOR.forEach(b => {
-    const v = Number(m.behaviors?.[b.key]);
-    behaviors[b.key] = v >= 1 && v <= 5 ? v : 3;
-  });
   const kind = ['league','friendly','cup','tournament'].includes(m.kind) ? m.kind : 'league';
   const format = (FORMAT_MIN[m.format] || m.format === 'custom') ? m.format : '2x30';
   const matchLen = formatLength(format, m.matchLen || m.minutes);
   const minutes = Math.min(120, Math.max(1, Number(m.minutes) || matchLen));
   const date = /^\d{4}-\d{2}-\d{2}$/.test(m.date) ? m.date : todayStr();
-  const action = actionScore(counts, pos, minutes, matchLen);
-  const effort = effortScore(behaviors);
+  const scored = calculateRating({
+    counts: m.counts,
+    behaviors: m.behaviors,
+    position: m.position,
+    pitchPos: m.pitchPos,
+    minutes,
+    matchLen
+  });
   return {
     id: (Number(m.id) > 0 ? Math.floor(Number(m.id)) : 0) || Date.now(),
     player: String(m.player || displayName()),
@@ -410,8 +407,8 @@ function normalizeMatch(m){
     season: String(m.season || '').trim().slice(0,16) || seasonFromDate(date),
     opponent: String(m.opponent || ''),
     score: String(m.score || ''),
-    position: pos,
-    pitchPos,
+    position: scored.position,
+    pitchPos: scored.pitchPos,
     team: String(m.team || player.team || player.club || '').trim().slice(0,40),
     tournament: String(m.tournament || '').slice(0,48),
     venue: m.venue === 'away' ? 'away' : 'home',
@@ -421,13 +418,14 @@ function normalizeMatch(m){
     matchLen,
     minutes,
     comment: String(m.comment || ''),
-    counts, behaviors,
+    counts: scored.counts,
+    behaviors: scored.behaviorValues,
     timeline: normalizeTimeline(m.timeline),
     kickoffAt: Number(m.kickoffAt) || 0,
     kickoffClock: String(m.kickoffClock || '').slice(0, 24).replace(/[\s·]+$/, ''),
-    actionRating: action,
-    effortRating: effort,
-    rating: overallScore(counts, behaviors, pos, minutes, matchLen)
+    actionRating: scored.action,
+    effortRating: scored.effort,
+    rating: scored.overall
   };
 }
 function normalizeTimeline(raw){

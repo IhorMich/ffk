@@ -4293,9 +4293,19 @@
     const matchLen = 60;
     const format = '2x30';
     const behaviors = (typeof emptyForm === 'function') ? emptyForm().behaviors : {};
-    const action = (typeof actionScore === 'function')
+    const scored = (typeof calculateRating === 'function')
+      ? calculateRating({
+          counts: quickRate.counts,
+          behaviors,
+          position: quickRate.position,
+          pitchPos: quickRate.pitchPos,
+          minutes,
+          matchLen
+        })
+      : null;
+    const action = scored ? scored.action : ((typeof actionScore === 'function')
       ? actionScore(quickRate.counts, quickRate.position, minutes, matchLen)
-      : quickRate.rating;
+      : quickRate.rating);
     store.upsertRating(session, {
       match_id: matchId,
       team_player_id: playerId,
@@ -4313,8 +4323,8 @@
       kickoffAt: 0,
       kickoffClock: '',
       actionRating: action,
-      effortRating: 6,
-      rating: clampQuickScore(quickRate.rating),
+      effortRating: scored ? scored.effort : 6,
+      rating: scored ? scored.overall : clampQuickScore(quickRate.rating),
       score: quickRate.score || store.getMatch(session, matchId)?.score || ''
     });
     // Ensure match is in played state once ratings start

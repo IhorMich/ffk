@@ -105,12 +105,42 @@ Debug APK: `cd android && ./gradlew :app:assembleDebug`.
 
 Хранилище PWA в браузере и хранилище приложения — разные. Перенос — через копию или облако.
 
+## Rating Engine
+
+Независимый модуль в `rating/` — без DOM, localStorage и settings:
+
+```
+rating/
+  positions.js
+  metrics.js
+  behaviors.js
+  normalization.js
+  explanations.js
+  engine.js
+```
+
+API:
+
+```js
+const result = calculateRating({
+  counts: { goals: 1 },
+  behaviors: { effort: 4 },
+  position: 'fwd',      // или pitchPos: 'ST'
+  minutes: 60,
+  matchLen: 60
+});
+// → { overall, action, effort, split, contributions, shortOuting, ... }
+```
+
+Проверка: `node rating/selftest.js`. В приложении скрипты грузятся из `index.html`; `js/rating.js` — только совместимость со старыми глобалами.
+
 ## Технически
 
 | | |
 | --- | --- |
 | UI | `index.html`, `css/app.css` |
-| Логика | `js/app.js`, `js/rating.js`, `js/storage.js` |
+| Логика | `js/app.js`, `js/storage.js` |
+| Оценка | `rating/` → `calculateRating(match)` (shim: `js/rating.js`) |
 | i18n | `js/i18n.js` (+ `js/i18n-coach-*.js`) |
 | Coach / Parent | `js/coach-*.js`, `js/parent-*.js`, `js/inbox-store.js` |
 | Облако | Supabase (`supabase/`), `@supabase/supabase-js` |
