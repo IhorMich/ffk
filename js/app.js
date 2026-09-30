@@ -3753,11 +3753,105 @@ function applyImportBundle(imported){
     saveSettings();
   }
 
-  if(!added && !playerTouched) throw new Error('bad');
+  if(!added && !playerTouched) return {added: 0, playerTouched: false, empty: true};
   applyI18n();
   applyTheme();
   applyPlayerContext();
   return {added, playerTouched};
+}
+function readTextFromBlob(file){
+  if(!file) return Promise.reject(new Error('empty'));
+  if(typeof file.text === 'function'){
+    return file.text().then(text => {
+      if(text != null && String(text).length) return String(text);
+      return readTextViaFileReader(file);
+    }).catch(() => readTextViaFileReader(file));
+  }
+  return readTextViaFileReader(file);
+}
+function readTextViaFileReader(file){
+  return new Promise((resolve, reject) => {
+    try{
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result || ''));
+      reader.onerror = () => reject(reader.error || new Error('read'));
+      reader.readAsText(file);
+    }catch(e){ reject(e); }
+  });
+}
+function parseImportJson(raw){
+  let text = String(raw || '').replace(/^\uFEFF/, '').trim();
+  if(!text) throw new Error('empty');
+  // Some share apps wrap JSON in quotes or add junk before/after.
+  if(text[0] !== '{' && text[0] !== '['){
+    const startObj = text.indexOf('{');
+    const startArr = text.indexOf('[');
+    let start = -1;
+    if(startObj >= 0 && startArr >= 0) start = Math.min(startObj, startArr);
+    else start = Math.max(startObj, startArr);
+    const endObj = text.lastIndexOf('}');
+    const endArr = text.lastIndexOf(']');
+    const end = Math.max(endObj, endArr);
+    if(start >= 0 && end > start) text = text.slice(start, end + 1);
+  }
+  const parsed = JSON.parse(text);
+  if(parsed == null || (typeof parsed !== 'object')) throw new Error('bad');
+  return parsed;
+}
+async function pickRestoreJsonText(){
+  if(isNativeApp()){
+    const Gallery = capPlugin('GalleryPicker');
+    if(Gallery && typeof Gallery.pickDocument === 'function'){
+      try{
+        const ret = await Gallery.pickDocument();
+        if(ret && ret.text) return String(ret.text);
+      }catch(e){
+        const code = String(e && (e.code || e.message) || '');
+        if(/CANCELLED|cancel/i.test(code)) return null;
+        // Fall through to HTML input if native picker missing/unavailable.
+      }
+    }
+  }
+  return new Promise(resolve => {
+    const input = document.getElementById('importFile');
+    if(!input){ resolve(null); return; }
+    const onChange = async (e) => {
+      input.removeEventListener('change', onChange);
+      const file = e.target.files && e.target.files[0];
+      input.value = '';
+      if(!file){ resolve(null); return; }
+      try{ resolve(await readTextFromBlob(file)); }
+      catch(err){ resolve(''); }
+    };
+    input.addEventListener('change', onChange);
+    input.click();
+  });
+}
+async function runRestoreFromJson(rawText){
+  if(rawText == null) return false;
+  if(!String(rawText || '').trim()){
+    showToast(t('toastReadFail'));
+    return false;
+  }
+  let parsed;
+  try{
+    parsed = parseImportJson(rawText);
+  }catch(err){
+    showToast(t('toastReadFail'));
+    return false;
+  }
+  try{
+    const result = applyImportBundle(parsed);
+    if(result && result.empty){
+      showToast(t('toastNoNew'));
+      return true;
+    }
+    showToast(result.added ? t('toastAdded', {n: result.added}) : (result.playerTouched ? t('toastPlayer') : t('toastNoNew')));
+    return true;
+  }catch(err){
+    showToast(t('toastReadFail'));
+    return false;
+  }
 }
 function exportBlob(){
   return {
@@ -3792,7 +3886,13 @@ function triggerDownload(blob, filename){
 }
 
 document.getElementById('exportBtn').addEventListener('click', downloadMatches);
-document.getElementById('importBtn').addEventListener('click', () => document.getElementById('importFile').click());
+document.getElementById('importBtn').addEventListener('click', async () => {
+  try{
+    await runRestoreFromJson(await pickRestoreJsonText());
+  }catch(err){
+    showToast(t('toastReadFail'));
+  }
+});
 document.getElementById('copyBtn').addEventListener('click', async () => {
   if(!requirePro('export')) return;
   try{
@@ -3854,15 +3954,13 @@ document.getElementById('appVersionHint')?.addEventListener('click', () => {
   applyI18n();
   showToast(settings.devBilling ? t('devBillingOn') : t('devBillingOff'));
 });
-document.getElementById('importFile').addEventListener('change', async (e) => {
-  const file = e.target.files[0];
-  if(!file) return;
-  try{
-    const result = applyImportBundle(JSON.parse(await file.text()));
-    showToast(result.added ? t('toastAdded', {n: result.added}) : (result.playerTouched ? t('toastPlayer') : t('toastNoNew')));
-  }catch(err){ showToast(t('toastReadFail')); }
-  e.target.value = '';
-});
+try{
+  const importInput = document.getElementById('importFile');
+  const transferInput = document.getElementById('transferFile');
+  if(importInput) importInput.accept = '.json,application/json,text/plain,*/*';
+  if(transferInput) transferInput.accept = '.json,application/json,text/plain,*/*';
+}catch(e){}
+/* importFile change is owned by pickRestoreJsonText() */
 
 let currentRange = '10';
 let currentSeasonFilter = 'current';
@@ -5072,18 +5170,16 @@ document.getElementById('onboardNext').addEventListener('click', () => {
   renderOnboard();
 });
 document.getElementById('onboardSkip').addEventListener('click', finishOnboard);
-document.getElementById('transferPick').addEventListener('click', () => document.getElementById('transferFile').click());
-document.getElementById('transferSkip').addEventListener('click', finishTransfer);
-document.getElementById('transferFile').addEventListener('change', async (e) => {
-  const file = e.target.files[0];
-  if(!file) return;
+document.getElementById('transferPick').addEventListener('click', async () => {
   try{
-    const result = applyImportBundle(JSON.parse(await file.text()));
-    showToast(result.added ? t('toastAdded', {n: result.added}) : (result.playerTouched ? t('toastPlayer') : t('toastNoNew')));
-    finishTransfer();
-  }catch(err){ showToast(t('toastReadFail')); }
-  e.target.value = '';
+    const text = await pickRestoreJsonText();
+    if(text == null) return;
+    if(await runRestoreFromJson(text)) finishTransfer();
+  }catch(err){
+    showToast(t('toastReadFail'));
+  }
 });
+document.getElementById('transferSkip').addEventListener('click', finishTransfer);
 document.getElementById('settingsBtn').addEventListener('click', () => {
   document.getElementById('s-lang').value = settings.lang;
   refreshBackupBanner();

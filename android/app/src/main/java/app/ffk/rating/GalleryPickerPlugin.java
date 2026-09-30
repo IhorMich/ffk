@@ -155,6 +155,68 @@ public class GalleryPickerPlugin extends Plugin {
     }
   }
 
+  /**
+   * Restore: pick a JSON backup from Files / Downloads. WebView file inputs
+   * often fail on content:// URIs after saveDocument writes there.
+   */
+  @PluginMethod
+  public void pickDocument(PluginCall call) {
+    Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+    intent.addCategory(Intent.CATEGORY_OPENABLE);
+    intent.setType("*/*");
+    intent.putExtra(Intent.EXTRA_MIME_TYPES, new String[] {
+      "application/json",
+      "text/plain",
+      "text/json",
+      "application/octet-stream"
+    });
+    try {
+      startActivityForResult(call, intent, "pickDocumentResult");
+    } catch (ActivityNotFoundException e) {
+      call.reject("no document picker", "NO_PICKER");
+    }
+  }
+
+  @ActivityCallback
+  private void pickDocumentResult(PluginCall call, ActivityResult result) {
+    if (call == null) return;
+    Uri uri = result.getData() != null ? result.getData().getData() : null;
+    if (result.getResultCode() != Activity.RESULT_OK || uri == null) {
+      call.reject("cancelled", "CANCELLED");
+      return;
+    }
+    try {
+      String text = readUtf8(uri);
+      if (text == null || text.trim().isEmpty()) {
+        call.reject("empty file", "EMPTY");
+        return;
+      }
+      JSObject ret = new JSObject();
+      ret.put("text", text);
+      ret.put("uri", uri.toString());
+      call.resolve(ret);
+    } catch (Exception e) {
+      call.reject(e.getMessage() == null ? "read failed" : e.getMessage(), "READ");
+    }
+  }
+
+  private String readUtf8(Uri uri) throws Exception {
+    try (InputStream in = getContext().getContentResolver().openInputStream(uri)) {
+      if (in == null) return null;
+      ByteArrayOutputStream out = new ByteArrayOutputStream();
+      byte[] buf = new byte[16 * 1024];
+      int n;
+      while ((n = in.read(buf)) >= 0) out.write(buf, 0, n);
+      byte[] bytes = out.toByteArray();
+      // Strip UTF-8 BOM if present.
+      int offset = 0;
+      if (bytes.length >= 3 && (bytes[0] & 0xff) == 0xef && (bytes[1] & 0xff) == 0xbb && (bytes[2] & 0xff) == 0xbf) {
+        offset = 3;
+      }
+      return new String(bytes, offset, bytes.length - offset, java.nio.charset.StandardCharsets.UTF_8);
+    }
+  }
+
   @ActivityCallback
   private void pickResult(PluginCall call, ActivityResult result) {
     if (call == null) return;
