@@ -3068,21 +3068,22 @@
     #view-stats.active .stats-layout{
       display:grid;
       grid-template-columns:minmax(0,1.25fr) minmax(320px,400px);
-      grid-template-areas:none;
+      grid-template-areas:"main side";
       gap:24px;
-      align-items:stretch;
+      align-items:start;
       width:100%;
       margin:0;
     }
-    #view-stats.active .stats-main,
-    #view-stats.active .stats-side{
-      grid-area:auto;
+    #view-stats.active .stats-main{
+      grid-area:main;
       min-width:0;
       display:flex;
       flex-direction:column;
       gap:14px;
     }
     #view-stats.active .stats-side{
+      grid-area:side;
+      min-width:0;
       position:sticky;
       top:12px;
       align-self:start;
