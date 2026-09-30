@@ -245,7 +245,7 @@
       }
     }catch(e){}
   }
-  /** Parent account: anonymous when the project allows it, otherwise email + password. */
+  /** Parent account: prefer existing session, then anonymous if the project allows it. */
   async function signInWithEmail(email, password){
     try{
       return await signIn(email, password);
@@ -256,25 +256,20 @@
       throw e;
     }
   }
-  async function promptEmailSession(){
-    if(typeof prompt !== 'function') throw new Error('auth');
-    const email = prompt(tt('parentCloudEmailPrompt', 'Email for syncing across devices:'));
-    if(!email) throw new Error('auth');
-    const password = prompt(tt('parentCloudPasswordPrompt', 'Password (at least 6 characters):'));
-    if(!password) throw new Error('auth');
-    return signInWithEmail(email, password);
-  }
   async function ensureSession(interactive){
     const sb = parentClient();
     if(!sb) throw new Error('no_cloud');
     const existing = await getSession();
     if(existing) return existing;
+    // Never interrupt claim/RSVP with email+password browser prompts.
+    // Cross-device sync uses Settings → Free account or Google when the user wants it.
     if(typeof sb.auth.signInAnonymously === 'function'){
-      const anon = await sb.auth.signInAnonymously();
-      if(anon.data && anon.data.session) return anon.data.session;
+      try{
+        const anon = await sb.auth.signInAnonymously();
+        if(anon.data && anon.data.session) return anon.data.session;
+      }catch(e){}
     }
-    if(!interactive) throw new Error('no_session');
-    return promptEmailSession();
+    throw new Error('no_session');
   }
   function tokenFromUrl(raw){
     const text = String(raw || '');
@@ -360,7 +355,15 @@
     const sb = client('parent');
     const profile = activeProfile();
     if(!sb || !token || !profile) throw new Error('bad_invite');
-    await ensureSession(true);
+    try{
+      await ensureSession(false);
+    }catch(e){
+      // Local claim still works without a cloud session.
+      if(e && (e.message === 'no_session' || e.message === 'no_cloud' || e.message === 'auth')){
+        return null;
+      }
+      throw e;
+    }
     const {data, error} = await sb.rpc('claim_parent_invite', {
       invite_token: token,
       personal_id: profile.id,
