@@ -42,6 +42,17 @@
     if(message.type === 'match_result') return `match_result:${message.match_id}:${message.team_player_id}`;
     return `${message.type || 'message'}:${message.id || ''}`;
   }
+  function safeLabel(v, max){
+    let s = '';
+    if(v == null) s = '';
+    else if(typeof v === 'object'){
+      if(v.name != null && typeof v.name !== 'object') s = String(v.name);
+      else if(v.first_name || v.last_name) s = [v.first_name, v.last_name].filter(Boolean).join(' ');
+    }else s = String(v);
+    s = String(s || '').trim();
+    if(s === '[object Object]') s = '';
+    return s.slice(0, max || 80);
+  }
 
   const InboxStore = {
     listAll(){
@@ -339,10 +350,10 @@
         type: 'chat_message',
         team_player_id: playerId,
         team_id: String(payload.team_id || ''),
-        player_name: String(payload.player_name || '').slice(0, 80),
-        team_name: String(payload.team_name || '').slice(0, 60),
-        academy_name: String(payload.academy_name || '').slice(0, 80),
-        coach_name: String(payload.coach_name || '').slice(0, 80),
+        player_name: safeLabel(payload.player_name, 80),
+        team_name: safeLabel(payload.team_name, 60),
+        academy_name: safeLabel(payload.academy_name, 80),
+        coach_name: safeLabel(payload.coach_name, 80),
         sender_role: role,
         text,
         broadcast_id: String(payload.broadcast_id || ''),
@@ -396,10 +407,10 @@
         type: 'chat_message',
         team_player_id: String(raw.team_player_id),
         team_id: String(raw.team_id || existing && existing.team_id || ''),
-        player_name: String(raw.player_name || existing && existing.player_name || '').slice(0, 80),
-        team_name: String(raw.team_name || existing && existing.team_name || '').slice(0, 60),
-        academy_name: String(raw.academy_name || existing && existing.academy_name || '').slice(0, 80),
-        coach_name: String(raw.coach_name || existing && existing.coach_name || '').slice(0, 80),
+        player_name: safeLabel(raw.player_name || existing && existing.player_name, 80),
+        team_name: safeLabel(raw.team_name || existing && existing.team_name, 60),
+        academy_name: safeLabel(raw.academy_name || existing && existing.academy_name, 80),
+        coach_name: safeLabel(raw.coach_name || existing && existing.coach_name, 80),
         sender_role: raw.sender_role === 'coach' ? 'coach' : 'parent',
         sender_user_id: String(raw.sender_user_id || existing && existing.sender_user_id || ''),
         text: String(raw.body || raw.text || '').slice(0, 500),

@@ -3974,10 +3974,16 @@
       return;
     }
     const academy = store.myAcademy && store.myAcademy(session);
-    const account = store.getAccount && store.getAccount(session);
-    const coachName = account
-      ? [account.first_name, account.last_name].filter(Boolean).join(' ') || account.email || ''
-      : '';
+    const coachName = (() => {
+      const profile = store.getProfile && store.getProfile(session);
+      if(profile){
+        return [profile.first_name, profile.last_name].filter(Boolean).join(' ') || profile.email || '';
+      }
+      const account = store.getAccount && store.getAccount(session);
+      return account
+        ? [account.first_name, account.last_name].filter(Boolean).join(' ') || account.email || ''
+        : '';
+    })();
     const nameEl = document.getElementById('coachBroadcastTeamName');
     const countEl = document.getElementById('coachBroadcastCount');
     const textEl = document.getElementById('coachBroadcastText');

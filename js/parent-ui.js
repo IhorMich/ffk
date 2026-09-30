@@ -5,6 +5,20 @@
       .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
       .replace(/"/g,'&quot;');
   }
+  /** Coerce display labels; hide the classic String(object) glitch. */
+  function labelOf(v, fallback){
+    if(v == null) return fallback || '';
+    if(typeof v === 'object'){
+      if(v.name != null && typeof v.name !== 'object') return labelOf(v.name, fallback);
+      if(v.first_name || v.last_name){
+        return [v.first_name, v.last_name].filter(Boolean).join(' ') || fallback || '';
+      }
+      return fallback || '';
+    }
+    const s = String(v).trim();
+    if(!s || s === '[object Object]') return fallback || '';
+    return s;
+  }
   function toast(msg){
     if(typeof showToast === 'function') showToast(msg);
   }
@@ -146,9 +160,9 @@
       team_player_id: link.player && link.player.id,
       team_id: link.team && link.team.id,
       player_name: playerName(link.player),
-      team_name: link.team && link.team.name || '',
-      academy_name: link.academy && link.academy.name || '',
-      coach_name: link.coach && link.coach.name || ''
+      team_name: labelOf(link.team && link.team.name),
+      academy_name: labelOf(link.academy && link.academy.name),
+      coach_name: labelOf(link.coach && link.coach.name)
     })).filter(x => x.team_player_id);
   }
   let activeChat = null;
@@ -177,9 +191,9 @@
     if(!page || !thread || !activeChat) return;
     const coachMode = typeof isCoachPlan === 'function' && isCoachPlan();
     if(title) title.textContent = coachMode
-      ? (activeChat.player_name || tt('chatFromPlayer', 'Player / parent'))
-      : (activeChat.coach_name || tt('parentCoachLabel', 'Coach'));
-    if(meta) meta.textContent = [activeChat.team_name, activeChat.academy_name].filter(Boolean).join(' · ');
+      ? labelOf(activeChat.player_name, tt('chatFromPlayer', 'Player / parent'))
+      : labelOf(activeChat.coach_name, tt('parentCoachLabel', 'Coach'));
+    if(meta) meta.textContent = [labelOf(activeChat.team_name), labelOf(activeChat.academy_name)].filter(Boolean).join(' · ');
     const messages = chatMessages(activeChat.team_player_id);
     messages.forEach(message => {
       const incoming = coachMode ? message.sender_role === 'parent' : message.sender_role === 'coach';
@@ -444,13 +458,13 @@
         const m = entry.last;
         const target = chatTargets().find(x => String(x.team_player_id) === entry.playerId) || {};
         const title = coachMode
-          ? (target.player_name || m.player_name || tt('chatFromPlayer', 'Player / parent'))
-          : (target.coach_name || m.coach_name || tt('parentCoachLabel', 'Coach'));
+          ? labelOf(target.player_name || m.player_name, tt('chatFromPlayer', 'Player / parent'))
+          : labelOf(target.coach_name || m.coach_name, tt('parentCoachLabel', 'Coach'));
         const count = tt('chatThreadCount', '{n} messages').replace('{n}', String(entry.total));
         return `<button type="button" class="parent-msg-row${entry.unread ? ' unread' : ''}" data-parent-chat="${esc(entry.playerId)}">
           <span class="parent-link-main">
             <b>${esc(title)}</b>
-            <span>${esc([count, m.text].filter(Boolean).join(' · '))}</span>
+            <span>${esc([count, labelOf(m.text)].filter(Boolean).join(' · '))}</span>
           </span>
           ${entry.unread ? `<span class="parent-msg-count">${esc(entry.unread)}</span>` : '<span class="parent-msg-dot" aria-hidden="true"></span>'}
         </button>`;

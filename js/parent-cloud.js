@@ -501,7 +501,9 @@
           player_name: playerName || '',
           team_name: teamName,
           academy_name: link.academy && link.academy.name || '',
-          coach_name: link.coach && link.coach.name || ''
+          coach_name: (link.coach && typeof link.coach.name === 'string' && link.coach.name !== '[object Object]')
+            ? link.coach.name
+            : ''
         });
       }catch(e){}
     });

@@ -9,18 +9,62 @@
   function emptyDb(){
     return {version: 2, links: [], pendingPayload: null, trainingsByTeam: {}};
   }
+  function isBrokenLabel(s){
+    return !s || s === '[object Object]';
+  }
+  function repairNamed(obj, fallback){
+    if(!obj || typeof obj !== 'object') return obj || fallback || null;
+    if(!isBrokenLabel(obj.name)) return obj;
+    const fixed = fallback && !isBrokenLabel(fallback.name) ? fallback.name : '';
+    return {...obj, name: fixed};
+  }
+  /** Recover coach/team/academy labels ruined by double-normalize String(object). */
+  function repairLink(link){
+    if(!link || typeof link !== 'object') return link;
+    let invitePayload = null;
+    try{
+      if(link.token && global.CoachStore && typeof global.CoachStore.findParentInviteByToken === 'function'){
+        const hit = global.CoachStore.findParentInviteByToken(link.token);
+        invitePayload = hit && hit.payload;
+      }else if(link.code && global.CoachStore && typeof global.CoachStore.findParentInviteByCode === 'function'){
+        const hit = global.CoachStore.findParentInviteByCode(link.code);
+        invitePayload = hit && hit.payload;
+      }
+    }catch(e){}
+    let fromInvite = null;
+    try{
+      if(invitePayload) fromInvite = normalizePayload(invitePayload);
+    }catch(e){}
+    const next = {
+      ...link,
+      academy: repairNamed(link.academy, fromInvite && fromInvite.academy),
+      team: repairNamed(link.team, fromInvite && fromInvite.team),
+      coach: repairNamed(link.coach, fromInvite && fromInvite.coach)
+    };
+    const changed =
+      (link.academy && link.academy.name) !== (next.academy && next.academy.name) ||
+      (link.team && link.team.name) !== (next.team && next.team.name) ||
+      (link.coach && link.coach.name) !== (next.coach && next.coach.name);
+    return changed ? next : link;
+  }
   function readDb(){
     try{
       const raw = localStorage.getItem(KEY);
       if(!raw) return emptyDb();
       const db = JSON.parse(raw);
       if(!db || typeof db !== 'object') return emptyDb();
-      return {
+      const links = Array.isArray(db.links) ? db.links.map(repairLink) : [];
+      const changed = links.some((l, i) => l !== db.links[i]);
+      const out = {
         version: 2,
-        links: Array.isArray(db.links) ? db.links : [],
+        links,
         pendingPayload: db.pendingPayload || null,
         trainingsByTeam: db.trainingsByTeam && typeof db.trainingsByTeam === 'object' ? db.trainingsByTeam : {}
       };
+      if(changed){
+        try{ localStorage.setItem(KEY, JSON.stringify(out)); }catch(e){}
+      }
+      return out;
     }catch(e){
       return emptyDb();
     }
@@ -57,6 +101,22 @@
     return null;
   }
 
+  /** Prefer string fields; never String(object) → "[object Object]". */
+  function textField(...candidates){
+    for(const c of candidates){
+      if(c == null || c === '') continue;
+      if(typeof c === 'string' || typeof c === 'number'){
+        const s = String(c).trim();
+        if(s && s !== '[object Object]') return s;
+        continue;
+      }
+      if(typeof c === 'object' && c.name != null && typeof c.name !== 'object'){
+        const s = String(c.name).trim();
+        if(s && s !== '[object Object]') return s;
+      }
+    }
+    return '';
+  }
   function normalizePayload(raw){
     if(!raw || typeof raw !== 'object') throw new Error('bad_payload');
     if(Number(raw.v) !== 1) throw new Error('bad_version');
@@ -64,23 +124,32 @@
     const fn = String(player.fn || player.first_name || '').trim();
     if(!fn) throw new Error('bad_player');
     const ratings = Array.isArray(raw.r || raw.ratings) ? (raw.r || raw.ratings) : [];
+    // Accept both compact invite shape (a/tm/c) and already-normalized
+    // claim shape (academy/team/coach). Re-normalizing must not turn
+    // nested objects into the literal string "[object Object]".
+    const academyObj = raw.a && typeof raw.a === 'object' ? raw.a
+      : (raw.academy && typeof raw.academy === 'object' ? raw.academy : null);
+    const teamObj = raw.tm && typeof raw.tm === 'object' ? raw.tm
+      : (raw.team && typeof raw.team === 'object' ? raw.team : null);
+    const coachObj = raw.c && typeof raw.c === 'object' ? raw.c
+      : (raw.coach && typeof raw.coach === 'object' ? raw.coach : null);
     return {
       v: 1,
       token: String(raw.t || raw.token || '').slice(0, 48),
       code: String(raw.code || '').toUpperCase().slice(0, 12),
       academy: {
-        id: String((raw.a && raw.a.id) || raw.aid || ''),
-        name: String((raw.a && raw.a.name) || raw.an || raw.academy || '').slice(0, 80)
+        id: String((academyObj && academyObj.id) || raw.aid || '').slice(0, 48),
+        name: textField(academyObj && academyObj.name, raw.an, raw.academy).slice(0, 80)
       },
       team: {
-        id: String((raw.tm && raw.tm.id) || raw.tid || ''),
-        name: String((raw.tm && raw.tm.name) || raw.tn || raw.team || '').slice(0, 60),
-        age_group: String((raw.tm && raw.tm.age_group) || raw.ag || '').slice(0, 24),
-        invite_code: String((raw.tm && raw.tm.invite_code) || raw.tc || '').slice(0, 12)
+        id: String((teamObj && teamObj.id) || raw.tid || '').slice(0, 48),
+        name: textField(teamObj && teamObj.name, raw.tn, raw.team).slice(0, 60),
+        age_group: textField(teamObj && teamObj.age_group, raw.ag).slice(0, 24),
+        invite_code: String((teamObj && teamObj.invite_code) || raw.tc || '').slice(0, 12)
       },
       coach: {
-        name: String((raw.c && raw.c.name) || raw.cn || raw.coach || '').slice(0, 80),
-        email: String((raw.c && raw.c.email) || raw.ce || '').slice(0, 80)
+        name: textField(coachObj && coachObj.name, raw.cn, raw.coach).slice(0, 80),
+        email: textField(coachObj && coachObj.email, raw.ce).slice(0, 80)
       },
       player: {
         id: String(player.id || '').slice(0, 48),
