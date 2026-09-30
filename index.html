@@ -1013,8 +1013,10 @@ window.ffkIsNative = function () {
             <input type="file" id="importFile" accept=".json,application/json,text/plain,*/*" hidden>
           </div>
           <div class="pro-card" id="cloudSyncCard" hidden>
-            <div class="pro-kicker" data-i18n="proCloudBtn">Облако Pro</div>
+            <div class="pro-kicker" data-i18n="proCloudBtn">Облако</div>
+            <p class="settings-status" id="cloudSyncAccount" hidden></p>
             <p class="settings-status" id="cloudSyncStatus" data-i18n="proCloudIdle">После каждого сохранённого матча данные уходят в аккаунт сами.</p>
+            <button class="ghost-btn" id="cloudSyncNowBtn" type="button" data-i18n="proCloudSyncNow">Синхронизировать сейчас</button>
           </div>
         </section>
 

@@ -3809,6 +3809,7 @@ ru:{
       proCloudSyncing:'Синхронізуємо…',
       proCloudOk:'Синхронізовано · {time}',
       proCloudErr:'Не вдалося синхронізувати. Спробуємо знову після наступного матчу.',
+      proCloudSyncNow:'Синхронізувати зараз',
       proCloudSoon:'Після кожного збереженого матчу дані самі йдуть в акаунт.',
       devBillingOn:'Режим тест-доступу Pro/Coach увімкнено. Ще 7 тапів по версії — вимкнути.',
       devBillingOff:'Режим тест-доступу вимкнено.'
@@ -3836,6 +3837,7 @@ ru:{
       proCloudSyncing:'Synchronizacja…',
       proCloudOk:'Zsynchronizowano · {time}',
       proCloudErr:'Nie udało się zsynchronizować. Spróbujemy po następnym meczu.',
+      proCloudSyncNow:'Synchronizuj teraz',
       proCloudSoon:'Po każdym zapisanym meczu dane same idą na konto.',
       devBillingOn:'Tryb testowego dostępu Pro/Coach włączony. Kolejne 7 stuknięć wersji — wyłącza.',
       devBillingOff:'Tryb testowego dostępu wyłączony.'
@@ -3863,6 +3865,7 @@ ru:{
       proCloudSyncing:'Syncing…',
       proCloudOk:'Synced · {time}',
       proCloudErr:'Could not sync. We\'ll try again after the next match.',
+      proCloudSyncNow:'Sync now',
       proCloudSoon:'After every saved match, data goes to your account on its own.',
       devBillingOn:'Pro/Coach test access on. Tap the version 7 more times to turn it off.',
       devBillingOff:'Pro/Coach test access off.'
@@ -3890,6 +3893,7 @@ ru:{
       proCloudSyncing:'Синхронизируем…',
       proCloudOk:'Синхронизировано · {time}',
       proCloudErr:'Не удалось синхронизировать. Попробуем снова после следующего матча.',
+      proCloudSyncNow:'Синхронизировать сейчас',
       proCloudSoon:'После каждого сохранённого матча данные сами уходят в аккаунт.',
       devBillingOn:'Тест-доступ Pro/Coach включён. Ещё 7 нажатий по версии — выключить.',
       devBillingOff:'Тест-доступ выключен.'

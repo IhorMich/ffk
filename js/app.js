@@ -868,7 +868,9 @@ function formatCloudSyncAt(iso){
 }
 function updateCloudSyncStatusUi(state){
   const el = document.getElementById('cloudSyncStatus');
+  const accountEl = document.getElementById('cloudSyncAccount');
   const card = document.getElementById('cloudSyncCard');
+  const syncBtn = document.getElementById('cloudSyncNowBtn');
   const st = state || (window.ParentCloud && typeof window.ParentCloud.personalSyncState === 'function'
     ? window.ParentCloud.personalSyncState()
     : null) || {};
@@ -877,6 +879,24 @@ function updateCloudSyncStatusUi(state){
     // Visible whenever cloud UI exists; status text explains login / sync.
     card.hidden = false;
   }
+  if(accountEl){
+    getPersonalAccountSession().then(session => {
+      const live = personalAccountEmail(session);
+      if(!accountEl) return;
+      if(live){
+        accountEl.hidden = false;
+        accountEl.textContent = live;
+      }else{
+        accountEl.hidden = true;
+        accountEl.textContent = '';
+      }
+      if(syncBtn) syncBtn.hidden = !live;
+    }).catch(() => {
+      accountEl.hidden = true;
+      if(syncBtn) syncBtn.hidden = true;
+    });
+  }
+  if(syncBtn && status === 'need_account') syncBtn.hidden = true;
   if(!el) return;
   if(status === 'need_account'){
     el.textContent = t('proCloudNeedAccount');
@@ -897,6 +917,19 @@ function updateCloudSyncStatusUi(state){
   el.textContent = t('proCloudIdle');
 }
 window.updateCloudSyncStatusUi = updateCloudSyncStatusUi;
+async function onCloudSyncNow(){
+  showToast(t('proCloudSyncing'));
+  const out = await runPersonalCloudSync({pull: true, push: true, force: true});
+  const st = (out && out.state) || (window.ParentCloud && window.ParentCloud.personalSyncState && window.ParentCloud.personalSyncState());
+  if(st && st.status === 'ok'){
+    showToast(t('accountSynced') || t('proCloudOk', {time: formatCloudSyncAt(st.at)}));
+    if(typeof applyHeader === 'function') applyHeader();
+    if(typeof applyPlayerContext === 'function') applyPlayerContext();
+    if(typeof renderHistory === 'function') renderHistory();
+  }else{
+    showToast(t('proCloudErr'));
+  }
+}
 async function runPersonalCloudSync(options){
   if(!window.ParentCloud || typeof window.ParentCloud.syncPersonalBackup !== 'function'){
     updateCloudSyncStatusUi({status: 'error'});
@@ -4264,6 +4297,7 @@ document.getElementById('personalSignInBtn')?.addEventListener('click', () => on
 document.getElementById('personalSignOutBtn')?.addEventListener('click', () => onPersonalSignOut());
 document.getElementById('settingsSignOutBtn')?.addEventListener('click', () => onSettingsSignOut());
 document.getElementById('settingsDeleteAccountBtn')?.addEventListener('click', () => onSettingsDeleteAccount());
+document.getElementById('cloudSyncNowBtn')?.addEventListener('click', () => onCloudSyncNow());
 document.getElementById('settingsSupportBtn')?.addEventListener('click', () => openSettingsSupport());
 document.getElementById('settingsRateBtn')?.addEventListener('click', () => openSettingsRate());
 document.getElementById('personalGoogleBtn')?.addEventListener('click', () => onPersonalGoogle());
@@ -6648,11 +6682,13 @@ async function shareCard(m){
       }
       if(window.ParentCloud && window.ParentCloud.ready && window.ParentCloud.ready()){
         try{
-          const task = isCoachPlan()
+          const parentOrCoach = isCoachPlan()
             ? window.ParentCloud.pullCoachData()
-            : window.ParentCloud.syncParentData().then(() => {
-                return runPersonalCloudSync({pull: true, push: true});
-              });
+            : window.ParentCloud.syncParentData();
+          // Personal backup must always run — coach mode previously skipped the pull.
+          const task = Promise.resolve(parentOrCoach).catch(() => null).then(() => {
+            return runPersonalCloudSync({pull: true, push: true});
+          });
           Promise.resolve(task).catch(() => {});
         }catch(e){}
       }

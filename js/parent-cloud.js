@@ -670,7 +670,7 @@
       const coachMode = typeof isCoachPlan === 'function' && isCoachPlan();
       const task = coachMode
         ? pullCoachData()
-        : syncParentData().then(() => syncPersonalBackup({pull: false, push: true}));
+        : syncParentData().then(() => syncPersonalBackup({pull: true, push: true}));
       Promise.resolve(task).catch(() => {});
     }, 1200);
   }

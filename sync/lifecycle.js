@@ -93,6 +93,13 @@
       var hasRemote = !!(remote && remote.payload);
       var remoteAt = hasRemote ? String(remote.updatedAt || '') : '';
 
+      var localExport = null;
+      try { localExport = await safeCall(a.exportLocal); } catch (e) { localExport = null; }
+      var localMatches = S.backupMatchCount ? S.backupMatchCount(localExport) : 0;
+      var remoteMatches = hasRemote && S.backupMatchCount ? S.backupMatchCount(remote.payload) : 0;
+      var localSparse = !!(S.isSparseBackup && S.isSparseBackup(localExport));
+      var remoteRicher = remoteMatches > localMatches;
+
       var plan = S.planPersonalSync({
         pull: opts.pull,
         push: opts.push,
@@ -101,6 +108,8 @@
         hasRemote: hasRemote,
         localDirty: dirty,
         force: !!opts.force,
+        localSparse: localSparse,
+        remoteRicher: remoteRicher,
         ready: true,
         isPro: true,
         hasSession: true
@@ -126,12 +135,21 @@
             localAt = remoteAt;
           }
           if (typeof a.setDirty === 'function') await safeCall(a.setDirty, [true]); // merged local may differ
+          try { localExport = await safeCall(a.exportLocal); } catch (e) {}
+          localMatches = S.backupMatchCount ? S.backupMatchCount(localExport) : localMatches;
+          localSparse = !!(S.isSparseBackup && S.isSparseBackup(localExport));
           results.push({ step: step, ok: true, validation: check });
         } else if (step.action === 'push') {
           var payload = await safeCall(a.exportLocal);
           if (!payload) {
             results.push({ step: step, ok: false, reason: 'no_export' });
             throw new Error('no_export');
+          }
+          var pushMatches = S.backupMatchCount ? S.backupMatchCount(payload) : 0;
+          // Never clobber a richer cloud backup with an empty/sparser device.
+          if (!opts.force && hasRemote && remoteMatches > pushMatches) {
+            results.push({ step: step, ok: true, skipped: true, reason: 'keep_richer_remote' });
+            continue;
           }
           var nowIso = (typeof a.nowIso === 'function' ? a.nowIso() : new Date().toISOString());
           await safeCall(a.pushRemote, [session, payload, nowIso]);

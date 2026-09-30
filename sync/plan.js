@@ -60,11 +60,16 @@
       conflict = 'local_dirty_and_remote_present';
     }
 
+    var localSparse = !!i.localSparse;
+    var remoteRicher = !!i.remoteRicher;
+
     var shouldPull = false;
     if (wantPull && hasRemote) {
       if (force) shouldPull = true;
       else if (relation === 'remote_newer' || relation === 'local_never_synced') shouldPull = true;
       else if (conflict === 'local_dirty_and_remote_present' && relation === 'remote_newer') shouldPull = true;
+      // Empty/sparse PC must pull even if a stale local sync clock looks newer.
+      else if (localSparse || remoteRicher) shouldPull = true;
     }
 
     if (shouldPull) {
@@ -82,13 +87,20 @@
     }
 
     if (wantPush) {
-      var pushReason = 'export';
-      if (localDirty) pushReason = 'local_dirty';
-      else if (relation === 'local_newer') pushReason = 'local_newer';
-      else if (shouldPull) pushReason = 'after_merge';
-      else if (!hasRemote) pushReason = 'seed_remote';
-      else if (relation === 'equal' && !localDirty) pushReason = 'refresh_remote';
-      steps.push({ action: 'push', reason: pushReason });
+      // Sparse local + richer remote: skip push unless we already queued a pull
+      // (lifecycle re-checks after merge and will skip if still sparse).
+      if (!force && hasRemote && remoteRicher && localSparse && !shouldPull) {
+        steps.push({ action: 'skip_push', reason: 'keep_richer_remote' });
+      } else {
+        var pushReason = 'export';
+        if (localDirty) pushReason = 'local_dirty';
+        else if (relation === 'local_newer') pushReason = 'local_newer';
+        else if (shouldPull) pushReason = 'after_merge';
+        else if (!hasRemote) pushReason = 'seed_remote';
+        else if (relation === 'equal' && !localDirty) pushReason = 'refresh_remote';
+        if (shouldPull && localSparse) pushReason = 'after_merge_guarded';
+        steps.push({ action: 'push', reason: pushReason });
+      }
     }
 
     return {

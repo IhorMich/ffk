@@ -58,6 +58,28 @@
     return { matches: local, added: added, skipped: skipped };
   };
 
+  /** Count matches in a personal backup (root + nested players). */
+  S.backupMatchCount = function (payload) {
+    if (payload == null) return 0;
+    if (Array.isArray(payload)) return payload.length;
+    if (typeof payload !== 'object') return 0;
+    var n = Array.isArray(payload.matches) ? payload.matches.length : 0;
+    if (Array.isArray(payload.players)) {
+      payload.players.forEach(function (entry) {
+        if (!entry || typeof entry !== 'object') return;
+        var nested = Array.isArray(entry.matches) ? entry.matches
+          : (entry.player && Array.isArray(entry.player.matches) ? entry.player.matches : null);
+        if (nested && nested.length > n) n = nested.length;
+      });
+    }
+    return n;
+  };
+
+  /** True when backup has no matches worth protecting over a richer remote. */
+  S.isSparseBackup = function (payload) {
+    return S.backupMatchCount(payload) === 0;
+  };
+
   /**
    * Validate minimal personal backup shape.
    */
