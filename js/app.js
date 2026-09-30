@@ -424,20 +424,25 @@ async function syncPersonalAccountUi(){
   const status = document.getElementById('personalAccountStatus');
   const form = document.getElementById('personalAccountForm');
   const signOutBtn = document.getElementById('personalSignOutBtn');
+  const coachEmail = coachAccountEmail();
+  const onCoach = isCoachPlan();
   if(status){
     if(email){
       status.textContent = isPro()
         ? t('accountStatusPro', {email})
         : t('accountStatusFree', {email});
-    }else if(coachAccountEmail()){
+    }else if(onCoach && coachEmail){
+      // Only claim "Coach mode" when the Coach plan tab is actually active.
       status.textContent = t('accountHintCoachActive');
     }else{
+      // Parent / Free mode: never say "you are in Coach" just because a coach
+      // session still exists for switching back later.
       status.textContent = t('accountHint');
     }
   }
-  // Hide signup when signed in to Personal, or when Coach session already covers login.
-  const coachEmail = coachAccountEmail();
-  if(form) form.hidden = !!(email || coachEmail);
+  // Free/Pro login must stay available even while a Coach session exists —
+  // they are separate products. Hide only when personal email is signed in.
+  if(form) form.hidden = !!email;
   if(signOutBtn) signOutBtn.hidden = !email;
   syncSettingsAccountFooter(email);
   updateCloudSyncStatusUi();
@@ -459,13 +464,17 @@ async function onSettingsSignOut(){
     }
   }
   if(coachEmail && window.CoachStore && typeof window.CoachStore.signOut === 'function'){
-    try{ window.CoachStore.signOut(); }catch(e){}
+    try{
+      const out = window.CoachStore.signOut();
+      if(out && typeof out.then === 'function') await out;
+    }catch(e){}
     if(typeof setCoachPlan === 'function') setCoachPlan(false);
     if(typeof renderCoachUi === 'function') renderCoachUi();
   }
   showToast(t('accountSignedOut'));
   await syncPersonalAccountUi();
   if(typeof syncPlanModeButtons === 'function') syncPlanModeButtons();
+  if(typeof showView === 'function') showView('settings');
 }
 function openPersonalAccount(reasonKey){
   showView('settings');
@@ -3694,6 +3703,8 @@ function collectEntryMatches(entry){
   if(entry.player && Array.isArray(entry.player.matches) && entry.player.matches.length){
     return entry.player.matches;
   }
+  if(Array.isArray(entry.history) && entry.history.length) return entry.history;
+  if(Array.isArray(entry.m) && entry.m.length) return entry.m;
   return [];
 }
 function ensureImportedPlayer(playerData){
@@ -3726,8 +3737,11 @@ function ensureImportedPlayer(playerData){
     return {created: false, playerTouched: true};
   }
   if(roster.ids.length >= playerCap()){
-    // Roster full: keep the active card and still restore matches onto it.
-    return {created: false, playerTouched: false, useCurrent: true};
+    // Roster full (Free=1): still merge profile + restore matches onto the active card.
+    player = normalizePlayer({...player, ...incoming, id: player.id}, player.id);
+    extraSelected = [...(player.extra || [])];
+    savePlayer();
+    return {created: false, playerTouched: true, useCurrent: true};
   }
   const id = (incomingId && !roster.ids.includes(incomingId)) ? incomingId : newPlayerId();
   const next = normalizePlayer(incoming, id);
@@ -3809,7 +3823,13 @@ function applyImportBundle(imported){
       const th = bundle.settings.theme === 'light' ? 'day' : bundle.settings.theme;
       if(THEME_ORDER.includes(th)) settings.theme = th;
     }
+    // Never import isCoach/isPro from a backup — mode is a live device choice.
     saveSettings();
+  }
+
+  // Last resort: file clearly had matches but nothing landed (bad nesting).
+  if(!added && rootMatches.length){
+    added += importMatchesIntoCurrent(rootMatches);
   }
 
   if(!added && !playerTouched) return {added: 0, playerTouched: false, empty: true};
@@ -3905,9 +3925,14 @@ async function runRestoreFromJson(rawText){
       showToast(t('toastNoNew'));
       return true;
     }
+    if(typeof applyPlayerContext === 'function') applyPlayerContext();
+    if(typeof renderHistory === 'function') renderHistory();
+    if(typeof renderStats === 'function') renderStats();
+    if(typeof fillPlayerForm === 'function') fillPlayerForm();
     showToast(result.added ? t('toastAdded', {n: result.added}) : (result.playerTouched ? t('toastPlayer') : t('toastNoNew')));
     return true;
   }catch(err){
+    console.warn('restore json', err);
     showToast(t('toastReadFail'));
     return false;
   }
@@ -6084,6 +6109,13 @@ async function shareCard(m){
     renderOppList();
     maybePromptSeasonClose();
     restoreView();
+    // Stale coach flag without a session traps Free/parent UI (match/history hidden).
+    try{
+      if(isCoachPlan()
+        && !(window.CoachStore && window.CoachStore.getSession && window.CoachStore.getSession())){
+        setCoachPlan(false);
+      }
+    }catch(e){}
     if(!playIntro()) if(!maybeTransfer()) maybeOnboard();
     bindAppBack();
     bindTapHaptics();

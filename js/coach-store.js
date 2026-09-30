@@ -244,12 +244,19 @@
   const CoachStore = {
     getSession(){ return readSession(); },
     signOut(){
-      writeSession(null);
+      const clearLocal = () => {
+        writeSession(null);
+        try{ localStorage.removeItem('ffk_coach_session_v1'); }catch(e){}
+      };
       try{
         if(global.CoachCloud && typeof global.CoachCloud.cloudSignOut === 'function'){
-          global.CoachCloud.cloudSignOut();
+          return Promise.resolve(global.CoachCloud.cloudSignOut())
+            .catch(() => {})
+            .then(clearLocal);
         }
       }catch(e){}
+      clearLocal();
+      return Promise.resolve();
     },
     writeSessionExternal(session){
       writeSession(session || null);

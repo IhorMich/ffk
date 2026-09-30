@@ -158,6 +158,7 @@ function loadSettings(){
       isPro: s.isPro === true,
       isCoach: s.isCoach === true,
       coachSub: s.coachSub === true,
+      coachSubPlan: String(s.coachSubPlan || ''),
       pwaTransferSeen: s.pwaTransferSeen === true,
       introMark: String(s.introMark || ''),
       accountPrompted: s.accountPrompted === true,

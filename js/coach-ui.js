@@ -142,6 +142,9 @@
     if(typeof showView === 'function') showView('player');
     if(typeof renderParentUi === 'function') renderParentUi();
     if(typeof applyHeader === 'function') applyHeader();
+    if(typeof syncPersonalAccountUi === 'function'){
+      try{ syncPersonalAccountUi(); }catch(e){}
+    }
     syncPlanModeButtons();
     toast(tt('coachSwitchedParent', 'Режим родителя / Free'));
   }
@@ -2760,18 +2763,25 @@
     openAuth();
   }
   function onSignOut(){
-    global.CoachStore.signOut();
-    const auth = document.getElementById('coachAuth');
-    if(auth) auth.dataset.open = '';
-    const work = document.getElementById('coachWorkspace');
-    if(work) work.dataset.started = '';
-    closeCoachSettings();
-    if(typeof closeCoachQuickRate === 'function') closeCoachQuickRate();
-    if(typeof setCoachPlan === 'function') setCoachPlan(false);
-    toast(tt('coachSignedOut', 'Signed out of Coach.'));
-    renderCoachUi();
-    if(typeof syncPersonalAccountUi === 'function') syncPersonalAccountUi();
-    if(typeof showView === 'function') showView('new');
+    const done = () => {
+      const auth = document.getElementById('coachAuth');
+      if(auth) auth.dataset.open = '';
+      const work = document.getElementById('coachWorkspace');
+      if(work) work.dataset.started = '';
+      closeCoachSettings();
+      if(typeof closeCoachQuickRate === 'function') closeCoachQuickRate();
+      if(typeof setCoachPlan === 'function') setCoachPlan(false);
+      toast(tt('coachSignedOut', 'Signed out of Coach.'));
+      renderCoachUi();
+      if(typeof syncPersonalAccountUi === 'function') syncPersonalAccountUi();
+      if(typeof syncPlanModeButtons === 'function') syncPlanModeButtons();
+      if(typeof showView === 'function') showView('settings');
+    };
+    try{
+      const out = global.CoachStore.signOut();
+      if(out && typeof out.then === 'function') out.finally(done);
+      else done();
+    }catch(e){ done(); }
   }
   function onCreateAcademy(){
     const name = document.getElementById('coachAcademyInput')?.value || '';

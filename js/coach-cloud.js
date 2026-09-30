@@ -74,6 +74,10 @@
     return {userId: user.id, email: user.email || email, cloud: true};
   }
   async function cloudSignOut(){
+    try{
+      if(syncTimer) clearTimeout(syncTimer);
+      syncTimer = null;
+    }catch(e){}
     const sb = getClient();
     if(sb) await sb.auth.signOut();
   }
