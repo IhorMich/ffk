@@ -2823,6 +2823,12 @@
   .coach-train-icon-btn{
     min-width:40px;padding:8px 10px;font-size:1rem;line-height:1;
   }
+  .coach-broadcast-actions{
+    margin:0 0 10px;justify-content:stretch;
+  }
+  .coach-broadcast-actions .ghost-btn{
+    width:100%;margin:0;
+  }
   .coach-train-body[hidden]{display:none !important;}
   .coach-train-cal-block{
     margin:0 0 12px;padding:10px;border-radius:14px;

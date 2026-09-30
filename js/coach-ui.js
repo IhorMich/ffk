@@ -3579,14 +3579,14 @@
     if(typeof closeCoachQuickRate === 'function') closeCoachQuickRate();
     closeCoachParentInviteSheet();
     [
-      'coachSettingsBack','coachRateBack','coachPlayerBack','coachParentInviteBack','coachTeamMenuBack',
+      'coachSettingsBack','coachRateBack','coachPlayerBack','coachParentInviteBack','coachBroadcastBack','coachTeamMenuBack',
       'parentClaimBack','parentLinkBack','parentMsgBack','inboxSheetBack'
     ].forEach(id => {
       const el = document.getElementById(id);
       if(el) el.hidden = true;
     });
     [
-      'coachSettingsSheet','coachRateSheet','coachPlayerSheet','coachParentInviteSheet','coachTeamMenuSheet',
+      'coachSettingsSheet','coachRateSheet','coachPlayerSheet','coachParentInviteSheet','coachBroadcastSheet','coachTeamMenuSheet',
       'parentClaimSheet','parentLinkSheet','parentMsgSheet','inboxSheet'
     ].forEach(id => {
       const el = document.getElementById(id);
@@ -3896,6 +3896,111 @@
       const sheet = document.getElementById('coachParentInviteSheet');
       if(sheet) sheet.hidden = true;
       if(back) back.hidden = true;
+    }
+  }
+  function closeCoachBroadcastSheet(){
+    const card = document.getElementById('coachBroadcastCard');
+    const back = document.getElementById('coachBroadcastBack');
+    if(typeof hideSheetCard === 'function') hideSheetCard(card, back);
+    else{
+      const sheet = document.getElementById('coachBroadcastSheet');
+      if(sheet) sheet.hidden = true;
+      if(back) back.hidden = true;
+    }
+  }
+  function openCoachBroadcastSheet(){
+    const store = global.CoachStore;
+    const session = store && store.getSession && store.getSession();
+    const teamId = store && store.getActiveTeamId && store.getActiveTeamId();
+    const team = session && teamId ? store.getTeam(session, teamId) : null;
+    if(!session || !team){
+      toast(tt('coachBroadcastNeedTeam', 'Open a team first.'));
+      return;
+    }
+    const players = store.listPlayers(session, team.id) || [];
+    if(!players.length){
+      toast(tt('coachBroadcastNoPlayers', 'Add players before messaging the team.'));
+      return;
+    }
+    const academy = store.myAcademy && store.myAcademy(session);
+    const account = store.getAccount && store.getAccount(session);
+    const coachName = account
+      ? [account.first_name, account.last_name].filter(Boolean).join(' ') || account.email || ''
+      : '';
+    const nameEl = document.getElementById('coachBroadcastTeamName');
+    const countEl = document.getElementById('coachBroadcastCount');
+    const textEl = document.getElementById('coachBroadcastText');
+    if(nameEl) nameEl.textContent = team.name + (team.age_group ? ` · ${team.age_group}` : '');
+    if(countEl){
+      countEl.textContent = tt('coachBroadcastCount', 'Will send to {n} players')
+        .replace('{n}', String(players.length));
+    }
+    if(textEl) textEl.value = '';
+    const sheet = document.getElementById('coachBroadcastSheet');
+    const back = document.getElementById('coachBroadcastBack');
+    const card = document.getElementById('coachBroadcastCard');
+    if(sheet){
+      sheet.dataset.teamId = team.id;
+      sheet.dataset.teamName = team.name || '';
+      sheet.dataset.academyName = (academy && academy.name) || '';
+      sheet.dataset.coachName = coachName;
+    }
+    if(typeof presentSheetCard === 'function') presentSheetCard(card, back);
+    else{
+      if(sheet) sheet.hidden = false;
+      if(back) back.hidden = false;
+    }
+    if(typeof pushAppState === 'function') pushAppState('layer');
+    setTimeout(() => textEl?.focus(), 80);
+  }
+  function sendCoachBroadcast(){
+    const store = global.CoachStore;
+    const inbox = global.InboxStore;
+    const session = store && store.getSession && store.getSession();
+    const sheet = document.getElementById('coachBroadcastSheet');
+    const teamId = (sheet && sheet.dataset.teamId) || (store && store.getActiveTeamId && store.getActiveTeamId());
+    const team = session && teamId ? store.getTeam(session, teamId) : null;
+    const text = document.getElementById('coachBroadcastText')?.value || '';
+    if(!session || !team || !inbox || typeof inbox.broadcastCoachMessage !== 'function'){
+      toast(tt('coachErrGeneric', 'Something went wrong.'));
+      return;
+    }
+    const players = (store.listPlayers(session, team.id) || []).map(p => ({
+      team_player_id: p.id,
+      player_name: [p.first_name, p.last_name].filter(Boolean).join(' '),
+      team_id: team.id,
+      team_name: team.name || '',
+      academy_name: (sheet && sheet.dataset.academyName) || '',
+      coach_name: (sheet && sheet.dataset.coachName) || ''
+    }));
+    try{
+      const res = inbox.broadcastCoachMessage({
+        text,
+        team_id: team.id,
+        team_name: team.name || '',
+        academy_name: (sheet && sheet.dataset.academyName) || '',
+        coach_name: (sheet && sheet.dataset.coachName) || '',
+        players
+      });
+      toast(tt('coachBroadcastSent', 'Sent to {n} players')
+        .replace('{n}', String(res.count || players.length)));
+      try{
+        if(global.FfkNotify && typeof global.FfkNotify.show === 'function'){
+          global.FfkNotify.show(
+            tt('coachBroadcastNotifyTitle', 'Team message'),
+            String(text).trim().slice(0, 120)
+          );
+        }
+      }catch(e){}
+      closeCoachBroadcastSheet();
+      if(typeof renderParentUi === 'function') renderParentUi();
+      if(typeof syncInboxBellUi === 'function') syncInboxBellUi();
+    }catch(e){
+      const map = {
+        bad_message: tt('coachBroadcastNeedText', 'Write a message first.'),
+        no_recipients: tt('coachBroadcastNoPlayers', 'Add players before messaging the team.')
+      };
+      toast(map[e && e.message] || tt('coachErrGeneric', 'Something went wrong.'));
     }
   }
   function openCoachParentInviteSheet(playerId){
@@ -4221,7 +4326,12 @@
     if(!trainFormOpen && opts.fold){
       setTrainFolded(true);
     }
-    if(!trainFormOpen || opts.clearEdit){
+    if(!trainFormOpen){
+      trainEdit = null;
+    }else if(!opts.keepEdit && !trainEdit){
+      // new create — leave trainEdit null
+    }
+    if(trainFormOpen && !opts.keepEdit && opts.clearEdit){
       trainEdit = null;
     }
     syncTrainFoldUi();
@@ -4934,6 +5044,10 @@
         toast(tt('coachErrGeneric', 'Something went wrong.'));
       }
     });
+    document.getElementById('coachBroadcastBtn')?.addEventListener('click', () => openCoachBroadcastSheet());
+    document.getElementById('coachBroadcastBack')?.addEventListener('click', () => closeCoachBroadcastSheet());
+    document.getElementById('coachBroadcastCloseBtn')?.addEventListener('click', () => closeCoachBroadcastSheet());
+    document.getElementById('coachBroadcastSendBtn')?.addEventListener('click', () => sendCoachBroadcast());
 
     document.getElementById('coachTrainNewBtn')?.addEventListener('click', () => {
       if(trainFormOpen && !trainFolded()){
@@ -5080,6 +5194,8 @@
   global.closeCoachPlayerSheet = closeCoachPlayerSheet;
   global.closeAllCoachOverlays = closeAllCoachOverlays;
   global.closeCoachParentInviteSheet = closeCoachParentInviteSheet;
+  global.closeCoachBroadcastSheet = closeCoachBroadcastSheet;
+  global.openCoachBroadcastSheet = openCoachBroadcastSheet;
   global.closeCoachSettings = closeCoachSettings;
   global.openCoachSettings = openCoachSettings;
   global.closeTeamMenu = closeTeamMenu;

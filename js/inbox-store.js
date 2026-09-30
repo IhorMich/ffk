@@ -345,6 +345,7 @@
         coach_name: String(payload.coach_name || '').slice(0, 80),
         sender_role: role,
         text,
+        broadcast_id: String(payload.broadcast_id || ''),
         read_by_parent: role === 'parent',
         read_by_coach: role === 'coach',
         status: 'delivered',
@@ -355,6 +356,34 @@
       db.messages.push(row);
       writeDb(db);
       return row;
+    },
+    /** One coach text → fan-out as 1:1 chat rows (no group thread). */
+    broadcastCoachMessage(payload){
+      const text = String(payload && payload.text || '').trim().slice(0, 500);
+      const players = Array.isArray(payload && payload.players) ? payload.players : [];
+      if(!text) throw new Error('bad_message');
+      if(!players.length) throw new Error('no_recipients');
+      const broadcastId = uid('bc');
+      const sent = [];
+      players.forEach(p => {
+        const playerId = String(p && (p.team_player_id || p.id) || '');
+        if(!playerId) return;
+        try{
+          sent.push(this.sendChatMessage({
+            team_player_id: playerId,
+            team_id: p.team_id || payload.team_id || '',
+            player_name: p.player_name || p.name || '',
+            team_name: p.team_name || payload.team_name || '',
+            academy_name: p.academy_name || payload.academy_name || '',
+            coach_name: payload.coach_name || '',
+            sender_role: 'coach',
+            text,
+            broadcast_id: broadcastId
+          }));
+        }catch(e){}
+      });
+      if(!sent.length) throw new Error('no_recipients');
+      return {broadcast_id: broadcastId, count: sent.length, messages: sent};
     },
     importCloudChat(raw){
       if(!raw || !raw.id || !raw.team_player_id) return null;

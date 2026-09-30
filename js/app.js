@@ -4640,6 +4640,10 @@ function handleAppBack(){
     if(typeof closeCoachParentInviteSheet === 'function') closeCoachParentInviteSheet();
     return true;
   }
+  if(isElShown('coachBroadcastSheet')){
+    if(typeof closeCoachBroadcastSheet === 'function') closeCoachBroadcastSheet();
+    return true;
+  }
   if(isElShown('coachHistoryDetail') && !document.getElementById('coachHistoryDetail')?.hidden){
     if(typeof closeCoachHistoryMatch === 'function'){
       closeCoachHistoryMatch();
@@ -4865,6 +4869,9 @@ function bindSheets(){
   });
   bindSheetDrag('coachParentInviteCard', 'coachParentInviteGrab', () => {
     if(typeof window.closeCoachParentInviteSheet === 'function') window.closeCoachParentInviteSheet();
+  });
+  bindSheetDrag('coachBroadcastCard', 'coachBroadcastGrab', () => {
+    if(typeof window.closeCoachBroadcastSheet === 'function') window.closeCoachBroadcastSheet();
   });
   bindSheetDrag('coachTeamMenuCard', 'coachTeamMenuGrab', () => {
     if(typeof window.closeTeamMenu === 'function') window.closeTeamMenu();

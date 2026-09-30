@@ -1114,6 +1114,9 @@ window.ffkIsNative = function () {
               </div>
               <button type="button" class="ghost-btn coach-fold-btn" id="coachRosterToggle" aria-expanded="true" data-i18n-aria="coachRosterToggleAria" aria-label="Свернуть игроков">▾</button>
             </div>
+            <div class="coach-match-create-actions coach-broadcast-actions">
+              <button type="button" class="ghost-btn" id="coachBroadcastBtn" data-i18n="coachBroadcastBtn">Сообщение команде</button>
+            </div>
             <div id="coachRosterBody" class="coach-roster-body">
               <button type="button" class="save-btn" id="coachShowAddPlayerBtn" data-i18n="coachAddPlayerBtn">+ Игрок</button>
               <div id="coachPlayerFormWrap" class="coach-player-form-wrap" hidden>
@@ -1337,6 +1340,23 @@ window.ffkIsNative = function () {
       <button class="save-btn" id="coachParentInviteShareBtn" type="button" data-i18n="coachParentShareBtn">Поделиться</button>
       <button class="ghost-btn" id="coachParentInviteCopyBtn" type="button" data-i18n="coachParentCopyBtn">Копировать ссылку</button>
       <button class="ghost-btn" id="coachParentInviteCloseBtn" type="button" data-i18n="previewCancel">Отмена</button>
+    </div>
+  </div>
+
+  <button class="coach-rate-back" id="coachBroadcastBack" type="button" hidden></button>
+  <div class="coach-rate-sheet" id="coachBroadcastSheet" hidden>
+    <div class="coach-rate-card" id="coachBroadcastCard">
+      <div class="sheet-grab" id="coachBroadcastGrab" aria-hidden="true"><span></span></div>
+      <div class="pro-kicker" data-i18n="coachBroadcastKicker">Сообщение команде</div>
+      <h3 class="coach-rate-name" id="coachBroadcastTeamName">—</h3>
+      <p class="hint" id="coachBroadcastMeta" data-i18n="coachBroadcastLead">Одно сообщение уйдёт каждому родителю в чат с тренером. Это не общий групповой чат — ответы приходят вам лично.</p>
+      <div class="field">
+        <label data-i18n="coachBroadcastTextLabel">Текст</label>
+        <textarea id="coachBroadcastText" rows="5" maxlength="500" data-i18n-placeholder="coachBroadcastTextPh" placeholder="Например: тренировка перенесена на 18:00, поле 2"></textarea>
+      </div>
+      <p class="hint" id="coachBroadcastCount"></p>
+      <button class="save-btn" id="coachBroadcastSendBtn" type="button" data-i18n="coachBroadcastSend">Отправить всем</button>
+      <button class="ghost-btn" id="coachBroadcastCloseBtn" type="button" data-i18n="previewCancel">Отмена</button>
     </div>
   </div>
 
