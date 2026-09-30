@@ -1330,6 +1330,32 @@
   .save-btn:disabled,.ghost-btn:disabled,.backup-btn:disabled,.live-start:disabled{
     opacity:.42;filter:saturate(.3);cursor:default;
   }
+  .settings-page{display:grid;gap:22px;padding-bottom:28px;}
+  .settings-block{
+    display:grid;gap:10px;
+    padding:14px 0 4px;
+    border-top:1px solid var(--line, rgba(255,255,255,.08));
+  }
+  .settings-block:first-child{border-top:0;padding-top:0;}
+  .settings-subhead{margin-top:6px;}
+  .settings-links{display:grid;gap:2px;margin:4px 0 10px;}
+  .settings-link{
+    display:block;width:100%;box-sizing:border-box;text-align:left;
+    background:transparent;border:0;border-radius:10px;
+    padding:12px 4px;margin:0;
+    font:inherit;font-weight:700;font-size:.95rem;
+    color:var(--accent, var(--gold, #E8C56A));
+    text-decoration:none;cursor:pointer;
+  }
+  .settings-link:hover,.settings-link:focus-visible{opacity:.88;}
+  .settings-block .danger-btn{margin-top:4px;}
+  .settings-block-about .save-btn{margin-top:8px;}
+  #view-settings .pro-card{margin:0;}
+  #view-settings .backup-row{margin:4px 0 8px;}
+  #view-settings .field{margin:0;}
+  html.theme-day .settings-block{
+    border-top-color:rgba(0,0,0,.08);
+  }
   .pro-card{
     margin:0 0 16px;padding:16px 16px 14px 18px;border-radius:18px;
     background:var(--card-paper);color:var(--card-ink);

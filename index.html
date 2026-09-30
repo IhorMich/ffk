@@ -887,118 +887,154 @@ window.ffkIsNative = function () {
     </div>
 
     <div class="view" id="view-settings">
-      <div class="field">
-        <label data-i18n="sLang">Язык</label>
-        <select id="s-lang">
-          <option value="uk">Українська</option>
-          <option value="pl">Polski</option>
-          <option value="en">English</option>
-          <option value="ru">Русский</option>
-          <option value="es">Español</option>
-          <option value="de">Deutsch</option>
-          <option value="it">Italiano</option>
-          <option value="fr">Français</option>
-          <option value="pt">Português</option>
-        </select>
-      </div>
-      <h3 class="period-head" data-i18n="sTheme">Тема</h3>
-      <div class="period-chips" id="themeChips">
-        <button type="button" class="chip" data-theme="dark" data-i18n="theme_dark">Ночь</button>
-        <button type="button" class="chip" data-theme="day" data-i18n="theme_day">Улица</button>
-      </div>
-      <h3 class="period-head" data-i18n="sIcons">Иконки действий</h3>
-      <div class="period-chips" id="iconSetChips">
-        <button type="button" class="chip" data-icons="clear" data-i18n="icons_clear">Понятнее</button>
-        <button type="button" class="chip" data-icons="bright" data-i18n="icons_bright">Яркие</button>
-        <button type="button" class="chip" data-icons="line" data-i18n="icons_line">Линия</button>
-      </div>
-      <p class="hint" data-i18n="sIconsHint">Сравни на вкладке «Матч» — список игровых действий.</p>
-      <p class="hint" id="tzHint"></p>
-      <h3 class="period-head" data-i18n="sBackup">Данные на телефоне</h3>
-      <p class="hint" id="backupBanner" hidden data-i18n="backupBanner">Данные только на этом телефоне. Сделайте копию «На телефон», чтобы не потерять сезон.</p>
-      <div class="backup-row">
-        <button class="backup-btn" id="exportBtn" type="button" data-i18n="saveCopy">На телефон</button>
-        <button class="backup-btn" id="importBtn" type="button" data-i18n="restoreCopy">Восстановить</button>
-        <button class="backup-btn js-pro-btn" id="copyBtn" type="button" data-i18n="copyJson">JSON</button>
-        <input type="file" id="importFile" accept=".json,application/json,text/plain,*/*" hidden>
-      </div>
-      <div class="pro-card" id="cloudSyncCard" hidden>
-        <div class="pro-kicker" data-i18n="proCloudBtn">Облако Pro</div>
-        <p class="hint" id="cloudSyncStatus" data-i18n="proCloudIdle">После каждого сохранённого матча данные уходят в аккаунт сами.</p>
-      </div>
-      <h3 class="period-head" data-i18n="coachPushKicker">Уведомления</h3>
-      <p class="hint" data-i18n="coachPushHint">Локальные уведомления для приглашений и карточек. Удалённый push включится после настройки FCM.</p>
-      <button class="save-btn" id="appPushOnBtn" type="button" data-i18n="coachPushEnable">Включить push</button>
-      <button class="ghost-btn" id="appPushOffBtn" type="button" data-i18n="coachPushDisable">Выключить</button>
-      <p class="hint" id="appPushStatus"></p>
-      <h3 class="period-head" data-i18n="planPersonalHead">Personal</h3>
-      <p class="hint" data-i18n="planPersonalHint">Личный Matchcard: один игрок или ваш состав на этом телефоне. Free и Pro не связаны с командой.</p>
-      <div class="pro-card" id="personalAccountCard">
-        <div class="pro-kicker" data-i18n="accountKicker">Free-аккаунт</div>
-        <p class="hint" id="personalAccountStatus">Создай Free-аккаунт — Pro откроет полный доступ.</p>
-        <div id="personalAccountForm">
-          <label class="field">
-            <span data-i18n="accountEmail">Email</span>
-            <input id="personalEmail" type="email" autocomplete="username" inputmode="email">
-          </label>
-          <label class="field">
-            <span data-i18n="accountPassword">Пароль</span>
-            <input id="personalPassword" type="password" autocomplete="new-password">
-          </label>
-          <div class="account-actions">
-            <button class="save-btn" id="personalSignUpBtn" type="button" data-i18n="accountSignUp">Создать аккаунт</button>
-            <button class="ghost-btn" id="personalSignInBtn" type="button" data-i18n="accountSignIn">Войти</button>
-            <button class="account-google-btn" id="personalGoogleBtn" type="button" data-i18n-aria="accountGoogle" aria-label="Войти через Google" title="Google">
-              <svg viewBox="0 0 48 48" aria-hidden="true" focusable="false">
-                <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 8 3l5.7-5.7C34.2 6.1 29.4 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.5-.4-3.5z"/>
-                <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 16.1 19 13 24 13c3.1 0 5.8 1.1 8 3l5.7-5.7C34.2 6.1 29.4 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/>
-                <path fill="#4CAF50" d="M24 44c5.2 0 10-2 13.6-5.2l-6.3-5.3C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.2-7.9l-6.5 5C9.6 39.6 16.3 44 24 44z"/>
-                <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.3 4.1-4.2 5.5l.1.1 6.3 5.3C39.2 37.3 44 32 44 24c0-1.3-.1-2.5-.4-3.5z"/>
-              </svg>
-            </button>
+      <div class="settings-page">
+
+        <section class="settings-block" id="settingsAccountBlock">
+          <h3 class="period-head" data-i18n="settingsSecAccount">Аккаунт</h3>
+          <div class="pro-card" id="settingsAccountCard">
+            <p class="hint" id="settingsAccountStatus" data-i18n="settingsAccountSignedOut">Вы не вошли в аккаунт.</p>
+            <p class="hint" id="settingsCoachEmail" hidden></p>
+            <button class="ghost-btn" id="settingsSignOutBtn" type="button" hidden data-i18n="accountSignOut">Выйти</button>
           </div>
-        </div>
-        <button class="ghost-btn" id="personalSignOutBtn" type="button" hidden data-i18n="accountSignOut">Выйти</button>
+          <div class="pro-card" id="personalAccountCard">
+            <div class="pro-kicker" data-i18n="accountKicker">Free-аккаунт</div>
+            <p class="hint" id="personalAccountStatus">Создай Free-аккаунт — Pro откроет полный доступ.</p>
+            <div id="personalAccountForm">
+              <label class="field">
+                <span data-i18n="accountEmail">Email</span>
+                <input id="personalEmail" type="email" autocomplete="username" inputmode="email">
+              </label>
+              <label class="field">
+                <span data-i18n="accountPassword">Пароль</span>
+                <input id="personalPassword" type="password" autocomplete="new-password">
+              </label>
+              <div class="account-actions">
+                <button class="save-btn" id="personalSignUpBtn" type="button" data-i18n="accountSignUp">Создать аккаунт</button>
+                <button class="ghost-btn" id="personalSignInBtn" type="button" data-i18n="accountSignIn">Войти</button>
+                <button class="account-google-btn" id="personalGoogleBtn" type="button" data-i18n-aria="accountGoogle" aria-label="Войти через Google" title="Google">
+                  <svg viewBox="0 0 48 48" aria-hidden="true" focusable="false">
+                    <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 8 3l5.7-5.7C34.2 6.1 29.4 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.5-.4-3.5z"/>
+                    <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 16.1 19 13 24 13c3.1 0 5.8 1.1 8 3l5.7-5.7C34.2 6.1 29.4 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/>
+                    <path fill="#4CAF50" d="M24 44c5.2 0 10-2 13.6-5.2l-6.3-5.3C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.2-7.9l-6.5 5C9.6 39.6 16.3 44 24 44z"/>
+                    <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.3 4.1-4.2 5.5l.1.1 6.3 5.3C39.2 37.3 44 32 44 24c0-1.3-.1-2.5-.4-3.5z"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <button class="ghost-btn" id="personalSignOutBtn" type="button" hidden data-i18n="accountSignOut">Выйти</button>
+          </div>
+        </section>
+
+        <section class="settings-block">
+          <h3 class="period-head" data-i18n="settingsSecAppearance">Внешний вид</h3>
+          <div class="field">
+            <label data-i18n="sLang">Язык</label>
+            <select id="s-lang">
+              <option value="uk">Українська</option>
+              <option value="pl">Polski</option>
+              <option value="en">English</option>
+              <option value="ru">Русский</option>
+              <option value="es">Español</option>
+              <option value="de">Deutsch</option>
+              <option value="it">Italiano</option>
+              <option value="fr">Français</option>
+              <option value="pt">Português</option>
+            </select>
+          </div>
+          <h3 class="period-head settings-subhead" data-i18n="sTheme">Тема</h3>
+          <div class="period-chips" id="themeChips">
+            <button type="button" class="chip" data-theme="dark" data-i18n="theme_dark">Ночь</button>
+            <button type="button" class="chip" data-theme="day" data-i18n="theme_day">Улица</button>
+          </div>
+          <h3 class="period-head settings-subhead" data-i18n="sIcons">Иконки действий</h3>
+          <div class="period-chips" id="iconSetChips">
+            <button type="button" class="chip" data-icons="clear" data-i18n="icons_clear">Понятнее</button>
+            <button type="button" class="chip" data-icons="bright" data-i18n="icons_bright">Яркие</button>
+            <button type="button" class="chip" data-icons="line" data-i18n="icons_line">Линия</button>
+          </div>
+          <p class="hint" data-i18n="sIconsHint">Сравни на вкладке «Матч» — список игровых действий.</p>
+          <p class="hint" id="tzHint"></p>
+        </section>
+
+        <section class="settings-block">
+          <h3 class="period-head" data-i18n="settingsSecNotifications">Уведомления</h3>
+          <p class="hint" data-i18n="coachPushHint">Локальные уведомления для приглашений и карточек.</p>
+          <button class="save-btn" id="appPushOnBtn" type="button" data-i18n="coachPushEnable">Включить push</button>
+          <button class="ghost-btn" id="appPushOffBtn" type="button" data-i18n="coachPushDisable">Выключить</button>
+          <p class="hint" id="appPushStatus"></p>
+        </section>
+
+        <section class="settings-block">
+          <h3 class="period-head" data-i18n="settingsSecData">Данные и копии</h3>
+          <p class="hint" id="backupBanner" hidden data-i18n="backupBanner">Данные только на этом телефоне. Сделайте копию «На телефон», чтобы не потерять сезон.</p>
+          <p class="hint" data-i18n="settingsDataHint">Копия JSON нужна при смене телефона или переустановке.</p>
+          <div class="backup-row">
+            <button class="backup-btn" id="exportBtn" type="button" data-i18n="saveCopy">На телефон</button>
+            <button class="backup-btn" id="importBtn" type="button" data-i18n="restoreCopy">Восстановить</button>
+            <button class="backup-btn js-pro-btn" id="copyBtn" type="button" data-i18n="copyJson">JSON</button>
+            <input type="file" id="importFile" accept=".json,application/json,text/plain,*/*" hidden>
+          </div>
+          <div class="pro-card" id="cloudSyncCard" hidden>
+            <div class="pro-kicker" data-i18n="proCloudBtn">Облако Pro</div>
+            <p class="hint" id="cloudSyncStatus" data-i18n="proCloudIdle">После каждого сохранённого матча данные уходят в аккаунт сами.</p>
+          </div>
+        </section>
+
+        <section class="settings-block">
+          <h3 class="period-head" data-i18n="settingsSecPlans">Тарифы и режимы</h3>
+          <p class="hint" data-i18n="planPersonalHint">Личный Matchcard: один игрок или состав на этом телефоне. Free и Pro не связаны с командой тренера.</p>
+          <div class="pro-card" id="proCard">
+            <div class="pro-kicker">Matchcard Pro</div>
+            <p id="proBody"></p>
+            <ul class="pro-list">
+              <li data-i18n="proBulletPlayers">До 32 игроков в составе — вся команда, не один</li>
+              <li data-i18n="proBulletSeasons">Новые сезоны без лимита после закрытия текущего</li>
+              <li data-i18n="proBulletStats">График оценок, сравнение периодов и разбор по минутам</li>
+              <li data-i18n="proBulletCards">Карточки сезона и периода для шеринга</li>
+              <li data-i18n="proBulletCloud">Облачный автосинк между устройствами</li>
+            </ul>
+            <button class="save-btn" id="proUnlockBtn" type="button" hidden data-i18n="proUnlock">Включить Pro</button>
+            <button class="ghost-btn" id="proLockBtn" type="button" hidden data-i18n="proLock">Выключить Pro</button>
+          </div>
+          <p class="hint" data-i18n="planCoachHint">Matchcard Coach — командный продукт: Academy → Team → игроки. Отдельно от Free/Pro.</p>
+          <div class="pro-card coach-card" id="coachCard">
+            <div class="pro-kicker">Matchcard Coach</div>
+            <p data-i18n="coachTeaserBody">Управляй командой, оценивай каждого игрока и делись прогрессом с родителями.</p>
+            <ul class="pro-list">
+              <li data-i18n="coachTeaserTeam">Академия, команда, состав 10–50</li>
+              <li data-i18n="coachTeaserAnalytics">Командные матчи и аналитика</li>
+              <li data-i18n="coachTeaserParents">Invite родителя к профилю ребёнка</li>
+            </ul>
+            <button class="save-btn" id="openCoachBtn" type="button" data-i18n="coachOpen">Matchcard Coach</button>
+            <button class="save-btn" id="coachSubUnlockBtn" type="button" hidden data-i18n="coachSubUnlock">Включить Coach</button>
+            <button class="ghost-btn" id="coachSubLockBtn" type="button" hidden data-i18n="coachSubLock">Выключить Coach</button>
+            <p class="hint" id="coachSubHint" hidden data-i18n="coachSubHint">Тестовый доступ Coach на этом телефоне.</p>
+            <button class="ghost-btn" id="enterParentModeBtn" type="button" hidden data-i18n="coachSwitchParent">Перейти в режим родителя / Free</button>
+            <button class="ghost-btn" id="enterCoachModeBtn" type="button" hidden data-i18n="coachSwitchCoach">Вернуться в режим тренера</button>
+          </div>
+        </section>
+
+        <section class="settings-block">
+          <h3 class="period-head" data-i18n="settingsSecSupport">Поддержка и правовое</h3>
+          <div class="settings-links">
+            <a class="settings-link" href="privacy.html" id="privacyLink" target="_blank" rel="noopener" data-i18n="sPrivacy">Конфиденциальность</a>
+            <a class="settings-link" href="terms.html" id="termsLink" target="_blank" rel="noopener" data-i18n="sTerms">Условия использования</a>
+            <button type="button" class="settings-link" id="settingsSupportBtn" data-i18n="settingsSupport">Написать в поддержку</button>
+            <button type="button" class="settings-link" id="settingsRateBtn" data-i18n="settingsRate">Оценить приложение</button>
+            <a class="settings-link" href="https://github.com/IhorMich/ffk/issues" id="settingsFeedbackLink" target="_blank" rel="noopener" data-i18n="settingsFeedback">Сообщить о проблеме</a>
+          </div>
+          <button class="ghost-btn danger-btn" id="settingsDeleteAccountBtn" type="button" data-i18n="settingsDeleteAccount">Удалить аккаунт</button>
+          <p class="hint" data-i18n="settingsDeleteAccountHint">Нужно для магазинов приложений. Удалит вход и предложит очистить данные на этом телефоне.</p>
+        </section>
+
+        <section class="settings-block settings-block-about">
+          <h3 class="period-head" data-i18n="settingsSecAbout">О приложении</h3>
+          <p class="hint" id="appVersionHint"></p>
+          <p class="hint" data-i18n="settingsAboutBody">Matchcard — оценки матчей для игрока, родителя и тренера.</p>
+          <button class="save-btn" id="saveSettingsBtn" type="button" data-i18n="sSave">Сохранить настройки</button>
+        </section>
+
       </div>
-      <div class="pro-card" id="proCard">
-        <div class="pro-kicker">Matchcard Pro</div>
-        <p id="proBody"></p>
-        <ul class="pro-list">
-          <li data-i18n="proBulletPlayers">До 32 игроков в составе — вся команда, не один</li>
-          <li data-i18n="proBulletSeasons">Новые сезоны без лимита после закрытия текущего</li>
-          <li data-i18n="proBulletStats">График оценок, сравнение периодов и разбор по минутам</li>
-          <li data-i18n="proBulletCards">Карточки сезона и периода для шеринга</li>
-          <li data-i18n="proBulletCloud">Облачный автосинк между устройствами</li>
-        </ul>
-        <button class="save-btn" id="proUnlockBtn" type="button" hidden data-i18n="proUnlock">Включить Pro</button>
-        <button class="ghost-btn" id="proLockBtn" type="button" hidden data-i18n="proLock">Выключить Pro</button>
-      </div>
-      <h3 class="period-head" data-i18n="planCoachHead">Coach</h3>
-      <p class="hint" data-i18n="planCoachHint">Matchcard Coach — командный продукт в облаке. Отдельное дерево: Academy → Team → игроки. Не смешивается с Free/Pro.</p>
-      <div class="pro-card coach-card" id="coachCard">
-        <div class="pro-kicker">Matchcard Coach</div>
-        <p data-i18n="coachTeaserBody">Управляй командой, оценивай каждого игрока и делись прогрессом с родителями.</p>
-        <ul class="pro-list">
-          <li data-i18n="coachTeaserTeam">Академия, команда, состав 10–50</li>
-          <li data-i18n="coachTeaserAnalytics">Командные матчи и аналитика</li>
-          <li data-i18n="coachTeaserParents">Invite родителя к профилю ребёнка</li>
-        </ul>
-        <button class="save-btn" id="openCoachBtn" type="button" data-i18n="coachOpen">Matchcard Coach</button>
-        <button class="save-btn" id="coachSubUnlockBtn" type="button" hidden data-i18n="coachSubUnlock">Включить Coach</button>
-        <button class="ghost-btn" id="coachSubLockBtn" type="button" hidden data-i18n="coachSubLock">Выключить Coach</button>
-        <p class="hint" id="coachSubHint" hidden data-i18n="coachSubHint">Тестовый доступ Coach на этом телефоне.</p>
-        <button class="ghost-btn" id="enterParentModeBtn" type="button" hidden data-i18n="coachSwitchParent">Перейти в режим родителя / Free</button>
-        <button class="ghost-btn" id="enterCoachModeBtn" type="button" hidden data-i18n="coachSwitchCoach">Вернуться в режим тренера</button>
-        <p class="hint" id="settingsCoachEmail" hidden></p>
-      </div>
-      <button class="save-btn" id="saveSettingsBtn" type="button" data-i18n="sSave">Сохранить настройки</button>
-      <div class="pro-card" id="settingsAccountCard">
-        <div class="pro-kicker" data-i18n="settingsAccountKicker">Аккаунт</div>
-        <p class="hint" id="settingsAccountStatus" data-i18n="settingsAccountSignedOut">Вы не вошли в аккаунт.</p>
-        <button class="ghost-btn" id="settingsSignOutBtn" type="button" hidden data-i18n="accountSignOut">Выйти</button>
-      </div>
-      <p class="hint" id="appVersionHint"></p>
-      <p class="hint"><a href="privacy.html" id="privacyLink" target="_blank" rel="noopener" data-i18n="sPrivacy">Конфиденциальность</a></p>
     </div>
 
     <div class="view" id="view-coach">

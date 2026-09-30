@@ -3593,19 +3593,86 @@ ru:{
 })();
 
 (function mergeReleaseI18n(){
-  const extra = {
-    uk:{ sVersion:'Версія {v}', sPrivacy:'Конфіденційність', sIcons:'Іконки дій', sIconsHint:'Порівняй на вкладці «Матч».', icons_line:'Лінія', icons_clear:'Силуети', icons_bright:'Яскраві', icons_solid:'Заливка' },
-    pl:{ sVersion:'Wersja {v}', sPrivacy:'Prywatność', sIcons:'Ikony akcji', sIconsHint:'Porównaj w zakładce Mecz.', icons_line:'Linia', icons_clear:'Sylwetki', icons_bright:'Kolorowe', icons_solid:'Wypełnienie' },
-    en:{ sVersion:'Version {v}', sPrivacy:'Privacy', sIcons:'Action icons', sIconsHint:'Compare on the Match tab.', icons_line:'Line', icons_clear:'Silhouettes', icons_bright:'Bright', icons_solid:'Solid' },
-    ru:{ sVersion:'Версия {v}', sPrivacy:'Конфиденциальность', sIcons:'Иконки действий', sIconsHint:'Сравни на вкладке «Матч» — список игровых действий.', icons_line:'Линия', icons_clear:'Силуэты', icons_bright:'Яркие', icons_solid:'Заливка' },
-    es:{ sVersion:'Versión {v}', sPrivacy:'Privacidad', sIcons:'Iconos de acciones', sIconsHint:'Compáralos en la pestaña Partido.', icons_line:'Línea', icons_clear:'Siluetas', icons_bright:'Vivos', icons_solid:'Relleno' },
-    de:{ sVersion:'Version {v}', sPrivacy:'Datenschutz', sIcons:'Aktions-Icons', sIconsHint:'Vergleiche unter Spiel.', icons_line:'Linie', icons_clear:'Silhouetten', icons_bright:'Bunt', icons_solid:'Fläche' },
-    it:{ sVersion:'Versione {v}', sPrivacy:'Privacy', sIcons:'Icone azioni', sIconsHint:'Confronta nella scheda Partita.', icons_line:'Linea', icons_clear:'Silhouette', icons_bright:'Vividi', icons_solid:'Pieno' },
-    fr:{ sVersion:'Version {v}', sPrivacy:'Confidentialité', sIcons:'Icônes d’actions', sIconsHint:'Comparez dans l’onglet Match.', icons_line:'Ligne', icons_clear:'Silhouettes', icons_bright:'Vifs', icons_solid:'Plein' },
-    pt:{ sVersion:'Versão {v}', sPrivacy:'Privacidade', sIcons:'Ícones de ações', sIconsHint:'Compara no separador Jogo.', icons_line:'Linha', icons_clear:'Silhuetas', icons_bright:'Vivos', icons_solid:'Preenchido' }
+  const settingsExtra = {
+    settingsSecAccount: 'Account',
+    settingsSecAppearance: 'Appearance',
+    settingsSecNotifications: 'Notifications',
+    settingsSecData: 'Data & backup',
+    settingsSecPlans: 'Plans & modes',
+    settingsSecSupport: 'Support & legal',
+    settingsSecAbout: 'About',
+    settingsDataHint: 'Keep a JSON copy when you change phones or reinstall.',
+    sTerms: 'Terms of use',
+    settingsSupport: 'Contact support',
+    settingsRate: 'Rate the app',
+    settingsFeedback: 'Report a problem',
+    settingsDeleteAccount: 'Delete account',
+    settingsDeleteAccountHint: 'Required by app stores. Signs you out and can clear data on this phone.',
+    settingsDeleteAccountConfirm: 'Sign out and remove account access on this device?',
+    settingsDeleteLocalConfirm: 'Clear personal Matchcard data on this phone?',
+    settingsDeleteWipeConfirm: 'Also erase match history and player cards on this phone?',
+    settingsDeleteDone: 'Signed out on this device. Email support to finish cloud deletion if needed.',
+    settingsSupportFallback: 'Email: ihormykhailiuk@gmail.com',
+    settingsAboutBody: 'Matchcard — match ratings for player, parent and coach.'
   };
+  const extra = {
+    uk:{
+      sVersion:'Версія {v}', sPrivacy:'Конфіденційність', sTerms:'Умови використання',
+      sIcons:'Іконки дій', sIconsHint:'Порівняй на вкладці «Матч».',
+      icons_line:'Лінія', icons_clear:'Силуети', icons_bright:'Яскраві', icons_solid:'Заливка',
+      settingsSecAccount:'Акаунт', settingsSecAppearance:'Вигляд', settingsSecNotifications:'Сповіщення',
+      settingsSecData:'Дані та копії', settingsSecPlans:'Тарифи та режими', settingsSecSupport:'Підтримка і правове',
+      settingsSecAbout:'Про застосунок',
+      settingsDataHint:'Зберігай JSON-копію при зміні телефону або перевстановленні.',
+      settingsSupport:'Написати в підтримку', settingsRate:'Оцінити застосунок', settingsFeedback:'Повідомити про проблему',
+      settingsDeleteAccount:'Видалити акаунт',
+      settingsDeleteAccountHint:'Потрібно для магазинів. Вийде з акаунта і може очистити дані на цьому телефоні.',
+      settingsDeleteAccountConfirm:'Вийти й прибрати доступ акаунта на цьому пристрої?',
+      settingsDeleteLocalConfirm:'Очистити особисті дані Matchcard на цьому телефоні?',
+      settingsDeleteWipeConfirm:'Також стерти історію матчів і картки гравців на цьому телефоні?',
+      settingsDeleteDone:'Ви вийшли на цьому пристрої. Для повного видалення в хмарі напишіть у підтримку.',
+      settingsAboutBody:'Matchcard — оцінки матчів для гравця, батька і тренера.'
+    },
+    pl:{
+      sVersion:'Wersja {v}', sPrivacy:'Prywatność', sTerms:'Warunki korzystania',
+      sIcons:'Ikony akcji', sIconsHint:'Porównaj w zakładce Mecz.',
+      icons_line:'Linia', icons_clear:'Sylwetki', icons_bright:'Kolorowe', icons_solid:'Wypełnienie',
+      settingsSecAccount:'Konto', settingsSecAppearance:'Wygląd', settingsSecNotifications:'Powiadomienia',
+      settingsSecData:'Dane i kopie', settingsSecPlans:'Plany i tryby', settingsSecSupport:'Pomoc i prawo',
+      settingsSecAbout:'O aplikacji',
+      settingsSupport:'Napisz do wsparcia', settingsRate:'Oceń aplikację', settingsFeedback:'Zgłoś problem',
+      settingsDeleteAccount:'Usuń konto'
+    },
+    ru:{
+      sVersion:'Версия {v}', sPrivacy:'Конфиденциальность', sTerms:'Условия использования',
+      sIcons:'Иконки действий', sIconsHint:'Сравни на вкладке «Матч» — список игровых действий.',
+      icons_line:'Линия', icons_clear:'Силуэты', icons_bright:'Яркие', icons_solid:'Заливка',
+      settingsSecAccount:'Аккаунт', settingsSecAppearance:'Внешний вид', settingsSecNotifications:'Уведомления',
+      settingsSecData:'Данные и копии', settingsSecPlans:'Тарифы и режимы', settingsSecSupport:'Поддержка и правовое',
+      settingsSecAbout:'О приложении',
+      settingsDataHint:'Копия JSON нужна при смене телефона или переустановке.',
+      settingsSupport:'Написать в поддержку', settingsRate:'Оценить приложение', settingsFeedback:'Сообщить о проблеме',
+      settingsDeleteAccount:'Удалить аккаунт',
+      settingsDeleteAccountHint:'Нужно для магазинов приложений. Удалит вход и предложит очистить данные на этом телефоне.',
+      settingsDeleteAccountConfirm:'Выйти и убрать доступ аккаунта на этом устройстве?',
+      settingsDeleteLocalConfirm:'Очистить личные данные Matchcard на этом телефоне?',
+      settingsDeleteWipeConfirm:'Также стереть историю матчей и карточки игроков на этом телефоне?',
+      settingsDeleteDone:'Вы вышли на этом устройстве. Для полного удаления в облаке напишите в поддержку.',
+      settingsAboutBody:'Matchcard — оценки матчей для игрока, родителя и тренера.'
+    },
+    es:{ sVersion:'Versión {v}', sPrivacy:'Privacidad', sTerms:'Términos de uso', sIcons:'Iconos de acciones', sIconsHint:'Compáralos en la pestaña Partido.', icons_line:'Línea', icons_clear:'Siluetas', icons_bright:'Vivos', icons_solid:'Relleno', settingsSecAccount:'Cuenta', settingsDeleteAccount:'Eliminar cuenta', settingsRate:'Valorar la app', settingsSupport:'Contactar soporte' },
+    de:{ sVersion:'Version {v}', sPrivacy:'Datenschutz', sTerms:'Nutzungsbedingungen', sIcons:'Aktions-Icons', sIconsHint:'Vergleiche unter Spiel.', icons_line:'Linie', icons_clear:'Silhouetten', icons_bright:'Bunt', icons_solid:'Fläche', settingsSecAccount:'Konto', settingsDeleteAccount:'Konto löschen', settingsRate:'App bewerten', settingsSupport:'Support kontaktieren' },
+    it:{ sVersion:'Versione {v}', sPrivacy:'Privacy', sTerms:'Termini di utilizzo', sIcons:'Icone azioni', sIconsHint:'Confronta nella scheda Partita.', icons_line:'Linea', icons_clear:'Silhouette', icons_bright:'Vividi', icons_solid:'Pieno', settingsSecAccount:'Account', settingsDeleteAccount:'Elimina account', settingsRate:'Valuta l’app', settingsSupport:'Contatta il supporto' },
+    fr:{ sVersion:'Version {v}', sPrivacy:'Confidentialité', sTerms:'Conditions d’utilisation', sIcons:'Icônes d’actions', sIconsHint:'Comparez dans l’onglet Match.', icons_line:'Ligne', icons_clear:'Silhouettes', icons_bright:'Vifs', icons_solid:'Plein', settingsSecAccount:'Compte', settingsDeleteAccount:'Supprimer le compte', settingsRate:'Noter l’app', settingsSupport:'Contacter le support' },
+    pt:{ sVersion:'Versão {v}', sPrivacy:'Privacidade', sTerms:'Termos de utilização', sIcons:'Ícones de ações', sIconsHint:'Compara no separador Jogo.', icons_line:'Linha', icons_clear:'Silhuetas', icons_bright:'Vivos', icons_solid:'Preenchido', settingsSecAccount:'Conta', settingsDeleteAccount:'Eliminar conta', settingsRate:'Avaliar a app', settingsSupport:'Contactar suporte' }
+  };
+  extra.en = Object.assign({
+    sVersion:'Version {v}', sPrivacy:'Privacy', sTerms:'Terms of use',
+    sIcons:'Action icons', sIconsHint:'Compare on the Match tab.',
+    icons_line:'Line', icons_clear:'Silhouettes', icons_bright:'Bright', icons_solid:'Solid'
+  }, settingsExtra);
   LANGS.forEach(lang => {
-    Object.assign(I18N[lang], extra.en, extra[lang] || {});
+    Object.assign(I18N[lang], settingsExtra, extra.en, extra[lang] || {});
   });
 })();
 

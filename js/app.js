@@ -448,6 +448,95 @@ async function syncPersonalAccountUi(){
   updateCloudSyncStatusUi();
   return session;
 }
+async function onSettingsDeleteAccount(){
+  const personal = personalAccountEmail(await getPersonalAccountSession());
+  const coachEmail = coachAccountEmail();
+  if(!personal && !coachEmail){
+    if(!confirm(t('settingsDeleteLocalConfirm') || 'Clear personal data on this phone?')) return;
+  }else if(!confirm(t('settingsDeleteAccountConfirm') || 'Sign out and delete account access on this device?')){
+    return;
+  }
+  try{
+    if(window.ParentCloud && typeof window.ParentCloud.signOut === 'function'){
+      await window.ParentCloud.signOut();
+    }
+  }catch(e){}
+  try{
+    if(window.CoachStore && typeof window.CoachStore.signOut === 'function'){
+      const out = window.CoachStore.signOut();
+      if(out && typeof out.then === 'function') await out;
+    }
+  }catch(e){}
+  if(typeof setCoachPlan === 'function') setCoachPlan(false);
+  if(isPro()){
+    settings.isPro = false;
+    saveSettings();
+    syncProUi();
+  }
+  const wipeLocal = confirm(t('settingsDeleteWipeConfirm') || 'Also erase match history and player cards on this phone?');
+  if(wipeLocal){
+    try{
+      const keys = [];
+      for(let i = 0; i < localStorage.length; i++){
+        const k = localStorage.key(i);
+        if(!k) continue;
+        if(/^(ffk_kid_|ffk_kid_m_|ffk_roster|ffk_player|ffk_matches|ffk_parent|ffk_inbox|ffk_draft)/.test(k)){
+          keys.push(k);
+        }
+      }
+      keys.forEach(k => { try{ localStorage.removeItem(k); }catch(e){} });
+    }catch(e){}
+  }
+  showToast(t('settingsDeleteDone') || 'Account signed out on this device.');
+  await syncPersonalAccountUi();
+  if(typeof renderCoachUi === 'function') renderCoachUi();
+  if(typeof renderParentUi === 'function') renderParentUi();
+  try{
+    const mail = 'mailto:ihormykhailiuk@gmail.com?subject=' +
+      encodeURIComponent('Matchcard delete account') +
+      '&body=' + encodeURIComponent(
+        'Please delete my Matchcard cloud account.\nEmail: ' + (personal || coachEmail || '') + '\n'
+      );
+    if(wipeLocal || personal || coachEmail){
+      // Offer formal cloud deletion mail after local cleanup.
+      setTimeout(() => {
+        try{ window.location.href = mail; }catch(e){}
+      }, 400);
+    }
+  }catch(e){}
+  if(typeof showView === 'function') showView('settings');
+  if(wipeLocal && typeof location !== 'undefined'){
+    setTimeout(() => { try{ location.reload(); }catch(e){} }, 800);
+  }
+}
+function openSettingsSupport(){
+  const subject = encodeURIComponent('Matchcard support');
+  const body = encodeURIComponent(
+    'Version: ' + (window.FFK_VERSION || '') + '\n\n'
+  );
+  const mail = 'mailto:ihormykhailiuk@gmail.com?subject=' + subject + '&body=' + body;
+  try{ window.location.href = mail; }catch(e){
+    showToast(t('settingsSupportFallback') || 'Email: ihormykhailiuk@gmail.com');
+  }
+}
+function openSettingsRate(){
+  const play = 'https://play.google.com/store/apps/details?id=app.ffk.rating';
+  const web = 'https://ihormich.github.io/ffk/';
+  let url = web;
+  try{
+    if(typeof isNativeApp === 'function' && isNativeApp()) url = play;
+  }catch(e){}
+  try{
+    const Browser = typeof capPlugin === 'function' ? capPlugin('Browser') : null;
+    if(Browser && typeof Browser.open === 'function'){
+      Browser.open({url});
+      return;
+    }
+  }catch(e){}
+  try{ window.open(url, '_blank', 'noopener'); }catch(e){
+    try{ window.location.href = url; }catch(err){}
+  }
+}
 async function onSettingsSignOut(){
   const personal = personalAccountEmail(await getPersonalAccountSession());
   const coachEmail = coachAccountEmail();
@@ -3991,6 +4080,9 @@ document.getElementById('personalSignUpBtn')?.addEventListener('click', () => on
 document.getElementById('personalSignInBtn')?.addEventListener('click', () => onPersonalSignIn());
 document.getElementById('personalSignOutBtn')?.addEventListener('click', () => onPersonalSignOut());
 document.getElementById('settingsSignOutBtn')?.addEventListener('click', () => onSettingsSignOut());
+document.getElementById('settingsDeleteAccountBtn')?.addEventListener('click', () => onSettingsDeleteAccount());
+document.getElementById('settingsSupportBtn')?.addEventListener('click', () => openSettingsSupport());
+document.getElementById('settingsRateBtn')?.addEventListener('click', () => openSettingsRate());
 document.getElementById('personalGoogleBtn')?.addEventListener('click', () => onPersonalGoogle());
 document.getElementById('coachSubUnlockBtn')?.addEventListener('click', () => setCoachSub(true));
 document.getElementById('coachSubLockBtn')?.addEventListener('click', () => setCoachSub(false));
