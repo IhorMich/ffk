@@ -761,6 +761,7 @@
         ${detailRow(tt('labelDate', 'Date'), msg.date || '')}
         ${detailRow(tt('coachMatchMeetup', 'Meetup time'), msg.meetup || '')}
         ${detailRow(tt('coachMatchKickoff', 'Kick-off'), msg.kickoff || '')}
+        ${detailRow(tt('coachMatchEnd', 'Ends'), msg.end_time || '')}
         ${!isResult ? detailRow(
           tt('coachMatchFee', 'Entry fee'),
           msg.fee_type === 'paid'

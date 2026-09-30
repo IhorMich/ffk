@@ -769,6 +769,7 @@
       const kind = ['league','friendly','cup','tournament'].includes(fields.kind) ? fields.kind : 'league';
       const meetup = normalizeKickoff(fields.meetup);
       const kickoff = normalizeKickoff(fields.kickoff);
+      const endTime = normalizeKickoff(fields.end_time);
       const feeInfo = normalizeFee(fields);
       const tournament = kind === 'friendly'
         ? ''
@@ -797,6 +798,7 @@
         squad,
         meetup,
         kickoff,
+        end_time: endTime,
         fee_type: feeInfo.fee_type,
         fee: feeInfo.fee,
         tournament,
@@ -859,6 +861,9 @@
       }
       if(fields && Object.prototype.hasOwnProperty.call(fields, 'kickoff')){
         next.kickoff = normalizeKickoff(fields.kickoff);
+      }
+      if(fields && Object.prototype.hasOwnProperty.call(fields, 'end_time')){
+        next.end_time = normalizeKickoff(fields.end_time);
       }
       if(fields && (Object.prototype.hasOwnProperty.call(fields, 'fee_type')
         || Object.prototype.hasOwnProperty.call(fields, 'fee'))){
@@ -957,7 +962,8 @@
               opponent: match.opponent,
               address: match.address,
               meetup: match.meetup,
-              kickoff: match.kickoff
+              kickoff: match.kickoff,
+              end_time: match.end_time
             });
           }
         }catch(e){}
@@ -1100,6 +1106,7 @@
         kind: base.kind,
         meetup: base.meetup || '',
         kickoff: base.kickoff || '',
+        end_time: base.end_time || '',
         tournament: base.tournament || '',
         type: 'match_result',
         score: match ? (match.score || '') : '',
@@ -1215,6 +1222,7 @@
         kind: match.kind,
         meetup: match.meetup || '',
         kickoff: match.kickoff || '',
+        end_time: match.end_time || '',
         fee_type: match.fee_type === 'paid' ? 'paid' : 'free',
         fee: match.fee_type === 'paid' ? (match.fee || '') : '',
         tournament: match.tournament || ''
@@ -1271,6 +1279,7 @@
               kind: payload.kind,
               meetup: payload.meetup || '',
               kickoff: payload.kickoff || '',
+              end_time: payload.end_time || '',
               fee_type: payload.fee_type === 'paid' ? 'paid' : 'free',
               fee: payload.fee_type === 'paid' ? (payload.fee || '') : '',
               tournament: payload.tournament || ''

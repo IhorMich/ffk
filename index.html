@@ -462,6 +462,15 @@ window.ffkIsNative = function () {
                 <input type="hidden" class="js-cm-kickoff" id="coachKickoffValue" value="">
               </div>
               <div class="field">
+                <label data-i18n="coachMatchEnd">Время окончания</label>
+                <div class="coach-kickoff-row">
+                  <select class="js-cm-end-h" id="coachMatchEndH" aria-label="end hour"></select>
+                  <span class="coach-kickoff-colon" aria-hidden="true">:</span>
+                  <select class="js-cm-end-m" id="coachMatchEndM" aria-label="end minute"></select>
+                </div>
+                <input type="hidden" class="js-cm-end" id="coachMatchEndValue" value="">
+              </div>
+              <div class="field">
                 <label data-i18n="coachMatchFee">Плата за вход</label>
                 <select class="js-cm-fee-type" id="coachFeeType">
                   <option value="free" data-i18n="coachMatchFeeFree">Бесплатно</option>
@@ -554,6 +563,15 @@ window.ffkIsNative = function () {
                         <select class="js-cu-kickoff-m" id="coachUpcomingKickoffM" aria-label="minute"></select>
                       </div>
                       <input type="hidden" class="js-cu-kickoff" id="coachUpcomingKickoffValue" value="">
+                    </div>
+                    <div class="field">
+                      <label data-i18n="coachMatchEnd">Время окончания</label>
+                      <div class="coach-kickoff-row">
+                        <select class="js-cu-end-h" id="coachUpcomingEndH" aria-label="end hour"></select>
+                        <span class="coach-kickoff-colon" aria-hidden="true">:</span>
+                        <select class="js-cu-end-m" id="coachUpcomingEndM" aria-label="end minute"></select>
+                      </div>
+                      <input type="hidden" class="js-cu-end" id="coachUpcomingEndValue" value="">
                     </div>
                     <div class="field">
                       <label data-i18n="labelVenue">Где играете</label>

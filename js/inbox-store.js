@@ -160,6 +160,7 @@
         kind: String(payload.kind || 'league').slice(0, 16),
         meetup: String(payload.meetup || '').slice(0, 8),
         kickoff: String(payload.kickoff || '').slice(0, 8),
+        end_time: String(payload.end_time || '').slice(0, 8),
         fee_type: payload.fee_type === 'paid' ? 'paid' : 'free',
         fee: payload.fee_type === 'paid' ? String(payload.fee || '').slice(0, 32) : '',
         tournament: String(payload.tournament || '').slice(0, 48),
@@ -206,7 +207,8 @@
             opponent: extra.opponent != null ? String(extra.opponent).slice(0, 48) : m.opponent,
             address: extra.address != null ? String(extra.address).slice(0, 120) : m.address,
             meetup: extra.meetup != null ? String(extra.meetup).slice(0, 8) : m.meetup,
-            kickoff: extra.kickoff != null ? String(extra.kickoff).slice(0, 8) : m.kickoff
+            kickoff: extra.kickoff != null ? String(extra.kickoff).slice(0, 8) : m.kickoff,
+            end_time: extra.end_time != null ? String(extra.end_time).slice(0, 8) : m.end_time
           } : {}),
           invite_notice: 'cancelled',
           rsvp: '',
@@ -246,6 +248,7 @@
         kind: String(payload.kind || 'league').slice(0, 16),
         meetup: String(payload.meetup || '').slice(0, 8),
         kickoff: String(payload.kickoff || '').slice(0, 8),
+        end_time: String(payload.end_time || '').slice(0, 8),
         tournament: String(payload.tournament || '').slice(0, 48),
         score: String(payload.score || '').slice(0, 16),
         rating: Number(payload.rating) || 0,
