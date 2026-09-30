@@ -2640,6 +2640,14 @@
         if(typeof saveSettings === 'function') saveSettings();
       }
     }catch(e){}
+    // Fallback if settings was not exposed on window yet
+    try{
+      if(typeof isCoachSub === 'function' && !isCoachSub() && typeof setCoachSub === 'function'){
+        setCoachSub(true);
+        if(global.settings) global.settings.coachSubPlan = value;
+        if(typeof saveSettings === 'function') saveSettings();
+      }
+    }catch(e){}
     try{
       const store = global.CoachStore;
       const session = store && store.getSession && store.getSession();

@@ -665,6 +665,7 @@ async function runPersonalCloudSync(options){
 }
 
 let settings = {club:'', player:'', position:'fwd', format:'2x30', minutes:'60', lang:'ru', seasonCloseDeclined:'', theme:'dark', iconSet:'clear', onboarded:false, onboardSkin:'', isPro:false, isCoach:false, coachSub:false, coachSubPlan:'', pwaTransferSeen:false, introMark:'', accountPrompted:false, devBilling:false};
+window.settings = settings;
 let roster = {currentId:'', ids:[]};
 let player = defaultPlayer();
 let extraSelected = [];
@@ -5808,7 +5809,18 @@ async function shareCard(m){
   try{
     if('serviceWorker' in navigator && !isNativeApp()){
       const swUrl = new URL('sw.js', document.querySelector('base')?.href || location.href);
-      navigator.serviceWorker.register(swUrl.href).catch(() => {});
+      navigator.serviceWorker.register(swUrl.href).then(reg => {
+        try{ reg.update(); }catch(e){}
+        try{
+          if(navigator.serviceWorker.controller){
+            navigator.serviceWorker.addEventListener('controllerchange', () => {
+              if(window.__ffkSwReloaded) return;
+              window.__ffkSwReloaded = true;
+              location.reload();
+            });
+          }
+        }catch(e){}
+      }).catch(() => {});
     } else if('serviceWorker' in navigator && isNativeApp()){
       // The APK ships its own assets; a worker left over from the PWA build
       // would keep serving stale files after an update.

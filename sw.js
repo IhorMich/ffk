@@ -1,4 +1,4 @@
-const CACHE = 'ffk_v312';
+const CACHE = 'ffk_v313';
 const ASSETS = [
   './',
   './index.html',
@@ -105,6 +105,15 @@ self.addEventListener('fetch', event => {
   if(url.origin !== self.location.origin) return;
   event.respondWith((async () => {
     const cache = await caches.open(CACHE);
+    if(/\/js\/version\.js$/i.test(url.pathname)){
+      try{
+        const fresh = await fetch(event.request, {cache: 'no-store'});
+        if(fresh && fresh.ok){
+          cache.put(event.request, fresh.clone());
+          return fresh;
+        }
+      }catch(e){}
+    }
     if(event.request.mode === 'navigate'){
       const path = url.pathname || '';
       const isPrivacy = path.endsWith('/privacy.html');
