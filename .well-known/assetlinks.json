@@ -1,0 +1,10 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "app.ffk.rating",
+    "sha256_cert_fingerprints": [
+      "49:64:29:A9:39:9F:4F:0D:54:53:2F:6F:3E:5E:A3:06:9A:86:C0:8A:E9:EE:63:B3:25:FE:6E:2B:48:DE:5D:12"
+    ]
+  }
+}]

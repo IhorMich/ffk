@@ -1173,13 +1173,26 @@
       if(back) back.hidden = true;
     }
   }
-  function previewClaim(){
+  async function previewClaim(){
     const store = global.ParentStore;
     const input = document.getElementById('parentClaimInput');
     const preview = document.getElementById('parentClaimPreview');
     if(!store || !preview) return null;
+    const rawText = input && input.value;
     try{
-      const payload = store.parseInviteInput(input && input.value);
+      let payload = null;
+      try{
+        payload = store.parseInviteInput(rawText);
+      }catch(localErr){
+        const code = global.ParentCloud && global.ParentCloud.codeFromText
+          ? global.ParentCloud.codeFromText(rawText)
+          : '';
+        if(!(code && global.ParentCloud && global.ParentCloud.ready && global.ParentCloud.ready())){
+          throw localErr;
+        }
+        const cloudPayload = await global.ParentCloud.resolveInviteByCode(code);
+        payload = store.parseInviteInput('FFKP1:' + store.encodePayload(cloudPayload));
+      }
       store.setPending(payload);
       const name = playerName(payload.player);
       preview.innerHTML = `<div class="parent-confirm-card">
@@ -1212,7 +1225,7 @@
     const store = global.ParentStore;
     if(!store) return;
     let payload = store.getPending();
-    if(!payload) payload = previewClaim();
+    if(!payload) payload = await previewClaim();
     if(!payload){
       toast(tt('parentBadInvite', 'Could not read this invite. Paste the full link or MC-code.'));
       return;
@@ -1305,12 +1318,30 @@
     const token = global.ParentCloud && global.ParentCloud.tokenFromUrl
       ? global.ParentCloud.tokenFromUrl(url)
       : '';
+    const code = global.ParentCloud && global.ParentCloud.codeFromText
+      ? global.ParentCloud.codeFromText(url)
+      : '';
     if(token && global.ParentCloud && global.ParentCloud.ready && global.ParentCloud.ready()){
       global.ParentCloud.resolveInvite(token).then(raw => {
         const encoded = store.encodePayload(raw);
         openParentClaimSheet('FFKP1:' + encoded);
       }).catch(() => {
         toast(tt('parentBadInvite', 'Could not read this invite.'));
+      });
+      return true;
+    }
+    if(code && global.ParentCloud && global.ParentCloud.ready && global.ParentCloud.ready()){
+      global.ParentCloud.resolveInviteByCode(code).then(raw => {
+        const encoded = store.encodePayload(raw);
+        openParentClaimSheet('FFKP1:' + encoded);
+      }).catch(() => {
+        try{
+          const payload = store.parseInviteInput(String(url));
+          store.setPending(payload);
+          openParentClaimSheet(String(url));
+        }catch(e){
+          toast(tt('parentBadInvite', 'Could not read this invite.'));
+        }
       });
       return true;
     }

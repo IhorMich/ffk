@@ -113,6 +113,28 @@
     if(!data) throw new Error('bad_invite');
     return data;
   }
+  function normalizeInviteCode(raw){
+    return String(raw || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8);
+  }
+  function codeFromText(raw){
+    const text = String(raw || '');
+    const fromQuery = text.match(/[?&#]code=(?:MC-)?([A-Za-z0-9]{4,8})/i);
+    if(fromQuery) return normalizeInviteCode(fromQuery[1]);
+    const trimmed = text.trim();
+    if(/^(?:MC-)?[A-Za-z0-9]{4,8}$/i.test(trimmed)){
+      return normalizeInviteCode(trimmed.replace(/^MC-/i, ''));
+    }
+    return '';
+  }
+  async function resolveInviteByCode(code){
+    const sb = client('parent');
+    const cleaned = normalizeInviteCode(code);
+    if(!sb || cleaned.length < 4) throw new Error('bad_invite');
+    const {data, error} = await sb.rpc('resolve_parent_invite_by_code', {invite_code: cleaned});
+    if(error) throw error;
+    if(!data) throw new Error('bad_invite');
+    return data;
+  }
   function activeProfile(){
     const id = global.ParentStore && global.ParentStore.currentPersonalPlayerId
       ? global.ParentStore.currentPersonalPlayerId()
@@ -377,6 +399,8 @@
     isCoachPlayerLinked,
     publishInvite,
     resolveInvite,
+    resolveInviteByCode,
+    codeFromText,
     claimInvite,
     syncParentData,
     scheduleSync,
