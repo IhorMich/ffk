@@ -309,6 +309,10 @@
     const coachSession = coach && coach.getSession && coach.getSession();
     const academy = coachSession && coach.myAcademy && coach.myAcademy(coachSession);
     if(!sb || !coachSession || !academy) return {ok: false};
+    const {data: authData, error: authErr} = await sb.auth.getSession();
+    if(authErr) throw authErr;
+    const session = authData && authData.session;
+    if(!session) return {ok: false, reason: 'no_session'};
     const teams = coach.listTeams ? coach.listTeams(coachSession, academy.id) : [];
     const playerIds = [];
     teams.forEach(team => {
@@ -348,7 +352,7 @@
         }
       }
     }
-    await syncChats(coachSession, linksRes.data || [], 'coach');
+    await syncChats(session, linksRes.data || [], 'coach');
     if(typeof syncCoachChildPlayerUi === 'function'){
       try{ syncCoachChildPlayerUi(); }catch(e){}
     }

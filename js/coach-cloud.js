@@ -9,7 +9,15 @@
   }
   function ready(){
     const c = cfg();
-    return !!(c.supabaseUrl && c.supabaseAnonKey && global.supabase && typeof global.supabase.createClient === 'function');
+    const url = String(c.supabaseUrl || '');
+    const key = String(c.supabaseAnonKey || '');
+    return !!(
+      /^https:\/\//i.test(url)
+      && key
+      && !/^sb_secret_/i.test(key)
+      && global.supabase
+      && typeof global.supabase.createClient === 'function'
+    );
   }
   function getClient(){
     if(!ready()) return null;
