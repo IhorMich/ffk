@@ -60,7 +60,7 @@ function blobToBase64(blob){
     reader.readAsDataURL(blob);
   });
 }
-async function nativeShareBlob(blob, filename, title){
+async function nativeShareBlob(blob, filename, title, text){
   const Share = capPlugin('Share');
   const Filesystem = capPlugin('Filesystem');
   if(!isNativeApp() || !Share || !Filesystem || !blob) return false;
@@ -68,7 +68,9 @@ async function nativeShareBlob(blob, filename, title){
   const directory = 'CACHE';
   await Filesystem.writeFile({path: filename, data, directory});
   const got = await Filesystem.getUri({path: filename, directory});
-  await Share.share({title: title || 'Matchcard', files: [got.uri], dialogTitle: title || 'Matchcard'});
+  const payload = {title: title || 'Matchcard', files: [got.uri], dialogTitle: title || 'Matchcard'};
+  if(text) payload.text = String(text);
+  await Share.share(payload);
   return true;
 }
 async function nativeSaveDocument(blob, filename){
@@ -921,7 +923,7 @@ async function runPersonalCloudSync(options){
   }
 }
 
-let settings = {club:'', player:'', position:'fwd', format:'2x30', minutes:'60', lang:'ru', seasonCloseDeclined:'', theme:'dark', iconSet:'clear', onboarded:false, onboardSkin:'', isPro:false, isCoach:false, coachSub:false, coachSubPlan:'', pwaTransferSeen:false, introMark:'', accountPrompted:false, devBilling:false};
+let settings = {club:'', player:'', position:'fwd', format:'2x30', minutes:'60', lang:'ru', seasonCloseDeclined:'', theme:'dark', iconSet:'clear', onboarded:false, onboardSkin:'', isPro:false, isCoach:false, coachSub:false, coachSubPlan:'', pwaTransferSeen:false, introMark:'', accountPrompted:false, devBilling:false, shareMilestonesSeen:''};
 window.settings = settings;
 let roster = {currentId:'', ids:[]};
 let player = defaultPlayer();
@@ -3521,6 +3523,64 @@ function collectMatch(){
   };
 }
 
+function ffkLog(event, data){
+  try{
+    if(window.MatchcardLog && typeof window.MatchcardLog.breadcrumb === 'function'){
+      window.MatchcardLog.breadcrumb(event, data || {});
+    }
+  }catch(e){}
+}
+function matchcardShareUrl(){
+  return 'https://ihormich.github.io/ffk/';
+}
+function matchcardShareText(){
+  return t('shareInviteText', {url: matchcardShareUrl()});
+}
+function drawCardViralFooter(ctx, w, h, theme){
+  ctx.fillStyle = theme.muted;
+  ctx.textAlign = 'center';
+  fitText(ctx, 'MATCHCARD  ·  ' + matchcardShareUrl().replace(/^https?:\/\//, ''), w / 2, h - 42, w - 120, '700', 18, 12);
+  ctx.textAlign = 'left';
+}
+
+let afterCardPreviewHooks = [];
+function runAfterCardPreviewHooks(){
+  const hooks = afterCardPreviewHooks.splice(0);
+  hooks.forEach(fn => { try{ fn(); }catch(e){} });
+}
+function queueAfterCardPreview(fn){
+  if(typeof fn === 'function') afterCardPreviewHooks.push(fn);
+}
+
+const SHARE_MILESTONES = [3, 5, 10];
+function seasonMatchCountForShare(){
+  const season = (player && player.season) || currentSeason();
+  return matches.filter(m => String(m.season || seasonFromDate(m.date)) === String(season)).length;
+}
+function seenShareMilestones(){
+  return String(settings.shareMilestonesSeen || '').split(',').map(s => s.trim()).filter(Boolean);
+}
+function markShareMilestone(n){
+  const set = new Set(seenShareMilestones());
+  set.add(String(n));
+  settings.shareMilestonesSeen = Array.from(set).join(',');
+  saveSettings();
+}
+function maybeShareMilestonePrompt(){
+  try{
+    if(typeof isCoachPlan === 'function' && isCoachPlan()) return;
+    const n = seasonMatchCountForShare();
+    const hit = SHARE_MILESTONES.find(m => m === n);
+    if(!hit || seenShareMilestones().includes(String(hit))) return;
+    markShareMilestone(hit);
+    ffkLog('milestone_prompt_shown', {n: hit});
+    if(confirm(t('milestoneShareAsk', {n: hit}))){
+      ffkLog('milestone_shared', {n: hit});
+      shareHistoryCard();
+    }
+  }catch(e){}
+}
+
 function saveCurrentMatch(){
   if(isCoachRateMode()) return saveCoachRatingFromForm();
   const row = collectMatch();
@@ -3533,6 +3593,7 @@ function saveCurrentMatch(){
     openSeason(s, true);
     row.season = s;
   }
+  const wasEdit = !!editingId;
   const firstPersonalSave = !editingId && matches.length === 0;
   if(editingId) matches = matches.map(m => m.id === editingId ? row : m);
   else matches.push(row);
@@ -3555,7 +3616,16 @@ function saveCurrentMatch(){
   renderStats();
   renderOppList();
   showView('report');
-  if(firstPersonalSave){
+  ffkLog('match_saved', {edit: wasEdit, rating: row.rating, season: row.season || ''});
+  if(!wasEdit){
+    queueAfterCardPreview(() => {
+      if(firstPersonalSave) maybePromptAccountAfterFirstMatch();
+      maybeShareMilestonePrompt();
+    });
+    window.setTimeout(() => {
+      if(lastReportMatch) shareCard(lastReportMatch).catch(() => runAfterCardPreviewHooks());
+    }, 320);
+  }else if(firstPersonalSave){
     setTimeout(() => { maybePromptAccountAfterFirstMatch(); }, 350);
   }
   return true;
@@ -5328,6 +5398,7 @@ document.getElementById('previewTheme').addEventListener('click', e => {
 document.getElementById('previewShare').addEventListener('click', async () => {
   if(!previewState || !previewState.canvas) return;
   const ok = await exportPngFile(previewState.canvas, previewState.filename);
+  ffkLog('card_shared', {ok: !!ok, kind: previewState.kind || 'match'});
   if(ok) closeCardPreview();
 });
 document.getElementById('previewSave').addEventListener('click', async () => {
@@ -5415,6 +5486,12 @@ function finishOnboard(){
   settings.onboardSkin = 'cards';
   saveSettings();
   document.getElementById('onboard').hidden = true;
+  try{
+    if(!isCoachPlan()){
+      showView('new');
+      scrollMainToTop();
+    }
+  }catch(e){}
 }
 function renderOnboard(){
   const pages = onboardPages();
@@ -5501,6 +5578,10 @@ document.querySelectorAll('.tabbtn').forEach(btn => {
 });
 document.getElementById('reportDoneBtn').addEventListener('click', () => {
   showView('new');
+  scrollMainToTop();
+});
+document.getElementById('reportHistoryBtn')?.addEventListener('click', () => {
+  showView('history');
   scrollMainToTop();
 });
 document.getElementById('reportShareBtn').addEventListener('click', () => {
@@ -5852,13 +5933,19 @@ function futStatRows(list, pos){
 }
 async function exportPngFile(canvas, filename){
   const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
+  const invite = matchcardShareText();
   try{
-    if(await nativeShareBlob(blob, filename, 'Matchcard')) return true;
+    if(await nativeShareBlob(blob, filename, 'Matchcard', invite)) return true;
   }catch(e){}
   const file = new File([blob], filename, {type:'image/png'});
   try{
+    const payload = {files:[file], title:'Matchcard', text: invite};
+    if(navigator.canShare && navigator.canShare(payload)){
+      await navigator.share(payload);
+      return true;
+    }
     if(navigator.canShare && navigator.canShare({files:[file]})){
-      await navigator.share({files:[file], title:'Matchcard'});
+      await navigator.share({files:[file], title:'Matchcard', text: invite});
       return true;
     }
   }catch(e){
@@ -5900,8 +5987,7 @@ async function savePngFile(canvas, filename){
 let shareBusy = false;
 let previewState = null;
 function defaultCardMode(){
-  if(!isPro()) return 'dark';
-  return themeName() === 'dark' ? 'dark' : 'light';
+  return 'dark';
 }
 function syncPreviewPeriodChips(range){
   const wrap = document.getElementById('previewPeriod');
@@ -5958,15 +6044,20 @@ async function refreshCardPreview(){
 async function openCardPreview(state){
   if(shareBusy) return;
   shareBusy = true;
-  previewState = {mode: defaultCardMode(), ...state};
+  previewState = {mode: 'dark', lockTheme: true, ...state};
+  if(previewState.lockTheme !== false) previewState.mode = 'dark';
   try{
     await refreshCardPreview();
+    const themeEl = document.getElementById('previewTheme');
+    if(themeEl) themeEl.hidden = previewState.lockTheme !== false;
     document.getElementById('previewModal').hidden = false;
     openSheet(document.getElementById('previewCard'));
     pushAppState('layer');
+    ffkLog('card_opened', {kind: previewState.kind || 'match'});
   }catch(e){
     shareBusy = false;
     previewState = null;
+    runAfterCardPreviewHooks();
     throw e;
   }
 }
@@ -5975,10 +6066,13 @@ function closeCardPreview(){
   resetSheet(document.getElementById('previewCard'));
   const period = document.getElementById('previewPeriod');
   if(period) period.hidden = true;
+  const themeEl = document.getElementById('previewTheme');
+  if(themeEl) themeEl.hidden = false;
   const img = document.getElementById('previewImg');
   img.removeAttribute('src');
   previewState = null;
   shareBusy = false;
+  runAfterCardPreviewHooks();
 }
 async function drawFutCardCanvas(list, period, mode){
   const pos = ratingPosOf(player.primary);
@@ -6082,7 +6176,8 @@ async function drawFutCardCanvas(list, period, mode){
   ctx.textAlign = 'center';
   const foot = [period, player.team || player.club, matchCountLabel(list.length)]
     .map(x => String(x || '').trim()).filter(Boolean).join('  ·  ');
-  fitText(ctx, foot, w / 2, h - 84, w - 200, '600', 20, 13);
+  fitText(ctx, foot, w / 2, h - 96, w - 200, '600', 20, 13);
+  drawCardViralFooter(ctx, w, h, theme);
   ctx.textAlign = 'left';
   return canvas;
 }
@@ -6156,7 +6251,7 @@ async function drawMatchCardCanvas(m, mode){
   const sumY = listTop + (rows - 1) * 50 + 96;
   const commentText = String(m.comment || '').trim().slice(0, 220);
   const commentBlock = commentText ? 110 : 0;
-  const h = Math.round(sumY + 104 + commentBlock);
+  const h = Math.round(sumY + 104 + commentBlock + 36);
   const {canvas, ctx} = makeHiCanvas(w, h);
 
   ctx.fillStyle = mode === 'light' ? '#FFF8D6' : '#070B14';
@@ -6260,6 +6355,7 @@ async function drawMatchCardCanvas(m, mode){
     ctx.textAlign = 'left';
     wrapText(ctx, commentText, left, cy + 72, right - left, 34);
   }
+  drawCardViralFooter(ctx, w, h, theme);
   return canvas;
 }
 async function shareCard(m){

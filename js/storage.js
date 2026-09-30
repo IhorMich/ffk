@@ -183,7 +183,8 @@ function loadSettings(){
       pwaTransferSeen: s.pwaTransferSeen === true,
       introMark: String(s.introMark || ''),
       accountPrompted: s.accountPrompted === true,
-      devBilling: s.devBilling === true
+      devBilling: s.devBilling === true,
+      shareMilestonesSeen: String(s.shareMilestonesSeen || '')
     };
     if(s.langManual !== true) saveSettings();
   }catch(e){}

@@ -1297,6 +1297,13 @@
     box-shadow:var(--card-shadow), inset 3px 0 0 var(--card-accent);
   }
   #view-report .report{padding:26px 22px 24px 24px;min-height:440px;}
+  #view-report .report-share-hint{
+    margin:14px 2px 8px;font-size:.88rem;font-weight:700;color:var(--muted);text-align:center;
+  }
+  #view-report #reportShareBtn{margin-top:4px;}
+  #view-report #reportHistoryBtn,
+  #view-report #reportStoryBtn,
+  #view-report #reportDoneBtn{margin-top:8px;}
   .report-kicker{font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--card-muted);}
   .report-title{font-size:1.7rem;font-weight:800;margin:6px 0 10px;line-height:1.2;}
   .report-title .n{color:var(--card-accent);}
