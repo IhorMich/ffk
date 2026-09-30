@@ -278,6 +278,26 @@
     const {error} = await query;
     if(error) throw error;
   }
+  async function reconcileDeletedRows(sb, table, teams, localRows){
+    const teamIds = [...new Set((teams || []).map(t => t && t.id).filter(Boolean))];
+    if(!teamIds.length) return;
+    for(const teamId of teamIds){
+      const keep = new Set(
+        (localRows || [])
+          .filter(row => row && String(row.team_id) === String(teamId))
+          .map(row => String(row.id))
+      );
+      const {data: remote, error} = await sb.from(table).select('id').eq('team_id', teamId);
+      if(error) throw error;
+      const drop = (remote || [])
+        .map(row => String(row.id))
+        .filter(id => id && !keep.has(id));
+      for(let i = 0; i < drop.length; i += 80){
+        const chunk = drop.slice(i, i + 80);
+        await upsertChecked(sb.from(table).delete().in('id', chunk));
+      }
+    }
+  }
 
   async function pushLocalSnapshot(){
     const sb = getClient();
@@ -341,6 +361,9 @@
           created_at: p.created_at || new Date().toISOString()
         }, {onConflict: 'id'}));
       }
+      // Local is source of truth: remove cloud players deleted on this device,
+      // otherwise the next pull resurrects them ~1s after removePlayer.
+      await reconcileDeletedRows(sb, 'team_players', db.teams || [], db.team_players || []);
       for(const m of (db.team_matches || [])){
         await upsertChecked(sb.from('team_matches').upsert({
           id: m.id,
@@ -430,6 +453,10 @@
           updated_at: inv.updated_at || new Date().toISOString()
         }, {onConflict: 'id'}));
       }
+      await reconcileDeletedRows(sb, 'team_matches', db.teams || [], db.team_matches || []);
+      await reconcileDeletedRows(sb, 'training_rules', db.teams || [], db.training_rules || []);
+      await reconcileDeletedRows(sb, 'team_trainings', db.teams || [], db.team_trainings || []);
+      await reconcileDeletedRows(sb, 'parent_invites', db.teams || [], db.parent_invites || []);
       return {ok: true};
     }catch(error){
       console.warn('Coach cloud push', error);
