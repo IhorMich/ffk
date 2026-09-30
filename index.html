@@ -344,11 +344,11 @@ window.ffkIsNative = function () {
                 <p class="hint" id="coachTrainLead" data-i18n="coachTrainLead">Календарь команды. Нажми день или «+ Тренировка».</p>
               </div>
               <div class="coach-train-top-actions">
-                <button type="button" class="ghost-btn coach-fold-btn" id="coachTrainFoldBtn" aria-expanded="true" data-i18n-aria="coachTrainFoldAria" aria-label="Свернуть">▴</button>
+                <button type="button" class="ghost-btn coach-fold-btn" id="coachTrainFoldBtn" aria-expanded="false" data-i18n-aria="coachTrainFoldAria" aria-label="Развернуть">▾</button>
                 <button type="button" class="save-btn" id="coachTrainNewBtn" data-i18n="coachTrainNewBtn">+ Тренировка</button>
               </div>
             </div>
-            <div id="coachTrainBody" class="coach-train-body">
+            <div id="coachTrainBody" class="coach-train-body" hidden>
               <div class="coach-train-cal-block">
                 <div class="coach-train-cal-nav">
                   <button type="button" class="ghost-btn coach-fold-btn" id="coachTrainPrevMonth" aria-label="prev">‹</button>

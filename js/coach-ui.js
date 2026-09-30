@@ -4081,7 +4081,12 @@
   let trainSelectedDate = '';
   const TRAIN_FOLD_KEY = 'ffk_coach_train_fold';
   function trainFolded(){
-    try{ return sessionStorage.getItem(TRAIN_FOLD_KEY) === '1'; }catch(e){ return false; }
+    // Default folded on first visit — expand only after the coach taps ▾ / +Training.
+    try{
+      const v = sessionStorage.getItem(TRAIN_FOLD_KEY);
+      if(v === null) return true;
+      return v === '1';
+    }catch(e){ return true; }
   }
   function setTrainFolded(on){
     try{ sessionStorage.setItem(TRAIN_FOLD_KEY, on ? '1' : '0'); }catch(e){}
