@@ -5,16 +5,19 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
  * send-chat-push — FCM HTTP v1 for Matchcard chat.
  *
  * Body: { message_id: string }
- * Auth: user JWT (sender) or service_role (DB webhook).
+ * Auth (verify_jwt disabled — checked here):
+ *   - Authorization: Bearer <user access token> (sender)
+ *   - OR header x-matchcard-push-secret / body.push_secret matching CHAT_PUSH_HOOK_SECRET
  *
  * Secrets:
- *   FIREBASE_SERVICE_ACCOUNT_JSON — full Firebase service account JSON
+ *   FIREBASE_SERVICE_ACCOUNT_JSON
+ *   CHAT_PUSH_HOOK_SECRET
  */
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+    "authorization, x-client-info, apikey, content-type, x-matchcard-push-secret",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
@@ -164,25 +167,12 @@ Deno.serve(async (req: Request) => {
     return json(500, { ok: false, error: "bad_service_account_json" });
   }
 
-  const authHeader = req.headers.get("Authorization") || "";
-  if (!authHeader.toLowerCase().startsWith("bearer ")) {
-    return json(401, { ok: false, error: "auth" });
-  }
-
   const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
   const supabaseAnon = Deno.env.get("SUPABASE_ANON_KEY") || "";
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+  const hookSecret = String(Deno.env.get("CHAT_PUSH_HOOK_SECRET") || "").trim();
   if (!supabaseUrl || !supabaseAnon || !serviceKey) {
     return json(500, { ok: false, error: "supabase_env" });
-  }
-
-  const userClient = createClient(supabaseUrl, supabaseAnon, {
-    global: { headers: { Authorization: authHeader } },
-  });
-  const { data: userData, error: userError } = await userClient.auth.getUser();
-  const caller = userData?.user;
-  if (userError || !caller) {
-    return json(401, { ok: false, error: "auth" });
   }
 
   let bodyJson: Record<string, unknown>;
@@ -193,6 +183,27 @@ Deno.serve(async (req: Request) => {
   }
   const messageId = String(bodyJson.message_id || "").trim();
   if (!messageId) return json(400, { ok: false, error: "message_id" });
+
+  const headerSecret = String(
+    req.headers.get("x-matchcard-push-secret") || bodyJson.push_secret || "",
+  ).trim();
+  const hookOk = !!(hookSecret && headerSecret && headerSecret === hookSecret);
+
+  const authHeader = req.headers.get("Authorization") || "";
+  let callerId = "";
+  if (!hookOk) {
+    if (!authHeader.toLowerCase().startsWith("bearer ")) {
+      return json(401, { ok: false, error: "auth" });
+    }
+    const userClient = createClient(supabaseUrl, supabaseAnon, {
+      global: { headers: { Authorization: authHeader } },
+    });
+    const { data: userData, error: userError } = await userClient.auth.getUser();
+    if (userError || !userData?.user) {
+      return json(401, { ok: false, error: "auth" });
+    }
+    callerId = String(userData.user.id);
+  }
 
   const admin = createClient(supabaseUrl, serviceKey);
   const { data: msg, error: msgErr } = await admin
@@ -206,7 +217,7 @@ Deno.serve(async (req: Request) => {
   if (!msg) return json(404, { ok: false, error: "not_found" });
 
   const chat = msg as ChatRow;
-  if (String(chat.sender_user_id) !== String(caller.id)) {
+  if (!hookOk && String(chat.sender_user_id) !== callerId) {
     return json(403, { ok: false, error: "forbidden" });
   }
 
@@ -251,7 +262,7 @@ Deno.serve(async (req: Request) => {
     }
   }
   recipientIds.delete(String(chat.sender_user_id || ""));
-  recipientIds.delete(String(caller.id));
+  if (callerId) recipientIds.delete(callerId);
 
   if (!recipientIds.size) {
     return json(200, { ok: true, sent: 0, reason: "no_recipients" });
@@ -301,7 +312,6 @@ Deno.serve(async (req: Request) => {
         status: r.status,
         error: r.ok ? null : r.payload,
       });
-      // Drop dead tokens
       if (
         !r.ok &&
         r.payload &&
@@ -320,5 +330,5 @@ Deno.serve(async (req: Request) => {
   }
 
   const sent = results.filter((r) => r.ok).length;
-  return json(200, { ok: true, sent, results });
+  return json(200, { ok: true, sent, results, via: hookOk ? "hook" : "user" });
 });

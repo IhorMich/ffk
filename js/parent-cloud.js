@@ -730,6 +730,48 @@
       return {ok: false, error};
     }
   }
+  /** Upsert one outgoing chat row then wake the other device via FCM. */
+  async function pushChatMessage(message){
+    if(!ready() || !message || !message.id) return {ok: false, reason: 'bad'};
+    const coachMode = typeof isCoachPlan === 'function' && isCoachPlan();
+    const senderRole = message.sender_role === 'coach' ? 'coach' : 'parent';
+    const sb = coachMode ? coachClient() : parentClient();
+    if(!sb) return {ok: false, reason: 'no_client'};
+    let session = null;
+    try{
+      const {data} = await sb.auth.getSession();
+      session = data && data.session;
+    }catch(e){}
+    if(!session){
+      try{ session = await ensureSession(false); }catch(e){}
+    }
+    if(!session) return {ok: false, reason: 'no_session'};
+    let parentUserId = senderRole === 'parent' ? session.user.id : '';
+    if(senderRole === 'coach'){
+      const links = coachLinks();
+      const hit = (links || []).find(l => String(l.team_player_id) === String(message.team_player_id));
+      parentUserId = hit && hit.parent_user_id || '';
+      if(!parentUserId && message.parent_user_id) parentUserId = message.parent_user_id;
+    }
+    if(!parentUserId) return {ok: false, reason: 'no_parent'};
+    const row = {
+      id: message.id,
+      team_player_id: message.team_player_id,
+      parent_user_id: parentUserId,
+      sender_user_id: message.sender_user_id || session.user.id,
+      sender_role: senderRole,
+      body: message.text || message.body || '',
+      edited_at: message.edited_at || null,
+      read_by_parent: !!message.read_by_parent,
+      read_by_coach: !!message.read_by_coach,
+      created_at: message.created_at || new Date().toISOString()
+    };
+    const {error} = await sb.from('player_chat_messages').upsert(row, {onConflict: 'id'});
+    if(error) return {ok: false, error};
+    // DB trigger also wakes FCM; client invoke is a second path.
+    const pushed = await notifyChatPush(row.id);
+    return {ok: true, push: pushed};
+  }
   async function syncChats(session, links, senderRole, opts){
     opts = opts || {};
     const pullOnly = !!opts.pullOnly;
@@ -1271,6 +1313,7 @@
     startChatPoll,
     pollInboxChats,
     notifyChatPush,
+    pushChatMessage,
     personalSyncState(){ return personalSyncState; },
     status(){ return {configured: ready(), syncing, personal: personalSyncState}; }
   };

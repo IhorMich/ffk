@@ -445,7 +445,7 @@
     if(!target || !text || !global.InboxStore || typeof global.InboxStore.sendChatMessage !== 'function') return;
     const coachMode = typeof isCoachPlan === 'function' && isCoachPlan();
     try{
-      global.InboxStore.sendChatMessage({
+      const row = global.InboxStore.sendChatMessage({
         ...target,
         sender_role: coachMode ? 'coach' : 'parent',
         text
@@ -453,9 +453,11 @@
       if(textEl) textEl.value = '';
       renderChatThread();
       renderParentInbox();
-      // Push immediately so the other side sees it without waiting for the heavy sync debounce.
+      // Upload + FCM wake immediately (don't wait for poll / debounce).
       try{
-        if(global.ParentCloud && typeof global.ParentCloud.pollInboxChats === 'function'){
+        if(global.ParentCloud && typeof global.ParentCloud.pushChatMessage === 'function'){
+          global.ParentCloud.pushChatMessage(row).catch(() => {});
+        }else if(global.ParentCloud && typeof global.ParentCloud.pollInboxChats === 'function'){
           global.ParentCloud.pollInboxChats({push: true}).catch(() => {});
         }
       }catch(e){}
