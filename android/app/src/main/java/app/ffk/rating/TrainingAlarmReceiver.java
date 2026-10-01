@@ -14,7 +14,7 @@ import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 
 public class TrainingAlarmReceiver extends BroadcastReceiver {
-  private static final String ALERT_CHANNEL = "matchcard_alerts";
+  private static final String ALERT_CHANNEL = "matchcard_alerts_v2";
 
   @Override
   public void onReceive(Context context, Intent intent) {
@@ -23,10 +23,11 @@ public class TrainingAlarmReceiver extends BroadcastReceiver {
     String body = intent.getStringExtra("body");
     ensureChannel(context);
     Intent open = new Intent(context, MainActivity.class);
-    open.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+    open.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
     int flags = PendingIntent.FLAG_UPDATE_CURRENT;
     if (Build.VERSION.SDK_INT >= 23) flags |= PendingIntent.FLAG_IMMUTABLE;
     PendingIntent pi = PendingIntent.getActivity(context, 0, open, flags);
+    Uri sound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
     NotificationCompat.Builder builder = new NotificationCompat.Builder(context, ALERT_CHANNEL)
       .setSmallIcon(R.drawable.ic_stat_notify)
       .setContentTitle(title == null || title.isEmpty() ? "Matchcard" : title)
@@ -36,7 +37,7 @@ public class TrainingAlarmReceiver extends BroadcastReceiver {
       .setCategory(NotificationCompat.CATEGORY_REMINDER)
       .setAutoCancel(true)
       .setContentIntent(pi)
-      .setDefaults(NotificationCompat.DEFAULT_ALL)
+      .setSound(sound)
       .setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
     try {
       int id = Math.abs((intent.getStringExtra("id") == null ? "train" : intent.getStringExtra("id")).hashCode());

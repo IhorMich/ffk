@@ -25,12 +25,16 @@ import androidx.core.splashscreen.SplashScreen;
 import androidx.core.view.WindowCompat;
 import com.getcapacitor.Bridge;
 import com.getcapacitor.BridgeActivity;
+import org.json.JSONObject;
 
 public class MainActivity extends BridgeActivity {
 
-  private static final String ALERT_CHANNEL = "matchcard_alerts";
+  // v2: recreate channel so Android picks up the phone's default notification sound.
+  private static final String ALERT_CHANNEL = "matchcard_alerts_v2";
+  private static final String ACTION_OPEN_CHAT = "app.ffk.rating.OPEN_CHAT";
   private static int notifySeq = 1000;
   private volatile boolean keepSplash = true;
+  private String pendingChatPlayerId = null;
 
   @Override
   public void onCreate(Bundle savedInstanceState) {
@@ -41,6 +45,7 @@ public class MainActivity extends BridgeActivity {
     registerPlugin(GalleryPickerPlugin.class);
     super.onCreate(savedInstanceState);
     ensureAlertChannel();
+    captureChatIntent(getIntent());
     Window window = getWindow();
     WindowCompat.setDecorFitsSystemWindows(window, false);
     window.setStatusBarColor(Color.parseColor("#030308"));
@@ -54,8 +59,6 @@ public class MainActivity extends BridgeActivity {
       webView.addJavascriptInterface(new SplashBridge(), "FfkSplash");
       webView.addJavascriptInterface(new NotifyBridge(), "FfkNotify");
     }
-    // Added after the plugins, so this callback is the top of the stack and gets
-    // both the back key and the edge gesture.
     getOnBackPressedDispatcher()
       .addCallback(
         this,
@@ -66,20 +69,75 @@ public class MainActivity extends BridgeActivity {
           }
         }
       );
+    // Web layer may not be ready yet — retry open-chat after load.
+    new Handler(Looper.getMainLooper()).postDelayed(this::flushPendingChatIntent, 1200);
+    new Handler(Looper.getMainLooper()).postDelayed(this::flushPendingChatIntent, 2800);
+  }
+
+  @Override
+  protected void onNewIntent(Intent intent) {
+    super.onNewIntent(intent);
+    setIntent(intent);
+    captureChatIntent(intent);
+    flushPendingChatIntent();
+  }
+
+  @Override
+  public void onResume() {
+    super.onResume();
+    flushPendingChatIntent();
+  }
+
+  private void captureChatIntent(Intent intent) {
+    if (intent == null) return;
+    String playerId = intent.getStringExtra("team_player_id");
+    if (playerId == null || playerId.isEmpty()) return;
+    pendingChatPlayerId = playerId;
+    intent.removeExtra("team_player_id");
+  }
+
+  private void flushPendingChatIntent() {
+    final String playerId = pendingChatPlayerId;
+    if (playerId == null || playerId.isEmpty()) return;
+    Bridge bridge = getBridge();
+    WebView webView = bridge != null ? bridge.getWebView() : null;
+    if (webView == null) return;
+    try {
+      String idJson = JSONObject.quote(playerId);
+      String js =
+        "(function(){"
+          + "var id=" + idJson + ";"
+          + "function go(){"
+          + "  if(window.openPlayerCoachChat){window.openPlayerCoachChat(id);return true;}"
+          + "  if(window.ParentUI&&window.ParentUI.openPlayerCoachChat){window.ParentUI.openPlayerCoachChat(id);return true;}"
+          + "  return false;"
+          + "}"
+          + "if(go()) return '1';"
+          + "setTimeout(function(){go();},400);"
+          + "return '0';"
+          + "})()";
+      webView.post(() -> webView.evaluateJavascript(js, value -> {
+        if (value != null && value.contains("1")) pendingChatPlayerId = null;
+      }));
+    } catch (Exception e) {
+      // keep pending for next resume
+    }
   }
 
   private void ensureAlertChannel() {
     if (Build.VERSION.SDK_INT < 26) return;
     NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
     if (nm == null) return;
+    // Drop legacy channel so sound/importance changes apply.
+    try { nm.deleteNotificationChannel("matchcard_alerts"); } catch (Exception e) {}
     NotificationChannel existing = nm.getNotificationChannel(ALERT_CHANNEL);
     if (existing != null) return;
     NotificationChannel channel = new NotificationChannel(
       ALERT_CHANNEL,
-      "Matchcard alerts",
+      "Matchcard messages",
       NotificationManager.IMPORTANCE_HIGH
     );
-    channel.setDescription("Match invites and player cards");
+    channel.setDescription("Chat and match alerts");
     channel.enableVibration(true);
     channel.enableLights(true);
     channel.setLockscreenVisibility(NotificationCompat.VISIBILITY_PUBLIC);
@@ -89,19 +147,23 @@ public class MainActivity extends BridgeActivity {
       .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
       .build();
     channel.setSound(sound, attrs);
-    // Notification stream (not ringer) — still plays when the phone is on silent/vibrate.
     nm.createNotificationChannel(channel);
   }
 
-  private void postAlert(String title, String body) {
+  private void postAlert(String title, String body, String playerId) {
     ensureAlertChannel();
     Intent open = new Intent(this, MainActivity.class);
-    open.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+    open.setAction(ACTION_OPEN_CHAT);
+    open.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+    if (playerId != null && !playerId.isEmpty()) {
+      open.putExtra("team_player_id", playerId);
+    }
     int flags = PendingIntent.FLAG_UPDATE_CURRENT;
     if (Build.VERSION.SDK_INT >= 23) flags |= PendingIntent.FLAG_IMMUTABLE;
-    PendingIntent pi = PendingIntent.getActivity(this, 0, open, flags);
+    int req = (playerId != null && !playerId.isEmpty()) ? Math.abs(playerId.hashCode()) : 0;
+    PendingIntent pi = PendingIntent.getActivity(this, req, open, flags);
+    Uri sound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
     NotificationCompat.Builder builder = new NotificationCompat.Builder(this, ALERT_CHANNEL)
-      // Adaptive launcher icons crash NotificationManager — use a white status icon.
       .setSmallIcon(R.drawable.ic_stat_notify)
       .setContentTitle(title == null || title.isEmpty() ? "Matchcard" : title)
       .setContentText(body == null ? "" : body)
@@ -110,7 +172,7 @@ public class MainActivity extends BridgeActivity {
       .setCategory(NotificationCompat.CATEGORY_MESSAGE)
       .setAutoCancel(true)
       .setContentIntent(pi)
-      .setDefaults(NotificationCompat.DEFAULT_ALL)
+      .setSound(sound)
       .setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
     try {
       NotificationManagerCompat.from(this).notify(++notifySeq, builder.build());
@@ -129,7 +191,12 @@ public class MainActivity extends BridgeActivity {
   private class NotifyBridge {
     @JavascriptInterface
     public void show(String title, String body) {
-      runOnUiThread(() -> postAlert(title, body));
+      runOnUiThread(() -> postAlert(title, body, ""));
+    }
+
+    @JavascriptInterface
+    public void showChat(String title, String body, String playerId) {
+      runOnUiThread(() -> postAlert(title, body, playerId == null ? "" : playerId));
     }
 
     @JavascriptInterface
@@ -184,8 +251,6 @@ public class MainActivity extends BridgeActivity {
       moveTaskToBack(true);
       return;
     }
-    // The web layer closes its own overlays and tabs; "0" means there is
-    // nothing left to close, so the app goes to the background.
     webView.evaluateJavascript(
       "(window.ffkBack&&window.ffkBack())?'1':'0'",
       value -> {

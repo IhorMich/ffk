@@ -272,8 +272,13 @@
     background:linear-gradient(to top, rgba(8,14,24,.22), transparent);
   }
   .avatar-pin{
-    position:absolute;left:50%;bottom:-84px;transform:translateX(-50%);
+    position:absolute;left:50%;
+    top:calc(178px + env(safe-area-inset-top, 0px) - 86px);
+    bottom:auto;transform:translateX(-50%);
     width:172px;height:172px;z-index:5;
+  }
+  @media (min-width:720px){
+    .avatar-pin{top:calc(206px - 86px);}
   }
   .photo-box{
     position:relative;width:172px;height:172px;border-radius:50%;overflow:hidden;padding:0;margin:0;
@@ -283,6 +288,7 @@
     box-shadow:0 8px 24px rgba(0,0,0,.35);z-index:1;
   }
   .photo-box img{width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;}
+  /* fb-id lives inside .profile-hero — reserve space under the overlapping avatar */
   .fb-id{text-align:center;margin:100px 16px 12px;position:relative;z-index:6;}
   .fb-name{
     font-size:1.45rem;font-weight:800;line-height:1.15;overflow-wrap:anywhere;

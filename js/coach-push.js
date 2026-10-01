@@ -48,8 +48,12 @@
     }catch(e){}
     return false;
   }
-  function nativeNotify(title, body){
+  function nativeNotify(title, body, playerId){
     try{
+      if(global.FfkNotify && typeof global.FfkNotify.showChat === 'function'){
+        global.FfkNotify.showChat(String(title || 'Matchcard'), String(body || ''), String(playerId || ''));
+        return true;
+      }
       if(global.FfkNotify && typeof global.FfkNotify.show === 'function'){
         global.FfkNotify.show(String(title || 'Matchcard'), String(body || ''));
         return true;
@@ -178,33 +182,12 @@
     return !!read().enabled;
   }
 
-  /** Heads-up system notification (plays via notification stream — works on silent ringer). */
-  function playAlertBeep(){
-    try{
-      const Ctx = global.AudioContext || global.webkitAudioContext;
-      if(!Ctx) return;
-      const ctx = new Ctx();
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = 'sine';
-      osc.frequency.value = 880;
-      gain.gain.value = 0.0001;
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      const now = ctx.currentTime;
-      gain.gain.setValueAtTime(0.0001, now);
-      gain.gain.exponentialRampToValueAtTime(0.18, now + 0.02);
-      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.28);
-      osc.start(now);
-      osc.stop(now + 0.3);
-      setTimeout(() => { try{ ctx.close(); }catch(e){} }, 500);
-    }catch(e){}
-  }
-  function notifyHeadsUp(title, body, force){
+  /** Heads-up system notification — uses the phone's default notification sound. */
+  function notifyHeadsUp(title, body, force, playerId){
     const s = read();
     if(!force && !s.enabled) return;
     let shown = false;
-    if(nativeNotify(title, body)) shown = true;
+    if(nativeNotify(title, body, playerId)) shown = true;
     else {
       try{
         if(typeof Notification !== 'undefined' && Notification.permission === 'granted'){
@@ -212,18 +195,17 @@
             body: body || '',
             silent: false,
             requireInteraction: false,
-            tag: 'ffk-chat-' + Date.now()
+            tag: 'ffk-chat-' + String(playerId || Date.now())
           });
           shown = true;
         }
       }catch(e){}
     }
-    playAlertBeep();
     if(!shown) toast(`${title || 'Matchcard'}: ${body || ''}`);
   }
 
-  function notifyLocal(title, body){
-    notifyHeadsUp(title, body, false);
+  function notifyLocal(title, body, playerId){
+    notifyHeadsUp(title, body, false, playerId);
   }
 
   /** Keep coach-only alerts quiet while the phone is in Player mode. */

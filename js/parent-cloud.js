@@ -60,11 +60,15 @@
       : who;
     try{
       if(global.CoachPush && typeof global.CoachPush.notifyHeadsUp === 'function'){
-        // Always force for fresh incoming chats when local push is enabled.
         const pushOn = !!(global.CoachPush.isEnabled && global.CoachPush.isEnabled());
-        global.CoachPush.notifyHeadsUp(title, body || 'Новое сообщение', pushOn);
+        global.CoachPush.notifyHeadsUp(
+          title,
+          body || 'Новое сообщение',
+          pushOn,
+          newest.team_player_id || ''
+        );
       }else if(global.CoachPush && typeof global.CoachPush.notifyLocal === 'function'){
-        global.CoachPush.notifyLocal(title, body || 'Новое сообщение');
+        global.CoachPush.notifyLocal(title, body || 'Новое сообщение', newest.team_player_id || '');
       }
     }catch(e){}
   }

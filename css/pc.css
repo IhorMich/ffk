@@ -137,6 +137,7 @@
   #view-player.active .avatar-pin {
     left: 28px;
     right: auto;
+    top: auto;
     transform: none;
     bottom: 24px;
     width: 112px;
