@@ -4007,14 +4007,25 @@
     const msg = tt('coachConfirmRemovePlayer', 'Remove {name} from the team?')
       .replace('{name}', label || tt('coachPlayerDetailKicker', 'Player'));
     if(!confirm(msg)) return;
+    const removedId = detailPlayerId;
     try{
-      store.removePlayer(session, detailPlayerId);
+      store.removePlayer(session, removedId);
       closeCoachPlayerSheet();
       toast(tt('coachPlayerRemoved', 'Player removed.'));
       renderCoachUi();
     }catch(e){
       toast(tt('coachErrGeneric', 'Something went wrong.'));
+      return;
     }
+    // Flush cloud delete immediately so a refresh cannot resurrect the player.
+    Promise.resolve().then(async () => {
+      try{
+        if(global.CoachCloud && typeof global.CoachCloud.syncNow === 'function'){
+          await global.CoachCloud.syncNow();
+        }
+      }catch(e){}
+      try{ renderCoachUi(); }catch(e){}
+    });
   }
 
   function drawInviteQr(text){

@@ -223,7 +223,13 @@
     }catch(e){
       try{ localStorage.setItem('ffk_coach_session_v1', JSON.stringify(coachSession)); }catch(err){}
     }
-    try{ await pullRemoteIntoLocal(); }catch(e){}
+    try{
+      const pendingRemoved = Array.isArray(db.removed_player_ids) && db.removed_player_ids.length;
+      if(pendingRemoved){
+        try{ await pushLocalSnapshot(); }catch(e){}
+      }
+      await pullRemoteIntoLocal();
+    }catch(e){}
     return coachSession;
   }
   let authDeepLinksBound = false;
@@ -368,9 +374,14 @@
       }
       // Local is source of truth: remove cloud players deleted on this device,
       // otherwise the next pull resurrects them ~1s after removePlayer.
-      // Never delete players that still have a parent link — CASCADE would wipe
-      // chats/memberships and break an already-confirmed parent connection.
+      // Protect linked players only when they were NOT intentionally removed —
+      // otherwise coach cannot delete a child who already has a parent claim.
       let protectedPlayerIds = [];
+      const removedSet = new Set(
+        (Array.isArray(db.removed_player_ids) ? db.removed_player_ids : [])
+          .map(id => String(id || ''))
+          .filter(Boolean)
+      );
       try{
         const teamIds = [...new Set((db.teams || []).map(t => t && t.id).filter(Boolean))];
         if(teamIds.length){
@@ -385,7 +396,8 @@
               .in('team_player_id', chunk);
             if(linked.error) throw linked.error;
             (linked.data || []).forEach(r => {
-              if(r && r.team_player_id) protectedPlayerIds.push(String(r.team_player_id));
+              const pid = r && r.team_player_id ? String(r.team_player_id) : '';
+              if(pid && !removedSet.has(pid)) protectedPlayerIds.push(pid);
             });
           }
         }
@@ -395,6 +407,26 @@
       await reconcileDeletedRows(sb, 'team_players', db.teams || [], db.team_players || [], {
         protectIds: protectedPlayerIds
       });
+      // Prune tombstones for players that are gone from cloud (delete stuck).
+      if(removedSet.size){
+        try{
+          const teamIds = [...new Set((db.teams || []).map(t => t && t.id).filter(Boolean))];
+          let stillRemote = new Set();
+          if(teamIds.length){
+            const remotePlayers = await sb.from('team_players').select('id').in('team_id', teamIds);
+            if(!remotePlayers.error){
+              stillRemote = new Set((remotePlayers.data || []).map(r => r && String(r.id)).filter(Boolean));
+            }
+          }
+          const nextRemoved = [...removedSet].filter(id => stillRemote.has(id));
+          if(nextRemoved.length !== (db.removed_player_ids || []).length){
+            const raw = localDb();
+            raw.removed_player_ids = nextRemoved;
+            try{ localStorage.setItem('ffk_coach_v1', JSON.stringify(raw)); }catch(e){}
+            db.removed_player_ids = nextRemoved;
+          }
+        }catch(e){}
+      }
       for(const m of (db.team_matches || [])){
         await upsertChecked(sb.from('team_matches').upsert({
           id: m.id,
@@ -586,20 +618,31 @@
     const pendingLocalMems = (raw.memberships || []).filter(m =>
       m && !remoteMemIds.has(String(m.id)) && !isUuid(m.user_id)
     );
+    const removedSet = new Set(
+      (Array.isArray(raw.removed_player_ids) ? raw.removed_player_ids : [])
+        .map(id => String(id || ''))
+        .filter(Boolean)
+    );
+    const pulledPlayers = (players || [])
+      .filter(p => p && !removedSet.has(String(p.id)))
+      .map(p => ({
+        ...p,
+        contact: p.contact || '',
+        coach_notes: String(p.coach_notes || '').slice(0, 2000)
+      }));
+    const keepPlayerIds = new Set(pulledPlayers.map(p => String(p.id)));
     const db = {
       version: 5,
       accounts: raw.accounts || {},
       academies: academies || [],
       teams: teams || [],
-      team_players: (players || []).map(p => ({
-        ...p,
-        contact: p.contact || '',
-        coach_notes: String(p.coach_notes || '').slice(0, 2000)
-      })),
+      team_players: pulledPlayers,
       memberships: remoteMems.concat(pendingLocalMems),
       team_matches: (matches || []).map(m => ({
         ...m,
-        squad: Array.isArray(m.squad) ? m.squad : (m.squad || []),
+        squad: Array.isArray(m.squad)
+          ? m.squad.filter(id => keepPlayerIds.has(String(id)))
+          : (m.squad || []),
         meetup: m.meetup || '',
         kickoff: m.kickoff || '',
         end_time: m.end_time || '',
@@ -621,17 +664,22 @@
         notify_minutes: Number(r.notify_minutes) || 60,
         status: r.status === 'cancelled' ? 'cancelled' : 'scheduled'
       })),
-      ratings: (ratings || []).map(r => ({
-        ...r,
-        pitchPos: r.pitch_pos || r.pitchPos || '',
-        matchLen: r.match_len || r.matchLen || 60,
-        actionRating: r.action_rating || r.actionRating || 6,
-        effortRating: r.effort_rating || r.effortRating || 6
-      })),
+      ratings: (ratings || [])
+        .filter(r => r && keepPlayerIds.has(String(r.team_player_id)))
+        .map(r => ({
+          ...r,
+          pitchPos: r.pitch_pos || r.pitchPos || '',
+          matchLen: r.match_len || r.matchLen || 60,
+          actionRating: r.action_rating || r.actionRating || 6,
+          effortRating: r.effort_rating || r.effortRating || 6
+        })),
       match_invites: raw.match_invites || [],
-      parent_invites: parentInvites || [],
+      parent_invites: (parentInvites || []).filter(i =>
+        !i || !i.team_player_id || keepPlayerIds.has(String(i.team_player_id)) || !removedSet.has(String(i.team_player_id))
+      ),
       leave_requests: Array.isArray(raw.leave_requests) ? raw.leave_requests : [],
       device_tokens: raw.device_tokens || [],
+      removed_player_ids: Array.isArray(raw.removed_player_ids) ? raw.removed_player_ids : [],
       activeTeamId: raw.activeTeamId || (teams && teams[0] && teams[0].id) || '',
       activeMatchId: raw.activeMatchId || ''
     };

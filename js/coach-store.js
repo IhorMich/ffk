@@ -29,9 +29,22 @@
       parent_invites: [],
       leave_requests: [],
       device_tokens: [],
+      // Intentional coach removals — survive refresh/pull until cloud delete sticks.
+      removed_player_ids: [],
       activeTeamId: '',
       activeMatchId: ''
     };
+  }
+  function normalizeRemovedPlayerIds(raw){
+    const out = [];
+    const seen = new Set();
+    (Array.isArray(raw) ? raw : []).forEach(id => {
+      const sid = String(id || '').trim();
+      if(!sid || seen.has(sid)) return;
+      seen.add(sid);
+      out.push(sid);
+    });
+    return out;
   }
   function readDb(){
     try{
@@ -54,6 +67,7 @@
         parent_invites: Array.isArray(db.parent_invites) ? db.parent_invites : [],
         leave_requests: Array.isArray(db.leave_requests) ? db.leave_requests : [],
         device_tokens: Array.isArray(db.device_tokens) ? db.device_tokens : [],
+        removed_player_ids: normalizeRemovedPlayerIds(db.removed_player_ids),
         activeTeamId: String(db.activeTeamId || ''),
         activeMatchId: String(db.activeMatchId || '')
       };
@@ -297,7 +311,10 @@
           };
           writeDb(db);
           writeSession(session);
-          try{ await global.CoachCloud.pullRemoteIntoLocal(); }catch(e){}
+          try{
+            if(typeof global.CoachCloud.syncNow === 'function') await global.CoachCloud.syncNow();
+            else await global.CoachCloud.pullRemoteIntoLocal();
+          }catch(e){}
           return session;
         }catch(e){
           // Fall through to local if cloud rejects (e.g. network)
@@ -351,7 +368,10 @@
             writeDb(db);
           }
           writeSession(session);
-          try{ await global.CoachCloud.pullRemoteIntoLocal(); }catch(e){}
+          try{
+            if(typeof global.CoachCloud.syncNow === 'function') await global.CoachCloud.syncNow();
+            else await global.CoachCloud.pullRemoteIntoLocal();
+          }catch(e){}
           return session;
         }catch(e){
           if(e && e.message !== 'no_cloud') throw new Error('auth');
@@ -621,21 +641,34 @@
     },
     removePlayer(session, playerId){
       const db = readDb();
-      const player = db.team_players.find(p => p.id === playerId);
+      const pid = String(playerId || '');
+      const player = db.team_players.find(p => p.id === playerId || String(p.id) === pid);
       if(!player) return;
       if(!this.getTeam(session, player.team_id)) throw new Error('forbidden');
-      db.team_players = db.team_players.filter(p => p.id !== playerId);
-      db.memberships = db.memberships.filter(m => m.team_player_id !== playerId);
-      db.ratings = db.ratings.filter(r => r.team_player_id !== playerId);
-      db.match_invites = db.match_invites.filter(i => i.team_player_id !== playerId);
-      db.parent_invites = db.parent_invites.filter(i => i.team_player_id !== playerId);
-      db.leave_requests = (db.leave_requests || []).filter(r => String(r.team_player_id) !== String(playerId));
+      db.team_players = db.team_players.filter(p => p.id !== player.id);
+      db.memberships = db.memberships.filter(m => m.team_player_id !== player.id);
+      db.ratings = db.ratings.filter(r => r.team_player_id !== player.id);
+      db.match_invites = db.match_invites.filter(i => i.team_player_id !== player.id);
+      db.parent_invites = db.parent_invites.filter(i => i.team_player_id !== player.id);
+      db.leave_requests = (db.leave_requests || []).filter(r => String(r.team_player_id) !== String(player.id));
+      const removed = normalizeRemovedPlayerIds(db.removed_player_ids);
+      if(!removed.includes(String(player.id))) removed.push(String(player.id));
+      db.removed_player_ids = removed;
+      // Drop player from upcoming/played squad lists so UI/sync stay consistent.
+      db.team_matches = (db.team_matches || []).map(m => {
+        if(!m || !Array.isArray(m.squad)) return m;
+        const nextSquad = m.squad.filter(id => String(id) !== String(player.id));
+        return nextSquad.length === m.squad.length ? m : {...m, squad: nextSquad};
+      });
       writeDb(db);
       try{
         if(global.ParentStore && typeof global.ParentStore.removeLinksForPlayer === 'function'){
-          global.ParentStore.removeLinksForPlayer(playerId);
+          global.ParentStore.removeLinksForPlayer(player.id);
         }
       }catch(e){}
+    },
+    listRemovedPlayerIds(){
+      return normalizeRemovedPlayerIds(readDb().removed_player_ids);
     },
     /** Pending leave requests from parents/players who changed club. */
     listLeaveRequests(session, opts){
