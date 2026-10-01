@@ -916,11 +916,11 @@
         : '';
       return `<div class="coach-player-row coach-rate-row${rating ? ' is-rated' : ' is-unrated'}">
         <button type="button" class="coach-player-main coach-rate-open" data-rate-player="${esc(p.id)}" data-match="${esc(match.id)}">
+          <span class="coach-rate-row-score" aria-hidden="true">${esc(scoreTxt)}</span>
           <span class="coach-rate-row-text">
             <b>${esc(label)}</b>
             <span>${note}</span>
           </span>
-          <span class="coach-rate-row-score" aria-label="${esc(tt('coachRatePlayer', 'Rate'))}">${esc(scoreTxt)}</span>
         </button>
         ${cardBtn ? `<div class="coach-history-rate-actions">${cardBtn}</div>` : ''}
       </div>`;
@@ -1898,15 +1898,21 @@
       toast(tt('coachErrRateFirst', 'Rate the player first.'));
       return;
     }
-    const fake = coachPlayerCardMatch(match, player, rating);
-    if(typeof openCardPreview === 'function' && typeof drawMatchCardCanvas === 'function'){
-      await openCardPreview({
-        filename: `matchcard_${String(player.first_name || 'player').slice(0, 16)}_${match.date || 'match'}.png`,
-        build: mode => drawMatchCardCanvas(fake, mode)
-      });
-      return;
+    try{
+      if(typeof closeCoachQuickRate === 'function') closeCoachQuickRate();
+      const fake = coachPlayerCardMatch(match, player, rating);
+      if(typeof openCardPreview === 'function' && typeof drawMatchCardCanvas === 'function'){
+        await openCardPreview({
+          filename: `tempo_${String(player.first_name || 'player').slice(0, 16)}_${match.date || 'match'}.png`,
+          build: mode => drawMatchCardCanvas(fake, mode)
+        });
+        return;
+      }
+      toast(tt('coachErrGeneric', 'Something went wrong.'));
+    }catch(e){
+      console.warn('shareCoachPlayerCard', e);
+      toast(tt('toastReadFail', 'Could not open the card.'));
     }
-    toast(tt('coachErrGeneric', 'Something went wrong.'));
   }
 
   async function shareCoachTeamMatchCard(matchId){
@@ -1914,6 +1920,9 @@
     const session = store.getSession();
     const match = store.getMatch(session, matchId || coachHistoryMatchId);
     if(!match) return;
+    try{
+      if(typeof closeCoachQuickRate === 'function') closeCoachQuickRate();
+    }catch(e){}
     const team = store.getTeam(session, match.team_id);
     const ratings = store.listRatings(session, match.id)
       .slice()
@@ -3723,8 +3732,8 @@
       if(sheet) sheet.hidden = false;
       if(back) back.hidden = false;
     }
-    // Full height so the 3×2 moment chips fit without inner scrolling.
-    if(card) card.classList.add('sheet-full');
+    // Keep sheet compact — full-screen stretch made the name block look huge.
+    if(card) card.classList.remove('sheet-full');
     if(typeof pushAppState === 'function') pushAppState('layer');
   }
   function closeCoachQuickRate(){
@@ -4392,6 +4401,13 @@
     const action = scored ? scored.action : ((typeof actionScore === 'function')
       ? actionScore(quickRate.counts, quickRate.position, minutes, matchLen)
       : quickRate.rating);
+    // Keep the coach's +/- score when moments don't move the overall much.
+    const momentOverall = scored ? Number(scored.overall) : null;
+    const manualOverall = clampQuickScore(quickRate.rating);
+    const hasMoments = Object.values(quickRate.counts || {}).some(v => Number(v) > 0);
+    const finalRating = hasMoments && Number.isFinite(momentOverall)
+      ? momentOverall
+      : manualOverall;
     store.upsertRating(session, {
       match_id: matchId,
       team_player_id: playerId,
@@ -4410,7 +4426,7 @@
       kickoffClock: '',
       actionRating: action,
       effortRating: scored ? scored.effort : 6,
-      rating: scored ? scored.overall : clampQuickScore(quickRate.rating),
+      rating: finalRating,
       score: quickRate.score || store.getMatch(session, matchId)?.score || ''
     });
     // Ensure match is in played state once ratings start

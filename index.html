@@ -32,7 +32,7 @@ window.ffkIsNative = function () {
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="TEMPO">
+<meta name="apple-mobile-web-app-title" content="Tempo">
 <meta name="theme-color" content="#05060c">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
@@ -706,6 +706,35 @@ window.ffkIsNative = function () {
             </div>
             <div class="coach-match-summary" id="coachHistorySummary"></div>
 
+            <div class="coach-history-top">
+              <div class="coach-score-row" id="coachHistoryScoreRow">
+                <label data-i18n="labelScore">Счёт</label>
+                <div class="score-split coach-score-split">
+                  <input id="coachHistoryScoreUs" class="js-cm-score-us" type="number" min="0" max="99" inputmode="numeric" data-i18n-aria="scoreUsAria" aria-label="Our goals">
+                  <span class="score-colon" aria-hidden="true">:</span>
+                  <input id="coachHistoryScoreThem" class="js-cm-score-them" type="number" min="0" max="99" inputmode="numeric" data-i18n-aria="scoreThemAria" aria-label="Opponent goals">
+                </div>
+                <button class="save-btn" id="coachHistorySaveScore" type="button" data-i18n="coachMatchSaveScore">Сохранить</button>
+              </div>
+              <div class="coach-history-top-actions">
+                <button type="button" class="ghost-btn" id="coachHistoryShareMatchBtn" data-i18n="coachShareMatchCard">Карточка матча</button>
+                <button class="save-btn" id="coachHistorySendResults" type="button" data-i18n="coachSendResultsBtn">Отправить родителям</button>
+              </div>
+              <p class="hint" id="coachHistoryResultsStatus"></p>
+            </div>
+
+            <div class="pro-kicker" data-i18n="coachMatchRatePhase">Оценки игроков</div>
+            <div id="coachHistoryRates" class="coach-player-list coach-rates-compact"></div>
+
+            <details class="coach-history-more" id="coachHistoryCommentDetails">
+              <summary data-i18n="coachMatchComment">Комментарий к матчу</summary>
+              <div class="coach-history-more-body">
+                <p class="hint coach-rate-comment-hint" data-i18n="coachMatchCommentHint">На карточке матча команды. Родители тоже получат его при отправке результатов.</p>
+                <textarea id="coachHistoryComment" rows="2" maxlength="400" data-i18n-placeholder="coachMatchCommentPh" placeholder="Как прошла игра…"></textarea>
+                <button type="button" class="ghost-btn" id="coachHistoryCommentSave" data-i18n="coachMatchCommentSave">Сохранить комментарий</button>
+              </div>
+            </details>
+
             <div class="coach-history-meta" id="coachHistoryMeta">
               <button type="button" class="ghost-btn coach-history-meta-toggle" id="coachHistoryMetaToggle" aria-expanded="false">Править детали матча</button>
               <div class="coach-history-meta-body" id="coachHistoryMetaBody" hidden>
@@ -776,31 +805,6 @@ window.ffkIsNative = function () {
               </div>
             </div>
 
-            <div class="coach-score-row" id="coachHistoryScoreRow">
-              <label data-i18n="labelScore">Счёт</label>
-              <div class="score-split coach-score-split">
-                <input id="coachHistoryScoreUs" class="js-cm-score-us" type="number" min="0" max="99" inputmode="numeric" data-i18n-aria="scoreUsAria" aria-label="Our goals">
-                <span class="score-colon" aria-hidden="true">:</span>
-                <input id="coachHistoryScoreThem" class="js-cm-score-them" type="number" min="0" max="99" inputmode="numeric" data-i18n-aria="scoreThemAria" aria-label="Opponent goals">
-              </div>
-              <button class="save-btn" id="coachHistorySaveScore" type="button" data-i18n="coachMatchSaveScore">Сохранить</button>
-            </div>
-
-            <div class="field">
-              <label data-i18n="coachMatchComment">Комментарий к матчу</label>
-              <p class="hint coach-rate-comment-hint" data-i18n="coachMatchCommentHint">На карточке матча команды. Родители тоже получат его при отправке результатов.</p>
-              <textarea id="coachHistoryComment" rows="2" maxlength="400" data-i18n-placeholder="coachMatchCommentPh" placeholder="Как прошла игра…"></textarea>
-            </div>
-            <button type="button" class="ghost-btn" id="coachHistoryCommentSave" data-i18n="coachMatchCommentSave">Сохранить комментарий</button>
-
-            <div class="coach-history-card-actions">
-              <button type="button" class="save-btn" id="coachHistoryShareMatchBtn" data-i18n="coachShareMatchCard">Карточка матча</button>
-            </div>
-
-            <div class="pro-kicker" data-i18n="coachMatchRatePhase">Оценки игроков</div>
-            <div id="coachHistoryRates" class="coach-player-list coach-rates-compact"></div>
-            <button class="save-btn" id="coachHistorySendResults" type="button" data-i18n="coachSendResultsBtn">Отправить карточки родителям</button>
-            <p class="hint" id="coachHistoryResultsStatus"></p>
             <button class="del-btn" id="coachHistoryDeleteBtn" type="button" data-i18n="coachHistoryDeleteBtn">Удалить матч</button>
             <button class="ghost-btn" id="coachHistoryBackBottom" type="button" data-i18n="coachMatchBackList">К списку</button>
           </div>
@@ -1627,7 +1631,7 @@ window.ffkIsNative = function () {
   <div class="onboard" id="transfer" hidden>
     <div class="onboard-card">
       <div class="brand-fan" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
-      <div class="onboard-kicker">TEMPO</div>
+      <div class="onboard-kicker">Tempo</div>
       <h2 data-i18n="transferTitle">Был сезон на сайте?</h2>
       <p data-i18n="transferBody">Сайт в браузере и это приложение хранят данные отдельно. Если матчи уже есть на сайте, откройте там Настройки → Экспорт и выберите тот JSON здесь.</p>
       <button class="save-btn" id="transferPick" type="button" data-i18n="transferPick">Выбрать JSON</button>
@@ -1663,7 +1667,7 @@ window.ffkIsNative = function () {
           </div>
         </div>
       </div>
-      <div class="onboard-kicker">TEMPO</div>
+      <div class="onboard-kicker">Tempo</div>
       <h2 id="onboardTitle"></h2>
       <p id="onboardBody"></p>
       <div class="onboard-dots" id="onboardDots"><span></span><span></span><span></span></div>

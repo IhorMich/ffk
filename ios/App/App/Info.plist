@@ -7,7 +7,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
-        <string>TEMPO</string>
+        <string>Tempo</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>

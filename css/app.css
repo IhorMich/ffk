@@ -692,7 +692,7 @@
   }
   @keyframes introFade{to{opacity:0}}
   .preview-modal{
-    position:fixed;inset:0;z-index:92;background:rgba(8,14,24,.88);
+    position:fixed;inset:0;z-index:200;background:rgba(8,14,24,.88);
     display:flex;align-items:center;justify-content:center;
     padding:calc(16px + env(safe-area-inset-top, 0px)) 16px calc(16px + env(safe-area-inset-bottom, 0px));
   }
@@ -711,6 +711,7 @@
     border:1px solid var(--card-line);
     border-radius:22px;padding:22px 18px 16px;
     box-shadow:var(--card-shadow);
+    position:relative;z-index:201;
   }
   .onboard-card{
     position:relative;
@@ -967,18 +968,32 @@
     min-height:28vh;margin:12px 0;border:1px dashed var(--card-line);border-radius:16px;
     background:transparent;
   }
-  .coach-history-detail{margin-top:4px;}
-  .coach-history-detail .coach-score-row{margin:0 0 12px;}
-  .coach-history-detail #coachHistoryCommentSave{width:100%;margin:0 0 8px;}
-  .coach-history-detail #coachHistorySendResults{width:100%;margin:8px 0 0;}
+  .coach-history-detail{margin-top:4px;max-width:560px;}
+  .coach-history-detail .coach-score-row{margin:0;}
+  .coach-history-detail #coachHistoryCommentSave{width:auto;margin:8px 0 0;}
+  .coach-history-detail #coachHistorySendResults{width:100%;margin:0;}
   .coach-history-detail #coachHistoryResultsStatus{margin:6px 0 0;}
   .coach-history-detail #coachHistoryBackBottom{width:100%;margin:12px 0 0;}
   .coach-history-detail #coachHistoryDeleteBtn{width:100%;margin:14px 0 0;}
+  .coach-history-top{display:grid;gap:8px;margin:0 0 14px;}
+  .coach-history-top-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+  .coach-history-top-actions .save-btn,
+  .coach-history-top-actions .ghost-btn{width:100%;margin:0;padding:10px 12px;}
+  .coach-history-more{
+    margin:12px 0 8px;padding:0;border-radius:12px;border:1px solid var(--card-line);
+    background:color-mix(in srgb, var(--card-paper) 92%, var(--surface));
+  }
+  .coach-history-more > summary{
+    list-style:none;cursor:pointer;padding:10px 12px;font-size:.82rem;font-weight:800;
+  }
+  .coach-history-more > summary::-webkit-details-marker{display:none;}
+  .coach-history-more-body{padding:0 12px 12px;}
+  .coach-history-more-body textarea{width:100%;box-sizing:border-box;min-height:64px;}
   .coach-history-card-actions{display:grid;gap:8px;margin:10px 0 14px;}
-  .coach-history-rate-actions{display:flex;flex-direction:column;gap:6px;align-items:stretch;}
-  .coach-history-rate-actions .coach-rate-btn{width:auto;min-width:96px;padding:8px 10px;}
+  .coach-history-rate-actions{display:flex;flex-direction:row;gap:6px;align-items:center;flex-shrink:0;}
+  .coach-history-rate-actions .coach-rate-btn{width:auto;min-width:0;padding:7px 10px;white-space:nowrap;}
   #coachHistoryHint{margin:0 0 10px;}
-  #coachHistoryComment{min-height:72px;resize:vertical;}
+  #coachHistoryComment{min-height:64px;resize:vertical;}
   #coachHistoryCommentSave{width:auto;margin:0 0 8px;}
   .inbox-page-list .parent-msg-row{
     border-radius:0;border:0;border-bottom:1px solid var(--card-line);
@@ -2181,16 +2196,17 @@
   .coach-rates-compact .coach-player-row{padding:8px 10px;}
   .coach-rates-compact .coach-rate-btn{padding:6px 10px;font-size:.72rem;}
   .coach-rates-progress{margin:0 0 8px;font-weight:700;}
-  .coach-rate-row{align-items:center;}
+  .coach-rate-row{align-items:center;gap:8px;}
   .coach-rate-row .coach-player-main{
-    display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;text-align:left;
+    display:flex;flex-direction:row;align-items:center;justify-content:flex-start;gap:10px;
+    flex:1;min-width:0;width:auto;text-align:left;
   }
   .coach-rate-row-text{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1;}
-  .coach-rate-row-text b{font-size:.95rem;}
-  .coach-rate-row-text span{font-size:.72rem;opacity:.78;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .coach-rate-row-text b{font-size:.92rem;font-weight:800;line-height:1.2;}
+  .coach-rate-row-text span{font-size:.7rem;opacity:.78;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   .coach-rate-row-score{
-    flex:none;min-width:2.6rem;padding:6px 8px;border-radius:10px;text-align:center;
-    font-size:1.05rem;font-weight:800;line-height:1;
+    flex:none;min-width:2.4rem;padding:5px 7px;border-radius:10px;text-align:center;
+    font-size:.95rem;font-weight:800;line-height:1;
     background:color-mix(in srgb, var(--card-accent, #c9a227) 16%, var(--surface, #fff));
     color:var(--text);
   }

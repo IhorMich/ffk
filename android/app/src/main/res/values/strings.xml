@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">TEMPO</string>
-    <string name="title_activity_main">TEMPO</string>
+    <string name="app_name">Tempo</string>
+    <string name="title_activity_main">Tempo</string>
     <string name="package_name">app.ffk.rating</string>
     <string name="custom_url_scheme">app.ffk.rating</string>
 </resources>
