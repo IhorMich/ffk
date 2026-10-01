@@ -116,7 +116,20 @@
       const key = deletionKey(message);
       db.messages = db.messages.filter(m => m.id !== id);
       if(key) db.deleted[key] = new Date().toISOString();
+      if(message.cloud_notice_id){
+        db.deleted[`notice:${message.cloud_notice_id}`] = new Date().toISOString();
+      }
       writeDb(db);
+      try{
+        if(global.ParentCloud && typeof global.ParentCloud.dismissParentNotices === 'function'
+           && (message.type === 'match_invite' || message.type === 'match_result')){
+          global.ParentCloud.dismissParentNotices({
+            noticeId: message.cloud_notice_id || '',
+            matchId: message.match_id || '',
+            teamPlayerId: message.team_player_id || ''
+          }).catch(() => {});
+        }
+      }catch(e){}
       return message;
     },
     findMatchInvite(matchId, teamPlayerId){
@@ -138,6 +151,13 @@
       const matchId = String(payload.match_id || '');
       const playerId = String(payload.team_player_id || '');
       if(!matchId || !playerId) throw new Error('bad_message');
+      const delKey = `match_invite:${matchId}:${playerId}`;
+      if(db.deleted[delKey] && !payload.forceUnread){
+        return null;
+      }
+      if(db.deleted[delKey] && payload.forceUnread){
+        delete db.deleted[delKey];
+      }
       const existing = db.messages.find(m =>
         m.type === 'match_invite' && m.match_id === matchId && m.team_player_id === playerId
       );
@@ -176,6 +196,7 @@
         invite_notice: notice || (existing && existing.invite_notice === 'recalled' && !payload.clearNotice
           ? 'recalled'
           : ''),
+        cloud_notice_id: String(payload.cloud_notice_id || existing && existing.cloud_notice_id || ''),
         status: existing && existing.status === 'read' && !payload.forceUnread
           ? 'read'
           : 'delivered',
@@ -233,6 +254,13 @@
       const matchId = String(payload.match_id || '');
       const playerId = String(payload.team_player_id || '');
       if(!matchId || !playerId) throw new Error('bad_message');
+      const delKey = `match_result:${matchId}:${playerId}`;
+      if(db.deleted[delKey] && !payload.forceUnread){
+        return null;
+      }
+      if(db.deleted[delKey] && payload.forceUnread){
+        delete db.deleted[delKey];
+      }
       const existing = db.messages.find(m =>
         m.type === 'match_result' && m.match_id === matchId && m.team_player_id === playerId
       );
@@ -266,6 +294,7 @@
         role: payload.role === 'sub' ? 'sub' : 'start',
         format: String(payload.format || '').slice(0, 16),
         match_len: Math.min(120, Math.max(0, Number(payload.match_len) || 0)),
+        cloud_notice_id: String(payload.cloud_notice_id || existing && existing.cloud_notice_id || ''),
         status: existing && existing.status === 'read' && !payload.forceUnread
           ? 'read'
           : 'delivered',
@@ -487,20 +516,33 @@
     markRead(id, readerRole){
       const db = readDb();
       const now = new Date().toISOString();
+      let touched = null;
       db.messages = db.messages.map(m => {
         if(m.id !== id) return m;
         if(m.type === 'chat_message'){
           const role = readerRole === 'coach' ? 'coach' : 'parent';
-          return {
+          touched = {
             ...m,
             read_by_parent: role === 'parent' ? true : !!m.read_by_parent,
             read_by_coach: role === 'coach' ? true : !!m.read_by_coach,
             updated_at: now
           };
+          return touched;
         }
-        return {...m, status: 'read', read_at: m.read_at || now, updated_at: now};
+        touched = {...m, status: 'read', read_at: m.read_at || now, updated_at: now};
+        return touched;
       });
       writeDb(db);
+      try{
+        if(touched && (touched.type === 'match_invite' || touched.type === 'match_result')
+           && global.ParentCloud && typeof global.ParentCloud.markParentNoticesRead === 'function'){
+          global.ParentCloud.markParentNoticesRead({
+            noticeId: touched.cloud_notice_id || '',
+            matchId: touched.match_id || '',
+            teamPlayerId: touched.team_player_id || ''
+          }).catch(() => {});
+        }
+      }catch(e){}
       return this.get(id);
     },
     setMatchInviteRsvp(messageId, response){

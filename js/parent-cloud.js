@@ -918,36 +918,148 @@
       .order('created_at', {ascending: false})
       .limit(80);
     if(error) return {ok: false, error};
+    const deleted = global.InboxStore.listDeleted ? global.InboxStore.listDeleted() : {};
     let imported = 0;
-    (data || []).forEach(row => {
+    const staleNoticeIds = [];
+    for(const row of (data || [])){
       const payload = row.payload && typeof row.payload === 'object' ? row.payload : {};
       const type = String(row.notice_type || '');
+      const playerId = String(row.team_player_id || payload.team_player_id || '');
+      const matchId = String(payload.match_id || '');
+      const inviteKey = `match_invite:${matchId}:${playerId}`;
+      const resultKey = `match_result:${matchId}:${playerId}`;
+      const noticeKey = `notice:${row.id}`;
       try{
-        if(type === 'match_result' && typeof global.InboxStore.upsertMatchResult === 'function'){
-          global.InboxStore.upsertMatchResult({
-            ...payload,
-            team_player_id: row.team_player_id || payload.team_player_id,
-            forceUnread: !row.read_at
-          });
-          imported += 1;
+        if(deleted[noticeKey]){
+          staleNoticeIds.push(row.id);
+          continue;
+        }
+        if(type === 'match_result'){
+          const delAt = deleted[resultKey];
+          if(delAt && (!row.created_at || new Date(row.created_at).getTime() <= new Date(delAt).getTime())){
+            staleNoticeIds.push(row.id);
+            continue;
+          }
+          const existing = global.InboxStore.findMatchResult
+            ? global.InboxStore.findMatchResult(matchId, playerId)
+            : null;
+          const locallyRead = !!(existing && existing.status === 'read');
+          if(locallyRead && !row.read_at){
+            try{
+              await sb.from('parent_notices').update({read_at: new Date().toISOString()}).eq('id', row.id);
+            }catch(e){}
+          }
+          if(typeof global.InboxStore.upsertMatchResult === 'function'){
+            global.InboxStore.upsertMatchResult({
+              ...payload,
+              team_player_id: playerId,
+              cloud_notice_id: row.id,
+              forceUnread: !row.read_at && !locallyRead
+            });
+            imported += 1;
+          }
         }else if(typeof global.InboxStore.upsertMatchInvite === 'function'){
+          const delAt = deleted[inviteKey];
+          if(delAt && (!row.created_at || new Date(row.created_at).getTime() <= new Date(delAt).getTime())){
+            staleNoticeIds.push(row.id);
+            continue;
+          }
+          const existing = global.InboxStore.findMatchInvite
+            ? global.InboxStore.findMatchInvite(matchId, playerId)
+            : null;
+          const locallyRead = !!(existing && existing.status === 'read');
+          if(locallyRead && !row.read_at){
+            try{
+              await sb.from('parent_notices').update({read_at: new Date().toISOString()}).eq('id', row.id);
+            }catch(e){}
+          }
           const notice = type === 'match_invite' ? ''
             : (type === 'match_updated' ? 'updated'
               : (type === 'match_recalled' ? 'recalled'
                 : (type === 'match_cancelled' ? 'cancelled' : (payload.invite_notice || ''))));
           global.InboxStore.upsertMatchInvite({
             ...payload,
-            team_player_id: row.team_player_id || payload.team_player_id,
+            team_player_id: playerId,
+            cloud_notice_id: row.id,
             invite_notice: notice || undefined,
-            forceUnread: !row.read_at,
-            resetRsvp: !!notice,
+            forceUnread: !row.read_at && !locallyRead,
+            resetRsvp: !!notice && !locallyRead,
             clearNotice: !notice
           });
           imported += 1;
         }
       }catch(e){}
-    });
+    }
+    if(staleNoticeIds.length){
+      try{
+        await sb.from('parent_notices').delete().in('id', staleNoticeIds).eq('parent_user_id', session.user.id);
+      }catch(e){}
+    }
     return {ok: true, imported};
+  }
+  async function dismissParentNotices(opts){
+    opts = opts || {};
+    const sb = parentClient();
+    if(!sb || !ready()) return {ok: false};
+    let session = null;
+    try{ session = await getSession(); }catch(e){}
+    if(!session){
+      try{ session = await ensureSession(false); }catch(e){ return {ok: false}; }
+    }
+    try{
+      if(opts.noticeId){
+        await sb.from('parent_notices').delete().eq('id', String(opts.noticeId)).eq('parent_user_id', session.user.id);
+      }
+      if(opts.matchId && opts.teamPlayerId){
+        const {data} = await sb.from('parent_notices')
+          .select('id,payload,team_player_id')
+          .eq('parent_user_id', session.user.id)
+          .eq('team_player_id', String(opts.teamPlayerId));
+        const ids = (data || []).filter(row => {
+          const p = row.payload && typeof row.payload === 'object' ? row.payload : {};
+          return String(p.match_id || '') === String(opts.matchId);
+        }).map(row => row.id);
+        if(ids.length){
+          await sb.from('parent_notices').delete().in('id', ids);
+        }
+      }
+      return {ok: true};
+    }catch(e){
+      return {ok: false, error: e};
+    }
+  }
+  async function markParentNoticesRead(opts){
+    opts = opts || {};
+    const sb = parentClient();
+    if(!sb || !ready()) return {ok: false};
+    let session = null;
+    try{ session = await getSession(); }catch(e){}
+    if(!session){
+      try{ session = await ensureSession(false); }catch(e){ return {ok: false}; }
+    }
+    try{
+      const now = new Date().toISOString();
+      if(opts.noticeId){
+        await sb.from('parent_notices').update({read_at: now}).eq('id', String(opts.noticeId)).eq('parent_user_id', session.user.id);
+      }
+      if(opts.matchId && opts.teamPlayerId){
+        const {data} = await sb.from('parent_notices')
+          .select('id,payload,team_player_id,read_at')
+          .eq('parent_user_id', session.user.id)
+          .eq('team_player_id', String(opts.teamPlayerId))
+          .is('read_at', null);
+        const ids = (data || []).filter(row => {
+          const p = row.payload && typeof row.payload === 'object' ? row.payload : {};
+          return String(p.match_id || '') === String(opts.matchId);
+        }).map(row => row.id);
+        if(ids.length){
+          await sb.from('parent_notices').update({read_at: now}).in('id', ids);
+        }
+      }
+      return {ok: true};
+    }catch(e){
+      return {ok: false, error: e};
+    }
   }
   async function syncChats(session, links, senderRole, opts){
     opts = opts || {};
@@ -1495,6 +1607,8 @@
     pushChatMessage,
     pushParentNotice,
     pullParentNotices,
+    dismissParentNotices,
+    markParentNoticesRead,
     personalSyncState(){ return personalSyncState; },
     status(){ return {configured: ready(), syncing, personal: personalSyncState}; }
   };
