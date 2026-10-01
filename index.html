@@ -703,6 +703,7 @@ window.ffkIsNative = function () {
           <div id="coachHistoryDetail" class="coach-history-detail coach-match-detail" hidden>
             <div class="coach-match-detail-bar">
               <button type="button" class="ghost-btn coach-match-back" id="coachHistoryBackBtn" data-i18n="coachMatchBack">← К списку</button>
+              <button type="button" class="ghost-btn coach-train-icon-btn coach-history-meta-toggle" id="coachHistoryMetaToggle" aria-expanded="false" aria-label="Edit" title="Edit">✎</button>
             </div>
             <div class="coach-match-summary" id="coachHistorySummary"></div>
 
@@ -716,9 +717,9 @@ window.ffkIsNative = function () {
                 </div>
                 <button class="save-btn" id="coachHistorySaveScore" type="button" data-i18n="coachMatchSaveScore">Сохранить</button>
               </div>
-              <div class="coach-history-top-actions">
-                <button type="button" class="ghost-btn" id="coachHistoryShareMatchBtn" data-i18n="coachShareMatchCard">Карточка матча</button>
-                <button class="save-btn" id="coachHistorySendResults" type="button" data-i18n="coachSendResultsBtn">Отправить родителям</button>
+              <div class="coach-history-top-actions coach-history-top-actions-compact">
+                <button type="button" class="ghost-btn coach-history-mini-btn" id="coachHistoryShareMatchBtn" data-i18n="coachShareMatchCard">Карточка матча</button>
+                <button class="ghost-btn coach-history-mini-btn" id="coachHistorySendResults" type="button" data-i18n="coachSendResultsBtn">Отправить родителям</button>
               </div>
               <p class="hint" id="coachHistoryResultsStatus"></p>
             </div>
@@ -736,7 +737,6 @@ window.ffkIsNative = function () {
             </details>
 
             <div class="coach-history-meta" id="coachHistoryMeta">
-              <button type="button" class="ghost-btn coach-history-meta-toggle" id="coachHistoryMetaToggle" aria-expanded="false">Править детали матча</button>
               <div class="coach-history-meta-body" id="coachHistoryMetaBody" hidden>
                 <div class="coach-match-create-grid" id="coachHistoryMetaEdit">
                   <div class="field">

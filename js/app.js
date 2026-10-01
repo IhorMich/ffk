@@ -5535,9 +5535,11 @@ document.getElementById('previewSave').addEventListener('click', async () => {
   btn.textContent = t('previewSaving');
   let done = false;
   try{
-    await savePngFile(previewState.canvas, previewState.filename);
-    done = true;
-  }catch(e){}
+    done = !!(await savePngFile(previewState.canvas, previewState.filename));
+  }catch(e){
+    done = false;
+  }
+  if(!done) showToast(t('toastCardGalleryFail') || 'Could not save to gallery');
   btn.textContent = done ? t('previewSaved') : t('previewSave');
   window.setTimeout(() => {
     btn.disabled = false;
@@ -6122,26 +6124,34 @@ async function exportPngFile(canvas, filename){
 async function savePngFile(canvas, filename){
   // A download link is dead inside the web view, so the card goes into the
   // gallery; sharing is the last resort if even that is refused.
+  const safeName = String(filename || 'tempo_card.png')
+    .replace(/[\\/:*?"<>|]+/g, '_')
+    .replace(/\s+/g, '_')
+    .slice(0, 80);
+  const name = /\.png$/i.test(safeName) ? safeName : `${safeName}.png`;
   if(isNativeApp()){
     const Gallery = capPlugin('GalleryPicker');
     if(Gallery && typeof Gallery.saveImage === 'function'){
       try{
-        await Gallery.saveImage({dataUrl: canvas.toDataURL('image/png'), filename});
-        showToast(t('toastCardGallery'));
-        return;
+        const ret = await Gallery.saveImage({dataUrl: canvas.toDataURL('image/png'), filename: name});
+        const folder = ret && ret.folder ? String(ret.folder) : 'Pictures/Tempo';
+        showToast(t('toastCardGallery', {folder}) || (`Saved to ${folder}`));
+        return true;
       }catch(err){
         camLog('save card fail', String((err && (err.message || err.errorMessage)) || err));
+        showToast(t('toastCardGalleryFail') || 'Could not save to gallery');
       }
     }
-    await exportPngFile(canvas, filename);
-    return;
+    await exportPngFile(canvas, name);
+    return false;
   }
   const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  a.href = url; a.download = filename; a.click();
+  a.href = url; a.download = name; a.click();
   URL.revokeObjectURL(url);
   showToast(t('toastCard'));
+  return true;
 }
 
 let shareBusy = false;

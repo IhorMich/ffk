@@ -906,24 +906,10 @@
       const label = playerLabel(p);
       const rating = store.getRatingForPlayer(session, match.id, p.id);
       const scoreTxt = rating ? Number(rating.rating).toFixed(1) : '—';
-      const note = rating
-        ? (rating.comment
-          ? esc(String(rating.comment).slice(0, 80))
-          : esc(tt('coachRated', 'Rated')))
-        : esc(tt('coachNotRated', 'Not rated'));
-      const cardBtn = rating
-        ? `<button type="button" class="ghost-btn coach-rate-btn" data-share-player-card="${esc(p.id)}" data-match="${esc(match.id)}">${esc(tt('coachSharePlayerCard', 'Card'))}</button>`
-        : '';
-      return `<div class="coach-player-row coach-rate-row${rating ? ' is-rated' : ' is-unrated'}">
-        <button type="button" class="coach-player-main coach-rate-open" data-rate-player="${esc(p.id)}" data-match="${esc(match.id)}">
-          <span class="coach-rate-row-score" aria-hidden="true">${esc(scoreTxt)}</span>
-          <span class="coach-rate-row-text">
-            <b>${esc(label)}</b>
-            <span>${note}</span>
-          </span>
-        </button>
-        ${cardBtn ? `<div class="coach-history-rate-actions">${cardBtn}</div>` : ''}
-      </div>`;
+      return `<button type="button" class="coach-rate-line${rating ? ' is-rated' : ' is-unrated'}" data-rate-player="${esc(p.id)}" data-match="${esc(match.id)}">
+        <span class="coach-rate-line-name">${esc(label)}</span>
+        <span class="coach-rate-line-score">★ ${esc(scoreTxt)}</span>
+      </button>`;
     }).join('');
     return progress + rows;
   }
@@ -1825,9 +1811,13 @@
     if(body) body.hidden = !open;
     if(btn){
       btn.setAttribute('aria-expanded', open ? 'true' : 'false');
-      btn.textContent = open
+      const lab = open
         ? tt('coachHistoryHideMeta', 'Hide match details')
         : tt('coachHistoryEditMeta', 'Edit match details');
+      btn.setAttribute('aria-label', lab);
+      btn.title = lab;
+      // Keep the pencil glyph — do not replace with long text.
+      if(!btn.textContent || btn.textContent.trim().length > 2) btn.textContent = '✎';
     }
   }
 
@@ -2023,7 +2013,7 @@
       return canvas;
     };
     await openCardPreview({
-      filename: `team_match_${String(match.opponent || 'match').replace(/\s+/g,'_').slice(0,18)}_${match.date || ''}.png`,
+      filename: `tempo_match_${String(match.opponent || 'match').replace(/[^a-zA-Z0-9_-]+/g,'_').slice(0,18)}_${match.date || ''}.png`,
       build
     });
     toast(tt('coachTeamCardPrivacy', 'Team card is for you/staff. Parents only get their own child’s card.'));

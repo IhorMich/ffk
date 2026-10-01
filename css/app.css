@@ -971,14 +971,15 @@
   .coach-history-detail{margin-top:4px;max-width:560px;}
   .coach-history-detail .coach-score-row{margin:0;}
   .coach-history-detail #coachHistoryCommentSave{width:auto;margin:8px 0 0;}
-  .coach-history-detail #coachHistorySendResults{width:100%;margin:0;}
-  .coach-history-detail #coachHistoryResultsStatus{margin:6px 0 0;}
+  .coach-history-detail #coachHistorySendResults{width:auto;margin:0;}
+  .coach-history-detail #coachHistoryResultsStatus{margin:4px 0 0;font-size:.72rem;}
   .coach-history-detail #coachHistoryBackBottom{width:100%;margin:12px 0 0;}
   .coach-history-detail #coachHistoryDeleteBtn{width:100%;margin:14px 0 0;}
-  .coach-history-top{display:grid;gap:8px;margin:0 0 14px;}
-  .coach-history-top-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+  .coach-history-top{display:grid;gap:6px;margin:0 0 10px;}
+  .coach-history-top-actions{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
   .coach-history-top-actions .save-btn,
-  .coach-history-top-actions .ghost-btn{width:100%;margin:0;padding:10px 12px;}
+  .coach-history-top-actions .ghost-btn{width:100%;margin:0;padding:7px 8px;font-size:.72rem;border-radius:10px;font-weight:700;}
+  .coach-history-mini-btn{width:100%;margin:0;padding:7px 8px !important;font-size:.72rem !important;border-radius:10px;font-weight:700;line-height:1.2;}
   .coach-history-more{
     margin:12px 0 8px;padding:0;border-radius:12px;border:1px solid var(--card-line);
     background:color-mix(in srgb, var(--card-paper) 92%, var(--surface));
@@ -2098,8 +2099,9 @@
     margin-top:0;padding:10px;border-radius:14px;border:1px solid var(--card-line);
     background:var(--card-paper);
   }
-  .coach-match-detail-bar{margin:0 0 8px;}
+  .coach-match-detail-bar{margin:0 0 8px;display:flex;align-items:center;justify-content:space-between;gap:8px;}
   .coach-match-back{margin:0;width:auto;padding:8px 12px;font-size:.78rem;border-radius:999px;}
+  .coach-history-meta-toggle.coach-train-icon-btn{min-width:40px;padding:8px 10px;margin:0;flex-shrink:0;}
   .coach-match-summary{
     display:grid;gap:2px;margin:0 0 10px;
   }
@@ -2192,25 +2194,21 @@
     padding:8px 6px;border-radius:10px;border:1px solid var(--card-line);
     background:var(--surface);color:var(--text);
   }
-  .coach-rates-compact{margin:6px 0 8px;gap:6px;}
+  .coach-rates-compact{margin:4px 0 6px;gap:3px;}
   .coach-rates-compact .coach-player-row{padding:8px 10px;}
   .coach-rates-compact .coach-rate-btn{padding:6px 10px;font-size:.72rem;}
-  .coach-rates-progress{margin:0 0 8px;font-weight:700;}
-  .coach-rate-row{align-items:center;gap:8px;}
-  .coach-rate-row .coach-player-main{
-    display:flex;flex-direction:row;align-items:center;justify-content:flex-start;gap:10px;
-    flex:1;min-width:0;width:auto;text-align:left;
+  .coach-rates-progress{margin:0 0 4px;font-weight:700;font-size:.72rem;}
+  .coach-rate-line{
+    display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;
+    padding:6px 8px;border-radius:10px;border:1px solid var(--card-line);
+    background:transparent;color:inherit;font:inherit;cursor:pointer;text-align:left;
   }
-  .coach-rate-row-text{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1;}
-  .coach-rate-row-text b{font-size:.92rem;font-weight:800;line-height:1.2;}
-  .coach-rate-row-text span{font-size:.7rem;opacity:.78;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-  .coach-rate-row-score{
-    flex:none;min-width:2.4rem;padding:5px 7px;border-radius:10px;text-align:center;
-    font-size:.95rem;font-weight:800;line-height:1;
-    background:color-mix(in srgb, var(--card-accent, #c9a227) 16%, var(--surface, #fff));
-    color:var(--text);
+  .coach-rate-line-name{
+    min-width:0;flex:1;font-size:.84rem;font-weight:700;line-height:1.2;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
   }
-  .coach-rate-row.is-unrated .coach-rate-row-score{opacity:.45;font-weight:700;}
+  .coach-rate-line-score{flex:none;font-size:.82rem;font-weight:800;color:var(--card-accent);white-space:nowrap;}
+  .coach-rate-line.is-unrated .coach-rate-line-score{opacity:.45;color:var(--card-muted);}
   #coachMatchPlayedBox .save-btn.js-cm-send-results{margin-top:4px;}
   #coachMatchUpcomingBox .save-btn,#coachMatchUpcomingBox .ghost-btn{margin-top:0;}
   .parent-msg-row.result{box-shadow:inset 3px 0 0 color-mix(in srgb, var(--card-accent) 55%, #2f9e44);}

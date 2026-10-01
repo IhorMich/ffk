@@ -58,7 +58,10 @@ public class GalleryPickerPlugin extends Plugin {
   @PluginMethod
   public void saveImage(PluginCall call) {
     String dataUrl = call.getString("dataUrl", "");
-    String name = call.getString("filename", "ffk_card.png");
+    String name = call.getString("filename", "tempo_card.png");
+    if (name == null || name.trim().isEmpty()) name = "tempo_card.png";
+    name = name.replaceAll("[\\\\/:*?\"<>|]+", "_").trim();
+    if (!name.toLowerCase().endsWith(".png")) name = name + ".png";
     int comma = dataUrl.indexOf(',');
     if (comma < 0) {
       call.reject("no image data", "NO_DATA");
@@ -66,14 +69,19 @@ public class GalleryPickerPlugin extends Plugin {
     }
     try {
       byte[] bytes = Base64.decode(dataUrl.substring(comma + 1), Base64.DEFAULT);
+      if (bytes == null || bytes.length == 0) {
+        call.reject("empty image", "NO_DATA");
+        return;
+      }
+      ContentResolver resolver = getContext().getContentResolver();
+      dropOldCopy(resolver, name);
       ContentValues values = new ContentValues();
       values.put(MediaStore.Images.Media.DISPLAY_NAME, name);
       values.put(MediaStore.Images.Media.MIME_TYPE, "image/png");
       if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-        values.put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES + "/TEMPO");
+        values.put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES + "/Tempo");
+        values.put(MediaStore.Images.Media.IS_PENDING, 1);
       }
-      ContentResolver resolver = getContext().getContentResolver();
-      dropOldCopy(resolver, name);
       Uri target = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
       if (target == null) {
         call.reject("gallery rejected the file", "NO_TARGET");
@@ -85,9 +93,25 @@ public class GalleryPickerPlugin extends Plugin {
           return;
         }
         out.write(bytes);
+        out.flush();
+      }
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        ContentValues done = new ContentValues();
+        done.put(MediaStore.Images.Media.IS_PENDING, 0);
+        resolver.update(target, done, null, null);
+      } else {
+        try {
+          android.media.MediaScannerConnection.scanFile(
+            getContext(),
+            new String[] { target.getPath() },
+            new String[] { "image/png" },
+            null
+          );
+        } catch (Exception ignore) {}
       }
       JSObject ret = new JSObject();
       ret.put("uri", target.toString());
+      ret.put("folder", "Pictures/Tempo");
       call.resolve(ret);
     } catch (Exception e) {
       call.reject(e.getMessage() == null ? "save failed" : e.getMessage(), "SAVE");
