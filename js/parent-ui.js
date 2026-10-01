@@ -206,12 +206,16 @@
       meta.textContent = [teamBit, academyBit].filter(Boolean).join(' · ');
     }
     const messages = chatMessages(activeChat.team_player_id);
+    let marked = false;
     messages.forEach(message => {
       const incoming = coachMode ? message.sender_role === 'parent' : message.sender_role === 'coach';
-      if(incoming && message.status !== 'read' && global.InboxStore.markRead){
+      const unread = coachMode ? !message.read_by_coach : !message.read_by_parent;
+      if(incoming && unread && global.InboxStore.markRead){
         global.InboxStore.markRead(message.id, coachMode ? 'coach' : 'parent');
+        marked = true;
       }
     });
+    if(marked) syncInboxBellUi();
     thread.innerHTML = messages.length
       ? messages.map(message => {
           const own = coachMode ? message.sender_role === 'coach' : message.sender_role === 'parent';
@@ -270,10 +274,29 @@
     }catch(e){}
   }
   function closePlayerCoachChat(){
+    const closing = activeChat;
+    const coachMode = typeof isCoachPlan === 'function' && isCoachPlan();
+    if(closing && closing.team_player_id && global.InboxStore && global.InboxStore.markRead){
+      try{
+        chatMessages(closing.team_player_id).forEach(message => {
+          const incoming = coachMode ? message.sender_role === 'parent' : message.sender_role === 'coach';
+          const unread = coachMode ? !message.read_by_coach : !message.read_by_parent;
+          if(incoming && unread){
+            global.InboxStore.markRead(message.id, coachMode ? 'coach' : 'parent');
+          }
+        });
+      }catch(e){}
+    }
     const page = document.getElementById('chatPage');
     if(page) page.hidden = true;
     activeChat = null;
     syncInboxBellUi();
+    // Push read receipts so cloud stops resurrecting the badge on the next poll.
+    try{
+      if(global.ParentCloud && typeof global.ParentCloud.pollInboxChats === 'function'){
+        global.ParentCloud.pollInboxChats({push: true}).catch(() => {});
+      }
+    }catch(e){}
   }
   function deleteChatMessage(id){
     if(!id || !global.InboxStore || typeof global.InboxStore.deleteMessage !== 'function') return;

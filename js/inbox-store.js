@@ -425,6 +425,10 @@
       const db = readDb();
       if(db.deleted[`chat:${raw.id}`]) return null;
       const existing = db.messages.find(m => m.id === raw.id);
+      // Keep local read receipts if the user already opened the thread —
+      // cloud flags can lag until the next full push of mark_player_chat_read.
+      const readByParent = !!raw.read_by_parent || !!(existing && existing.read_by_parent);
+      const readByCoach = !!raw.read_by_coach || !!(existing && existing.read_by_coach);
       const row = {
         ...(existing || {}),
         id: String(raw.id),
@@ -439,8 +443,8 @@
         sender_user_id: String(raw.sender_user_id || existing && existing.sender_user_id || ''),
         text: String(raw.body || raw.text || '').slice(0, 500),
         edited_at: raw.edited_at || (existing && existing.edited_at) || '',
-        read_by_parent: !!raw.read_by_parent,
-        read_by_coach: !!raw.read_by_coach,
+        read_by_parent: readByParent,
+        read_by_coach: readByCoach,
         status: 'delivered',
         created_at: raw.created_at || existing && existing.created_at || new Date().toISOString(),
         updated_at: new Date().toISOString(),
