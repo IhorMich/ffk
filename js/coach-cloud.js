@@ -3,6 +3,7 @@
   let clients = {coach: null, parent: null};
   let syncTimer = null;
   let syncing = false;
+  let syncAgain = false;
 
   function cfg(){
     return global.FFK_COACH_CONFIG || {};
@@ -290,8 +291,9 @@
   }
   async function reconcileDeletedRows(sb, table, teams, localRows, opts){
     const teamIds = [...new Set((teams || []).map(t => t && t.id).filter(Boolean))];
-    if(!teamIds.length) return;
+    if(!teamIds.length) return {dropped: []};
     const protectIds = new Set((opts && opts.protectIds) || []);
+    const dropped = [];
     for(const teamId of teamIds){
       const keep = new Set(
         (localRows || [])
@@ -305,9 +307,16 @@
         .filter(id => id && !keep.has(id) && !protectIds.has(id));
       for(let i = 0; i < drop.length; i += 80){
         const chunk = drop.slice(i, i + 80);
-        await upsertChecked(sb.from(table).delete().in('id', chunk));
+        const {error: delErr} = await sb.from(table).delete().in('id', chunk);
+        if(delErr) throw delErr;
+        // RLS can "succeed" with 0 rows — verify and only treat confirmed gone as dropped.
+        const {data: left, error: leftErr} = await sb.from(table).select('id').in('id', chunk);
+        if(leftErr) throw leftErr;
+        const leftIds = new Set((left || []).map(r => String(r.id)));
+        chunk.forEach(id => { if(!leftIds.has(id)) dropped.push(id); });
       }
     }
+    return {dropped};
   }
 
   async function pushLocalSnapshot(){
@@ -315,7 +324,7 @@
     if(!sb) return {ok: false, reason: 'no_cloud'};
     const {data: {session}} = await sb.auth.getSession();
     if(!session) return {ok: false, reason: 'no_session'};
-    const db = localDb();
+    let db = localDb();
     const uid = session.user.id;
     const localUserId = (global.CoachStore.getSession() || {}).userId;
 
@@ -358,7 +367,15 @@
           created_at: t.created_at || new Date().toISOString()
         }, {onConflict: 'id'}));
       }
-      for(const p of (db.team_players || [])){
+      // Re-read right before players — a delete may have landed while earlier upserts ran.
+      db = localDb();
+      const removedSet = new Set(
+        (Array.isArray(db.removed_player_ids) ? db.removed_player_ids : [])
+          .map(id => String(id || ''))
+          .filter(Boolean)
+      );
+      const localPlayers = (db.team_players || []).filter(p => p && !removedSet.has(String(p.id)));
+      for(const p of localPlayers){
         await upsertChecked(sb.from('team_players').upsert({
           id: p.id,
           team_id: p.team_id,
@@ -377,11 +394,6 @@
       // Protect linked players only when they were NOT intentionally removed —
       // otherwise coach cannot delete a child who already has a parent claim.
       let protectedPlayerIds = [];
-      const removedSet = new Set(
-        (Array.isArray(db.removed_player_ids) ? db.removed_player_ids : [])
-          .map(id => String(id || ''))
-          .filter(Boolean)
-      );
       try{
         const teamIds = [...new Set((db.teams || []).map(t => t && t.id).filter(Boolean))];
         if(teamIds.length){
@@ -404,28 +416,41 @@
       }catch(e){
         console.warn('protect linked players', e);
       }
-      await reconcileDeletedRows(sb, 'team_players', db.teams || [], db.team_players || [], {
+      const playerReconcile = await reconcileDeletedRows(sb, 'team_players', db.teams || [], localPlayers, {
         protectIds: protectedPlayerIds
       });
-      // Prune tombstones for players that are gone from cloud (delete stuck).
+      // Only drop tombstones that were confirmed deleted from cloud.
       if(removedSet.size){
+        const confirmed = new Set((playerReconcile && playerReconcile.dropped) || []);
+        // Also drop tombstones already absent remotely (previous sync finished the delete).
         try{
           const teamIds = [...new Set((db.teams || []).map(t => t && t.id).filter(Boolean))];
-          let stillRemote = new Set();
           if(teamIds.length){
             const remotePlayers = await sb.from('team_players').select('id').in('team_id', teamIds);
             if(!remotePlayers.error){
-              stillRemote = new Set((remotePlayers.data || []).map(r => r && String(r.id)).filter(Boolean));
+              const stillRemote = new Set((remotePlayers.data || []).map(r => r && String(r.id)).filter(Boolean));
+              [...removedSet].forEach(id => {
+                if(!stillRemote.has(id)) confirmed.add(id);
+              });
             }
+          }else{
+            // No teams left — treat all tombstones as done only if remote select would be empty.
+            [...removedSet].forEach(id => confirmed.add(id));
           }
-          const nextRemoved = [...removedSet].filter(id => stillRemote.has(id));
-          if(nextRemoved.length !== (db.removed_player_ids || []).length){
-            const raw = localDb();
-            raw.removed_player_ids = nextRemoved;
-            try{ localStorage.setItem('ffk_coach_v1', JSON.stringify(raw)); }catch(e){}
-            db.removed_player_ids = nextRemoved;
+        }catch(e){
+          // Keep tombstones on verify failure — never wipe them blindly.
+        }
+        const nextRemoved = [...removedSet].filter(id => !confirmed.has(id));
+        if(nextRemoved.length !== (db.removed_player_ids || []).length){
+          const raw = localDb();
+          raw.removed_player_ids = nextRemoved;
+          // Preserve concurrent local roster edits (delete mid-push).
+          if(Array.isArray(raw.team_players)){
+            raw.team_players = raw.team_players.filter(p => p && !removedSet.has(String(p.id)));
           }
-        }catch(e){}
+          try{ localStorage.setItem('ffk_coach_v1', JSON.stringify(raw)); }catch(e){}
+          db.removed_player_ids = nextRemoved;
+        }
       }
       for(const m of (db.team_matches || [])){
         await upsertChecked(sb.from('team_matches').upsert({
@@ -618,11 +643,13 @@
     const pendingLocalMems = (raw.memberships || []).filter(m =>
       m && !remoteMemIds.has(String(m.id)) && !isUuid(m.user_id)
     );
-    const removedSet = new Set(
-      (Array.isArray(raw.removed_player_ids) ? raw.removed_player_ids : [])
-        .map(id => String(id || ''))
-        .filter(Boolean)
-    );
+    // Merge live local deletions that landed while remote fetches were in flight.
+    // Without this, pull overwrites a mid-sync removePlayer and resurrects the roster.
+    const live = localDb();
+    const removedSet = new Set([
+      ...((Array.isArray(raw.removed_player_ids) ? raw.removed_player_ids : [])),
+      ...((Array.isArray(live.removed_player_ids) ? live.removed_player_ids : []))
+    ].map(id => String(id || '')).filter(Boolean));
     const pulledPlayers = (players || [])
       .filter(p => p && !removedSet.has(String(p.id)))
       .map(p => ({
@@ -633,7 +660,7 @@
     const keepPlayerIds = new Set(pulledPlayers.map(p => String(p.id)));
     const db = {
       version: 5,
-      accounts: raw.accounts || {},
+      accounts: (live.accounts && Object.keys(live.accounts).length ? live.accounts : raw.accounts) || {},
       academies: academies || [],
       teams: teams || [],
       team_players: pulledPlayers,
@@ -673,15 +700,15 @@
           actionRating: r.action_rating || r.actionRating || 6,
           effortRating: r.effort_rating || r.effortRating || 6
         })),
-      match_invites: raw.match_invites || [],
+      match_invites: Array.isArray(live.match_invites) ? live.match_invites : (raw.match_invites || []),
       parent_invites: (parentInvites || []).filter(i =>
-        !i || !i.team_player_id || keepPlayerIds.has(String(i.team_player_id)) || !removedSet.has(String(i.team_player_id))
+        !i || !i.team_player_id || keepPlayerIds.has(String(i.team_player_id))
       ),
-      leave_requests: Array.isArray(raw.leave_requests) ? raw.leave_requests : [],
-      device_tokens: raw.device_tokens || [],
-      removed_player_ids: Array.isArray(raw.removed_player_ids) ? raw.removed_player_ids : [],
-      activeTeamId: raw.activeTeamId || (teams && teams[0] && teams[0].id) || '',
-      activeMatchId: raw.activeMatchId || ''
+      leave_requests: Array.isArray(live.leave_requests) ? live.leave_requests : (Array.isArray(raw.leave_requests) ? raw.leave_requests : []),
+      device_tokens: Array.isArray(live.device_tokens) ? live.device_tokens : (raw.device_tokens || []),
+      removed_player_ids: [...removedSet],
+      activeTeamId: live.activeTeamId || raw.activeTeamId || (teams && teams[0] && teams[0].id) || '',
+      activeMatchId: live.activeMatchId || raw.activeMatchId || ''
     };
     // Keep local account profile fields
     const email = (session.user.email || '').toLowerCase();
@@ -705,22 +732,35 @@
 
   function scheduleSync(){
     if(!ready()) return;
+    if(syncing){
+      syncAgain = true;
+      return;
+    }
     clearTimeout(syncTimer);
     syncTimer = setTimeout(() => { syncNow().catch(() => {}); }, 1200);
   }
 
   async function syncNow(){
-    if(!ready() || syncing) return {ok: false};
+    if(!ready()) return {ok: false};
+    if(syncing){
+      syncAgain = true;
+      return {ok: false, deferred: true};
+    }
     syncing = true;
+    let last = {ok: false};
     try{
-      const pushed = await pushLocalSnapshot();
-      if(!pushed || !pushed.ok){
-        throw pushed && pushed.error || new Error(pushed && pushed.reason || 'push');
-      }
-      await pullRemoteIntoLocal();
-      if(global.ParentCloud && typeof global.ParentCloud.pullCoachData === 'function'){
-        await global.ParentCloud.pullCoachData();
-      }
+      do{
+        syncAgain = false;
+        const pushed = await pushLocalSnapshot();
+        if(!pushed || !pushed.ok){
+          throw pushed && pushed.error || new Error(pushed && pushed.reason || 'push');
+        }
+        await pullRemoteIntoLocal();
+        if(global.ParentCloud && typeof global.ParentCloud.pullCoachData === 'function'){
+          await global.ParentCloud.pullCoachData();
+        }
+        last = {ok: true};
+      }while(syncAgain);
       if(typeof renderCoachUi === 'function'){
         const ae = document.activeElement;
         const picking = ae && (
@@ -729,12 +769,16 @@
         );
         if(!picking) renderCoachUi();
       }
-      return {ok: true};
+      return last;
     }catch(e){
       console.warn('Coach cloud sync', e);
       return {ok: false, error: e};
     }finally{
       syncing = false;
+      if(syncAgain){
+        syncAgain = false;
+        scheduleSync();
+      }
     }
   }
 

@@ -765,9 +765,10 @@
             }
           }catch(e){}
           // Drop bulky data URLs from coach localStorage — they blow the quota.
+          // Silent write: do not schedule cloud sync (that caused roster flicker).
           if(String(tp.photo || '') && typeof store.updatePlayer === 'function'){
             try{
-              store.updatePlayer(session, tp.id, {photo: ''});
+              store.updatePlayer(session, tp.id, {photo: ''}, {sync: false});
               changed = true;
             }catch(e){}
           }

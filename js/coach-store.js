@@ -75,8 +75,9 @@
       return emptyDb();
     }
   }
-  function writeDb(db){
+  function writeDb(db, opts){
     localStorage.setItem(KEY, JSON.stringify(db));
+    if(opts && opts.sync === false) return;
     try{
       if(global.CoachCloud && typeof global.CoachCloud.scheduleSync === 'function'){
         global.CoachCloud.scheduleSync();
@@ -605,7 +606,7 @@
       writeDb(db);
       return player;
     },
-    updatePlayer(session, playerId, fields){
+    updatePlayer(session, playerId, fields, opts){
       const db = readDb();
       const player = db.team_players.find(p => p.id === playerId);
       if(!player || !this.getTeam(session, player.team_id)) throw new Error('forbidden');
@@ -636,7 +637,7 @@
       if(Object.prototype.hasOwnProperty.call(fields, 'photo')){
         player.photo = fields.photo ? String(fields.photo) : '';
       }
-      writeDb(db);
+      writeDb(db, opts);
       return player;
     },
     removePlayer(session, playerId){
