@@ -493,7 +493,14 @@
             if(global.ParentCloud.pollInboxChats){
               global.ParentCloud.pollInboxChats({push: true}).catch(() => {});
             }
-            toast(tt('chatCloudPushFail', 'Message saved here, but the phone did not get a push.'));
+            const reason = String(res && res.reason || '');
+            const map = {
+              coach_no_session: tt('coachCloudSessionGone', 'Coach cloud session expired. Sign in again in Coach settings.'),
+              no_session: tt('coachCloudSessionGone', 'Coach cloud session expired. Sign in again in Coach settings.'),
+              no_parent: tt('coachBroadcastNoParentLink', 'No linked parent found for these players.'),
+              upsert_failed: tt('coachBroadcastUpsertFail', 'Could not save the message to the cloud (permissions).')
+            };
+            toast(map[reason] || tt('chatCloudPushFail', 'Message saved here, but the phone did not get a push.'));
           }).catch(err => {
             console.warn('Chat cloud push', err);
             if(global.ParentCloud.pollInboxChats){

@@ -747,8 +747,7 @@
   async function notifyChatPush(messageId, extra){
     const id = String(messageId || '').trim();
     if(!id || !ready()) return {ok: false, reason: 'no_cloud'};
-    const coachMode = typeof isCoachPlan === 'function' && isCoachPlan();
-    const sb = coachMode ? coachClient() : parentClient();
+    const sb = await senderClient('coach') || await senderClient('parent');
     if(!sb) return {ok: false, reason: 'no_client'};
     const body = {message_id: id};
     if(extra && extra.broadcast_id) body.broadcast_id = String(extra.broadcast_id);
@@ -764,8 +763,7 @@
   async function notifyChatBroadcast(broadcastId){
     const bc = String(broadcastId || '').trim();
     if(!bc || !ready()) return {ok: false, reason: 'no_cloud'};
-    const coachMode = typeof isCoachPlan === 'function' && isCoachPlan();
-    const sb = coachMode ? coachClient() : parentClient();
+    const sb = await senderClient('coach') || await senderClient('parent');
     if(!sb) return {ok: false, reason: 'no_client'};
     try{
       const {data, error} = await sb.functions.invoke('send-chat-push', {
@@ -777,6 +775,42 @@
       console.warn('Broadcast push', error);
       return {ok: false, error};
     }
+  }
+  /** Prefer the auth client that actually has a live Supabase session. */
+  async function senderClient(preferredRole){
+    const order = preferredRole === 'parent'
+      ? [parentClient, coachClient]
+      : [coachClient, parentClient];
+    for(const get of order){
+      const sb = typeof get === 'function' ? get() : null;
+      if(!sb) continue;
+      try{
+        const {data} = await sb.auth.getSession();
+        if(data && data.session) return sb;
+      }catch(e){}
+    }
+    return preferredRole === 'parent' ? parentClient() : coachClient();
+  }
+  async function requireSenderSession(senderRole){
+    const preferred = senderRole === 'coach' ? 'coach' : 'parent';
+    const sb = preferred === 'coach' ? coachClient() : parentClient();
+    if(!sb) return {sb: null, session: null, reason: 'no_client'};
+    let session = null;
+    try{
+      const {data} = await sb.auth.getSession();
+      session = data && data.session;
+    }catch(e){}
+    if(session) return {sb, session, reason: ''};
+    // Parent may bootstrap anonymously; coach must already be signed into cloud.
+    if(preferred === 'parent'){
+      try{
+        session = await ensureSession(false);
+        return {sb: parentClient(), session, reason: session ? '' : 'no_session'};
+      }catch(e){
+        return {sb, session: null, reason: 'no_session'};
+      }
+    }
+    return {sb, session: null, reason: 'coach_no_session'};
   }
   async function resolveParentUserIds(sb, teamPlayerId){
     const pid = String(teamPlayerId || '');
@@ -851,19 +885,12 @@
   /** Upsert one outgoing chat row then wake the other device via FCM. */
   async function pushChatMessage(message){
     if(!ready() || !message || !message.id) return {ok: false, reason: 'bad'};
-    const coachMode = typeof isCoachPlan === 'function' && isCoachPlan();
     const senderRole = message.sender_role === 'coach' ? 'coach' : 'parent';
-    const sb = coachMode ? coachClient() : parentClient();
+    const auth = await requireSenderSession(senderRole);
+    const sb = auth.sb;
+    const session = auth.session;
     if(!sb) return {ok: false, reason: 'no_client'};
-    let session = null;
-    try{
-      const {data} = await sb.auth.getSession();
-      session = data && data.session;
-    }catch(e){}
-    if(!session){
-      try{ session = await ensureSession(false); }catch(e){}
-    }
-    if(!session) return {ok: false, reason: 'no_session'};
+    if(!session) return {ok: false, reason: auth.reason || 'no_session'};
     let parentUserIds = [];
     if(senderRole === 'parent'){
       parentUserIds = [session.user.id];
@@ -895,36 +922,32 @@
       const {error} = await sb.from('player_chat_messages').upsert(row, {onConflict: 'id'});
       if(error){
         console.warn('pushChatMessage upsert', error);
-        results.push({ok: false, error});
+        results.push({ok: false, error, reason: error.message || 'upsert_failed'});
         continue;
       }
-      // Always wake FCM. Team fan-out is de-duplicated server-side per parent+broadcast.
       const pushed = await notifyChatPush(row.id);
       results.push({ok: true, push: pushed, id: row.id});
     }
     const ok = results.some(r => r.ok);
-    return {ok, results, reason: ok ? '' : 'upsert_failed'};
+    return {
+      ok,
+      results,
+      reason: ok ? '' : (results[0] && results[0].reason) || 'upsert_failed'
+    };
   }
   /** Upsert a full team broadcast once, then one FCM per unique parent. */
   async function pushChatBroadcast(messages){
     const list = (Array.isArray(messages) ? messages : []).filter(m => m && m.id);
     if(!list.length) return {ok: false, reason: 'empty'};
-    const coachMode = typeof isCoachPlan === 'function' && isCoachPlan();
-    const sb = coachMode ? coachClient() : parentClient();
+    const auth = await requireSenderSession('coach');
+    const sb = auth.sb;
+    const session = auth.session;
     if(!sb || !ready()) return {ok: false, reason: 'no_client'};
-    let session = null;
-    try{
-      const {data} = await sb.auth.getSession();
-      session = data && data.session;
-    }catch(e){}
-    if(!session){
-      try{ session = await ensureSession(false); }catch(e){}
-    }
-    if(!session) return {ok: false, reason: 'no_session'};
+    if(!session) return {ok: false, reason: auth.reason || 'coach_no_session'};
     const broadcastId = String(list[0].broadcast_id || '').trim() || list[0].id;
     await refreshParentLinksForPlayers(sb, list.map(m => m.team_player_id));
     const rows = [];
-    const notifyParents = new Map(); // parentUserId → representative message id
+    const notifyParents = new Map();
     for(const message of list){
       const parentUserIds = message.parent_user_id
         ? [String(message.parent_user_id)]
@@ -950,17 +973,14 @@
       }
     }
     if(!rows.length) return {ok: false, reason: 'no_parent'};
-    // Chunk upserts to avoid payload limits on large squads.
     for(let i = 0; i < rows.length; i += 40){
       const chunk = rows.slice(i, i + 40);
       const {error} = await sb.from('player_chat_messages').upsert(chunk, {onConflict: 'id'});
       if(error){
         console.warn('pushChatBroadcast upsert', error);
-        return {ok: false, error, reason: 'upsert_failed'};
+        return {ok: false, error, reason: error.message || 'upsert_failed'};
       }
     }
-    // One edge invoke for the whole broadcast — server wakes each parent once.
-    // Also poke one representative message_id in case broadcast_id path fails.
     let pushed = await notifyChatBroadcast(broadcastId);
     if(!pushed || pushed.ok === false){
       const firstId = notifyParents.values().next().value;
