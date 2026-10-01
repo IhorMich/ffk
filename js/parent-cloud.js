@@ -74,6 +74,51 @@
   }
   let chatPollTimer = 0;
   let chatPolling = false;
+  let bgPollWired = false;
+  function nativeBgPollStart(intervalMs){
+    try{
+      if(global.FfkNotify && typeof global.FfkNotify.startBackgroundChatPoll === 'function'){
+        global.FfkNotify.startBackgroundChatPoll(Number(intervalMs) || 12000);
+        return true;
+      }
+    }catch(e){}
+    return false;
+  }
+  function nativeBgPollStop(){
+    try{
+      if(global.FfkNotify && typeof global.FfkNotify.stopBackgroundChatPoll === 'function'){
+        global.FfkNotify.stopBackgroundChatPoll();
+      }
+    }catch(e){}
+  }
+  function wireBackgroundChatPoll(){
+    if(bgPollWired) return;
+    bgPollWired = true;
+    const onHidden = () => {
+      // Android freezes WebView timers when minimized — wake via AlarmManager/Handler.
+      nativeBgPollStart(12000);
+    };
+    const onVisible = () => {
+      nativeBgPollStop();
+      try{
+        if(ready()) pollInboxChats().catch(() => {});
+      }catch(e){}
+    };
+    document.addEventListener('visibilitychange', () => {
+      if(document.visibilityState === 'hidden') onHidden();
+      else onVisible();
+    });
+    try{
+      const App = global.Capacitor && global.Capacitor.Plugins && global.Capacitor.Plugins.App;
+      if(App && typeof App.addListener === 'function'){
+        App.addListener('appStateChange', (state) => {
+          if(state && state.isActive) onVisible();
+          else onHidden();
+        });
+      }
+    }catch(e){}
+    if(document.visibilityState === 'hidden') onHidden();
+  }
   function startChatPoll(){
     if(chatPollTimer) return;
     const tick = () => {
@@ -87,6 +132,7 @@
       if(document.visibilityState === 'visible') tick();
     });
     setTimeout(tick, 800);
+    try{ wireBackgroundChatPoll(); }catch(e){}
   }
   async function pollInboxChats(){
     if(!ready() || chatPolling) return {ok: false, reason: 'busy'};

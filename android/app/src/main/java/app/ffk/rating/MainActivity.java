@@ -35,9 +35,26 @@ public class MainActivity extends BridgeActivity {
   private static int notifySeq = 1000;
   private volatile boolean keepSplash = true;
   private String pendingChatPlayerId = null;
+  private static volatile MainActivity aliveInstance;
+  private final Handler chatPollHandler = new Handler(Looper.getMainLooper());
+  private volatile boolean chatPollHandlerActive = false;
+  private long chatPollHandlerIntervalMs = 12000L;
+  private final Runnable chatPollHandlerTick = new Runnable() {
+    @Override
+    public void run() {
+      if (!chatPollHandlerActive) return;
+      runBackgroundChatPoll();
+      chatPollHandler.postDelayed(this, chatPollHandlerIntervalMs);
+    }
+  };
+
+  static MainActivity getAlive() {
+    return aliveInstance;
+  }
 
   @Override
   public void onCreate(Bundle savedInstanceState) {
+    aliveInstance = this;
     SplashScreen splash = SplashScreen.installSplashScreen(this);
     splash.setKeepOnScreenCondition(() -> keepSplash);
     splash.setOnExitAnimationListener(view -> view.remove());
@@ -85,7 +102,57 @@ public class MainActivity extends BridgeActivity {
   @Override
   public void onResume() {
     super.onResume();
+    aliveInstance = this;
     flushPendingChatIntent();
+  }
+
+  @Override
+  public void onDestroy() {
+    if (aliveInstance == this) aliveInstance = null;
+    stopBackgroundChatPollInternal();
+    super.onDestroy();
+  }
+
+  /** Called from ChatPollReceiver / Handler while app is backgrounded. */
+  void runBackgroundChatPoll() {
+    Bridge bridge = getBridge();
+    WebView webView = bridge != null ? bridge.getWebView() : null;
+    if (webView == null) return;
+    try {
+      // Ensure JS can run even if Chromium paused timers while hidden.
+      webView.resumeTimers();
+    } catch (Exception e) {}
+    final String js =
+      "(function(){"
+        + "try{"
+        + "  if(window.ParentCloud&&typeof window.ParentCloud.pollInboxChats==='function'){"
+        + "    window.ParentCloud.pollInboxChats();"
+        + "    return '1';"
+        + "  }"
+        + "  return '0';"
+        + "}catch(e){return '0';}"
+        + "})()";
+    webView.post(() -> {
+      try {
+        webView.evaluateJavascript(js, null);
+      } catch (Exception e) {}
+    });
+  }
+
+  void startBackgroundChatPollInternal(long intervalMs) {
+    long interval = intervalMs > 0 ? intervalMs : 12000L;
+    if (interval < 8000L) interval = 8000L;
+    chatPollHandlerIntervalMs = interval;
+    chatPollHandlerActive = true;
+    chatPollHandler.removeCallbacks(chatPollHandlerTick);
+    chatPollHandler.postDelayed(chatPollHandlerTick, Math.min(interval, 2000L));
+    ChatPollReceiver.start(this, interval);
+  }
+
+  void stopBackgroundChatPollInternal() {
+    chatPollHandlerActive = false;
+    chatPollHandler.removeCallbacks(chatPollHandlerTick);
+    ChatPollReceiver.stop(this);
   }
 
   private void captureChatIntent(Intent intent) {
@@ -241,6 +308,17 @@ public class MainActivity extends BridgeActivity {
       if (am != null) am.cancel(pi);
       getSharedPreferences("ffk_train_alarms", MODE_PRIVATE).edit()
         .remove(id).remove(id + "_title").remove(id + "_body").apply();
+    }
+
+    /** Native wake loop while app is minimized — WebView setInterval is frozen. */
+    @JavascriptInterface
+    public void startBackgroundChatPoll(double intervalMs) {
+      runOnUiThread(() -> startBackgroundChatPollInternal((long) intervalMs));
+    }
+
+    @JavascriptInterface
+    public void stopBackgroundChatPoll() {
+      runOnUiThread(() -> stopBackgroundChatPollInternal());
     }
   }
 
