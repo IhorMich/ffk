@@ -59,8 +59,13 @@
       ? `${who} (${fresh.length})`
       : who;
     try{
-      if(global.CoachPush && typeof global.CoachPush.notifyLocal === 'function'){
-        global.CoachPush.notifyLocal(title, body || 'Новое сообщение');
+      if(global.CoachPush){
+        if(typeof global.CoachPush.notifyHeadsUp === 'function'){
+          // force=true: still alert if permission was granted even when settings race
+          global.CoachPush.notifyHeadsUp(title, body || 'Новое сообщение', !!global.CoachPush.isEnabled());
+        }else if(typeof global.CoachPush.notifyLocal === 'function'){
+          global.CoachPush.notifyLocal(title, body || 'Новое сообщение');
+        }
       }
     }catch(e){}
   }
@@ -74,12 +79,12 @@
         scheduleSync();
       }catch(e){}
     };
-    chatPollTimer = setInterval(tick, 20000);
+    chatPollTimer = setInterval(tick, 5000);
     document.addEventListener('visibilitychange', () => {
       if(document.visibilityState === 'visible') tick();
     });
     // First tick soon after boot so an already-open phone picks up waiting chats.
-    setTimeout(tick, 2500);
+    setTimeout(tick, 1500);
   }
   function coachClient(){
     return ready() && global.CoachCloud.getClient ? global.CoachCloud.getClient() : null;
