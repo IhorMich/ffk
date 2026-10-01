@@ -58,9 +58,17 @@
       if(bc){
         if(seenBroadcast.has(bc)) return;
         seenBroadcast.add(bc);
+        // Persist cooldown so polls 2s apart don't re-alert the same broadcast.
+        try{
+          const key = `ffk_bc_alert_${bc}`;
+          const prev = Number(sessionStorage.getItem(key) || 0);
+          if(prev && Date.now() - prev < 120000) return;
+          sessionStorage.setItem(key, String(Date.now()));
+        }catch(e){}
       }
       collapsed.push(m);
     });
+    if(!collapsed.length) return;
     const newest = collapsed[0];
     const isTeam = !!(newest && newest.broadcast_id);
     const who = isTeam
@@ -80,14 +88,16 @@
           body || 'Новое сообщение',
           pushOn,
           newest.team_player_id || '',
-          isTeam ? 'team' : 'personal'
+          isTeam ? 'team' : 'personal',
+          newest.broadcast_id || ''
         );
       }else if(global.CoachPush && typeof global.CoachPush.notifyLocal === 'function'){
         global.CoachPush.notifyLocal(
           title,
           body || 'Новое сообщение',
           newest.team_player_id || '',
-          isTeam ? 'team' : 'personal'
+          isTeam ? 'team' : 'personal',
+          newest.broadcast_id || ''
         );
       }
     }catch(e){}
@@ -734,20 +744,37 @@
       if(error) throw error;
     }
   }
-  async function notifyChatPush(messageId){
+  async function notifyChatPush(messageId, extra){
     const id = String(messageId || '').trim();
     if(!id || !ready()) return {ok: false, reason: 'no_cloud'};
     const coachMode = typeof isCoachPlan === 'function' && isCoachPlan();
     const sb = coachMode ? coachClient() : parentClient();
     if(!sb) return {ok: false, reason: 'no_client'};
+    const body = {message_id: id};
+    if(extra && extra.broadcast_id) body.broadcast_id = String(extra.broadcast_id);
     try{
-      const {data, error} = await sb.functions.invoke('send-chat-push', {
-        body: {message_id: id}
-      });
+      const {data, error} = await sb.functions.invoke('send-chat-push', {body});
       if(error) throw error;
       return data || {ok: true};
     }catch(error){
       console.warn('Chat push', error);
+      return {ok: false, error};
+    }
+  }
+  async function notifyChatBroadcast(broadcastId){
+    const bc = String(broadcastId || '').trim();
+    if(!bc || !ready()) return {ok: false, reason: 'no_cloud'};
+    const coachMode = typeof isCoachPlan === 'function' && isCoachPlan();
+    const sb = coachMode ? coachClient() : parentClient();
+    if(!sb) return {ok: false, reason: 'no_client'};
+    try{
+      const {data, error} = await sb.functions.invoke('send-chat-push', {
+        body: {broadcast_id: bc}
+      });
+      if(error) throw error;
+      return data || {ok: true};
+    }catch(error){
+      console.warn('Broadcast push', error);
       return {ok: false, error};
     }
   }
@@ -893,12 +920,9 @@
       const {error} = await sb.from('player_chat_messages').upsert(chunk, {onConflict: 'id'});
       if(error) return {ok: false, error};
     }
-    // One push per parent (DB trigger may also fire — FCM collapse_key merges them).
-    const pushResults = [];
-    for(const messageId of notifyParents.values()){
-      pushResults.push(await notifyChatPush(messageId));
-    }
-    return {ok: true, count: rows.length, parents: notifyParents.size, pushResults};
+    // One edge invoke for the whole broadcast — server wakes each parent once.
+    const pushed = await notifyChatBroadcast(broadcastId);
+    return {ok: true, count: rows.length, parents: notifyParents.size, push: pushed};
   }
   function noticeTitleBody(noticeType, payload){
     const opponent = String(payload && payload.opponent || '').trim();
@@ -1177,6 +1201,7 @@
         // One notify per team broadcast — not one per fan-out row.
         const seenBroadcast = new Set();
         const freshIds = [];
+        const freshBroadcasts = [];
         rows.forEach(r => {
           const t = Date.parse(r.created_at || '');
           if(!Number.isFinite(t) || Date.now() - t >= 90 * 1000) return;
@@ -1184,8 +1209,13 @@
           if(bc){
             if(seenBroadcast.has(bc)) return;
             seenBroadcast.add(bc);
+            freshBroadcasts.push(bc);
+            return;
           }
           if(r.id) freshIds.push(r.id);
+        });
+        freshBroadcasts.slice(0, 4).forEach(bc => {
+          notifyChatBroadcast(bc).catch(() => {});
         });
         freshIds.slice(0, 8).forEach(id => {
           notifyChatPush(id).catch(() => {});
@@ -1685,6 +1715,7 @@
     startChatPoll,
     pollInboxChats,
     notifyChatPush,
+    notifyChatBroadcast,
     pushChatMessage,
     pushChatBroadcast,
     pushParentNotice,

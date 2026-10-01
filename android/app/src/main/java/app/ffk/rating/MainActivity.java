@@ -261,10 +261,14 @@ public class MainActivity extends BridgeActivity {
   }
 
   private void postAlert(String title, String body, String playerId) {
-    postAlert(title, body, playerId, "");
+    postAlert(title, body, playerId, "", "");
   }
 
   private void postAlert(String title, String body, String playerId, String chatKind) {
+    postAlert(title, body, playerId, chatKind, "");
+  }
+
+  private void postAlert(String title, String body, String playerId, String chatKind, String broadcastId) {
     ensureAlertChannel();
     Intent open = new Intent(this, MainActivity.class);
     open.setAction(ACTION_OPEN_CHAT);
@@ -275,9 +279,17 @@ public class MainActivity extends BridgeActivity {
     if (chatKind != null && !chatKind.isEmpty()) {
       open.putExtra("chat_kind", chatKind);
     }
+    if (broadcastId != null && !broadcastId.isEmpty()) {
+      open.putExtra("broadcast_id", broadcastId);
+    }
     int flags = PendingIntent.FLAG_UPDATE_CURRENT;
     if (Build.VERSION.SDK_INT >= 23) flags |= PendingIntent.FLAG_IMMUTABLE;
-    int req = (playerId != null && !playerId.isEmpty()) ? Math.abs(playerId.hashCode()) : 0;
+    int req = 0;
+    if (broadcastId != null && !broadcastId.isEmpty()) {
+      req = Math.abs(broadcastId.hashCode());
+    } else if (playerId != null && !playerId.isEmpty()) {
+      req = Math.abs(playerId.hashCode());
+    }
     PendingIntent pi = PendingIntent.getActivity(this, req, open, flags);
     Uri sound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
     NotificationCompat.Builder builder = new NotificationCompat.Builder(this, ALERT_CHANNEL)
@@ -291,8 +303,25 @@ public class MainActivity extends BridgeActivity {
       .setContentIntent(pi)
       .setSound(sound)
       .setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
+    // Stable id for team broadcasts so fan-out replaces instead of stacking.
+    int notifyId;
+    boolean onlyAlertOnce = false;
+    if (broadcastId != null && !broadcastId.isEmpty()) {
+      notifyId = 0x40000000 | (Math.abs(broadcastId.hashCode()) & 0x0fffffff);
+      onlyAlertOnce = true;
+    } else if (playerId != null && !playerId.isEmpty() && "team".equals(chatKind)) {
+      notifyId = 0x41000000 | (Math.abs(playerId.hashCode()) & 0x0fffffff);
+      onlyAlertOnce = true;
+    } else if (playerId != null && !playerId.isEmpty()) {
+      notifyId = 0x42000000 | (Math.abs(playerId.hashCode()) & 0x0fffffff);
+    } else {
+      notifyId = ++notifySeq;
+    }
+    if (onlyAlertOnce) {
+      builder.setOnlyAlertOnce(true);
+    }
     try {
-      NotificationManagerCompat.from(this).notify(++notifySeq, builder.build());
+      NotificationManagerCompat.from(this).notify(notifyId, builder.build());
     } catch (SecurityException e) {
       // POST_NOTIFICATIONS not granted yet
     }
@@ -322,7 +351,19 @@ public class MainActivity extends BridgeActivity {
         title,
         body,
         playerId == null ? "" : playerId,
-        chatKind == null ? "" : chatKind
+        chatKind == null ? "" : chatKind,
+        ""
+      ));
+    }
+
+    @JavascriptInterface
+    public void showChatBroadcast(String title, String body, String playerId, String chatKind, String broadcastId) {
+      runOnUiThread(() -> postAlert(
+        title,
+        body,
+        playerId == null ? "" : playerId,
+        chatKind == null ? "" : chatKind,
+        broadcastId == null ? "" : broadcastId
       ));
     }
 

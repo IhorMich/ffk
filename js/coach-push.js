@@ -48,8 +48,18 @@
     }catch(e){}
     return false;
   }
-  function nativeNotify(title, body, playerId, chatKind){
+  function nativeNotify(title, body, playerId, chatKind, broadcastId){
     try{
+      if(global.FfkNotify && typeof global.FfkNotify.showChatBroadcast === 'function' && broadcastId){
+        global.FfkNotify.showChatBroadcast(
+          String(title || 'Matchcard'),
+          String(body || ''),
+          String(playerId || ''),
+          String(chatKind || 'team'),
+          String(broadcastId || '')
+        );
+        return true;
+      }
       if(global.FfkNotify && typeof global.FfkNotify.showChatKind === 'function'){
         global.FfkNotify.showChatKind(
           String(title || 'Matchcard'),
@@ -110,7 +120,24 @@
         const body = (n && n.body) || (n && n.notification && n.notification.body) || '';
         const playerId = (n && n.data && (n.data.team_player_id || n.data.teamPlayerId)) || '';
         const chatKind = (n && n.data && (n.data.chat_kind || n.data.chatKind)) || '';
-        notifyHeadsUp(title, body, true, playerId, chatKind);
+        const broadcastId = (n && n.data && (n.data.broadcast_id || n.data.broadcastId)) || '';
+        // Team broadcasts: at most one heads-up per broadcast_id (FCM can still fan out).
+        if(broadcastId){
+          try{
+            const key = `ffk_bc_fcm_${broadcastId}`;
+            const prev = Number(sessionStorage.getItem(key) || 0);
+            if(prev && Date.now() - prev < 120000){
+              try{
+                if(global.ParentCloud && typeof global.ParentCloud.pollInboxChats === 'function'){
+                  global.ParentCloud.pollInboxChats({push: false}).catch(() => {});
+                }
+              }catch(e){}
+              return;
+            }
+            sessionStorage.setItem(key, String(Date.now()));
+          }catch(e){}
+        }
+        notifyHeadsUp(title, body, true, playerId, chatKind, broadcastId);
         try{
           if(global.ParentCloud && typeof global.ParentCloud.pollInboxChats === 'function'){
             global.ParentCloud.pollInboxChats({push: false}).catch(() => {});
@@ -214,19 +241,22 @@
   }
 
   /** Heads-up system notification — uses the phone's default notification sound. */
-  function notifyHeadsUp(title, body, force, playerId, chatKind){
+  function notifyHeadsUp(title, body, force, playerId, chatKind, broadcastId){
     const s = read();
     if(!force && !s.enabled) return;
     let shown = false;
-    if(nativeNotify(title, body, playerId, chatKind)) shown = true;
+    if(nativeNotify(title, body, playerId, chatKind, broadcastId)) shown = true;
     else {
       try{
         if(typeof Notification !== 'undefined' && Notification.permission === 'granted'){
+          const tag = broadcastId
+            ? `ffk-bc-${broadcastId}`
+            : (`ffk-chat-${String(playerId || Date.now())}`);
           new Notification(title || 'Matchcard', {
             body: body || '',
             silent: false,
             requireInteraction: false,
-            tag: 'ffk-chat-' + String(playerId || Date.now())
+            tag
           });
           shown = true;
         }
@@ -235,8 +265,8 @@
     if(!shown) toast(`${title || 'Matchcard'}: ${body || ''}`);
   }
 
-  function notifyLocal(title, body, playerId, chatKind){
-    notifyHeadsUp(title, body, false, playerId, chatKind);
+  function notifyLocal(title, body, playerId, chatKind, broadcastId){
+    notifyHeadsUp(title, body, false, playerId, chatKind, broadcastId);
   }
 
   /** Keep coach-only alerts quiet while the phone is in Player mode. */

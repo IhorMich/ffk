@@ -189,8 +189,9 @@ Deno.serve(async (req: Request) => {
   }
   const messageId = String(bodyJson.message_id || "").trim();
   const noticeId = String(bodyJson.notice_id || "").trim();
-  if (!messageId && !noticeId) {
-    return json(400, { ok: false, error: "message_id_or_notice_id" });
+  const broadcastId = String(bodyJson.broadcast_id || "").trim();
+  if (!messageId && !noticeId && !broadcastId) {
+    return json(400, { ok: false, error: "message_id_or_notice_id_or_broadcast_id" });
   }
 
   const headerSecret = String(
@@ -314,6 +315,85 @@ Deno.serve(async (req: Request) => {
     );
   }
 
+  async function claimBroadcastParent(
+    bc: string,
+    parentUserId: string,
+    msgId: string,
+  ): Promise<boolean> {
+    if (!bc || !parentUserId) return true;
+    const { error } = await admin.from("chat_broadcast_pushes").insert({
+      broadcast_id: bc,
+      parent_user_id: parentUserId,
+      message_id: msgId || bc,
+    });
+    if (!error) return true;
+    // Unique violation → already woken this parent for this broadcast.
+    const code = String((error as { code?: string }).code || "");
+    if (code === "23505") return false;
+    // Table missing / RLS — still deliver rather than drop the alert.
+    return true;
+  }
+
+  // One wake for every unique parent of a team broadcast.
+  if (broadcastId && !messageId) {
+    if (!hookOk && !callerId) {
+      return json(401, { ok: false, error: "auth" });
+    }
+    const { data: rows, error: rowsErr } = await admin
+      .from("player_chat_messages")
+      .select("id,parent_user_id,team_player_id,body,broadcast_id,sender_user_id")
+      .eq("broadcast_id", broadcastId)
+      .limit(200);
+    if (rowsErr) return json(500, { ok: false, error: rowsErr.message });
+    const list = rows || [];
+    if (!list.length) return json(404, { ok: false, error: "not_found" });
+    if (!hookOk) {
+      const senderOk = list.some((r) => String(r.sender_user_id) === callerId);
+      if (!senderOk) return json(403, { ok: false, error: "forbidden" });
+    }
+    const bodyText =
+      String(list[0].body || "Новое сообщение").trim().slice(0, 180) ||
+      "Новое сообщение";
+    const recipientIds = new Set<string>();
+    let teamPlayerId = "";
+    let repMessageId = "";
+    for (const r of list) {
+      const pid = String(r.parent_user_id || "");
+      if (!pid) continue;
+      const claimed = await claimBroadcastParent(
+        broadcastId,
+        pid,
+        String(r.id || ""),
+      );
+      if (!claimed) continue;
+      recipientIds.add(pid);
+      if (!teamPlayerId) teamPlayerId = String(r.team_player_id || "");
+      if (!repMessageId) repMessageId = String(r.id || "");
+    }
+    recipientIds.delete(String(list[0].sender_user_id || ""));
+    if (callerId) recipientIds.delete(callerId);
+    if (!recipientIds.size) {
+      return json(200, {
+        ok: true,
+        sent: 0,
+        skipped: "deduped_or_empty",
+        broadcast_id: broadcastId,
+      });
+    }
+    return await deliver(
+      recipientIds,
+      "Главный тренер",
+      bodyText,
+      {
+        type: "chat",
+        chat_kind: "team",
+        broadcast_id: broadcastId,
+        team_player_id: teamPlayerId,
+        message_id: repMessageId || broadcastId,
+      },
+    );
+  }
+
   const { data: msg, error: msgErr } = await admin
     .from("player_chat_messages")
     .select(
@@ -373,6 +453,17 @@ Deno.serve(async (req: Request) => {
   if (callerId) recipientIds.delete(callerId);
 
   const isTeam = !!String(chat.broadcast_id || "").trim();
+  if (isTeam && chat.parent_user_id) {
+    const claimed = await claimBroadcastParent(
+      String(chat.broadcast_id),
+      String(chat.parent_user_id),
+      String(chat.id),
+    );
+    if (!claimed) {
+      return json(200, { ok: true, sent: 0, skipped: "broadcast_deduped" });
+    }
+  }
+
   return await deliver(
     recipientIds,
     isTeam ? "Главный тренер" : "Matchcard",
