@@ -836,7 +836,6 @@
     }
     if(!parentUserIds.length) return {ok: false, reason: 'no_parent'};
     const results = [];
-    const isBroadcast = !!String(message.broadcast_id || '').trim();
     for(const parentUserId of parentUserIds){
       const row = {
         id: parentUserIds.length > 1
@@ -858,14 +857,9 @@
         results.push({ok: false, error});
         continue;
       }
-      // Team broadcasts: DB trigger still wakes FCM (collapse_key dedupes). Skip client
-      // re-invoke here so parents don't get a drip of N identical alerts.
-      if(!isBroadcast){
-        const pushed = await notifyChatPush(row.id);
-        results.push({ok: true, push: pushed, id: row.id});
-      }else{
-        results.push({ok: true, push: {skipped: 'broadcast'}, id: row.id});
-      }
+      // Always wake FCM. Team fan-out is de-duplicated server-side per parent+broadcast.
+      const pushed = await notifyChatPush(row.id);
+      results.push({ok: true, push: pushed, id: row.id});
     }
     const ok = results.some(r => r.ok);
     return {ok, results};
