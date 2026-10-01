@@ -124,6 +124,19 @@ async function sendFcm(
   if (!projectId) throw new Error("no_project_id");
   const url =
     `https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`;
+  const collapse =
+    String(data.broadcast_id || data.notice_id || data.message_id || "").trim();
+  const androidNotification: Record<string, unknown> = {
+    channel_id: "matchcard_alerts_v2",
+    notification_priority: "PRIORITY_HIGH",
+    default_sound: true,
+  };
+  if (collapse) androidNotification.tag = collapse.slice(0, 64);
+  const android: Record<string, unknown> = {
+    priority: "HIGH",
+    notification: androidNotification,
+  };
+  if (collapse) android.collapse_key = collapse.slice(0, 64);
   const res = await fetch(url, {
     method: "POST",
     headers: {
@@ -135,14 +148,7 @@ async function sendFcm(
         token: deviceToken,
         notification: { title, body },
         data,
-        android: {
-          priority: "HIGH",
-          notification: {
-            channel_id: "matchcard_alerts_v2",
-            notification_priority: "PRIORITY_HIGH",
-            default_sound: true,
-          },
-        },
+        android,
       },
     }),
   });
@@ -369,7 +375,7 @@ Deno.serve(async (req: Request) => {
   const isTeam = !!String(chat.broadcast_id || "").trim();
   return await deliver(
     recipientIds,
-    isTeam ? "Сообщение команде" : "Matchcard",
+    isTeam ? "Главный тренер" : "Matchcard",
     String(chat.body || "Новое сообщение").trim().slice(0, 180) ||
       "Новое сообщение",
     {

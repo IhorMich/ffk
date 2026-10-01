@@ -428,25 +428,37 @@
       if(!text) throw new Error('bad_message');
       if(!players.length) throw new Error('no_recipients');
       const broadcastId = uid('bc');
+      const coachName = safeLabel(payload.coach_name, 80);
+      const now = new Date().toISOString();
+      const db = readDb();
       const sent = [];
       players.forEach(p => {
         const playerId = String(p && (p.team_player_id || p.id) || '');
         if(!playerId) return;
-        try{
-          sent.push(this.sendChatMessage({
-            team_player_id: playerId,
-            team_id: p.team_id || payload.team_id || '',
-            player_name: p.player_name || p.name || '',
-            team_name: p.team_name || payload.team_name || '',
-            academy_name: p.academy_name || payload.academy_name || '',
-            coach_name: payload.coach_name || '',
-            sender_role: 'coach',
-            text,
-            broadcast_id: broadcastId
-          }));
-        }catch(e){}
+        const row = {
+          id: uid('chat'),
+          type: 'chat_message',
+          team_player_id: playerId,
+          team_id: String(p.team_id || payload.team_id || ''),
+          player_name: safeLabel(p.player_name || p.name, 80),
+          team_name: safeLabel(p.team_name || payload.team_name, 60),
+          academy_name: safeLabel(p.academy_name || payload.academy_name, 80),
+          coach_name: coachName,
+          sender_role: 'coach',
+          text,
+          broadcast_id: broadcastId,
+          read_by_parent: false,
+          read_by_coach: true,
+          status: 'delivered',
+          created_at: now,
+          updated_at: now,
+          read_at: ''
+        };
+        db.messages.push(row);
+        sent.push(row);
       });
       if(!sent.length) throw new Error('no_recipients');
+      writeDb(db);
       return {broadcast_id: broadcastId, count: sent.length, messages: sent};
     },
     importCloudChat(raw){

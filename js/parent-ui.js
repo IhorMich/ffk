@@ -208,7 +208,7 @@
     const teamMode = activeChat.kind === 'team';
     if(title){
       title.textContent = teamMode
-        ? tt('chatTeamTitle', 'Team message')
+        ? tt('chatTeamFromCoach', 'Head coach')
         : (coachMode
           ? labelOf(activeChat.player_name, tt('chatFromPlayer', 'Player / parent'))
           : labelOf(activeChat.coach_name, tt('parentCoachLabel', 'Coach')));
@@ -544,7 +544,7 @@
         const m = entry.last;
         const target = chatTargets().find(x => String(x.team_player_id) === entry.playerId) || {};
         const title = entry.teamBroadcast
-          ? tt('chatTeamTitle', 'Team message')
+          ? tt('chatTeamFromCoach', 'Head coach')
           : (coachMode
             ? labelOf(target.player_name || m.player_name, tt('chatFromPlayer', 'Player / parent'))
             : labelOf(target.coach_name || m.coach_name, tt('parentCoachLabel', 'Coach')));

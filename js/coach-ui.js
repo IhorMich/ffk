@@ -4106,17 +4106,6 @@
       return;
     }
     const academy = store.myAcademy && store.myAcademy(session);
-    const coachName = (() => {
-      const profile = store.getProfile && store.getProfile(session);
-      if(profile){
-        return labelOf([profile.first_name, profile.last_name].filter(Boolean).join(' '))
-          || labelOf(profile.email) || '';
-      }
-      const account = store.getAccount && store.getAccount(session);
-      return account
-        ? (labelOf([account.first_name, account.last_name].filter(Boolean).join(' ')) || labelOf(account.email) || '')
-        : '';
-    })();
     const teamLabel = labelOf(team && team.name);
     const ageLabel = labelOf(team && team.age_group);
     const academyLabel = labelOf(academy && academy.name);
@@ -4136,7 +4125,7 @@
       sheet.dataset.teamId = team.id;
       sheet.dataset.teamName = teamLabel;
       sheet.dataset.academyName = academyLabel;
-      sheet.dataset.coachName = coachName;
+      sheet.dataset.coachName = tt('chatTeamFromCoach', 'Head coach');
     }
     if(typeof presentSheetCard === 'function') presentSheetCard(card, back);
     else{
@@ -4175,17 +4164,21 @@
         coach_name: (sheet && sheet.dataset.coachName) || '',
         players
       });
-      // Upload each thread to cloud so parents see it in dialogs + get FCM when closed.
+      // Upload once as a batch so parents get a single FCM, not one drip per player.
       const msgs = (res && res.messages) || [];
       let cloudQueued = 0;
-      msgs.forEach(row => {
-        try{
-          if(global.ParentCloud && typeof global.ParentCloud.pushChatMessage === 'function'){
-            cloudQueued += 1;
-            global.ParentCloud.pushChatMessage(row).catch(() => {});
-          }
-        }catch(e){}
-      });
+      try{
+        if(msgs.length && global.ParentCloud && typeof global.ParentCloud.pushChatBroadcast === 'function'){
+          cloudQueued = 1;
+          global.ParentCloud.pushChatBroadcast(msgs).catch(() => {});
+        }else if(msgs.length && global.ParentCloud && typeof global.ParentCloud.pushChatMessage === 'function'){
+          cloudQueued = 1;
+          global.ParentCloud.pushChatMessage(msgs[0]).catch(() => {});
+          msgs.slice(1).forEach(row => {
+            try{ global.ParentCloud.pushChatMessage(row).catch(() => {}); }catch(e){}
+          });
+        }
+      }catch(e){}
       toast(tt('coachBroadcastSent', 'Sent to {n} players')
         .replace('{n}', String(res.count || players.length)));
       if(!cloudQueued){

@@ -50,16 +50,27 @@
       const page = document.getElementById('chatPage');
       if(page && !page.hidden) return;
     }catch(e){}
-    const newest = fresh[0];
+    // One heads-up per team broadcast (not one per roster fan-out row).
+    const seenBroadcast = new Set();
+    const collapsed = [];
+    fresh.forEach(m => {
+      const bc = String(m && m.broadcast_id || '').trim();
+      if(bc){
+        if(seenBroadcast.has(bc)) return;
+        seenBroadcast.add(bc);
+      }
+      collapsed.push(m);
+    });
+    const newest = collapsed[0];
     const isTeam = !!(newest && newest.broadcast_id);
     const who = isTeam
-      ? (typeof t === 'function' ? (t('chatTeamTitle') || 'Сообщение команде') : 'Сообщение команде')
+      ? (typeof t === 'function' ? (t('chatTeamFromCoach') || t('chatTeamTitle') || 'Главный тренер') : 'Главный тренер')
       : (newest.sender_role === 'coach'
         ? (newest.coach_name || newest.player_name || 'Matchcard')
         : (newest.player_name || newest.coach_name || 'Matchcard'));
     const body = String(newest.text || '').trim().slice(0, 120);
-    const title = !isTeam && fresh.length > 1
-      ? `${who} (${fresh.length})`
+    const title = !isTeam && collapsed.length > 1
+      ? `${who} (${collapsed.length})`
       : who;
     try{
       if(global.CoachPush && typeof global.CoachPush.notifyHeadsUp === 'function'){
@@ -798,6 +809,7 @@
     }
     if(!parentUserIds.length) return {ok: false, reason: 'no_parent'};
     const results = [];
+    const isBroadcast = !!String(message.broadcast_id || '').trim();
     for(const parentUserId of parentUserIds){
       const row = {
         id: parentUserIds.length > 1
@@ -819,12 +831,74 @@
         results.push({ok: false, error});
         continue;
       }
-      // DB trigger also wakes FCM; client invoke is a second path.
-      const pushed = await notifyChatPush(row.id);
-      results.push({ok: true, push: pushed, id: row.id});
+      // Team broadcasts: DB trigger still wakes FCM (collapse_key dedupes). Skip client
+      // re-invoke here so parents don't get a drip of N identical alerts.
+      if(!isBroadcast){
+        const pushed = await notifyChatPush(row.id);
+        results.push({ok: true, push: pushed, id: row.id});
+      }else{
+        results.push({ok: true, push: {skipped: 'broadcast'}, id: row.id});
+      }
     }
     const ok = results.some(r => r.ok);
     return {ok, results};
+  }
+  /** Upsert a full team broadcast once, then one FCM per unique parent. */
+  async function pushChatBroadcast(messages){
+    const list = (Array.isArray(messages) ? messages : []).filter(m => m && m.id);
+    if(!list.length) return {ok: false, reason: 'empty'};
+    const coachMode = typeof isCoachPlan === 'function' && isCoachPlan();
+    const sb = coachMode ? coachClient() : parentClient();
+    if(!sb || !ready()) return {ok: false, reason: 'no_client'};
+    let session = null;
+    try{
+      const {data} = await sb.auth.getSession();
+      session = data && data.session;
+    }catch(e){}
+    if(!session){
+      try{ session = await ensureSession(false); }catch(e){}
+    }
+    if(!session) return {ok: false, reason: 'no_session'};
+    const broadcastId = String(list[0].broadcast_id || '').trim() || list[0].id;
+    const rows = [];
+    const notifyParents = new Map(); // parentUserId → representative message id
+    for(const message of list){
+      const parentUserIds = message.parent_user_id
+        ? [String(message.parent_user_id)]
+        : await resolveParentUserIds(sb, message.team_player_id);
+      for(const parentUserId of parentUserIds){
+        const id = parentUserIds.length > 1
+          ? `${message.id}_${String(parentUserId).slice(0, 8)}`
+          : message.id;
+        rows.push({
+          id,
+          team_player_id: message.team_player_id,
+          parent_user_id: parentUserId,
+          sender_user_id: message.sender_user_id || session.user.id,
+          sender_role: 'coach',
+          body: message.text || message.body || '',
+          broadcast_id: broadcastId,
+          edited_at: message.edited_at || null,
+          read_by_parent: !!message.read_by_parent,
+          read_by_coach: !!message.read_by_coach,
+          created_at: message.created_at || new Date().toISOString()
+        });
+        if(!notifyParents.has(parentUserId)) notifyParents.set(parentUserId, id);
+      }
+    }
+    if(!rows.length) return {ok: false, reason: 'no_parent'};
+    // Chunk upserts to avoid payload limits on large squads.
+    for(let i = 0; i < rows.length; i += 40){
+      const chunk = rows.slice(i, i + 40);
+      const {error} = await sb.from('player_chat_messages').upsert(chunk, {onConflict: 'id'});
+      if(error) return {ok: false, error};
+    }
+    // One push per parent (DB trigger may also fire — FCM collapse_key merges them).
+    const pushResults = [];
+    for(const messageId of notifyParents.values()){
+      pushResults.push(await notifyChatPush(messageId));
+    }
+    return {ok: true, count: rows.length, parents: notifyParents.size, pushResults};
   }
   function noticeTitleBody(noticeType, payload){
     const opponent = String(payload && payload.opponent || '').trim();
@@ -1100,15 +1174,20 @@
         const {error} = await sb.from('player_chat_messages').upsert(rows, {onConflict: 'id'});
         if(error) throw error;
         // Wake the other phone via FCM even if their app is fully closed.
-        const freshIds = rows
-          .filter(r => {
-            const t = Date.parse(r.created_at || '');
-            return Number.isFinite(t) && Date.now() - t < 90 * 1000;
-          })
-          .map(r => r.id)
-          .filter(Boolean)
-          .slice(0, 8);
-        freshIds.forEach(id => {
+        // One notify per team broadcast — not one per fan-out row.
+        const seenBroadcast = new Set();
+        const freshIds = [];
+        rows.forEach(r => {
+          const t = Date.parse(r.created_at || '');
+          if(!Number.isFinite(t) || Date.now() - t >= 90 * 1000) return;
+          const bc = String(r.broadcast_id || '').trim();
+          if(bc){
+            if(seenBroadcast.has(bc)) return;
+            seenBroadcast.add(bc);
+          }
+          if(r.id) freshIds.push(r.id);
+        });
+        freshIds.slice(0, 8).forEach(id => {
           notifyChatPush(id).catch(() => {});
         });
       }
@@ -1163,9 +1242,11 @@
           player_name: playerName || '',
           team_name: teamName,
           academy_name: link.academy && link.academy.name || '',
-          coach_name: (link.coach && typeof link.coach.name === 'string' && link.coach.name !== '[object Object]')
-            ? link.coach.name
-            : ''
+          coach_name: String(row.broadcast_id || '').trim()
+            ? tt('chatTeamFromCoach', 'Head coach')
+            : ((link.coach && typeof link.coach.name === 'string' && link.coach.name !== '[object Object]')
+              ? link.coach.name
+              : '')
         });
         const msg = imported && imported.row ? imported.row : null;
         if(imported && imported.isNew && msg && msg.sender_role && msg.sender_role !== senderRole){
@@ -1605,6 +1686,7 @@
     pollInboxChats,
     notifyChatPush,
     pushChatMessage,
+    pushChatBroadcast,
     pushParentNotice,
     pullParentNotices,
     dismissParentNotices,
