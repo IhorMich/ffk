@@ -48,8 +48,17 @@
     }catch(e){}
     return false;
   }
-  function nativeNotify(title, body, playerId){
+  function nativeNotify(title, body, playerId, chatKind){
     try{
+      if(global.FfkNotify && typeof global.FfkNotify.showChatKind === 'function'){
+        global.FfkNotify.showChatKind(
+          String(title || 'Matchcard'),
+          String(body || ''),
+          String(playerId || ''),
+          String(chatKind || '')
+        );
+        return true;
+      }
       if(global.FfkNotify && typeof global.FfkNotify.showChat === 'function'){
         global.FfkNotify.showChat(String(title || 'Matchcard'), String(body || ''), String(playerId || ''));
         return true;
@@ -100,7 +109,8 @@
         const title = (n && n.title) || (n && n.notification && n.notification.title) || 'Matchcard';
         const body = (n && n.body) || (n && n.notification && n.notification.body) || '';
         const playerId = (n && n.data && (n.data.team_player_id || n.data.teamPlayerId)) || '';
-        notifyHeadsUp(title, body, true, playerId);
+        const chatKind = (n && n.data && (n.data.chat_kind || n.data.chatKind)) || '';
+        notifyHeadsUp(title, body, true, playerId, chatKind);
         try{
           if(global.ParentCloud && typeof global.ParentCloud.pollInboxChats === 'function'){
             global.ParentCloud.pollInboxChats({push: false}).catch(() => {});
@@ -111,10 +121,12 @@
         try{
           const data = (action && action.notification && action.notification.data) || {};
           const playerId = data.team_player_id || data.teamPlayerId || '';
+          const chatKind = data.chat_kind || data.chatKind || '';
+          const opts = chatKind === 'team' ? {kind: 'team'} : undefined;
           if(playerId && typeof global.openPlayerCoachChat === 'function'){
-            global.openPlayerCoachChat(playerId);
+            global.openPlayerCoachChat(playerId, null, opts);
           }else if(playerId && global.ParentUI && typeof global.ParentUI.openPlayerCoachChat === 'function'){
-            global.ParentUI.openPlayerCoachChat(playerId);
+            global.ParentUI.openPlayerCoachChat(playerId, null, opts);
           }
           if(global.ParentCloud && typeof global.ParentCloud.pollInboxChats === 'function'){
             global.ParentCloud.pollInboxChats({push: true}).catch(() => {});
@@ -202,11 +214,11 @@
   }
 
   /** Heads-up system notification — uses the phone's default notification sound. */
-  function notifyHeadsUp(title, body, force, playerId){
+  function notifyHeadsUp(title, body, force, playerId, chatKind){
     const s = read();
     if(!force && !s.enabled) return;
     let shown = false;
-    if(nativeNotify(title, body, playerId)) shown = true;
+    if(nativeNotify(title, body, playerId, chatKind)) shown = true;
     else {
       try{
         if(typeof Notification !== 'undefined' && Notification.permission === 'granted'){
@@ -223,8 +235,8 @@
     if(!shown) toast(`${title || 'Matchcard'}: ${body || ''}`);
   }
 
-  function notifyLocal(title, body, playerId){
-    notifyHeadsUp(title, body, false, playerId);
+  function notifyLocal(title, body, playerId, chatKind){
+    notifyHeadsUp(title, body, false, playerId, chatKind);
   }
 
   /** Keep coach-only alerts quiet while the phone is in Player mode. */

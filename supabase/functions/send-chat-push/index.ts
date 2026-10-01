@@ -311,14 +311,14 @@ Deno.serve(async (req: Request) => {
   const { data: msg, error: msgErr } = await admin
     .from("player_chat_messages")
     .select(
-      "id,team_player_id,parent_user_id,sender_user_id,sender_role,body,created_at",
+      "id,team_player_id,parent_user_id,sender_user_id,sender_role,body,broadcast_id,created_at",
     )
     .eq("id", messageId)
     .maybeSingle();
   if (msgErr) return json(500, { ok: false, error: msgErr.message });
   if (!msg) return json(404, { ok: false, error: "not_found" });
 
-  const chat = msg as ChatRow;
+  const chat = msg as ChatRow & { broadcast_id?: string };
   if (!hookOk && String(chat.sender_user_id) !== callerId) {
     return json(403, { ok: false, error: "forbidden" });
   }
@@ -366,13 +366,16 @@ Deno.serve(async (req: Request) => {
   recipientIds.delete(String(chat.sender_user_id || ""));
   if (callerId) recipientIds.delete(callerId);
 
+  const isTeam = !!String(chat.broadcast_id || "").trim();
   return await deliver(
     recipientIds,
-    "Matchcard",
+    isTeam ? "Сообщение команде" : "Matchcard",
     String(chat.body || "Новое сообщение").trim().slice(0, 180) ||
       "Новое сообщение",
     {
       type: "chat",
+      chat_kind: isTeam ? "team" : "personal",
+      broadcast_id: String(chat.broadcast_id || ""),
       team_player_id: String(chat.team_player_id || ""),
       message_id: String(chat.id || ""),
     },

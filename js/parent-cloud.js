@@ -51,11 +51,14 @@
       if(page && !page.hidden) return;
     }catch(e){}
     const newest = fresh[0];
-    const who = newest.sender_role === 'coach'
-      ? (newest.coach_name || newest.player_name || 'Matchcard')
-      : (newest.player_name || newest.coach_name || 'Matchcard');
+    const isTeam = !!(newest && newest.broadcast_id);
+    const who = isTeam
+      ? (typeof t === 'function' ? (t('chatTeamTitle') || 'Сообщение команде') : 'Сообщение команде')
+      : (newest.sender_role === 'coach'
+        ? (newest.coach_name || newest.player_name || 'Matchcard')
+        : (newest.player_name || newest.coach_name || 'Matchcard'));
     const body = String(newest.text || '').trim().slice(0, 120);
-    const title = fresh.length > 1
+    const title = !isTeam && fresh.length > 1
       ? `${who} (${fresh.length})`
       : who;
     try{
@@ -65,10 +68,16 @@
           title,
           body || 'Новое сообщение',
           pushOn,
-          newest.team_player_id || ''
+          newest.team_player_id || '',
+          isTeam ? 'team' : 'personal'
         );
       }else if(global.CoachPush && typeof global.CoachPush.notifyLocal === 'function'){
-        global.CoachPush.notifyLocal(title, body || 'Новое сообщение', newest.team_player_id || '');
+        global.CoachPush.notifyLocal(
+          title,
+          body || 'Новое сообщение',
+          newest.team_player_id || '',
+          isTeam ? 'team' : 'personal'
+        );
       }
     }catch(e){}
   }
@@ -799,6 +808,7 @@
         sender_user_id: message.sender_user_id || session.user.id,
         sender_role: senderRole,
         body: message.text || message.body || '',
+        broadcast_id: String(message.broadcast_id || ''),
         edited_at: message.edited_at || null,
         read_by_parent: !!message.read_by_parent,
         read_by_coach: !!message.read_by_coach,
@@ -967,6 +977,7 @@
             sender_user_id: m.sender_user_id || session.user.id,
             sender_role: m.sender_role,
             body: m.text,
+            broadcast_id: String(m.broadcast_id || ''),
             edited_at: m.edited_at || null,
             read_by_parent: !!m.read_by_parent,
             read_by_coach: !!m.read_by_coach,

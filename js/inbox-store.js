@@ -442,6 +442,7 @@
         sender_role: raw.sender_role === 'coach' ? 'coach' : 'parent',
         sender_user_id: String(raw.sender_user_id || existing && existing.sender_user_id || ''),
         text: String(raw.body || raw.text || '').slice(0, 500),
+        broadcast_id: String(raw.broadcast_id || existing && existing.broadcast_id || ''),
         edited_at: raw.edited_at || (existing && existing.edited_at) || '',
         read_by_parent: readByParent,
         read_by_coach: readByCoach,

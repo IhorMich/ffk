@@ -35,6 +35,7 @@ public class MainActivity extends BridgeActivity {
   private static int notifySeq = 1000;
   private volatile boolean keepSplash = true;
   private String pendingChatPlayerId = null;
+  private String pendingChatKind = null;
   private static volatile MainActivity aliveInstance;
   private final Handler chatPollHandler = new Handler(Looper.getMainLooper());
   private volatile boolean chatPollHandlerActive = false;
@@ -192,23 +193,30 @@ public class MainActivity extends BridgeActivity {
     String playerId = intent.getStringExtra("team_player_id");
     if (playerId == null || playerId.isEmpty()) return;
     pendingChatPlayerId = playerId;
+    String kind = intent.getStringExtra("chat_kind");
+    pendingChatKind = kind == null ? "" : kind;
     intent.removeExtra("team_player_id");
+    intent.removeExtra("chat_kind");
   }
 
   private void flushPendingChatIntent() {
     final String playerId = pendingChatPlayerId;
     if (playerId == null || playerId.isEmpty()) return;
+    final String chatKind = pendingChatKind == null ? "" : pendingChatKind;
     Bridge bridge = getBridge();
     WebView webView = bridge != null ? bridge.getWebView() : null;
     if (webView == null) return;
     try {
       String idJson = JSONObject.quote(playerId);
+      String kindJson = JSONObject.quote(chatKind);
       String js =
         "(function(){"
           + "var id=" + idJson + ";"
+          + "var kind=" + kindJson + ";"
+          + "var opts=kind==='team'?{kind:'team'}:undefined;"
           + "function go(){"
-          + "  if(window.openPlayerCoachChat){window.openPlayerCoachChat(id);return true;}"
-          + "  if(window.ParentUI&&window.ParentUI.openPlayerCoachChat){window.ParentUI.openPlayerCoachChat(id);return true;}"
+          + "  if(window.openPlayerCoachChat){window.openPlayerCoachChat(id,null,opts);return true;}"
+          + "  if(window.ParentUI&&window.ParentUI.openPlayerCoachChat){window.ParentUI.openPlayerCoachChat(id,null,opts);return true;}"
           + "  return false;"
           + "}"
           + "if(go()) return '1';"
@@ -216,7 +224,10 @@ public class MainActivity extends BridgeActivity {
           + "return '0';"
           + "})()";
       webView.post(() -> webView.evaluateJavascript(js, value -> {
-        if (value != null && value.contains("1")) pendingChatPlayerId = null;
+        if (value != null && value.contains("1")) {
+          pendingChatPlayerId = null;
+          pendingChatKind = null;
+        }
       }));
     } catch (Exception e) {
       // keep pending for next resume
@@ -250,12 +261,19 @@ public class MainActivity extends BridgeActivity {
   }
 
   private void postAlert(String title, String body, String playerId) {
+    postAlert(title, body, playerId, "");
+  }
+
+  private void postAlert(String title, String body, String playerId, String chatKind) {
     ensureAlertChannel();
     Intent open = new Intent(this, MainActivity.class);
     open.setAction(ACTION_OPEN_CHAT);
     open.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
     if (playerId != null && !playerId.isEmpty()) {
       open.putExtra("team_player_id", playerId);
+    }
+    if (chatKind != null && !chatKind.isEmpty()) {
+      open.putExtra("chat_kind", chatKind);
     }
     int flags = PendingIntent.FLAG_UPDATE_CURRENT;
     if (Build.VERSION.SDK_INT >= 23) flags |= PendingIntent.FLAG_IMMUTABLE;
@@ -295,7 +313,17 @@ public class MainActivity extends BridgeActivity {
 
     @JavascriptInterface
     public void showChat(String title, String body, String playerId) {
-      runOnUiThread(() -> postAlert(title, body, playerId == null ? "" : playerId));
+      runOnUiThread(() -> postAlert(title, body, playerId == null ? "" : playerId, ""));
+    }
+
+    @JavascriptInterface
+    public void showChatKind(String title, String body, String playerId, String chatKind) {
+      runOnUiThread(() -> postAlert(
+        title,
+        body,
+        playerId == null ? "" : playerId,
+        chatKind == null ? "" : chatKind
+      ));
     }
 
     @JavascriptInterface
