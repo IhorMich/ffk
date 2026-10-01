@@ -4175,16 +4175,26 @@
         coach_name: (sheet && sheet.dataset.coachName) || '',
         players
       });
+      // Upload each thread to cloud so parents see it in dialogs + get FCM when closed.
+      const msgs = (res && res.messages) || [];
+      let cloudQueued = 0;
+      msgs.forEach(row => {
+        try{
+          if(global.ParentCloud && typeof global.ParentCloud.pushChatMessage === 'function'){
+            cloudQueued += 1;
+            global.ParentCloud.pushChatMessage(row).catch(() => {});
+          }
+        }catch(e){}
+      });
       toast(tt('coachBroadcastSent', 'Sent to {n} players')
         .replace('{n}', String(res.count || players.length)));
-      try{
-        if(global.FfkNotify && typeof global.FfkNotify.show === 'function'){
-          global.FfkNotify.show(
-            tt('coachBroadcastNotifyTitle', 'Team message'),
-            String(text).trim().slice(0, 120)
-          );
-        }
-      }catch(e){}
+      if(!cloudQueued){
+        try{
+          if(global.ParentCloud && typeof global.ParentCloud.pollInboxChats === 'function'){
+            global.ParentCloud.pollInboxChats({push: true}).catch(() => {});
+          }
+        }catch(e){}
+      }
       closeCoachBroadcastSheet();
       if(typeof renderParentUi === 'function') renderParentUi();
       if(typeof syncInboxBellUi === 'function') syncInboxBellUi();

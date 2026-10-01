@@ -182,7 +182,10 @@ Deno.serve(async (req: Request) => {
     return json(400, { ok: false, error: "bad_json" });
   }
   const messageId = String(bodyJson.message_id || "").trim();
-  if (!messageId) return json(400, { ok: false, error: "message_id" });
+  const noticeId = String(bodyJson.notice_id || "").trim();
+  if (!messageId && !noticeId) {
+    return json(400, { ok: false, error: "message_id_or_notice_id" });
+  }
 
   const headerSecret = String(
     req.headers.get("x-matchcard-push-secret") || bodyJson.push_secret || "",
@@ -206,6 +209,105 @@ Deno.serve(async (req: Request) => {
   }
 
   const admin = createClient(supabaseUrl, serviceKey);
+
+  async function deliver(
+    recipientIds: Set<string>,
+    title: string,
+    text: string,
+    data: Record<string, string>,
+  ) {
+    if (!recipientIds.size) {
+      return json(200, { ok: true, sent: 0, reason: "no_recipients" });
+    }
+    const { data: tokens, error: tokErr } = await admin
+      .from("device_tokens")
+      .select("token,user_id,platform")
+      .in("user_id", [...recipientIds]);
+    if (tokErr) return json(500, { ok: false, error: tokErr.message });
+    const list = (tokens || []).filter((t) => t && t.token);
+    if (!list.length) {
+      return json(200, { ok: true, sent: 0, reason: "no_tokens" });
+    }
+    let accessToken: string;
+    try {
+      accessToken = await googleAccessToken(sa);
+    } catch (e) {
+      return json(500, {
+        ok: false,
+        error: "oauth",
+        detail: String((e as Error)?.message || e),
+      });
+    }
+    const results = [];
+    for (const row of list) {
+      try {
+        const r = await sendFcm(
+          sa,
+          accessToken,
+          String(row.token),
+          title,
+          text,
+          data,
+        );
+        results.push({
+          user_id: row.user_id,
+          ok: r.ok,
+          status: r.status,
+          error: r.ok ? null : r.payload,
+        });
+        if (
+          !r.ok &&
+          r.payload &&
+          typeof r.payload === "object" &&
+          JSON.stringify(r.payload).includes("UNREGISTERED")
+        ) {
+          await admin.from("device_tokens").delete().eq("token", row.token);
+        }
+      } catch (e) {
+        results.push({
+          user_id: row.user_id,
+          ok: false,
+          error: String((e as Error)?.message || e),
+        });
+      }
+    }
+    const sent = results.filter((r) => r.ok).length;
+    return json(200, {
+      ok: true,
+      sent,
+      results,
+      via: hookOk ? "hook" : "user",
+    });
+  }
+
+  if (noticeId) {
+    const { data: notice, error: noticeErr } = await admin
+      .from("parent_notices")
+      .select("id,parent_user_id,team_player_id,notice_type,title,body")
+      .eq("id", noticeId)
+      .maybeSingle();
+    if (noticeErr) return json(500, { ok: false, error: noticeErr.message });
+    if (!notice) return json(404, { ok: false, error: "not_found" });
+    if (!hookOk && callerId && String(notice.parent_user_id) === callerId) {
+      return json(403, { ok: false, error: "forbidden" });
+    }
+    const recipientIds = new Set<string>();
+    if (notice.parent_user_id) {
+      recipientIds.add(String(notice.parent_user_id));
+    }
+    return await deliver(
+      recipientIds,
+      String(notice.title || "Matchcard").slice(0, 80) || "Matchcard",
+      String(notice.body || "Новое уведомление").trim().slice(0, 180) ||
+        "Новое уведомление",
+      {
+        type: String(notice.notice_type || "notice"),
+        team_player_id: String(notice.team_player_id || ""),
+        notice_id: String(notice.id || ""),
+      },
+    );
+  }
+
   const { data: msg, error: msgErr } = await admin
     .from("player_chat_messages")
     .select(
@@ -264,71 +366,15 @@ Deno.serve(async (req: Request) => {
   recipientIds.delete(String(chat.sender_user_id || ""));
   if (callerId) recipientIds.delete(callerId);
 
-  if (!recipientIds.size) {
-    return json(200, { ok: true, sent: 0, reason: "no_recipients" });
-  }
-
-  const { data: tokens, error: tokErr } = await admin
-    .from("device_tokens")
-    .select("token,user_id,platform")
-    .in("user_id", [...recipientIds]);
-  if (tokErr) return json(500, { ok: false, error: tokErr.message });
-  const list = (tokens || []).filter((t) => t && t.token);
-  if (!list.length) {
-    return json(200, { ok: true, sent: 0, reason: "no_tokens" });
-  }
-
-  const title = "Matchcard";
-  const text = String(chat.body || "Новое сообщение").trim().slice(0, 180);
-  let accessToken: string;
-  try {
-    accessToken = await googleAccessToken(sa);
-  } catch (e) {
-    return json(500, {
-      ok: false,
-      error: "oauth",
-      detail: String((e as Error)?.message || e),
-    });
-  }
-
-  const results = [];
-  for (const row of list) {
-    try {
-      const r = await sendFcm(
-        sa,
-        accessToken,
-        String(row.token),
-        title,
-        text || "Новое сообщение",
-        {
-          type: "chat",
-          team_player_id: String(chat.team_player_id || ""),
-          message_id: String(chat.id || ""),
-        },
-      );
-      results.push({
-        user_id: row.user_id,
-        ok: r.ok,
-        status: r.status,
-        error: r.ok ? null : r.payload,
-      });
-      if (
-        !r.ok &&
-        r.payload &&
-        typeof r.payload === "object" &&
-        JSON.stringify(r.payload).includes("UNREGISTERED")
-      ) {
-        await admin.from("device_tokens").delete().eq("token", row.token);
-      }
-    } catch (e) {
-      results.push({
-        user_id: row.user_id,
-        ok: false,
-        error: String((e as Error)?.message || e),
-      });
-    }
-  }
-
-  const sent = results.filter((r) => r.ok).length;
-  return json(200, { ok: true, sent, results, via: hookOk ? "hook" : "user" });
+  return await deliver(
+    recipientIds,
+    "Matchcard",
+    String(chat.body || "Новое сообщение").trim().slice(0, 180) ||
+      "Новое сообщение",
+    {
+      type: "chat",
+      team_player_id: String(chat.team_player_id || ""),
+      message_id: String(chat.id || ""),
+    },
+  );
 });

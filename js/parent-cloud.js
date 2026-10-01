@@ -257,6 +257,7 @@
         recentLimit: push ? 0 : 120
       });
       notifyIncomingChats(chatRes && chatRes.incoming);
+      try{ await pullParentNotices(session); }catch(e){}
       refreshChatUi();
       return {ok: true, incoming: (chatRes && chatRes.incoming) || []};
     }catch(error){
@@ -730,6 +731,39 @@
       return {ok: false, error};
     }
   }
+  async function resolveParentUserIds(sb, teamPlayerId){
+    const pid = String(teamPlayerId || '');
+    if(!sb || !pid) return [];
+    const cached = (coachLinks() || [])
+      .filter(l => String(l.team_player_id || '') === pid && l.parent_user_id)
+      .map(l => String(l.parent_user_id));
+    if(cached.length) return [...new Set(cached)];
+    try{
+      const {data, error} = await sb.from('parent_player_links')
+        .select('parent_user_id,team_player_id,status')
+        .eq('team_player_id', pid)
+        .eq('status', 'active');
+      if(error) throw error;
+      const ids = (data || []).map(r => String(r.parent_user_id || '')).filter(Boolean);
+      if(ids.length){
+        try{
+          const prev = coachLinks().filter(row => String(row.team_player_id || '') !== pid);
+          ids.forEach(uid => {
+            prev.push({
+              team_player_id: pid,
+              personal_player_id: '',
+              parent_user_id: uid,
+              status: 'active'
+            });
+          });
+          localStorage.setItem(COACH_LINKS_KEY, JSON.stringify(prev));
+        }catch(e){}
+      }
+      return [...new Set(ids)];
+    }catch(e){
+      return [];
+    }
+  }
   /** Upsert one outgoing chat row then wake the other device via FCM. */
   async function pushChatMessage(message){
     if(!ready() || !message || !message.id) return {ok: false, reason: 'bad'};
@@ -746,31 +780,164 @@
       try{ session = await ensureSession(false); }catch(e){}
     }
     if(!session) return {ok: false, reason: 'no_session'};
-    let parentUserId = senderRole === 'parent' ? session.user.id : '';
-    if(senderRole === 'coach'){
-      const links = coachLinks();
-      const hit = (links || []).find(l => String(l.team_player_id) === String(message.team_player_id));
-      parentUserId = hit && hit.parent_user_id || '';
-      if(!parentUserId && message.parent_user_id) parentUserId = message.parent_user_id;
+    let parentUserIds = [];
+    if(senderRole === 'parent'){
+      parentUserIds = [session.user.id];
+    }else{
+      if(message.parent_user_id) parentUserIds = [String(message.parent_user_id)];
+      else parentUserIds = await resolveParentUserIds(sb, message.team_player_id);
     }
-    if(!parentUserId) return {ok: false, reason: 'no_parent'};
-    const row = {
-      id: message.id,
-      team_player_id: message.team_player_id,
-      parent_user_id: parentUserId,
-      sender_user_id: message.sender_user_id || session.user.id,
-      sender_role: senderRole,
-      body: message.text || message.body || '',
-      edited_at: message.edited_at || null,
-      read_by_parent: !!message.read_by_parent,
-      read_by_coach: !!message.read_by_coach,
-      created_at: message.created_at || new Date().toISOString()
+    if(!parentUserIds.length) return {ok: false, reason: 'no_parent'};
+    const results = [];
+    for(const parentUserId of parentUserIds){
+      const row = {
+        id: parentUserIds.length > 1
+          ? `${message.id}_${String(parentUserId).slice(0, 8)}`
+          : message.id,
+        team_player_id: message.team_player_id,
+        parent_user_id: parentUserId,
+        sender_user_id: message.sender_user_id || session.user.id,
+        sender_role: senderRole,
+        body: message.text || message.body || '',
+        edited_at: message.edited_at || null,
+        read_by_parent: !!message.read_by_parent,
+        read_by_coach: !!message.read_by_coach,
+        created_at: message.created_at || new Date().toISOString()
+      };
+      const {error} = await sb.from('player_chat_messages').upsert(row, {onConflict: 'id'});
+      if(error){
+        results.push({ok: false, error});
+        continue;
+      }
+      // DB trigger also wakes FCM; client invoke is a second path.
+      const pushed = await notifyChatPush(row.id);
+      results.push({ok: true, push: pushed, id: row.id});
+    }
+    const ok = results.some(r => r.ok);
+    return {ok, results};
+  }
+  function noticeTitleBody(noticeType, payload){
+    const opponent = String(payload && payload.opponent || '').trim();
+    const date = String(payload && payload.date || '').trim();
+    const when = [opponent, date].filter(Boolean).join(' · ');
+    if(noticeType === 'match_result'){
+      return {
+        title: 'Matchcard',
+        body: `Карточка матча${when ? ': ' + when : ''}`.slice(0, 180)
+      };
+    }
+    if(noticeType === 'match_cancelled'){
+      return {
+        title: 'Матч отменён',
+        body: when || 'Матч отменён'
+      };
+    }
+    if(noticeType === 'match_recalled'){
+      return {
+        title: 'Вызов снят',
+        body: when || 'Игрок больше не в заявке'
+      };
+    }
+    if(noticeType === 'match_updated'){
+      return {
+        title: 'Изменение матча',
+        body: when || 'Обновлены детали матча'
+      };
+    }
+    return {
+      title: 'Приглашение на матч',
+      body: when || 'Новое приглашение на матч'
     };
-    const {error} = await sb.from('player_chat_messages').upsert(row, {onConflict: 'id'});
+  }
+  /** Coach → remote parent inbox card + FCM (works with app fully closed). */
+  async function pushParentNotice(input){
+    if(!ready() || !input || !input.team_player_id) return {ok: false, reason: 'bad'};
+    const sb = coachClient() || parentClient();
+    if(!sb) return {ok: false, reason: 'no_client'};
+    let session = null;
+    try{
+      const {data} = await sb.auth.getSession();
+      session = data && data.session;
+    }catch(e){}
+    if(!session){
+      try{ session = await ensureSession(false); }catch(e){}
+    }
+    if(!session) return {ok: false, reason: 'no_session'};
+    const noticeType = String(input.notice_type || 'match_invite');
+    const payload = input.payload && typeof input.payload === 'object' ? input.payload : {};
+    const parents = input.parent_user_id
+      ? [String(input.parent_user_id)]
+      : await resolveParentUserIds(sb, input.team_player_id);
+    if(!parents.length) return {ok: false, reason: 'no_parent'};
+    const copy = noticeTitleBody(noticeType, payload);
+    const title = String(input.title || copy.title).slice(0, 80);
+    const body = String(input.body || copy.body).slice(0, 180);
+    const baseId = String(input.id || `${noticeType}_${payload.match_id || 'x'}_${input.team_player_id}`);
+    const out = [];
+    for(const parentUserId of parents){
+      const id = parents.length > 1 ? `${baseId}_${String(parentUserId).slice(0, 8)}` : baseId;
+      const row = {
+        id,
+        parent_user_id: parentUserId,
+        team_player_id: String(input.team_player_id),
+        notice_type: noticeType,
+        title,
+        body,
+        payload,
+        created_at: input.created_at || new Date().toISOString(),
+        read_at: null
+      };
+      const {error} = await sb.from('parent_notices').upsert(row, {onConflict: 'id'});
+      if(error){
+        out.push({ok: false, error});
+        continue;
+      }
+      try{
+        await sb.functions.invoke('send-chat-push', {body: {notice_id: id}});
+      }catch(e){}
+      out.push({ok: true, id});
+    }
+    return {ok: out.some(r => r.ok), results: out};
+  }
+  async function pullParentNotices(session){
+    const sb = parentClient();
+    if(!sb || !session || !global.InboxStore) return {ok: false, imported: 0};
+    const {data, error} = await sb.from('parent_notices')
+      .select('id,team_player_id,notice_type,title,body,payload,created_at,read_at')
+      .eq('parent_user_id', session.user.id)
+      .order('created_at', {ascending: false})
+      .limit(80);
     if(error) return {ok: false, error};
-    // DB trigger also wakes FCM; client invoke is a second path.
-    const pushed = await notifyChatPush(row.id);
-    return {ok: true, push: pushed};
+    let imported = 0;
+    (data || []).forEach(row => {
+      const payload = row.payload && typeof row.payload === 'object' ? row.payload : {};
+      const type = String(row.notice_type || '');
+      try{
+        if(type === 'match_result' && typeof global.InboxStore.upsertMatchResult === 'function'){
+          global.InboxStore.upsertMatchResult({
+            ...payload,
+            team_player_id: row.team_player_id || payload.team_player_id,
+            forceUnread: !row.read_at
+          });
+          imported += 1;
+        }else if(typeof global.InboxStore.upsertMatchInvite === 'function'){
+          const notice = type === 'match_invite' ? ''
+            : (type === 'match_updated' ? 'updated'
+              : (type === 'match_recalled' ? 'recalled'
+                : (type === 'match_cancelled' ? 'cancelled' : (payload.invite_notice || ''))));
+          global.InboxStore.upsertMatchInvite({
+            ...payload,
+            team_player_id: row.team_player_id || payload.team_player_id,
+            invite_notice: notice || undefined,
+            forceUnread: !row.read_at,
+            resetRsvp: !!notice,
+            clearNotice: !notice
+          });
+          imported += 1;
+        }
+      }catch(e){}
+    });
+    return {ok: true, imported};
   }
   async function syncChats(session, links, senderRole, opts){
     opts = opts || {};
@@ -908,6 +1075,7 @@
       }
       const chatRes = await syncChats(session, links, 'parent');
       notifyIncomingChats(chatRes && chatRes.incoming);
+      try{ await pullParentNotices(session); }catch(e){}
       try{
         const teamIds = [...new Set(links.map(l => l && l.team && l.team.id).filter(Boolean))];
         if(teamIds.length){
@@ -1314,6 +1482,8 @@
     pollInboxChats,
     notifyChatPush,
     pushChatMessage,
+    pushParentNotice,
+    pullParentNotices,
     personalSyncState(){ return personalSyncState; },
     status(){ return {configured: ready(), syncing, personal: personalSyncState}; }
   };

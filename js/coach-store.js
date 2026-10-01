@@ -1053,6 +1053,25 @@
             });
           }
         }catch(e){}
+        try{
+          if(global.ParentCloud && typeof global.ParentCloud.pushParentNotice === 'function'){
+            (db.match_invites || []).filter(i => i.match_id === matchId).forEach(inv => {
+              const payload = this.buildMatchInvitePayload(session, matchId, inv.team_player_id);
+              if(!payload) return;
+              global.ParentCloud.pushParentNotice({
+                id: `mi_${matchId}_${inv.team_player_id}`,
+                team_player_id: inv.team_player_id,
+                notice_type: 'match_cancelled',
+                payload: {
+                  ...payload,
+                  invite_notice: 'cancelled',
+                  forceUnread: true,
+                  resetRsvp: true
+                }
+              }).catch(() => {});
+            });
+          }
+        }catch(e){}
       }else{
         try{
           if(global.InboxStore && typeof global.InboxStore.removeForMatch === 'function'){
@@ -1238,6 +1257,16 @@
             }
           }catch(e){}
         }
+        try{
+          if(global.ParentCloud && typeof global.ParentCloud.pushParentNotice === 'function'){
+            global.ParentCloud.pushParentNotice({
+              id: `mr_${matchId}_${p.id}`,
+              team_player_id: p.id,
+              notice_type: 'match_result',
+              payload: {...payload, forceUnread}
+            }).catch(() => {});
+          }
+        }catch(e){}
         // Refresh parent invite snapshot + local parent link ratings
         try{
           this.createParentInvite(session, p.id);
@@ -1387,6 +1416,25 @@
               }
             }catch(e){}
           }
+          // Always wake remote parent phone via FCM + cloud inbox (app may be fully closed).
+          try{
+            if(global.ParentCloud && typeof global.ParentCloud.pushParentNotice === 'function'){
+              const nType = notice === 'updated' ? 'match_updated'
+                : (notice === 'recalled' ? 'match_recalled'
+                  : (notice === 'cancelled' ? 'match_cancelled' : 'match_invite'));
+              global.ParentCloud.pushParentNotice({
+                id: `mi_${matchId}_${inv.team_player_id}`,
+                team_player_id: inv.team_player_id,
+                notice_type: nType,
+                payload: {
+                  ...payload,
+                  invite_notice: notice || '',
+                  forceUnread: true,
+                  resetRsvp: !!notice || resetRsvp
+                }
+              }).catch(() => {});
+            }
+          }catch(e){}
           return {
             ...inv,
             status: clearedRsvp === 'accepted' || clearedRsvp === 'declined' ? inv.status : 'delivered',
@@ -1396,6 +1444,27 @@
             rsvp_at: clearedRsvpAt
           };
         }
+        // Parent linked on another phone — still push cloud notice/FCM.
+        try{
+          if(global.ParentCloud && typeof global.ParentCloud.pushParentNotice === 'function'){
+            const nType = notice === 'updated' ? 'match_updated'
+              : (notice === 'recalled' ? 'match_recalled'
+                : (notice === 'cancelled' ? 'match_cancelled' : 'match_invite'));
+            global.ParentCloud.pushParentNotice({
+              id: `mi_${matchId}_${inv.team_player_id}`,
+              team_player_id: inv.team_player_id,
+              notice_type: nType,
+              payload: {
+                ...payload,
+                invite_notice: notice || '',
+                forceUnread: true,
+                resetRsvp: !!notice || resetRsvp
+              }
+            }).then(r => {
+              // no-op; count stays waiting until parent opens
+            }).catch(() => {});
+          }
+        }catch(e){}
         waiting += 1;
         return {
           ...inv,
@@ -1419,8 +1488,7 @@
       ids.forEach(pid => {
         const payload = this.buildMatchInvitePayload(session, matchId, pid);
         if(!payload) return;
-        if(!this.parentLinkedForPlayer(pid)) return;
-        if(global.InboxStore && typeof global.InboxStore.upsertMatchInvite === 'function'){
+        if(this.parentLinkedForPlayer(pid) && global.InboxStore && typeof global.InboxStore.upsertMatchInvite === 'function'){
           global.InboxStore.upsertMatchInvite({
             ...payload,
             forceUnread: true,
@@ -1429,6 +1497,16 @@
           });
           delivered += 1;
         }
+        try{
+          if(global.ParentCloud && typeof global.ParentCloud.pushParentNotice === 'function'){
+            global.ParentCloud.pushParentNotice({
+              id: `mi_${matchId}_${pid}`,
+              team_player_id: pid,
+              notice_type: 'match_recalled',
+              payload: {...payload, invite_notice: 'recalled', forceUnread: true, resetRsvp: true}
+            }).catch(() => {});
+          }
+        }catch(e){}
       });
       return {delivered};
     },
