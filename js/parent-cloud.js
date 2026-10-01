@@ -38,8 +38,8 @@
     const list = Array.isArray(incoming) ? incoming : [];
     refreshInboxBell();
     if(!list.length) return;
-    // Skip historical backfill — alert only for messages from the last few minutes.
-    const cutoff = Date.now() - 5 * 60 * 1000;
+    // Skip historical backfill — alert for recent messages (wider window for delayed bg poll).
+    const cutoff = Date.now() - 15 * 60 * 1000;
     const fresh = list.filter(m => {
       const t = Date.parse(m && m.created_at || '');
       return Number.isFinite(t) && t >= cutoff;

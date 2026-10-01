@@ -103,13 +103,25 @@ public class MainActivity extends BridgeActivity {
   public void onResume() {
     super.onResume();
     aliveInstance = this;
+    // Foreground: JS interval owns polling; stop native wake loop.
+    stopBackgroundChatPollInternal();
     flushPendingChatIntent();
+    runForegroundChatPoll();
+  }
+
+  @Override
+  public void onPause() {
+    // Don't wait for JS visibility events — WebView may freeze before they run.
+    startBackgroundChatPollInternal(10000L);
+    super.onPause();
   }
 
   @Override
   public void onDestroy() {
     if (aliveInstance == this) aliveInstance = null;
-    stopBackgroundChatPollInternal();
+    // Keep AlarmManager alive after destroy so minimized delivery can resume.
+    chatPollHandlerActive = false;
+    chatPollHandler.removeCallbacks(chatPollHandlerTick);
     super.onDestroy();
   }
 
@@ -126,7 +138,7 @@ public class MainActivity extends BridgeActivity {
       "(function(){"
         + "try{"
         + "  if(window.ParentCloud&&typeof window.ParentCloud.pollInboxChats==='function'){"
-        + "    window.ParentCloud.pollInboxChats();"
+        + "    window.ParentCloud.pollInboxChats({push:false});"
         + "    return '1';"
         + "  }"
         + "  return '0';"
@@ -139,13 +151,33 @@ public class MainActivity extends BridgeActivity {
     });
   }
 
+  private void runForegroundChatPoll() {
+    Bridge bridge = getBridge();
+    WebView webView = bridge != null ? bridge.getWebView() : null;
+    if (webView == null) return;
+    try { webView.resumeTimers(); } catch (Exception e) {}
+    final String js =
+      "(function(){"
+        + "try{"
+        + "  if(window.ParentCloud&&typeof window.ParentCloud.pollInboxChats==='function'){"
+        + "    window.ParentCloud.pollInboxChats({push:true});"
+        + "    return '1';"
+        + "  }"
+        + "  return '0';"
+        + "}catch(e){return '0';}"
+        + "})()";
+    webView.post(() -> {
+      try { webView.evaluateJavascript(js, null); } catch (Exception e) {}
+    });
+  }
+
   void startBackgroundChatPollInternal(long intervalMs) {
-    long interval = intervalMs > 0 ? intervalMs : 12000L;
+    long interval = intervalMs > 0 ? intervalMs : 10000L;
     if (interval < 8000L) interval = 8000L;
     chatPollHandlerIntervalMs = interval;
     chatPollHandlerActive = true;
     chatPollHandler.removeCallbacks(chatPollHandlerTick);
-    chatPollHandler.postDelayed(chatPollHandlerTick, Math.min(interval, 2000L));
+    chatPollHandler.postDelayed(chatPollHandlerTick, 1500L);
     ChatPollReceiver.start(this, interval);
   }
 
