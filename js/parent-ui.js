@@ -36,6 +36,36 @@
     }catch(e){}
     return fallback || key;
   }
+  /** Chat stamp in the viewer's local timezone, always 24h (no AM/PM). */
+  function formatChatTime(iso){
+    const d = new Date(iso || '');
+    if(Number.isNaN(d.getTime())) return '';
+    let locale = '';
+    try{
+      if(typeof clockLocale === 'function') locale = clockLocale();
+      else if(typeof LANG_LOCALE === 'object' && typeof settings !== 'undefined' && settings && settings.lang){
+        locale = LANG_LOCALE[settings.lang] || '';
+      }
+    }catch(e){}
+    if(!locale){
+      try{ locale = (navigator.language || '').trim() || undefined; }catch(e){ locale = undefined; }
+    }
+    try{
+      return new Intl.DateTimeFormat(locale || undefined, {
+        day: '2-digit',
+        month: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+      }).format(d);
+    }catch(e){
+      const dd = String(d.getDate()).padStart(2, '0');
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const hh = String(d.getHours()).padStart(2, '0');
+      const mi = String(d.getMinutes()).padStart(2, '0');
+      return `${dd}.${mm} ${hh}:${mi}`;
+    }
+  }
 
   function playerName(p){
     if(!p) return '—';
@@ -240,12 +270,7 @@
     thread.innerHTML = messages.length
       ? messages.map(message => {
           const own = coachMode ? message.sender_role === 'coach' : message.sender_role === 'parent';
-          let time = '';
-          try{
-            time = new Date(message.created_at).toLocaleString([], {
-              day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'
-            });
-          }catch(e){}
+          const time = formatChatTime(message.created_at);
           return `<div class="chat-bubble-row${own ? ' own' : ''}">
             <div class="chat-bubble" data-chat-id="${esc(message.id)}" data-own="${own ? '1' : ''}">
               <p>${esc(message.text || '')}</p>
