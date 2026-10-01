@@ -25,6 +25,62 @@
   function ready(){
     return !!(global.CoachCloud && global.CoachCloud.ready && global.CoachCloud.ready());
   }
+  function refreshInboxBell(){
+    try{
+      if(global.ParentUI && typeof global.ParentUI.syncInboxBellUi === 'function'){
+        global.ParentUI.syncInboxBellUi();
+      }else if(typeof syncInboxBellUi === 'function'){
+        syncInboxBellUi();
+      }
+    }catch(e){}
+  }
+  function notifyIncomingChats(incoming){
+    const list = Array.isArray(incoming) ? incoming : [];
+    refreshInboxBell();
+    if(!list.length) return;
+    // Skip historical backfill — alert only for messages from the last few minutes.
+    const cutoff = Date.now() - 5 * 60 * 1000;
+    const fresh = list.filter(m => {
+      const t = Date.parse(m && m.created_at || '');
+      return Number.isFinite(t) && t >= cutoff;
+    });
+    if(!fresh.length) return;
+    // Don't spam heads-up while the user is already in the chat screen.
+    try{
+      const page = document.getElementById('chatPage');
+      if(page && !page.hidden) return;
+    }catch(e){}
+    const newest = fresh[0];
+    const who = newest.sender_role === 'coach'
+      ? (newest.coach_name || newest.player_name || 'Matchcard')
+      : (newest.player_name || newest.coach_name || 'Matchcard');
+    const body = String(newest.text || '').trim().slice(0, 120);
+    const title = fresh.length > 1
+      ? `${who} (${fresh.length})`
+      : who;
+    try{
+      if(global.CoachPush && typeof global.CoachPush.notifyLocal === 'function'){
+        global.CoachPush.notifyLocal(title, body || 'Новое сообщение');
+      }
+    }catch(e){}
+  }
+  let chatPollTimer = 0;
+  function startChatPoll(){
+    if(chatPollTimer) return;
+    const tick = () => {
+      try{
+        if(!ready()) return;
+        // Keep badge/notifications warm while the app is alive (foreground or background WebView).
+        scheduleSync();
+      }catch(e){}
+    };
+    chatPollTimer = setInterval(tick, 20000);
+    document.addEventListener('visibilitychange', () => {
+      if(document.visibilityState === 'visible') tick();
+    });
+    // First tick soon after boot so an already-open phone picks up waiting chats.
+    setTimeout(tick, 2500);
+  }
   function coachClient(){
     return ready() && global.CoachCloud.getClient ? global.CoachCloud.getClient() : null;
   }
@@ -527,12 +583,13 @@
       if(removed.error) throw removed.error;
     }
     const playerIds = [...byPlayer.keys()].filter(Boolean);
-    if(!playerIds.length) return;
+    if(!playerIds.length) return {ok: true, incoming: []};
     const pulled = await sb.from('player_chat_messages')
       .select('*')
       .in('team_player_id', playerIds)
       .order('created_at', {ascending: false});
     if(pulled.error) throw pulled.error;
+    const incoming = [];
     (pulled.data || []).forEach(row => {
       const link = byPlayer.get(String(row.team_player_id)) || {};
       let playerName = link.player && [link.player.first_name, link.player.last_name].filter(Boolean).join(' ');
@@ -547,7 +604,7 @@
         }catch(e){}
       }
       try{
-        global.InboxStore.importCloudChat({
+        const imported = global.InboxStore.importCloudChat({
           ...row,
           player_name: playerName || '',
           team_name: teamName,
@@ -556,8 +613,13 @@
             ? link.coach.name
             : ''
         });
+        const msg = imported && imported.row ? imported.row : null;
+        if(imported && imported.isNew && msg && msg.sender_role && msg.sender_role !== senderRole){
+          incoming.push(msg);
+        }
       }catch(e){}
     });
+    return {ok: true, incoming};
   }
   async function syncParentData(options){
     if(!ready() || syncing) return {ok: false, reason: ready() ? 'busy' : 'no_cloud'};
@@ -580,7 +642,8 @@
         }
         await pushProfile(link, profile, session);
       }
-      await syncChats(session, links, 'parent');
+      const chatRes = await syncChats(session, links, 'parent');
+      notifyIncomingChats(chatRes && chatRes.incoming);
       try{
         const teamIds = [...new Set(links.map(l => l && l.team && l.team.id).filter(Boolean))];
         if(teamIds.length){
@@ -943,10 +1006,15 @@
         }
       }
     }
-    await syncChats(session, nextLinks, 'coach');
+    const chatRes = await syncChats(session, nextLinks, 'coach');
+    notifyIncomingChats(chatRes && chatRes.incoming);
     if(typeof syncCoachChildPlayerUi === 'function'){
       try{ syncCoachChildPlayerUi(); }catch(e){}
     }
+    try{
+      if(typeof renderParentUi === 'function') renderParentUi();
+      else refreshInboxBell();
+    }catch(e){ refreshInboxBell(); }
     return {ok: true};
   }
 
@@ -977,7 +1045,9 @@
     markPersonalDirty,
     scheduleSync,
     pullCoachData,
+    startChatPoll,
     personalSyncState(){ return personalSyncState; },
     status(){ return {configured: ready(), syncing, personal: personalSyncState}; }
   };
+  try{ startChatPoll(); }catch(e){}
 })(window);

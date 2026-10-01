@@ -551,20 +551,24 @@
     const btn = document.getElementById('inboxBtn');
     const badge = document.getElementById('inboxBadge');
     if(!btn) return;
-    if(typeof isCoachPlan === 'function' && isCoachPlan()){
-      const msgs = inboxMessages();
-      const unread = inboxUnread();
-      btn.hidden = msgs.length === 0;
-      btn.classList.toggle('has-unread', unread > 0);
-      if(badge){
-        badge.hidden = unread === 0;
-        if(unread > 0) badge.textContent = unread > 99 ? '99+' : String(unread);
-      }
-      return;
-    }
     const pushOn = !!(global.CoachPush && global.CoachPush.isEnabled && global.CoachPush.isEnabled());
     const msgs = inboxMessages();
     const unread = inboxUnread();
+    if(typeof isCoachPlan === 'function' && isCoachPlan()){
+      const links = typeof chatTargets === 'function' ? chatTargets().length : 0;
+      const show = pushOn || unread > 0 || msgs.length > 0 || links > 0;
+      btn.hidden = !show;
+      btn.classList.toggle('has-unread', unread > 0);
+      if(badge){
+        if(unread > 0){
+          badge.hidden = false;
+          badge.textContent = unread > 99 ? '99+' : String(unread);
+        }else{
+          badge.hidden = true;
+        }
+      }
+      return;
+    }
     const links = global.ParentStore && global.ParentStore.listLinks
       ? global.ParentStore.listLinks().length
       : 0;

@@ -803,7 +803,16 @@ function syncPushSettingsUi(){
   if(unlock) unlock.hidden = on;
   if(lock) lock.hidden = !on;
   if(st){
-    st.textContent = on ? t('coachPushOn') : t('coachPushOff');
+    if(!on){
+      st.textContent = t('coachPushOff');
+    }else{
+      let remote = false;
+      try{
+        remote = !!(window.CoachPush && window.CoachPush.canRegisterRemote && window.CoachPush.canRegisterRemote());
+      }catch(e){}
+      // Until Firebase/FCM is wired, "enabled" means local heads-up + inbox polling.
+      st.textContent = remote ? t('coachPushOn') : t('coachPushLocalOn');
+    }
   }
   if(typeof syncInboxBellUi === 'function') syncInboxBellUi();
 }

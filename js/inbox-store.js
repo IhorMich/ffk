@@ -446,10 +446,11 @@
         updated_at: new Date().toISOString(),
         cloud_synced: true
       };
+      const isNew = !existing;
       if(existing) db.messages = db.messages.map(m => m.id === row.id ? row : m);
       else db.messages.push(row);
       writeDb(db, true);
-      return row;
+      return {row, isNew};
     },
     resolveCoachLeaveRequest(requestId, decision){
       const rid = String(requestId || '');
@@ -532,10 +533,22 @@
       return before - db.messages.length;
     },
     unreadCountForPlayers(playerIds){
-      return this.listForPlayers(playerIds).filter(m => m.status !== 'read').length;
+      return this.listForPlayers(playerIds).filter(m => {
+        if(m.type === 'chat_message'){
+          // Only incoming unread chats for the parent.
+          return m.sender_role === 'coach' && !m.read_by_parent;
+        }
+        return m.status !== 'read';
+      }).length;
     },
     unreadCountForCoach(){
-      return this.listForCoach().filter(m => m.status !== 'read').length;
+      return this.listForCoach().filter(m => {
+        if(m.type === 'chat_message'){
+          // Only incoming unread chats for the coach.
+          return m.sender_role === 'parent' && !m.read_by_coach;
+        }
+        return m.status !== 'read';
+      }).length;
     }
   };
 
