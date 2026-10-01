@@ -263,6 +263,11 @@
     renderChatThread();
     if(typeof pushAppState === 'function') pushAppState('layer');
     setTimeout(() => document.getElementById('chatText')?.focus(), 80);
+    try{
+      if(global.ParentCloud && typeof global.ParentCloud.pollInboxChats === 'function'){
+        global.ParentCloud.pollInboxChats({push: false}).catch(() => {});
+      }
+    }catch(e){}
   }
   function closePlayerCoachChat(){
     const page = document.getElementById('chatPage');
