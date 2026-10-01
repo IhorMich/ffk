@@ -876,6 +876,59 @@
     if(scoreHtml) bits.push(scoreHtml);
     return bits.join(' · ') || '—';
   }
+  /** Team ratings list for a played match: unrated first, tap row → quick rate. */
+  function matchRatesListHtml(session, match, opts){
+    opts = opts || {};
+    const store = global.CoachStore;
+    if(!store || !session || !match){
+      return `<div class="inbox-empty coach-tab-empty">${esc(tt('coachNoPlayers', 'No players'))}</div>`;
+    }
+    const squadPlayers = (store.listMatchPlayers(session, match) || []).slice();
+    if(!squadPlayers.length){
+      return `<div class="inbox-empty coach-tab-empty">${esc(
+        opts.emptyHint || tt('coachNoPlayers', 'No players')
+      )}</div>`;
+    }
+    squadPlayers.sort((a, b) => {
+      const ra = store.getRatingForPlayer(session, match.id, a.id);
+      const rb = store.getRatingForPlayer(session, match.id, b.id);
+      if(!ra && rb) return -1;
+      if(ra && !rb) return 1;
+      if(ra && rb){
+        const diff = (Number(rb.rating) || 0) - (Number(ra.rating) || 0);
+        if(diff) return diff;
+      }
+      return playerLabel(a).localeCompare(playerLabel(b), undefined, {sensitivity: 'base'});
+    });
+    const ratedN = squadPlayers.filter(p => store.getRatingForPlayer(session, match.id, p.id)).length;
+    const progress = `<p class="hint coach-rates-progress">${esc(String(ratedN))}/${esc(String(squadPlayers.length))} ${esc(tt('coachRatedShort', 'rated'))}</p>`;
+    const rows = squadPlayers.map(p => {
+      const label = playerLabel(p);
+      const rating = store.getRatingForPlayer(session, match.id, p.id);
+      const scoreTxt = rating ? Number(rating.rating).toFixed(1) : '—';
+      const note = rating
+        ? (rating.comment
+          ? esc(String(rating.comment).slice(0, 80))
+          : esc(tt('coachRated', 'Rated')))
+        : esc(tt('coachNotRated', 'Not rated'));
+      const cardBtn = rating
+        ? `<button type="button" class="ghost-btn coach-rate-btn" data-share-player-card="${esc(p.id)}" data-match="${esc(match.id)}">${esc(tt('coachSharePlayerCard', 'Card'))}</button>`
+        : '';
+      return `<div class="coach-player-row coach-rate-row${rating ? ' is-rated' : ' is-unrated'}">
+        <button type="button" class="coach-player-main coach-rate-open" data-rate-player="${esc(p.id)}" data-match="${esc(match.id)}">
+          <span class="coach-rate-row-text">
+            <b>${esc(label)}</b>
+            <span>${note}</span>
+          </span>
+          <span class="coach-rate-row-score" aria-label="${esc(tt('coachRatePlayer', 'Rate'))}">${esc(scoreTxt)}</span>
+        </button>
+        ${cardBtn ? `<div class="coach-history-rate-actions">${cardBtn}</div>` : ''}
+      </div>`;
+    }).join('');
+    return progress + rows;
+  }
+  let quickRateReturnMatchId = '';
+  let quickRateReturnToHistory = false;
   function matchListRowHtml(m, opts){
     opts = opts || {};
     const store = global.CoachStore;
@@ -1439,32 +1492,11 @@
       }
     }else{
       fillCoachScoreFields(document.getElementById('coachMatchPlayedBox'), activeMatch.score || '');
-      const squadPlayers = store.listMatchPlayers(session, activeMatch);
-      let rateHtml = '';
-      if(!squadPlayers.length){
-        rateHtml = `<p class="hint">${esc(tt('coachSquadEmpty', 'Select who plays in this match.'))}</p>`;
-      }else{
-        rateHtml = squadPlayers.map(p => {
-          const label = playerLabel(p);
-          const rating = store.getRatingForPlayer(session, activeMatch.id, p.id);
-          const btnLabel = rating
-            ? `${tt('coachEditRating', 'Edit')} ${Number(rating.rating).toFixed(1)}`
-            : tt('coachRatePlayer', 'Rate');
-          const note = rating
-            ? (rating.comment
-              ? esc(String(rating.comment).slice(0, 80))
-              : esc(tt('coachRated', 'Rated')))
-            : esc(tt('coachNotRated', 'Not rated'));
-          return `<div class="coach-player-row">
-            <button type="button" class="coach-player-main coach-player-open" data-open-player="${esc(p.id)}">
-              <b>${esc(label)}</b>
-              <span>${note}</span>
-            </button>
-            <button type="button" class="save-btn coach-rate-btn" data-rate-player="${esc(p.id)}" data-match="${esc(activeMatch.id)}">${esc(btnLabel)}</button>
-          </div>`;
-        }).join('');
-      }
-      document.querySelectorAll('.js-cm-rates').forEach(el => { el.innerHTML = rateHtml; });
+      document.querySelectorAll('.js-cm-rates').forEach(el => {
+        el.innerHTML = matchRatesListHtml(session, activeMatch, {
+          emptyHint: tt('coachSquadEmpty', 'Select who plays in this match.')
+        });
+      });
       const sentInfo = resultsSentForMatch(session, activeMatch);
       const statusEl = document.getElementById('coachResultsStatus');
       if(statusEl){
@@ -1813,7 +1845,9 @@
     if(typeof showView === 'function') showView('history');
     renderCoachUi();
     try{
-      document.getElementById('coachHistoryDetail')?.scrollIntoView({behavior:'smooth', block:'start'});
+      const rates = document.getElementById('coachHistoryRates');
+      (rates || document.getElementById('coachHistoryDetail'))
+        ?.scrollIntoView({behavior: 'smooth', block: rates ? 'nearest' : 'start'});
     }catch(e){}
   }
 
@@ -2072,35 +2106,10 @@
     if(commentEl && document.activeElement !== commentEl){
       commentEl.value = match.comment || '';
     }
-    const squadPlayers = store.listMatchPlayers(session, match);
     if(ratesEl){
-      if(!squadPlayers.length){
-        ratesEl.innerHTML = `<div class="inbox-empty coach-tab-empty">${esc(tt('coachNoPlayers', 'No players'))}</div>`;
-      }else{
-        ratesEl.innerHTML = squadPlayers.map(p => {
-          const label = playerLabel(p);
-          const rating = store.getRatingForPlayer(session, match.id, p.id);
-          const rateBtn = rating
-            ? `${tt('coachEditRating', 'Edit')} ${Number(rating.rating).toFixed(1)}`
-            : tt('coachRatePlayer', 'Rate');
-          const note = rating
-            ? (rating.comment ? esc(String(rating.comment).slice(0, 80)) : esc(tt('coachRated', 'Rated')))
-            : esc(tt('coachNotRated', 'Not rated'));
-          const cardBtn = rating
-            ? `<button type="button" class="ghost-btn coach-rate-btn" data-share-player-card="${esc(p.id)}" data-match="${esc(match.id)}">${esc(tt('coachSharePlayerCard', 'Card'))}</button>`
-            : '';
-          return `<div class="coach-player-row">
-            <button type="button" class="coach-player-main coach-player-open" data-open-player="${esc(p.id)}">
-              <b>${esc(label)}</b>
-              <span>${note}</span>
-            </button>
-            <div class="coach-history-rate-actions">
-              <button type="button" class="save-btn coach-rate-btn" data-rate-player="${esc(p.id)}" data-match="${esc(match.id)}">${esc(rateBtn)}</button>
-              ${cardBtn}
-            </div>
-          </div>`;
-        }).join('');
-      }
+      ratesEl.innerHTML = matchRatesListHtml(session, match, {
+        emptyHint: tt('coachNoPlayers', 'No players')
+      });
     }
     const sentInfo = resultsSentForMatch(session, match);
     const statusEl = document.getElementById('coachHistoryResultsStatus');
@@ -3660,6 +3669,14 @@
       toast(tt('coachErrGeneric', 'Something went wrong.'));
       return;
     }
+    quickRateReturnMatchId = String(match.id || '');
+    quickRateReturnToHistory = String(coachHistoryMatchId || '') === String(match.id)
+      || (() => {
+        try{
+          const detail = document.getElementById('coachHistoryDetail');
+          return !!(detail && !detail.hidden);
+        }catch(e){ return false; }
+      })();
     const existing = store.getRatingForPlayer(session, matchId, teamPlayerId);
     const pitchPos = (typeof isPitchCode === 'function' && isPitchCode(tp.position) ? tp.position : null)
       || (existing && existing.pitchPos)
@@ -3712,6 +3729,8 @@
   }
   function closeCoachQuickRate(){
     quickRate = null;
+    quickRateReturnMatchId = '';
+    quickRateReturnToHistory = false;
     const card = document.getElementById('coachRateCard');
     const back = document.getElementById('coachRateBack');
     if(typeof hideSheetCard === 'function') hideSheetCard(card, back);
@@ -3720,6 +3739,30 @@
       if(sheet) sheet.hidden = true;
       if(back) back.hidden = true;
     }
+  }
+  function returnToMatchRatesList(matchId, toHistory){
+    const id = String(matchId || '').trim();
+    if(!id){
+      renderCoachUi();
+      return;
+    }
+    if(toHistory){
+      coachHistoryMatchId = id;
+      if(typeof showView === 'function') showView('history');
+      renderCoachUi();
+      try{
+        document.getElementById('coachHistoryRates')
+          ?.scrollIntoView({behavior: 'smooth', block: 'nearest'});
+      }catch(e){}
+      return;
+    }
+    const store = global.CoachStore;
+    if(store && store.setActiveMatchId) store.setActiveMatchId(id);
+    renderCoachUi();
+    try{
+      document.querySelector('#coachMatchPlayedBox .js-cm-rates')
+        ?.scrollIntoView({behavior: 'smooth', block: 'nearest'});
+    }catch(e){}
   }
 
   let detailPlayerId = '';
@@ -4371,6 +4414,7 @@
       score: quickRate.score || store.getMatch(session, matchId)?.score || ''
     });
     // Ensure match is in played state once ratings start
+    const returnToHistory = quickRateReturnToHistory;
     try{
       const m = store.getMatch(session, matchId);
       if(m && !matchIsPlayed(m)){
@@ -4391,12 +4435,12 @@
     }catch(e){
       if(e && e.message === 'not_finished'){
         toast(tt('coachRatingSavedNeedScore', 'Rating saved. Save the match score to send the card to the parent.'));
-        renderCoachUi();
+        returnToMatchRatesList(matchId, returnToHistory);
         if(typeof renderParentUi === 'function') renderParentUi();
         return;
       }
       toast(tt('coachRatingSaved', 'Player rating saved to Coach.'));
-      renderCoachUi();
+      returnToMatchRatesList(matchId, returnToHistory);
       return;
     }
     if(delivered){
@@ -4406,7 +4450,7 @@
     }else{
       toast(tt('coachRatingSaved', 'Player rating saved to Coach.'));
     }
-    renderCoachUi();
+    returnToMatchRatesList(matchId, returnToHistory);
     if(typeof renderParentUi === 'function') renderParentUi();
   }
 

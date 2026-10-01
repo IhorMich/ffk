@@ -2167,6 +2167,21 @@
   .coach-rates-compact{margin:6px 0 8px;gap:6px;}
   .coach-rates-compact .coach-player-row{padding:8px 10px;}
   .coach-rates-compact .coach-rate-btn{padding:6px 10px;font-size:.72rem;}
+  .coach-rates-progress{margin:0 0 8px;font-weight:700;}
+  .coach-rate-row{align-items:center;}
+  .coach-rate-row .coach-player-main{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;text-align:left;
+  }
+  .coach-rate-row-text{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1;}
+  .coach-rate-row-text b{font-size:.95rem;}
+  .coach-rate-row-text span{font-size:.72rem;opacity:.78;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .coach-rate-row-score{
+    flex:none;min-width:2.6rem;padding:6px 8px;border-radius:10px;text-align:center;
+    font-size:1.05rem;font-weight:800;line-height:1;
+    background:color-mix(in srgb, var(--card-accent, #c9a227) 16%, var(--surface, #fff));
+    color:var(--text);
+  }
+  .coach-rate-row.is-unrated .coach-rate-row-score{opacity:.45;font-weight:700;}
   #coachMatchPlayedBox .save-btn.js-cm-send-results{margin-top:4px;}
   #coachMatchUpcomingBox .save-btn,#coachMatchUpcomingBox .ghost-btn{margin-top:0;}
   .parent-msg-row.result{box-shadow:inset 3px 0 0 color-mix(in srgb, var(--card-accent) 55%, #2f9e44);}

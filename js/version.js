@@ -1,1 +1,1 @@
-window.FFK_VERSION = '1.2.307';
+window.FFK_VERSION = '1.2.308';
