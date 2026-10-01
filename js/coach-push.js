@@ -97,11 +97,30 @@
         console.warn('push registration', err);
       });
       Push.addListener('pushNotificationReceived', (n) => {
-        const title = (n && n.title) || 'Matchcard';
-        const body = (n && n.body) || '';
-        notifyHeadsUp(title, body, true);
+        const title = (n && n.title) || (n && n.notification && n.notification.title) || 'Matchcard';
+        const body = (n && n.body) || (n && n.notification && n.notification.body) || '';
+        const playerId = (n && n.data && (n.data.team_player_id || n.data.teamPlayerId)) || '';
+        notifyHeadsUp(title, body, true, playerId);
+        try{
+          if(global.ParentCloud && typeof global.ParentCloud.pollInboxChats === 'function'){
+            global.ParentCloud.pollInboxChats({push: false}).catch(() => {});
+          }
+        }catch(e){}
       });
-      Push.addListener('pushNotificationActionPerformed', () => {});
+      Push.addListener('pushNotificationActionPerformed', (action) => {
+        try{
+          const data = (action && action.notification && action.notification.data) || {};
+          const playerId = data.team_player_id || data.teamPlayerId || '';
+          if(playerId && typeof global.openPlayerCoachChat === 'function'){
+            global.openPlayerCoachChat(playerId);
+          }else if(playerId && global.ParentUI && typeof global.ParentUI.openPlayerCoachChat === 'function'){
+            global.ParentUI.openPlayerCoachChat(playerId);
+          }
+          if(global.ParentCloud && typeof global.ParentCloud.pollInboxChats === 'function'){
+            global.ParentCloud.pollInboxChats({push: true}).catch(() => {});
+          }
+        }catch(e){}
+      });
     }catch(e){
       console.warn('push listeners', e);
       registered = false;

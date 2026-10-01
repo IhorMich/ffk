@@ -783,7 +783,12 @@
   }
 
   async function registerDeviceToken(token, platform){
-    const sb = getClient();
+    let sb = getClient();
+    try{
+      if(typeof isCoachPlan === 'function' && !isCoachPlan() && getParentClient){
+        sb = getParentClient() || sb;
+      }
+    }catch(e){}
     if(!sb || !token) return null;
     const {data: {session}} = await sb.auth.getSession();
     if(!session) return null;

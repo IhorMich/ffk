@@ -713,6 +713,23 @@
       if(error) throw error;
     }
   }
+  async function notifyChatPush(messageId){
+    const id = String(messageId || '').trim();
+    if(!id || !ready()) return {ok: false, reason: 'no_cloud'};
+    const coachMode = typeof isCoachPlan === 'function' && isCoachPlan();
+    const sb = coachMode ? coachClient() : parentClient();
+    if(!sb) return {ok: false, reason: 'no_client'};
+    try{
+      const {data, error} = await sb.functions.invoke('send-chat-push', {
+        body: {message_id: id}
+      });
+      if(error) throw error;
+      return data || {ok: true};
+    }catch(error){
+      console.warn('Chat push', error);
+      return {ok: false, error};
+    }
+  }
   async function syncChats(session, links, senderRole, opts){
     opts = opts || {};
     const pullOnly = !!opts.pullOnly;
@@ -750,6 +767,18 @@
       if(rows.length){
         const {error} = await sb.from('player_chat_messages').upsert(rows, {onConflict: 'id'});
         if(error) throw error;
+        // Wake the other phone via FCM even if their app is fully closed.
+        const freshIds = rows
+          .filter(r => {
+            const t = Date.parse(r.created_at || '');
+            return Number.isFinite(t) && Date.now() - t < 90 * 1000;
+          })
+          .map(r => r.id)
+          .filter(Boolean)
+          .slice(0, 8);
+        freshIds.forEach(id => {
+          notifyChatPush(id).catch(() => {});
+        });
       }
       const readIds = global.InboxStore.listAll()
         .filter(m =>
@@ -1241,6 +1270,7 @@
     pullCoachData,
     startChatPoll,
     pollInboxChats,
+    notifyChatPush,
     personalSyncState(){ return personalSyncState; },
     status(){ return {configured: ready(), syncing, personal: personalSyncState}; }
   };

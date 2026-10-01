@@ -46,8 +46,15 @@ Test unlock **Enable Coach (test)** in Settings (same pattern as Pro). Store IAP
 
 ## Push
 
-Coach settings → Enable push. Uses Capacitor Push Notifications on device.
-Cloud delivery of remote pushes needs FCM/APNs + a Supabase Edge Function (token table is ready: `device_tokens`).
+Coach / Player settings → **Enable push**.
+
+1. Device registers an FCM token into `device_tokens` (needs `android/app/google-services.json`).
+2. On each new chat upload the app calls Edge Function **`send-chat-push`**, which delivers
+   FCM to the other user's tokens — works even when Matchcard is fully closed.
+3. Set secret `FIREBASE_SERVICE_ACCOUNT_JSON` (see `supabase/functions/send-chat-push/README.md`).
+
+Without the secret, in-app / minimized delivery still works via local polling; only
+fully-killed delivery needs FCM.
 
 ## Limits
 
