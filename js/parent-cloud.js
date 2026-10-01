@@ -74,7 +74,18 @@
   }
   let chatPollTimer = 0;
   let chatPolling = false;
+  let chatPollStartedAt = 0;
+  let chatPollTicks = 0;
   let bgPollWired = false;
+  const CHAT_POLL_MS = 2000;
+  const CHAT_POLL_OPEN_MS = 1200;
+  const CHAT_FULL_EVERY = 10; // every N light pulls also push local changes
+  function chatPageOpen(){
+    try{
+      const page = document.getElementById('chatPage');
+      return !!(page && !page.hidden);
+    }catch(e){ return false; }
+  }
   function nativeBgPollStart(intervalMs){
     try{
       if(global.FfkNotify && typeof global.FfkNotify.startBackgroundChatPoll === 'function'){
@@ -101,7 +112,7 @@
     const onVisible = () => {
       nativeBgPollStop();
       try{
-        if(ready()) pollInboxChats().catch(() => {});
+        if(ready()) pollInboxChats({push: true}).catch(() => {});
       }catch(e){}
     };
     document.addEventListener('visibilitychange', () => {
@@ -119,24 +130,70 @@
     }catch(e){}
     if(document.visibilityState === 'hidden') onHidden();
   }
-  function startChatPoll(){
-    if(chatPollTimer) return;
+  function restartChatPollTimer(){
+    if(chatPollTimer){
+      clearInterval(chatPollTimer);
+      chatPollTimer = 0;
+    }
+    const interval = chatPageOpen() ? CHAT_POLL_OPEN_MS : CHAT_POLL_MS;
     const tick = () => {
       try{
         if(!ready()) return;
-        pollInboxChats().catch(() => {});
+        // If a previous poll hung, unblock after 20s so desktop chat keeps moving.
+        if(chatPolling && chatPollStartedAt && Date.now() - chatPollStartedAt > 20000){
+          chatPolling = false;
+        }
+        chatPollTicks += 1;
+        const push = (chatPollTicks % CHAT_FULL_EVERY) === 0;
+        pollInboxChats({push}).catch(() => {});
       }catch(e){}
     };
-    chatPollTimer = setInterval(tick, 4000);
+    chatPollTimer = setInterval(tick, interval);
+  }
+  function startChatPoll(){
+    if(chatPollTimer) return;
+    restartChatPollTimer();
     document.addEventListener('visibilitychange', () => {
-      if(document.visibilityState === 'visible') tick();
+      if(document.visibilityState === 'visible'){
+        restartChatPollTimer();
+        try{ pollInboxChats({push: true}).catch(() => {}); }catch(e){}
+      }
     });
-    setTimeout(tick, 800);
+    // Speed up while the chat dialog is open.
+    try{
+      const page = document.getElementById('chatPage');
+      if(page && typeof MutationObserver === 'function'){
+        new MutationObserver(() => restartChatPollTimer()).observe(page, {
+          attributes: true,
+          attributeFilter: ['hidden']
+        });
+      }
+    }catch(e){}
+    setTimeout(() => {
+      try{ pollInboxChats({push: true}).catch(() => {}); }catch(e){}
+    }, 500);
     try{ wireBackgroundChatPoll(); }catch(e){}
   }
-  async function pollInboxChats(){
+  function refreshChatUi(){
+    try{
+      if(typeof renderChatThread === 'function') renderChatThread();
+      else if(global.ParentUI && typeof global.ParentUI.renderChatThread === 'function'){
+        global.ParentUI.renderChatThread();
+      }
+      const sheet = document.getElementById('inboxSheet');
+      const list = document.getElementById('inboxSheetList');
+      if(sheet && !sheet.hidden && list && typeof inboxRowsHtml === 'function' && typeof inboxMessages === 'function'){
+        list.innerHTML = inboxRowsHtml(inboxMessages());
+      }
+      refreshInboxBell();
+    }catch(e){}
+  }
+  async function pollInboxChats(opts){
+    opts = opts || {};
+    const push = !!opts.push;
     if(!ready() || chatPolling) return {ok: false, reason: 'busy'};
     chatPolling = true;
+    chatPollStartedAt = Date.now();
     try{
       const coachMode = typeof isCoachPlan === 'function' && isCoachPlan();
       if(coachMode){
@@ -157,7 +214,8 @@
           });
         });
         let links = coachLinks();
-        if(playerIds.length){
+        // Refresh link cache only on full push ticks — keeps light polls snappy on desktop.
+        if(push && playerIds.length){
           try{
             const linksRes = await sb.from('parent_player_links')
               .select('team_player_id,personal_player_id,parent_user_id')
@@ -174,14 +232,12 @@
         playerIds.forEach(id => {
           if(!byId.has(String(id))) byId.set(String(id), {team_player_id: id});
         });
-        const chatRes = await syncChats(session, [...byId.values()], 'coach');
+        const chatRes = await syncChats(session, [...byId.values()], 'coach', {
+          pullOnly: !push,
+          recentLimit: push ? 0 : 120
+        });
         notifyIncomingChats(chatRes && chatRes.incoming);
-        try{
-          if(typeof renderChatThread === 'function') renderChatThread();
-          else if(global.ParentUI && typeof global.ParentUI.renderChatThread === 'function'){
-            global.ParentUI.renderChatThread();
-          }
-        }catch(e){}
+        refreshChatUi();
         return {ok: true, incoming: (chatRes && chatRes.incoming) || []};
       }
 
@@ -196,25 +252,19 @@
       const links = global.ParentStore && global.ParentStore.listLinks
         ? global.ParentStore.listLinks()
         : [];
-      const chatRes = await syncChats(session, links, 'parent');
+      const chatRes = await syncChats(session, links, 'parent', {
+        pullOnly: !push,
+        recentLimit: push ? 0 : 120
+      });
       notifyIncomingChats(chatRes && chatRes.incoming);
-      try{
-        if(typeof renderChatThread === 'function') renderChatThread();
-        else if(global.ParentUI && typeof global.ParentUI.renderChatThread === 'function'){
-          global.ParentUI.renderChatThread();
-        }
-        const sheet = document.getElementById('inboxSheet');
-        const list = document.getElementById('inboxSheetList');
-        if(sheet && !sheet.hidden && list && typeof inboxRowsHtml === 'function' && typeof inboxMessages === 'function'){
-          list.innerHTML = inboxRowsHtml(inboxMessages());
-        }
-      }catch(e){}
+      refreshChatUi();
       return {ok: true, incoming: (chatRes && chatRes.incoming) || []};
     }catch(error){
       console.warn('Chat poll', error);
       return {ok: false, error};
     }finally{
       chatPolling = false;
+      chatPollStartedAt = 0;
     }
   }
   function coachClient(){
@@ -663,67 +713,74 @@
       if(error) throw error;
     }
   }
-  async function syncChats(session, links, senderRole){
+  async function syncChats(session, links, senderRole, opts){
+    opts = opts || {};
+    const pullOnly = !!opts.pullOnly;
+    const recentLimit = Number(opts.recentLimit) > 0 ? Math.floor(Number(opts.recentLimit)) : 0;
     const sb = client(senderRole === 'coach' ? 'coach' : 'parent');
     if(!sb || !session || !global.InboxStore) return {ok: false, incoming: []};
     const byPlayer = new Map((links || []).map(link => [
       String(link.team_player_id || link.player && link.player.id || ''),
       link
     ]));
-    const rows = global.InboxStore.listAll()
-      .filter(m =>
-        m.type === 'chat_message'
-        && m.sender_role === senderRole
-        && byPlayer.has(String(m.team_player_id || ''))
-      )
-      .map(m => {
-        const link = byPlayer.get(String(m.team_player_id));
-        return {
-          id: m.id,
-          team_player_id: m.team_player_id,
-          parent_user_id: senderRole === 'parent'
-            ? session.user.id
-            : link.parent_user_id,
-          sender_user_id: m.sender_user_id || session.user.id,
-          sender_role: m.sender_role,
-          body: m.text,
-          edited_at: m.edited_at || null,
-          read_by_parent: !!m.read_by_parent,
-          read_by_coach: !!m.read_by_coach,
-          created_at: m.created_at || new Date().toISOString()
-        };
-      }).filter(row => row.parent_user_id && row.sender_user_id);
-    if(rows.length){
-      const {error} = await sb.from('player_chat_messages').upsert(rows, {onConflict: 'id'});
-      if(error) throw error;
-    }
-    const readIds = global.InboxStore.listAll()
-      .filter(m =>
-        m.type === 'chat_message'
-        && m.sender_role !== senderRole
-        && byPlayer.has(String(m.team_player_id || ''))
-        && (senderRole === 'parent' ? m.read_by_parent : m.read_by_coach)
-      )
-      .map(m => m.id);
-    for(const id of readIds){
-      const marked = await sb.rpc('mark_player_chat_read', {message_id: id});
-      if(marked.error) throw marked.error;
-    }
-    const deleted = global.InboxStore.listDeleted ? global.InboxStore.listDeleted() : {};
-    const deletedChatIds = Object.keys(deleted)
-      .filter(key => key.startsWith('chat:'))
-      .map(key => key.slice('chat:'.length))
-      .filter(Boolean);
-    for(const id of deletedChatIds){
-      const removed = await sb.rpc('delete_player_chat_message', {message_id: id});
-      if(removed.error) throw removed.error;
+    if(!pullOnly){
+      const rows = global.InboxStore.listAll()
+        .filter(m =>
+          m.type === 'chat_message'
+          && m.sender_role === senderRole
+          && byPlayer.has(String(m.team_player_id || ''))
+        )
+        .map(m => {
+          const link = byPlayer.get(String(m.team_player_id));
+          return {
+            id: m.id,
+            team_player_id: m.team_player_id,
+            parent_user_id: senderRole === 'parent'
+              ? session.user.id
+              : link.parent_user_id,
+            sender_user_id: m.sender_user_id || session.user.id,
+            sender_role: m.sender_role,
+            body: m.text,
+            edited_at: m.edited_at || null,
+            read_by_parent: !!m.read_by_parent,
+            read_by_coach: !!m.read_by_coach,
+            created_at: m.created_at || new Date().toISOString()
+          };
+        }).filter(row => row.parent_user_id && row.sender_user_id);
+      if(rows.length){
+        const {error} = await sb.from('player_chat_messages').upsert(rows, {onConflict: 'id'});
+        if(error) throw error;
+      }
+      const readIds = global.InboxStore.listAll()
+        .filter(m =>
+          m.type === 'chat_message'
+          && m.sender_role !== senderRole
+          && byPlayer.has(String(m.team_player_id || ''))
+          && (senderRole === 'parent' ? m.read_by_parent : m.read_by_coach)
+        )
+        .map(m => m.id);
+      for(const id of readIds){
+        const marked = await sb.rpc('mark_player_chat_read', {message_id: id});
+        if(marked.error) throw marked.error;
+      }
+      const deleted = global.InboxStore.listDeleted ? global.InboxStore.listDeleted() : {};
+      const deletedChatIds = Object.keys(deleted)
+        .filter(key => key.startsWith('chat:'))
+        .map(key => key.slice('chat:'.length))
+        .filter(Boolean);
+      for(const id of deletedChatIds){
+        const removed = await sb.rpc('delete_player_chat_message', {message_id: id});
+        if(removed.error) throw removed.error;
+      }
     }
     const playerIds = [...byPlayer.keys()].filter(Boolean);
     if(!playerIds.length) return {ok: true, incoming: []};
-    const pulled = await sb.from('player_chat_messages')
+    let query = sb.from('player_chat_messages')
       .select('*')
       .in('team_player_id', playerIds)
       .order('created_at', {ascending: false});
+    if(recentLimit) query = query.limit(recentLimit);
+    const pulled = await query;
     if(pulled.error) throw pulled.error;
     const incoming = [];
     (pulled.data || []).forEach(row => {

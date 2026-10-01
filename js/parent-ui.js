@@ -425,6 +425,12 @@
       if(textEl) textEl.value = '';
       renderChatThread();
       renderParentInbox();
+      // Push immediately so the other side sees it without waiting for the heavy sync debounce.
+      try{
+        if(global.ParentCloud && typeof global.ParentCloud.pollInboxChats === 'function'){
+          global.ParentCloud.pollInboxChats({push: true}).catch(() => {});
+        }
+      }catch(e){}
     }catch(e){
       toast(tt('coachErrGeneric', 'Something went wrong.'));
     }
