@@ -856,6 +856,7 @@
     pushLocalSnapshot,
     pullRemoteIntoLocal,
     registerDeviceToken,
+    hasPushBackend(){ return global.FFK_PUSH_FCM === true; },
     status(){
       return {
         configured: ready(),

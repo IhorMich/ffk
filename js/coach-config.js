@@ -6,6 +6,8 @@ window.FFK_COACH_CONFIG = {
   supabaseAnonKey: 'sb_publishable_oSVHv0IEEDr_DvwZu9Kusw_WOSIFg2-',
   mode: 'local' // 'local' | 'supabase' (auto if url+key set)
 };
+// Firebase google-services.json is in android/app — allow Capacitor Push.register (FCM).
+window.FFK_PUSH_FCM = true;
 (function(){
   const c = window.FFK_COACH_CONFIG;
   if(c.supabaseUrl && c.supabaseAnonKey) c.mode = 'supabase';

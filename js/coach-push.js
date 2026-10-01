@@ -41,10 +41,10 @@
   /** Remote FCM only when explicitly configured (no google-services → never register). */
   function canRegisterRemote(){
     try{
+      if(global.FFK_PUSH_FCM === true) return isNative();
       if(global.CoachCloud && typeof global.CoachCloud.hasPushBackend === 'function'){
-        return !!global.CoachCloud.hasPushBackend();
+        return !!global.CoachCloud.hasPushBackend() && isNative();
       }
-      if(global.FFK_PUSH_FCM === true) return true;
     }catch(e){}
     return false;
   }
