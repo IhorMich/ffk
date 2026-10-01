@@ -334,6 +334,19 @@ Deno.serve(async (req: Request) => {
     return true;
   }
 
+  /** One FCM wake per chat row — blocks client+trigger double-fire and poll loops. */
+  async function claimMessagePush(msgId: string): Promise<boolean> {
+    const id = String(msgId || "").trim();
+    if (!id) return true;
+    const { error } = await admin.from("chat_push_claims").insert({
+      message_id: id,
+    });
+    if (!error) return true;
+    const code = String((error as { code?: string }).code || "");
+    if (code === "23505") return false;
+    return true;
+  }
+
   // One wake for every unique parent of a team broadcast.
   if (broadcastId && !messageId) {
     if (!hookOk && !callerId) {
@@ -409,6 +422,15 @@ Deno.serve(async (req: Request) => {
     return json(403, { ok: false, error: "forbidden" });
   }
 
+  const isTeam = !!String(chat.broadcast_id || "").trim();
+  // Personal (and single-row) pushes: claim once so sync/trigger/client cannot loop.
+  if (!isTeam) {
+    const claimedMsg = await claimMessagePush(String(chat.id || messageId));
+    if (!claimedMsg) {
+      return json(200, { ok: true, sent: 0, skipped: "message_deduped" });
+    }
+  }
+
   const recipientIds = new Set<string>();
   if (chat.sender_role === "coach") {
     if (chat.parent_user_id) recipientIds.add(String(chat.parent_user_id));
@@ -452,7 +474,6 @@ Deno.serve(async (req: Request) => {
   recipientIds.delete(String(chat.sender_user_id || ""));
   if (callerId) recipientIds.delete(callerId);
 
-  const isTeam = !!String(chat.broadcast_id || "").trim();
   if (isTeam && chat.parent_user_id) {
     const claimed = await claimBroadcastParent(
       String(chat.broadcast_id),

@@ -121,10 +121,13 @@
         const playerId = (n && n.data && (n.data.team_player_id || n.data.teamPlayerId)) || '';
         const chatKind = (n && n.data && (n.data.chat_kind || n.data.chatKind)) || '';
         const broadcastId = (n && n.data && (n.data.broadcast_id || n.data.broadcastId)) || '';
-        // Team broadcasts: at most one heads-up per broadcast_id (FCM can still fan out).
-        if(broadcastId){
-          try{
-            const key = `ffk_bc_fcm_${broadcastId}`;
+        const messageId = (n && n.data && (n.data.message_id || n.data.messageId)) || '';
+        // Dedupe FCM heads-ups (team by broadcast, personal by message).
+        try{
+          const key = broadcastId
+            ? `ffk_bc_fcm_${broadcastId}`
+            : (messageId ? `ffk_msg_fcm_${messageId}` : '');
+          if(key){
             const prev = Number(sessionStorage.getItem(key) || 0);
             if(prev && Date.now() - prev < 120000){
               try{
@@ -135,8 +138,8 @@
               return;
             }
             sessionStorage.setItem(key, String(Date.now()));
-          }catch(e){}
-        }
+          }
+        }catch(e){}
         notifyHeadsUp(title, body, true, playerId, chatKind, broadcastId);
         try{
           if(global.ParentCloud && typeof global.ParentCloud.pollInboxChats === 'function'){

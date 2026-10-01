@@ -313,7 +313,9 @@ public class MainActivity extends BridgeActivity {
       notifyId = 0x41000000 | (Math.abs(playerId.hashCode()) & 0x0fffffff);
       onlyAlertOnce = true;
     } else if (playerId != null && !playerId.isEmpty()) {
+      // Stable id per personal dialog — replace instead of stacking.
       notifyId = 0x42000000 | (Math.abs(playerId.hashCode()) & 0x0fffffff);
+      onlyAlertOnce = true;
     } else {
       notifyId = ++notifySeq;
     }

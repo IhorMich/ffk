@@ -55,12 +55,19 @@
     const collapsed = [];
     fresh.forEach(m => {
       const bc = String(m && m.broadcast_id || '').trim();
+      const mid = String(m && m.id || '').trim();
       if(bc){
         if(seenBroadcast.has(bc)) return;
         seenBroadcast.add(bc);
-        // Persist cooldown so polls 2s apart don't re-alert the same broadcast.
         try{
           const key = `ffk_bc_alert_${bc}`;
+          const prev = Number(sessionStorage.getItem(key) || 0);
+          if(prev && Date.now() - prev < 120000) return;
+          sessionStorage.setItem(key, String(Date.now()));
+        }catch(e){}
+      }else if(mid){
+        try{
+          const key = `ffk_msg_alert_${mid}`;
           const prev = Number(sessionStorage.getItem(key) || 0);
           if(prev && Date.now() - prev < 120000) return;
           sessionStorage.setItem(key, String(Date.now()));
@@ -744,9 +751,26 @@
       if(error) throw error;
     }
   }
+  const recentPushClaims = new Map(); // messageOrBroadcastId → ts
+  function claimLocalPush(key, ttlMs){
+    const id = String(key || '').trim();
+    if(!id) return true;
+    const now = Date.now();
+    const prev = Number(recentPushClaims.get(id) || 0);
+    if(prev && now - prev < (ttlMs || 120000)) return false;
+    recentPushClaims.set(id, now);
+    // Bound memory
+    if(recentPushClaims.size > 200){
+      for(const [k, ts] of recentPushClaims){
+        if(now - ts > 300000) recentPushClaims.delete(k);
+      }
+    }
+    return true;
+  }
   async function notifyChatPush(messageId, extra){
     const id = String(messageId || '').trim();
     if(!id || !ready()) return {ok: false, reason: 'no_cloud'};
+    if(!claimLocalPush(`msg:${id}`, 180000)) return {ok: true, skipped: 'local_dedupe'};
     const sb = await senderClient('coach') || await senderClient('parent');
     if(!sb) return {ok: false, reason: 'no_client'};
     const body = {message_id: id};
@@ -763,6 +787,7 @@
   async function notifyChatBroadcast(broadcastId){
     const bc = String(broadcastId || '').trim();
     if(!bc || !ready()) return {ok: false, reason: 'no_cloud'};
+    if(!claimLocalPush(`bc:${bc}`, 180000)) return {ok: true, skipped: 'local_dedupe'};
     const sb = await senderClient('coach') || await senderClient('parent');
     if(!sb) return {ok: false, reason: 'no_client'};
     try{
@@ -1275,29 +1300,8 @@
       if(rows.length){
         const {error} = await sb.from('player_chat_messages').upsert(rows, {onConflict: 'id'});
         if(error) throw error;
-        // Wake the other phone via FCM even if their app is fully closed.
-        // One notify per team broadcast — not one per fan-out row.
-        const seenBroadcast = new Set();
-        const freshIds = [];
-        const freshBroadcasts = [];
-        rows.forEach(r => {
-          const t = Date.parse(r.created_at || '');
-          if(!Number.isFinite(t) || Date.now() - t >= 90 * 1000) return;
-          const bc = String(r.broadcast_id || '').trim();
-          if(bc){
-            if(seenBroadcast.has(bc)) return;
-            seenBroadcast.add(bc);
-            freshBroadcasts.push(bc);
-            return;
-          }
-          if(r.id) freshIds.push(r.id);
-        });
-        freshBroadcasts.slice(0, 4).forEach(bc => {
-          notifyChatBroadcast(bc).catch(() => {});
-        });
-        freshIds.slice(0, 8).forEach(id => {
-          notifyChatPush(id).catch(() => {});
-        });
+        // Do NOT re-fire FCM here. pushChatMessage / pushChatBroadcast + DB trigger
+        // already wake devices once. Re-notifying every poll caused endless personal spam.
       }
       const readIds = global.InboxStore.listAll()
         .filter(m =>
