@@ -1,0 +1,541 @@
+/* Matchcard desktop layout — loaded after app.css */
+@media (min-width: 980px) {
+  body {
+    background:
+      radial-gradient(ellipse 70% 50% at 12% 0%, rgba(237, 241, 247, 0.05) 0%, transparent 55%),
+      radial-gradient(ellipse 55% 40% at 88% 100%, rgba(245, 185, 66, 0.05) 0%, transparent 50%),
+      var(--bg);
+  }
+
+  .app {
+    max-width: none;
+    width: 100%;
+    display: grid;
+    grid-template-columns: 220px minmax(0, 1fr);
+    grid-template-rows: auto 1fr;
+    min-height: 100vh;
+    min-height: 100dvh;
+    margin: 0;
+  }
+
+  .tabbar {
+    position: sticky;
+    top: 16px;
+    left: auto;
+    transform: none;
+    bottom: auto;
+    grid-row: 1 / -1;
+    grid-column: 1;
+    width: auto;
+    max-width: none;
+    height: auto;
+    align-self: start;
+    flex-direction: column;
+    margin: 16px 0 16px 16px;
+    padding: 10px;
+    border-radius: 20px;
+  }
+
+  .tabbtn {
+    flex: 0 0 auto;
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: 10px;
+    padding: 12px 14px;
+    min-height: 48px;
+    font-size: 0.84rem;
+  }
+
+  .tabbtn.active {
+    color: var(--card-ink);
+    background: var(--card-wash);
+    box-shadow: inset 3px 0 0 var(--card-accent);
+  }
+
+  .topbar {
+    grid-column: 2;
+    padding: 16px 36px 12px;
+  }
+
+  .app.player-on .topbar {
+    position: static;
+    background: var(--bg);
+    padding: 16px 36px 12px;
+    pointer-events: auto;
+  }
+
+  .app.player-on .club-row-main {
+    display: flex;
+  }
+
+  .app.player-on .icon-btn {
+    background: var(--surface);
+    border-color: var(--border);
+    color: var(--text);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  .content {
+    grid-column: 2;
+    max-width: 1320px;
+    width: 100%;
+    padding: 8px 36px 48px;
+    box-sizing: border-box;
+  }
+
+  .hero-pin {
+    left: 220px;
+    padding-left: 36px;
+    padding-right: 36px;
+  }
+
+  .hero-pin-inner {
+    max-width: 1320px;
+  }
+
+  #view-player.active,
+  #view-history.active,
+  #view-settings.active,
+  #view-report.active,
+  #view-coach.active,
+  #view-coach-child.active,
+  #view-stats.active,
+  #view-new.active {
+    max-width: none;
+    width: 100%;
+  }
+
+  /* ========== PLAYER ========== */
+  #view-player.active {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 320px;
+    gap: 20px 24px;
+    align-items: start;
+  }
+
+  #view-player.active .profile-hero {
+    grid-column: 1 / -1;
+    width: 100%;
+    margin: 0 0 4px;
+    position: relative;
+    overflow: visible;
+  }
+
+  #view-player.active .profile-cover {
+    width: 100%;
+    height: 240px;
+    min-height: 240px;
+    border-radius: 24px;
+  }
+
+  #view-player.active .profile-cover::after {
+    height: 70%;
+    background: linear-gradient(to top, rgba(5, 6, 12, 0.88) 0%, rgba(5, 6, 12, 0.35) 45%, transparent 100%);
+  }
+
+  #view-player.active .avatar-pin {
+    left: 28px;
+    right: auto;
+    transform: none;
+    bottom: 24px;
+    width: 112px;
+    height: 112px;
+  }
+
+  #view-player.active .photo-box {
+    width: 112px;
+    height: 112px;
+    font-size: 1.6rem;
+    border-width: 3px;
+  }
+
+  #view-player.active .fb-id {
+    position: absolute;
+    left: 156px;
+    right: 24px;
+    bottom: 32px;
+    margin: 0;
+    padding: 0;
+    text-align: left;
+    z-index: 6;
+    color: #fff;
+  }
+
+  #view-player.active .fb-name {
+    font-size: 1.85rem;
+    color: #fff;
+    text-shadow: 0 2px 16px rgba(0, 0, 0, 0.45);
+  }
+
+  #view-player.active .fb-meta {
+    color: rgba(255, 255, 255, 0.82);
+    text-shadow: 0 1px 10px rgba(0, 0, 0, 0.4);
+  }
+
+  #view-player.active #playerFeed {
+    grid-column: 1;
+    grid-row: 2;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin: 0;
+    min-width: 0;
+  }
+
+  #view-player.active #playerFeed .pf-card {
+    margin: 0;
+  }
+
+  #view-player.active .player-side {
+    grid-column: 2;
+    grid-row: 2;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin: 0;
+    position: sticky;
+    top: 16px;
+    align-self: start;
+  }
+
+  #view-player.active .player-side .pf-card,
+  #view-player.active .player-side > .ghost-btn {
+    margin: 0;
+    width: 100%;
+  }
+
+  #view-player.active #playerEdit {
+    grid-column: 1 / -1;
+  }
+
+  /* ========== MATCH ========== */
+  #view-new.active #personalMatchRoot {
+    display: grid;
+    grid-template-columns: 340px minmax(0, 1fr);
+    gap: 24px;
+    align-items: start;
+  }
+
+  #view-new.active #personalMatchRoot > .coach-banner {
+    grid-column: 1 / -1;
+  }
+
+  #view-new.active .match-col-ctx {
+    position: sticky;
+    top: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px;
+    border-radius: 22px;
+    border: 1px solid var(--card-line);
+    background: color-mix(in srgb, var(--card-paper) 94%, transparent);
+  }
+
+  #view-new.active .match-col-ctx .hero {
+    margin: 0;
+  }
+
+  #view-new.active .match-col-ctx details.match-context {
+    margin: 0;
+  }
+
+  #view-new.active .match-col-ctx details.match-context[open] {
+    padding-top: 4px;
+  }
+
+  #view-new.active .match-col-play {
+    min-width: 0;
+    padding: 18px 20px 20px;
+    border-radius: 22px;
+    border: 1px solid var(--card-line);
+    background: color-mix(in srgb, var(--card-paper) 94%, transparent);
+  }
+
+  #view-new.active .metric-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  #view-new.active .section-title {
+    margin-top: 8px;
+  }
+
+  #view-new.active #saveBtn {
+    margin-top: 8px;
+  }
+
+  /* ========== HISTORY ========== */
+  #view-history.active #historyToolbar {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 12px 20px;
+    align-items: end;
+    margin-bottom: 16px;
+  }
+
+  #view-history.active #historyToolbar > .banner,
+  #view-history.active #historyBackup {
+    grid-column: 1 / -1;
+  }
+
+  #view-history.active .hist-filters {
+    grid-column: 1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 16px;
+  }
+
+  #view-history.active #historyKind {
+    grid-column: 1 / -1;
+  }
+
+  #view-history.active #historyCardBtn {
+    grid-column: 2;
+    grid-row: 2;
+    width: auto;
+    min-width: 180px;
+    margin: 0;
+    align-self: end;
+  }
+
+  #view-history.active #historyList {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    align-items: start;
+  }
+
+  #view-history.active #historyList .match-card {
+    margin: 0;
+  }
+
+  #view-history.active #historyList .match-card:has(.match-details.open) {
+    grid-column: 1 / -1;
+  }
+
+  /* ========== STATS ========== */
+  #view-stats.active #personalStatsRoot {
+    display: grid;
+    grid-template-columns: minmax(0, 1.3fr) minmax(340px, 400px);
+    gap: 18px 24px;
+    align-items: start;
+    width: 100%;
+  }
+
+  #view-stats.active #personalStatsRoot > .field:has(#statsSeason) {
+    grid-column: 1;
+    max-width: 280px;
+    margin: 0;
+  }
+
+  #view-stats.active #periodHead {
+    display: none;
+  }
+
+  #view-stats.active #periodChips {
+    grid-column: 1 / -1;
+    max-width: none;
+    width: 100%;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 10px 12px;
+    margin: 0;
+  }
+
+  #view-stats.active #periodChips .period-switch-row,
+  #view-stats.active #periodChips .period-switch-row-full {
+    display: contents;
+  }
+
+  #view-stats.active #periodChips .chip {
+    width: auto;
+    min-width: 7.25rem;
+    flex: 0 0 auto;
+    padding: 10px 14px;
+    white-space: nowrap;
+  }
+
+  #view-stats.active .stats-layout {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: minmax(0, 1.3fr) minmax(340px, 400px);
+    grid-template-areas: "main side";
+    gap: 24px;
+    align-items: start;
+    width: 100%;
+    margin: 0;
+  }
+
+  #view-stats.active .stats-main {
+    grid-area: main;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  #view-stats.active .stats-side {
+    grid-area: side;
+    min-width: 0;
+    position: sticky;
+    top: 16px;
+  }
+
+  #view-stats.active .stats-side .chart-wrap {
+    margin: 0;
+    min-height: 300px;
+    padding: 16px;
+  }
+
+  #view-stats.active .stat-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    margin: 0;
+  }
+
+  #view-stats.active .kpi-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  #view-stats.active .season-board,
+  #view-stats.active .compare-board,
+  #view-stats.active #timingBoard {
+    margin: 0;
+    width: 100%;
+  }
+
+  #view-stats.active .hint[data-i18n="statsPeriodHint"] {
+    grid-column: 1;
+    width: 100%;
+    max-width: none;
+    margin: 0;
+  }
+
+  #view-stats.active #statsCardBtn {
+    grid-column: 2;
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    align-self: start;
+  }
+
+  #view-stats.active #parentTrainingsPanel,
+  #view-stats.active #parentCoachStatsPanel {
+    grid-column: 1 / -1;
+  }
+
+  #view-stats.active #coachStatsPeriod {
+    max-width: none;
+    width: 100%;
+    box-sizing: border-box;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  #view-stats.active #coachStatsPeriod .period-switch-row,
+  #view-stats.active #coachStatsPeriod .period-switch-row-full {
+    display: contents;
+  }
+
+  #view-stats.active #coachStatsPeriod .chip {
+    width: auto;
+    min-width: 7.25rem;
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+
+  /* ========== SETTINGS ========== */
+  #view-settings.active .settings-page {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px 24px;
+    align-items: start;
+  }
+
+  #view-settings.active .settings-block {
+    margin: 0;
+    padding: 16px;
+    border: 1px solid var(--card-line);
+    border-radius: 18px;
+    border-top: 1px solid var(--card-line);
+    background: color-mix(in srgb, var(--card-paper) 92%, transparent);
+  }
+
+  #view-settings.active .settings-block:first-child {
+    padding-top: 16px;
+  }
+
+  #view-settings.active .settings-block-about,
+  #view-settings.active .settings-block-danger,
+  #view-settings.active .settings-block:has(#cloudSyncCard) {
+    grid-column: 1 / -1;
+  }
+
+  .live {
+    max-width: 1200px;
+  }
+
+  .toast {
+    left: calc(50% + 90px);
+  }
+
+  .app > .toast,
+  .app > .live,
+  .app > .photo-sheet-back,
+  .app > .photo-sheet,
+  .app > .crop-modal,
+  .app > .onboard,
+  .app > .preview-modal,
+  .app > .hero-pin {
+    grid-column: 1 / -1;
+  }
+
+  .metric-grid {
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+  }
+
+  .coach-hero,
+  .coach-section {
+    max-width: none;
+  }
+}
+
+@media (min-width: 1280px) {
+  .app {
+    grid-template-columns: 232px minmax(0, 1fr);
+  }
+
+  .tabbar {
+    margin-left: 20px;
+  }
+
+  .content {
+    max-width: 1400px;
+    padding-left: 40px;
+    padding-right: 40px;
+  }
+
+  #view-player.active {
+    grid-template-columns: minmax(0, 1fr) 340px;
+    gap: 24px 28px;
+  }
+
+  #view-new.active #personalMatchRoot {
+    grid-template-columns: 360px minmax(0, 1fr);
+    gap: 28px;
+  }
+
+  #view-stats.active .stats-layout {
+    grid-template-columns: minmax(0, 1.35fr) minmax(360px, 420px);
+    gap: 28px;
+  }
+
+  #view-stats.active #personalStatsRoot {
+    grid-template-columns: minmax(0, 1.35fr) minmax(360px, 420px);
+    gap: 20px 28px;
+  }
+}

@@ -39,6 +39,7 @@ window.ffkIsNative = function () {
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <title>Matchcard — Оценка матча</title>
 <link rel="stylesheet" href="css/app.css">
+<link rel="stylesheet" href="css/pc.css">
 <script src="js/version.js"></script>
 </head>
 <body>
@@ -105,14 +106,15 @@ window.ffkIsNative = function () {
         <div class="avatar-pin" id="pPhotoWrap">
           <button class="photo-box" id="pPhotoBox" type="button" data-i18n-aria="pPhotoAria">Д</button>
         </div>
+        <div class="fb-id">
+          <div class="fb-name" id="fbName"></div>
+          <div class="fb-meta" id="fbMeta"></div>
+        </div>
         <input type="file" id="p-photo" accept="image/jpeg,image/png,image/webp,image/gif,image/heic,image/heif,.jpg,.jpeg,.png,.webp,.gif,.heic,.heif" hidden>
         <input type="file" id="p-cover" accept="image/jpeg,image/png,image/webp,image/gif,image/heic,image/heif,.jpg,.jpeg,.png,.webp,.gif,.heic,.heif" hidden>
       </div>
-      <div class="fb-id">
-        <div class="fb-name" id="fbName"></div>
-        <div class="fb-meta" id="fbMeta"></div>
-      </div>
       <div id="playerFeed"></div>
+      <aside class="player-side">
       <div class="pf-card" id="parentLinksCard">
         <h3 data-i18n="parentLinksTitle">От тренера</h3>
         <p class="hint" data-i18n="parentLinksLead">Игрок, подтверждённый тренером. Личная статистика у бровки — как раньше, отдельно.</p>
@@ -121,12 +123,14 @@ window.ffkIsNative = function () {
         <button class="ghost-btn" id="parentChatCoachBtn" type="button" data-i18n="chatWriteCoach" hidden>Написать тренеру</button>
         <button class="ghost-btn" id="parentAddLinkBtn" type="button" data-i18n="parentAddLinkBtn">Добавить по QR / ссылке</button>
       </div>
-      <div class="pf-card">
+      <div class="pf-card" id="playerRoster">
         <h3 data-i18n="myPlayers">Мои игроки</h3>
         <div id="rosterList"></div>
         <button class="ghost-btn" id="addPlayerBtn" type="button" data-i18n="addPlayer">Добавить игрока</button>
       </div>
       <button class="ghost-btn" id="editPlayerBtn" type="button" data-i18n="pEditCard">Редактировать карточку</button>
+      <button class="ghost-btn" id="parentAddLinkBtnBottom" type="button" data-i18n="parentAddLinkBtn" hidden>Добавить по QR / ссылке</button>
+      </aside>
       <div class="player-edit" id="playerEdit" hidden>
         <div class="player-edit-card" id="playerEditCard">
           <div class="sheet-grab" id="playerEditGrab" aria-hidden="true"><span></span></div>
@@ -195,7 +199,6 @@ window.ffkIsNative = function () {
       <button class="save-btn" id="savePlayerBtn" type="button" data-i18n="pSave">Сохранить данные</button>
         </div>
       </div>
-      <button class="ghost-btn" id="parentAddLinkBtnBottom" type="button" data-i18n="parentAddLinkBtn" hidden>Добавить по QR / ссылке</button>
     </div>
     <div class="view active" id="view-new">
       <div id="personalMatchRoot">

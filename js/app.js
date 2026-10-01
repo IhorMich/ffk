@@ -3891,6 +3891,10 @@ function showView(name){
   if(isCoachPlan() && (name === 'new' || name === 'history' || name === 'stats') && typeof renderCoachUi === 'function'){
     renderCoachUi();
   }
+  if(name === 'new' && isDesktopUi()){
+    const details = document.getElementById('matchContext');
+    if(details) details.open = true;
+  }
   if(childOn) applyHeader();
   else if(isCoachPlan()) applyHeader();
   else if(name === 'player') applyHeader();
@@ -5386,8 +5390,15 @@ function bindOverlayBackdropClose(overlayId, closeFn){
 }
 function bindDesktopChrome(){
   syncDesktopUiClass();
+  const openMatchDetailsDesktop = () => {
+    if(!isDesktopUi()) return;
+    const details = document.getElementById('matchContext');
+    if(details) details.open = true;
+  };
+  openMatchDetailsDesktop();
   window.addEventListener('resize', () => {
     syncDesktopUiClass();
+    openMatchDetailsDesktop();
   });
   window.addEventListener('keydown', e => {
     if(e.key !== 'Escape') return;
