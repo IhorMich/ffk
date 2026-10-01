@@ -4166,28 +4166,36 @@
       });
       // Upload once as a batch so parents get a single FCM, not one drip per player.
       const msgs = (res && res.messages) || [];
-      let cloudQueued = 0;
+      const finishCloud = (cloudRes) => {
+        const ok = !!(cloudRes && cloudRes.ok);
+        if(!ok){
+          console.warn('Broadcast cloud push failed', cloudRes);
+          try{
+            if(global.ParentCloud && typeof global.ParentCloud.pollInboxChats === 'function'){
+              global.ParentCloud.pollInboxChats({push: true}).catch(() => {});
+            }
+          }catch(e){}
+          toast(tt('coachBroadcastCloudFail', 'Saved on this PC, but phone push failed. Check coach cloud login.'));
+        }
+      };
       try{
         if(msgs.length && global.ParentCloud && typeof global.ParentCloud.pushChatBroadcast === 'function'){
-          cloudQueued = 1;
-          global.ParentCloud.pushChatBroadcast(msgs).catch(() => {});
-        }else if(msgs.length && global.ParentCloud && typeof global.ParentCloud.pushChatMessage === 'function'){
-          cloudQueued = 1;
-          global.ParentCloud.pushChatMessage(msgs[0]).catch(() => {});
-          msgs.slice(1).forEach(row => {
-            try{ global.ParentCloud.pushChatMessage(row).catch(() => {}); }catch(e){}
+          global.ParentCloud.pushChatBroadcast(msgs).then(finishCloud).catch(err => {
+            console.warn('Broadcast cloud push', err);
+            finishCloud({ok: false, error: err});
           });
+        }else if(msgs.length && global.ParentCloud && typeof global.ParentCloud.pushChatMessage === 'function'){
+          Promise.all(msgs.map(row => global.ParentCloud.pushChatMessage(row)))
+            .then(results => finishCloud({ok: results.some(r => r && r.ok)}))
+            .catch(err => finishCloud({ok: false, error: err}));
+        }else{
+          finishCloud({ok: false, reason: 'no_cloud'});
         }
-      }catch(e){}
+      }catch(e){
+        finishCloud({ok: false, error: e});
+      }
       toast(tt('coachBroadcastSent', 'Sent to {n} players')
         .replace('{n}', String(res.count || players.length)));
-      if(!cloudQueued){
-        try{
-          if(global.ParentCloud && typeof global.ParentCloud.pollInboxChats === 'function'){
-            global.ParentCloud.pollInboxChats({push: true}).catch(() => {});
-          }
-        }catch(e){}
-      }
       closeCoachBroadcastSheet();
       if(typeof renderParentUi === 'function') renderParentUi();
       if(typeof syncInboxBellUi === 'function') syncInboxBellUi();

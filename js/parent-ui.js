@@ -487,7 +487,20 @@
       // Upload + FCM wake immediately (don't wait for poll / debounce).
       try{
         if(global.ParentCloud && typeof global.ParentCloud.pushChatMessage === 'function'){
-          global.ParentCloud.pushChatMessage(row).catch(() => {});
+          global.ParentCloud.pushChatMessage(row).then(res => {
+            if(res && res.ok) return;
+            console.warn('Chat cloud push failed', res);
+            if(global.ParentCloud.pollInboxChats){
+              global.ParentCloud.pollInboxChats({push: true}).catch(() => {});
+            }
+            toast(tt('chatCloudPushFail', 'Message saved here, but the phone did not get a push.'));
+          }).catch(err => {
+            console.warn('Chat cloud push', err);
+            if(global.ParentCloud.pollInboxChats){
+              global.ParentCloud.pollInboxChats({push: true}).catch(() => {});
+            }
+            toast(tt('chatCloudPushFail', 'Message saved here, but the phone did not get a push.'));
+          });
         }else if(global.ParentCloud && typeof global.ParentCloud.pollInboxChats === 'function'){
           global.ParentCloud.pollInboxChats({push: true}).catch(() => {});
         }

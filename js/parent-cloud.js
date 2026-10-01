@@ -782,14 +782,15 @@
     const pid = String(teamPlayerId || '');
     if(!sb || !pid) return [];
     const cached = (coachLinks() || [])
-      .filter(l => String(l.team_player_id || '') === pid && l.parent_user_id)
+      .filter(l => String(l.team_player_id || '') === pid && l.parent_user_id
+        && String(l.status || 'active') !== 'revoked')
       .map(l => String(l.parent_user_id));
     if(cached.length) return [...new Set(cached)];
     try{
       const {data, error} = await sb.from('parent_player_links')
         .select('parent_user_id,team_player_id,status')
         .eq('team_player_id', pid)
-        .eq('status', 'active');
+        .neq('status', 'revoked');
       if(error) throw error;
       const ids = (data || []).map(r => String(r.parent_user_id || '')).filter(Boolean);
       if(ids.length){
@@ -808,7 +809,43 @@
       }
       return [...new Set(ids)];
     }catch(e){
+      console.warn('resolveParentUserIds', e);
       return [];
+    }
+  }
+  /** Refresh parent links for many players in one query (needed on PC before push). */
+  async function refreshParentLinksForPlayers(sb, playerIds){
+    const ids = [...new Set((playerIds || []).map(id => String(id || '')).filter(Boolean))];
+    if(!sb || !ids.length) return coachLinks();
+    try{
+      const {data, error} = await sb.from('parent_player_links')
+        .select('parent_user_id,team_player_id,personal_player_id,status')
+        .in('team_player_id', ids)
+        .neq('status', 'revoked');
+      if(error) throw error;
+      const incoming = Array.isArray(data) ? data : [];
+      if(!incoming.length) return coachLinks();
+      const byPlayer = new Map();
+      coachLinks().forEach(row => {
+        const key = String(row.team_player_id || '');
+        if(key) byPlayer.set(key, row);
+      });
+      incoming.forEach(row => {
+        const key = String(row.team_player_id || '');
+        if(!key || !row.parent_user_id) return;
+        byPlayer.set(key, {
+          team_player_id: key,
+          personal_player_id: String(row.personal_player_id || ''),
+          parent_user_id: String(row.parent_user_id),
+          status: String(row.status || 'active')
+        });
+      });
+      const next = [...byPlayer.values()];
+      try{ localStorage.setItem(COACH_LINKS_KEY, JSON.stringify(next)); }catch(e){}
+      return next;
+    }catch(e){
+      console.warn('refreshParentLinksForPlayers', e);
+      return coachLinks();
     }
   }
   /** Upsert one outgoing chat row then wake the other device via FCM. */
@@ -832,7 +869,10 @@
       parentUserIds = [session.user.id];
     }else{
       if(message.parent_user_id) parentUserIds = [String(message.parent_user_id)];
-      else parentUserIds = await resolveParentUserIds(sb, message.team_player_id);
+      else{
+        await refreshParentLinksForPlayers(sb, [message.team_player_id]);
+        parentUserIds = await resolveParentUserIds(sb, message.team_player_id);
+      }
     }
     if(!parentUserIds.length) return {ok: false, reason: 'no_parent'};
     const results = [];
@@ -854,6 +894,7 @@
       };
       const {error} = await sb.from('player_chat_messages').upsert(row, {onConflict: 'id'});
       if(error){
+        console.warn('pushChatMessage upsert', error);
         results.push({ok: false, error});
         continue;
       }
@@ -862,7 +903,7 @@
       results.push({ok: true, push: pushed, id: row.id});
     }
     const ok = results.some(r => r.ok);
-    return {ok, results};
+    return {ok, results, reason: ok ? '' : 'upsert_failed'};
   }
   /** Upsert a full team broadcast once, then one FCM per unique parent. */
   async function pushChatBroadcast(messages){
@@ -881,6 +922,7 @@
     }
     if(!session) return {ok: false, reason: 'no_session'};
     const broadcastId = String(list[0].broadcast_id || '').trim() || list[0].id;
+    await refreshParentLinksForPlayers(sb, list.map(m => m.team_player_id));
     const rows = [];
     const notifyParents = new Map(); // parentUserId → representative message id
     for(const message of list){
@@ -912,10 +954,18 @@
     for(let i = 0; i < rows.length; i += 40){
       const chunk = rows.slice(i, i + 40);
       const {error} = await sb.from('player_chat_messages').upsert(chunk, {onConflict: 'id'});
-      if(error) return {ok: false, error};
+      if(error){
+        console.warn('pushChatBroadcast upsert', error);
+        return {ok: false, error, reason: 'upsert_failed'};
+      }
     }
     // One edge invoke for the whole broadcast — server wakes each parent once.
-    const pushed = await notifyChatBroadcast(broadcastId);
+    // Also poke one representative message_id in case broadcast_id path fails.
+    let pushed = await notifyChatBroadcast(broadcastId);
+    if(!pushed || pushed.ok === false){
+      const firstId = notifyParents.values().next().value;
+      if(firstId) pushed = await notifyChatPush(firstId);
+    }
     return {ok: true, count: rows.length, parents: notifyParents.size, push: pushed};
   }
   function noticeTitleBody(noticeType, payload){
@@ -1159,10 +1209,24 @@
     const recentLimit = Number(opts.recentLimit) > 0 ? Math.floor(Number(opts.recentLimit)) : 0;
     const sb = client(senderRole === 'coach' ? 'coach' : 'parent');
     if(!sb || !session || !global.InboxStore) return {ok: false, incoming: []};
-    const byPlayer = new Map((links || []).map(link => [
+    let effectiveLinks = links || [];
+    if(!pullOnly && senderRole === 'coach'){
+      const playerIds = effectiveLinks.map(l => l && (l.team_player_id || l.player && l.player.id)).filter(Boolean);
+      const outgoingIds = global.InboxStore.listAll()
+        .filter(m => m.type === 'chat_message' && m.sender_role === 'coach')
+        .map(m => m.team_player_id)
+        .filter(Boolean);
+      effectiveLinks = await refreshParentLinksForPlayers(sb, [...playerIds, ...outgoingIds]);
+    }
+    const byPlayer = new Map((effectiveLinks || []).map(link => [
       String(link.team_player_id || link.player && link.player.id || ''),
       link
     ]));
+    // Ensure roster stubs still exist even if link refresh returned only linked parents.
+    (links || []).forEach(link => {
+      const key = String(link.team_player_id || link.player && link.player.id || '');
+      if(key && !byPlayer.has(key)) byPlayer.set(key, link);
+    });
     if(!pullOnly){
       const rows = global.InboxStore.listAll()
         .filter(m =>
@@ -1694,6 +1758,8 @@
     tokenFromUrl,
     buildInviteUrl,
     coachLinks,
+    refreshParentLinksForPlayers,
+    resolveParentUserIds,
     isCoachPlayerLinked,
     rememberCoachLink,
     publishInvite,
