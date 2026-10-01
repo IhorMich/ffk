@@ -230,7 +230,7 @@
     padding: 16px;
     border-radius: 22px;
     border: 1px solid var(--card-line);
-    background: color-mix(in srgb, var(--card-paper) 94%, transparent);
+    background: var(--card-paper);
   }
 
   #view-new.active .match-col-ctx .hero {
@@ -250,7 +250,7 @@
     padding: 18px 20px 20px;
     border-radius: 22px;
     border: 1px solid var(--card-line);
-    background: color-mix(in srgb, var(--card-paper) 94%, transparent);
+    background: var(--card-paper);
   }
 
   #view-new.active .metric-grid {
