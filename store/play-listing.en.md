@@ -1,8 +1,8 @@
-# Matchcard — Google Play (English)
+# TEMPO — Google Play (English)
 
 ## App name (≤ 30)
 
-Matchcard
+TEMPO
 
 ## Short description (≤ 80)
 
@@ -10,7 +10,7 @@ Sideline diary for one child: actions, a rating out of 10, a card to share.
 
 ## Full description
 
-Matchcard is a match diary for one young footballer, for a parent on the sideline.
+TEMPO is a match diary for one young footballer, for a parent on the sideline.
 
 Tap Start and the big pitch buttons open. Goals, passes, tackles and mistakes move the rating live. It starts at 6.0 and finishes between 0 and 10. After the game, share a card in the family chat.
 

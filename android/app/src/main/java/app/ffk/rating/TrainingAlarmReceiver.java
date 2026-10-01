@@ -30,7 +30,7 @@ public class TrainingAlarmReceiver extends BroadcastReceiver {
     Uri sound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
     NotificationCompat.Builder builder = new NotificationCompat.Builder(context, ALERT_CHANNEL)
       .setSmallIcon(R.drawable.ic_stat_notify)
-      .setContentTitle(title == null || title.isEmpty() ? "Matchcard" : title)
+      .setContentTitle(title == null || title.isEmpty() ? "TEMPO" : title)
       .setContentText(body == null ? "" : body)
       .setStyle(new NotificationCompat.BigTextStyle().bigText(body == null ? "" : body))
       .setPriority(NotificationCompat.PRIORITY_HIGH)
@@ -54,7 +54,7 @@ public class TrainingAlarmReceiver extends BroadcastReceiver {
     if (nm.getNotificationChannel(ALERT_CHANNEL) != null) return;
     NotificationChannel channel = new NotificationChannel(
       ALERT_CHANNEL,
-      "Matchcard alerts",
+      "TEMPO alerts",
       NotificationManager.IMPORTANCE_HIGH
     );
     channel.setDescription("Match invites and training reminders");

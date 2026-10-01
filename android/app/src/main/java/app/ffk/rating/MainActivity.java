@@ -244,7 +244,7 @@ public class MainActivity extends BridgeActivity {
     if (existing != null) return;
     NotificationChannel channel = new NotificationChannel(
       ALERT_CHANNEL,
-      "Matchcard messages",
+      "TEMPO messages",
       NotificationManager.IMPORTANCE_HIGH
     );
     channel.setDescription("Chat and match alerts");
@@ -294,7 +294,7 @@ public class MainActivity extends BridgeActivity {
     Uri sound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
     NotificationCompat.Builder builder = new NotificationCompat.Builder(this, ALERT_CHANNEL)
       .setSmallIcon(R.drawable.ic_stat_notify)
-      .setContentTitle(title == null || title.isEmpty() ? "Matchcard" : title)
+      .setContentTitle(title == null || title.isEmpty() ? "TEMPO" : title)
       .setContentText(body == null ? "" : body)
       .setStyle(new NotificationCompat.BigTextStyle().bigText(body == null ? "" : body))
       .setPriority(NotificationCompat.PRIORITY_HIGH)
@@ -376,7 +376,7 @@ public class MainActivity extends BridgeActivity {
       Intent intent = new Intent(MainActivity.this, TrainingAlarmReceiver.class);
       intent.setAction("app.ffk.rating.TRAINING_REMINDER");
       intent.putExtra("id", id);
-      intent.putExtra("title", title == null ? "Matchcard" : title);
+      intent.putExtra("title", title == null ? "TEMPO" : title);
       intent.putExtra("body", body == null ? "" : body);
       int req = Math.abs(id.hashCode());
       int flags = PendingIntent.FLAG_UPDATE_CURRENT;

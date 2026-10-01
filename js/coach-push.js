@@ -1,4 +1,4 @@
-/* Matchcard push / local alerts — permission + Android FfkNotify channel.
+/* TEMPO push / local alerts — permission + Android FfkNotify channel.
    Remote FCM (Push.register) is skipped until google-services.json is present —
    calling register without Firebase crashes the Android process. */
 (function(global){
@@ -52,7 +52,7 @@
     try{
       if(global.FfkNotify && typeof global.FfkNotify.showChatBroadcast === 'function' && broadcastId){
         global.FfkNotify.showChatBroadcast(
-          String(title || 'Matchcard'),
+          String(title || 'TEMPO'),
           String(body || ''),
           String(playerId || ''),
           String(chatKind || 'team'),
@@ -62,7 +62,7 @@
       }
       if(global.FfkNotify && typeof global.FfkNotify.showChatKind === 'function'){
         global.FfkNotify.showChatKind(
-          String(title || 'Matchcard'),
+          String(title || 'TEMPO'),
           String(body || ''),
           String(playerId || ''),
           String(chatKind || '')
@@ -70,11 +70,11 @@
         return true;
       }
       if(global.FfkNotify && typeof global.FfkNotify.showChat === 'function'){
-        global.FfkNotify.showChat(String(title || 'Matchcard'), String(body || ''), String(playerId || ''));
+        global.FfkNotify.showChat(String(title || 'TEMPO'), String(body || ''), String(playerId || ''));
         return true;
       }
       if(global.FfkNotify && typeof global.FfkNotify.show === 'function'){
-        global.FfkNotify.show(String(title || 'Matchcard'), String(body || ''));
+        global.FfkNotify.show(String(title || 'TEMPO'), String(body || ''));
         return true;
       }
     }catch(e){}
@@ -116,7 +116,7 @@
         console.warn('push registration', err);
       });
       Push.addListener('pushNotificationReceived', (n) => {
-        const title = (n && n.title) || (n && n.notification && n.notification.title) || 'Matchcard';
+        const title = (n && n.title) || (n && n.notification && n.notification.title) || 'TEMPO';
         const body = (n && n.body) || (n && n.notification && n.notification.body) || '';
         const playerId = (n && n.data && (n.data.team_player_id || n.data.teamPlayerId)) || '';
         const chatKind = (n && n.data && (n.data.chat_kind || n.data.chatKind)) || '';
@@ -255,7 +255,7 @@
           const tag = broadcastId
             ? `ffk-bc-${broadcastId}`
             : (`ffk-chat-${String(playerId || Date.now())}`);
-          new Notification(title || 'Matchcard', {
+          new Notification(title || 'TEMPO', {
             body: body || '',
             silent: false,
             requireInteraction: false,
@@ -265,7 +265,7 @@
         }
       }catch(e){}
     }
-    if(!shown) toast(`${title || 'Matchcard'}: ${body || ''}`);
+    if(!shown) toast(`${title || 'TEMPO'}: ${body || ''}`);
   }
 
   function notifyLocal(title, body, playerId, chatKind, broadcastId){
@@ -277,7 +277,7 @@
     const s = read();
     const alerts = Array.isArray(s.coachAlerts) ? s.coachAlerts.slice(-9) : [];
     alerts.push({
-      title: String(title || 'Matchcard'),
+      title: String(title || 'TEMPO'),
       body: String(body || ''),
       createdAt: new Date().toISOString()
     });
@@ -357,7 +357,7 @@
   function nativeSchedule(id, title, body, whenMs){
     try{
       if(global.FfkNotify && typeof global.FfkNotify.schedule === 'function'){
-        global.FfkNotify.schedule(String(id), String(title || 'Matchcard'), String(body || ''), Number(whenMs));
+        global.FfkNotify.schedule(String(id), String(title || 'TEMPO'), String(body || ''), Number(whenMs));
         return true;
       }
     }catch(e){}

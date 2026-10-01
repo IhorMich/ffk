@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#05060c">
-  <title>Matchcard</title>
+  <title>TEMPO</title>
   <style>
     :root{color-scheme:dark}
     *{box-sizing:border-box}
@@ -19,9 +19,9 @@
 </head>
 <body>
   <main>
-    <h1>Matchcard</h1>
+    <h1>TEMPO</h1>
     <p id="message">Tap the button to open the invitation in the app.</p>
-    <a id="openApp" href="#">Open Matchcard</a>
+    <a id="openApp" href="#">Open TEMPO</a>
     <a id="openWeb" class="secondary" href="#" hidden>Open in browser</a>
     <small id="hint">Android requires a tap before a website can open an app.</small>
   </main>
@@ -29,10 +29,10 @@
   (function(){
     const lang = (navigator.language || 'en').toLowerCase();
     const text = lang.startsWith('ru')
-      ? {opening:'Нажмите кнопку, чтобы открыть приглашение в приложении.', button:'Открыть Matchcard', web:'Открыть в браузере', hint:'Если приложение не установлено — откройте в браузере.', bad:'Неверная ссылка-приглашение.'}
+      ? {opening:'Нажмите кнопку, чтобы открыть приглашение в приложении.', button:'Открыть TEMPO', web:'Открыть в браузере', hint:'Если приложение не установлено — откройте в браузере.', bad:'Неверная ссылка-приглашение.'}
       : lang.startsWith('uk')
-        ? {opening:'Натисніть кнопку, щоб відкрити запрошення в застосунку.', button:'Відкрити Matchcard', web:'Відкрити в браузері', hint:'Якщо застосунок не встановлено — відкрийте в браузері.', bad:'Невірне посилання-запрошення.'}
-        : {opening:'Tap the button to open the invitation in the app.', button:'Open Matchcard', web:'Open in browser', hint:'If the app is not installed, open the invite in the browser.', bad:'Invalid invitation link.'};
+        ? {opening:'Натисніть кнопку, щоб відкрити запрошення в застосунку.', button:'Відкрити TEMPO', web:'Відкрити в браузері', hint:'Якщо застосунок не встановлено — відкрийте в браузері.', bad:'Невірне посилання-запрошення.'}
+        : {opening:'Tap the button to open the invitation in the app.', button:'Open TEMPO', web:'Open in browser', hint:'If the app is not installed, open the invite in the browser.', bad:'Invalid invitation link.'};
     const params = new URLSearchParams(location.search);
     const code = params.get('code') || '';
     const token = params.get('token') || '';

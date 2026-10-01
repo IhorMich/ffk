@@ -2,7 +2,7 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 
 /**
- * send-chat-push — FCM HTTP v1 for Matchcard chat.
+ * send-chat-push — FCM HTTP v1 for TEMPO chat.
  *
  * Body: { message_id: string }
  * Auth (verify_jwt disabled — checked here):
@@ -304,7 +304,7 @@ Deno.serve(async (req: Request) => {
     }
     return await deliver(
       recipientIds,
-      String(notice.title || "Matchcard").slice(0, 80) || "Matchcard",
+      String(notice.title || "TEMPO").slice(0, 80) || "TEMPO",
       String(notice.body || "Новое уведомление").trim().slice(0, 180) ||
         "Новое уведомление",
       {
@@ -487,7 +487,7 @@ Deno.serve(async (req: Request) => {
 
   return await deliver(
     recipientIds,
-    isTeam ? "Главный тренер" : "Matchcard",
+    isTeam ? "Главный тренер" : "TEMPO",
     String(chat.body || "Новое сообщение").trim().slice(0, 180) ||
       "Новое сообщение",
     {

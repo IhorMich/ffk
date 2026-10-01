@@ -622,7 +622,7 @@
   }
   .intro-name{
     position:relative;z-index:1;
-    display:grid;place-items:center;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
     width:100%;
     margin-top:18px;
     min-height:1.35em;
@@ -631,8 +631,21 @@
   .intro-name-line{
     display:flex;justify-content:center;align-items:baseline;
     white-space:nowrap;
-    font-size:clamp(1.55rem,5.8vw,2.35rem);font-weight:800;letter-spacing:.04em;text-transform:uppercase;
+    font-size:clamp(1.9rem,7vw,2.85rem);font-weight:800;letter-spacing:.14em;text-transform:uppercase;
     color:#fff;line-height:1.05;
+  }
+  .intro-name-sub{
+    opacity:0;
+    transform:translateY(8px);
+    font-size:clamp(.72rem,2.8vw,.92rem);font-weight:650;letter-spacing:.12em;text-transform:uppercase;
+    color:rgba(255,255,255,.72);
+  }
+  .intro.play .intro-name-sub{
+    animation:introSubIn .7s ease calc(3.35s + .55s) forwards;
+  }
+  @keyframes introSubIn{
+    from{opacity:0;transform:translateY(8px)}
+    to{opacity:1;transform:translateY(0)}
   }
   .intro-name-ch{
     display:inline-block;

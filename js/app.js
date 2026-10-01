@@ -68,7 +68,7 @@ async function nativeShareBlob(blob, filename, title, text){
   const directory = 'CACHE';
   await Filesystem.writeFile({path: filename, data, directory});
   const got = await Filesystem.getUri({path: filename, directory});
-  const payload = {title: title || 'Matchcard', files: [got.uri], dialogTitle: title || 'Matchcard'};
+  const payload = {title: title || 'TEMPO', files: [got.uri], dialogTitle: title || 'TEMPO'};
   if(text) payload.text = String(text);
   await Share.share(payload);
   return true;
@@ -80,19 +80,19 @@ async function nativeSaveDocument(blob, filename){
   if(Gallery && typeof Gallery.saveDocument === 'function'){
     try{
       const ret = await Gallery.saveDocument({data, filename, mimeType:'application/json'});
-      return {folder: (ret && ret.folder) || 'Download/Matchcard'};
+      return {folder: (ret && ret.folder) || 'Download/TEMPO'};
     }catch(e){}
   }
   const Filesystem = capPlugin('Filesystem');
   if(!Filesystem) return null;
   try{
     await Filesystem.writeFile({
-      path: 'Matchcard/' + filename,
+      path: 'TEMPO/' + filename,
       data,
       directory: 'DOCUMENTS',
       recursive: true
     });
-    return {folder: 'Files / Matchcard'};
+    return {folder: 'Files / TEMPO'};
   }catch(e){
     return null;
   }
@@ -554,7 +554,7 @@ async function onSettingsDeleteAccount(){
   }
 }
 function openSettingsSupport(){
-  const subject = encodeURIComponent('Matchcard support');
+  const subject = encodeURIComponent('TEMPO support');
   let trail = '';
   try{
     if(window.MatchcardLog && typeof window.MatchcardLog.getTrail === 'function'){
@@ -820,7 +820,7 @@ window.syncPushSettingsUi = syncPushSettingsUi;
 function proTeaserHtml(titleKey){
   const unlock = `<button class="save-btn pro-lock-btn" type="button">${escapeHtml(t('proUnlock'))}</button>`;
   return `<div class="pro-lock">
-    <div class="pro-lock-kicker">Matchcard Pro</div>
+    <div class="pro-lock-kicker">TEMPO Pro</div>
     <p>${escapeHtml(t(titleKey))}</p>
     ${unlock}
   </div>`;
@@ -2396,7 +2396,7 @@ function ageLabel(n){
 function initialsOf(p){
   const a = (p.firstName || '').trim().charAt(0);
   const b = (p.lastName || '').trim().charAt(0);
-  return ((a + b) || (p.club || 'Matchcard').slice(0,2) || 'MC').toUpperCase();
+  return ((a + b) || (p.club || 'TEMPO').slice(0,2) || 'MC').toUpperCase();
 }
 function initials(){
   return initialsOf(player);
@@ -4822,7 +4822,7 @@ function renderStats(){
 function drawChart(list){
   const svg = document.getElementById('chartSvg');
   if(!isPro()){
-    svg.innerHTML = `<text x="160" y="88" text-anchor="middle" font-size="13" font-weight="800" fill="${cssVar('--card-ink','#EDF1F7')}">Matchcard Pro</text>
+    svg.innerHTML = `<text x="160" y="88" text-anchor="middle" font-size="13" font-weight="800" fill="${cssVar('--card-ink','#EDF1F7')}">TEMPO Pro</text>
       <text x="160" y="112" text-anchor="middle" font-size="11" fill="${cssVar('--card-muted','#8D9AB5')}">${escapeHtml(t('proFeatureChart'))}</text>`;
     return;
   }
@@ -6095,17 +6095,17 @@ async function exportPngFile(canvas, filename){
   }
   const invite = matchcardShareText();
   try{
-    if(await nativeShareBlob(blob, filename, 'Matchcard', invite)) return true;
+    if(await nativeShareBlob(blob, filename, 'TEMPO', invite)) return true;
   }catch(e){}
   const file = new File([blob], filename, {type:'image/png'});
   try{
-    const payload = {files:[file], title:'Matchcard', text: invite};
+    const payload = {files:[file], title:'TEMPO', text: invite};
     if(navigator.canShare && navigator.canShare(payload)){
       await navigator.share(payload);
       return true;
     }
     if(navigator.canShare && navigator.canShare({files:[file]})){
-      await navigator.share({files:[file], title:'Matchcard', text: invite});
+      await navigator.share({files:[file], title:'TEMPO', text: invite});
       return true;
     }
   }catch(e){
@@ -6357,7 +6357,7 @@ async function drawFutCardCanvas(list, period, mode){
   ctx.lineTo(84 + 96, 276);
   ctx.stroke();
   ctx.fillStyle = theme.muted;
-  fitText(ctx, 'MATCHCARD', 84, 308, rail, '800', 18, 12);
+  fitText(ctx, 'TEMPO', 84, 308, rail, '800', 18, 12);
   const no = shirtNo();
   if(no){
     ctx.textAlign = 'right';
@@ -6504,7 +6504,7 @@ async function drawMatchCardCanvas(m, mode){
   const tx = photo ? textX : left;
   const tw = photo ? headW : headX - left - 32;
   ctx.fillStyle = theme.muted;
-  fitText(ctx, 'MATCHCARD  ·  ' + t('reportTitle').toUpperCase(), tx, 84, tw, '800', 22, 16);
+  fitText(ctx, 'TEMPO  ·  ' + t('reportTitle').toUpperCase(), tx, 84, tw, '800', 22, 16);
   ctx.fillStyle = theme.plate;
   fitText(ctx, reportPlayerName(m), tx, 150, tw, '900', 54, 30);
   ctx.fillStyle = theme.muted;
@@ -6632,7 +6632,7 @@ async function shareCard(m){
     const ratingFail = ratingFixtureFail();
     if(ratingFail){
       if(typeof reportError === 'function') reportError(ratingFail, {scope: 'rating.fixtures', silent: true});
-      else console.error('Matchcard rating', ratingFail);
+      else console.error('TEMPO rating', ratingFail);
     }
     loadFilters();
     applyTheme();

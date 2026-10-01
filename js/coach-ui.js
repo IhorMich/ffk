@@ -1,4 +1,4 @@
-/* Matchcard Coach UI — Phase 1+2: academy, teams, roster, matches, analytics.
+/* TEMPO Coach UI — Phase 1+2: academy, teams, roster, matches, analytics.
    Separate from Personal Free/Pro. */
 (function(global){
   // Parent invite email: opens the device mail app with a ready message (no server SMTP yet).
@@ -1958,7 +1958,7 @@
         : async () => null;
       ctx.fillStyle = muted;
       ctx.font = '700 22px sans-serif';
-      fit(ctx, team && team.name ? team.name : 'Matchcard Coach', 64, 90, w - 128, '700', 22, 16);
+      fit(ctx, team && team.name ? team.name : 'TEMPO Coach', 64, 90, w - 128, '700', 22, 16);
       ctx.fillStyle = ink;
       ctx.font = '900 48px sans-serif';
       fit(ctx, match.opponent || '—', 64, 150, w - 128, '900', 48, 28);

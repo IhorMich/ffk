@@ -1,4 +1,4 @@
-/* Matchcard Coach ↔ Supabase. No-op when URL/key empty; local CoachStore stays source of truth on device. */
+/* TEMPO Coach ↔ Supabase. No-op when URL/key empty; local CoachStore stays source of truth on device. */
 (function(global){
   let clients = {coach: null, parent: null};
   let syncTimer = null;

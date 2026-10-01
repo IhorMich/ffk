@@ -70,7 +70,7 @@ public class GalleryPickerPlugin extends Plugin {
       values.put(MediaStore.Images.Media.DISPLAY_NAME, name);
       values.put(MediaStore.Images.Media.MIME_TYPE, "image/png");
       if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-        values.put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES + "/Matchcard");
+        values.put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES + "/TEMPO");
       }
       ContentResolver resolver = getContext().getContentResolver();
       dropOldCopy(resolver, name);
@@ -95,7 +95,7 @@ public class GalleryPickerPlugin extends Plugin {
   }
 
   /**
-   * Season backup: write JSON into Downloads/Matchcard so it sits in Files
+   * Season backup: write JSON into Downloads/TEMPO so it sits in Files
    * on the phone, not only in a share sheet.
    */
   @PluginMethod
@@ -116,7 +116,7 @@ public class GalleryPickerPlugin extends Plugin {
         ContentValues values = new ContentValues();
         values.put(MediaStore.Downloads.DISPLAY_NAME, name);
         values.put(MediaStore.Downloads.MIME_TYPE, mime);
-        values.put(MediaStore.Downloads.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS + "/Matchcard");
+        values.put(MediaStore.Downloads.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS + "/TEMPO");
         ContentResolver resolver = getContext().getContentResolver();
         dropOldDownload(resolver, name);
         Uri target = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values);
@@ -132,11 +132,11 @@ public class GalleryPickerPlugin extends Plugin {
           out.write(bytes);
         }
         ret.put("uri", target.toString());
-        ret.put("folder", "Download/Matchcard");
+        ret.put("folder", "Download/TEMPO");
       } else {
         File dir = new File(
           Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
-          "Matchcard"
+          "TEMPO"
         );
         if (!dir.exists() && !dir.mkdirs()) {
           call.reject("cannot create folder", "NO_DIR");
@@ -147,7 +147,7 @@ public class GalleryPickerPlugin extends Plugin {
           out.write(bytes);
         }
         ret.put("path", file.getAbsolutePath());
-        ret.put("folder", "Download/Matchcard");
+        ret.put("folder", "Download/TEMPO");
       }
       call.resolve(ret);
     } catch (Exception e) {

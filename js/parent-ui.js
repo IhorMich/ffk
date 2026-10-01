@@ -1,4 +1,4 @@
-/* Parent claim + academy-confirmed child stats (separate from personal Matchcard). */
+/* Parent claim + academy-confirmed child stats (separate from personal TEMPO). */
 (function(global){
   function esc(s){
     return String(s == null ? '' : s)
@@ -1486,7 +1486,7 @@
             ? `${tt('parentCoachLabel', 'Coach')}: ${labelOf(payload.coach.name)}`
             : ''
         )}</p>
-        <p class="hint">${esc(tt('parentClaimHint', 'Personal Matchcard stats stay yours. Coach ratings appear separately.'))}</p>
+        <p class="hint">${esc(tt('parentClaimHint', 'Personal TEMPO stats stay yours. Coach ratings appear separately.'))}</p>
       </div>`;
       return payload;
     }catch(e){
@@ -1563,7 +1563,7 @@
       ].filter(Boolean).join(' · '))}</p>
       <div class="pro-kicker">${esc(tt('parentCoachStatsKicker', 'Stats from coach'))}</div>
       ${parentCoachStatsBlockHtml(link)}
-      <p class="hint">${esc(tt('parentPersonalNote', 'Your sideline Matchcard ratings stay in History / Stats as before.'))}</p>
+      <p class="hint">${esc(tt('parentPersonalNote', 'Your sideline TEMPO ratings stay in History / Stats as before.'))}</p>
       <button type="button" class="save-btn" id="parentLinkOpenStatsBtn">${esc(tt('parentCoachStatsBtn', 'Coach stats'))}</button>
       <p class="hint">${esc(
         link.leave_status === 'pending'

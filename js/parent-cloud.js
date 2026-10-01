@@ -1,4 +1,4 @@
-/* Matchcard parent/player cross-device sync through Supabase. */
+/* TEMPO parent/player cross-device sync through Supabase. */
 (function(global){
   const COACH_LINKS_KEY = 'ffk_cloud_parent_links_v1';
   const PERSONAL_SYNC_AT_KEY = 'ffk_personal_backup_sync_at';
@@ -81,8 +81,8 @@
     const who = isTeam
       ? (typeof t === 'function' ? (t('chatTeamFromCoach') || t('chatTeamTitle') || 'Главный тренер') : 'Главный тренер')
       : (newest.sender_role === 'coach'
-        ? (newest.coach_name || newest.player_name || 'Matchcard')
-        : (newest.player_name || newest.coach_name || 'Matchcard'));
+        ? (newest.coach_name || newest.player_name || 'TEMPO')
+        : (newest.player_name || newest.coach_name || 'TEMPO'));
     const body = String(newest.text || '').trim().slice(0, 120);
     const title = !isTeam && collapsed.length > 1
       ? `${who} (${collapsed.length})`
@@ -1019,7 +1019,7 @@
     const when = [opponent, date].filter(Boolean).join(' · ');
     if(noticeType === 'match_result'){
       return {
-        title: 'Matchcard',
+        title: 'TEMPO',
         body: `Карточка матча${when ? ': ' + when : ''}`.slice(0, 180)
       };
     }
