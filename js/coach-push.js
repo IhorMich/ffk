@@ -179,22 +179,47 @@
   }
 
   /** Heads-up system notification (plays via notification stream — works on silent ringer). */
+  function playAlertBeep(){
+    try{
+      const Ctx = global.AudioContext || global.webkitAudioContext;
+      if(!Ctx) return;
+      const ctx = new Ctx();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = 880;
+      gain.gain.value = 0.0001;
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      const now = ctx.currentTime;
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.exponentialRampToValueAtTime(0.18, now + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.28);
+      osc.start(now);
+      osc.stop(now + 0.3);
+      setTimeout(() => { try{ ctx.close(); }catch(e){} }, 500);
+    }catch(e){}
+  }
   function notifyHeadsUp(title, body, force){
     const s = read();
     if(!force && !s.enabled) return;
-    if(nativeNotify(title, body)) return;
-    try{
-      if(typeof Notification !== 'undefined' && Notification.permission === 'granted'){
-        new Notification(title || 'Matchcard', {
-          body: body || '',
-          silent: false,
-          requireInteraction: false,
-          tag: 'ffk-alert'
-        });
-        return;
-      }
-    }catch(e){}
-    toast(`${title || 'Matchcard'}: ${body || ''}`);
+    let shown = false;
+    if(nativeNotify(title, body)) shown = true;
+    else {
+      try{
+        if(typeof Notification !== 'undefined' && Notification.permission === 'granted'){
+          new Notification(title || 'Matchcard', {
+            body: body || '',
+            silent: false,
+            requireInteraction: false,
+            tag: 'ffk-chat-' + Date.now()
+          });
+          shown = true;
+        }
+      }catch(e){}
+    }
+    playAlertBeep();
+    if(!shown) toast(`${title || 'Matchcard'}: ${body || ''}`);
   }
 
   function notifyLocal(title, body){

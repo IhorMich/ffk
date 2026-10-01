@@ -59,32 +59,113 @@
       ? `${who} (${fresh.length})`
       : who;
     try{
-      if(global.CoachPush){
-        if(typeof global.CoachPush.notifyHeadsUp === 'function'){
-          // force=true: still alert if permission was granted even when settings race
-          global.CoachPush.notifyHeadsUp(title, body || 'Новое сообщение', !!global.CoachPush.isEnabled());
-        }else if(typeof global.CoachPush.notifyLocal === 'function'){
-          global.CoachPush.notifyLocal(title, body || 'Новое сообщение');
-        }
+      if(global.CoachPush && typeof global.CoachPush.notifyHeadsUp === 'function'){
+        // Always force for fresh incoming chats when local push is enabled.
+        const pushOn = !!(global.CoachPush.isEnabled && global.CoachPush.isEnabled());
+        global.CoachPush.notifyHeadsUp(title, body || 'Новое сообщение', pushOn);
+      }else if(global.CoachPush && typeof global.CoachPush.notifyLocal === 'function'){
+        global.CoachPush.notifyLocal(title, body || 'Новое сообщение');
       }
     }catch(e){}
   }
   let chatPollTimer = 0;
+  let chatPolling = false;
   function startChatPoll(){
     if(chatPollTimer) return;
     const tick = () => {
       try{
         if(!ready()) return;
-        // Keep badge/notifications warm while the app is alive (foreground or background WebView).
-        scheduleSync();
+        pollInboxChats().catch(() => {});
       }catch(e){}
     };
-    chatPollTimer = setInterval(tick, 5000);
+    chatPollTimer = setInterval(tick, 4000);
     document.addEventListener('visibilitychange', () => {
       if(document.visibilityState === 'visible') tick();
     });
-    // First tick soon after boot so an already-open phone picks up waiting chats.
-    setTimeout(tick, 1500);
+    setTimeout(tick, 800);
+  }
+  async function pollInboxChats(){
+    if(!ready() || chatPolling) return {ok: false, reason: 'busy'};
+    chatPolling = true;
+    try{
+      const coachMode = typeof isCoachPlan === 'function' && isCoachPlan();
+      if(coachMode){
+        const sb = coachClient();
+        const coach = global.CoachStore;
+        const coachSession = coach && coach.getSession && coach.getSession();
+        if(!sb || !coachSession) return {ok: false, reason: 'no_session'};
+        const {data: authData, error: authErr} = await sb.auth.getSession();
+        if(authErr) throw authErr;
+        const session = authData && authData.session;
+        if(!session) return {ok: false, reason: 'no_session'};
+        const academy = coach.myAcademy && coach.myAcademy(coachSession);
+        const teams = academy && coach.listTeams ? coach.listTeams(coachSession, academy.id) : [];
+        const playerIds = [];
+        (teams || []).forEach(team => {
+          (coach.listPlayers ? coach.listPlayers(coachSession, team.id) : []).forEach(player => {
+            if(player && player.id) playerIds.push(player.id);
+          });
+        });
+        let links = coachLinks();
+        if(playerIds.length){
+          try{
+            const linksRes = await sb.from('parent_player_links')
+              .select('team_player_id,personal_player_id,parent_user_id')
+              .in('team_player_id', playerIds)
+              .neq('status', 'revoked');
+            if(!linksRes.error && Array.isArray(linksRes.data) && linksRes.data.length){
+              links = linksRes.data;
+              try{ localStorage.setItem(COACH_LINKS_KEY, JSON.stringify(links)); }catch(e){}
+            }
+          }catch(e){}
+        }
+        // Always include roster players so we can pull chats even if link cache is stale.
+        const byId = new Map(links.map(l => [String(l.team_player_id || ''), l]));
+        playerIds.forEach(id => {
+          if(!byId.has(String(id))) byId.set(String(id), {team_player_id: id});
+        });
+        const chatRes = await syncChats(session, [...byId.values()], 'coach');
+        notifyIncomingChats(chatRes && chatRes.incoming);
+        try{
+          if(typeof renderChatThread === 'function') renderChatThread();
+          else if(global.ParentUI && typeof global.ParentUI.renderChatThread === 'function'){
+            global.ParentUI.renderChatThread();
+          }
+        }catch(e){}
+        return {ok: true, incoming: (chatRes && chatRes.incoming) || []};
+      }
+
+      // Parent / Free mode
+      const sb = parentClient();
+      if(!sb) return {ok: false, reason: 'no_cloud'};
+      let session = null;
+      try{ session = await getSession(); }catch(e){}
+      if(!session){
+        try{ session = await ensureSession(false); }catch(e){ return {ok: false, reason: 'no_session'}; }
+      }
+      const links = global.ParentStore && global.ParentStore.listLinks
+        ? global.ParentStore.listLinks()
+        : [];
+      const chatRes = await syncChats(session, links, 'parent');
+      notifyIncomingChats(chatRes && chatRes.incoming);
+      try{
+        if(typeof renderChatThread === 'function') renderChatThread();
+        else if(global.ParentUI && typeof global.ParentUI.renderChatThread === 'function'){
+          global.ParentUI.renderChatThread();
+        }
+        const sheet = document.getElementById('inboxSheet');
+        const list = document.getElementById('inboxSheetList');
+        if(sheet && !sheet.hidden && list && typeof inboxRowsHtml === 'function' && typeof inboxMessages === 'function'){
+          list.innerHTML = inboxRowsHtml(inboxMessages());
+        }
+      }catch(e){}
+      return {ok: true, incoming: (chatRes && chatRes.incoming) || []};
+    }catch(error){
+      console.warn('Chat poll', error);
+      return {ok: false, error};
+    }finally{
+      chatPolling = false;
+    }
   }
   function coachClient(){
     return ready() && global.CoachCloud.getClient ? global.CoachCloud.getClient() : null;
@@ -534,7 +615,7 @@
   }
   async function syncChats(session, links, senderRole){
     const sb = client(senderRole === 'coach' ? 'coach' : 'parent');
-    if(!sb || !session || !global.InboxStore) return;
+    if(!sb || !session || !global.InboxStore) return {ok: false, incoming: []};
     const byPlayer = new Map((links || []).map(link => [
       String(link.team_player_id || link.player && link.player.id || ''),
       link
@@ -1011,7 +1092,8 @@
         }
       }
     }
-    const chatRes = await syncChats(session, nextLinks, 'coach');
+    const chatLinks = (nextLinks && nextLinks.length) ? nextLinks : coachLinks();
+    const chatRes = await syncChats(session, chatLinks, 'coach');
     notifyIncomingChats(chatRes && chatRes.incoming);
     if(typeof syncCoachChildPlayerUi === 'function'){
       try{ syncCoachChildPlayerUi(); }catch(e){}
@@ -1051,6 +1133,7 @@
     scheduleSync,
     pullCoachData,
     startChatPoll,
+    pollInboxChats,
     personalSyncState(){ return personalSyncState; },
     status(){ return {configured: ready(), syncing, personal: personalSyncState}; }
   };

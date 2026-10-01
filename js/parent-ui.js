@@ -1835,6 +1835,7 @@
   global.renderParentUi = renderParentUi;
   global.bindParentUi = bindParentUi;
   global.syncInboxBellUi = syncInboxBellUi;
+  global.renderChatThread = renderChatThread;
   global.openInboxSheet = openInboxSheet;
   global.closeInboxSheet = closeInboxSheet;
   global.openPlayerCoachChat = openPlayerCoachChat;
