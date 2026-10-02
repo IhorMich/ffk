@@ -460,21 +460,25 @@
     position:relative;z-index:1;
     display:flex;align-items:center;justify-content:center;
     width:100%;
-    padding:0 28px;
+    padding:0 24px;
   }
   .intro-logo{
     display:block;
-    width:min(72vw, 280px);
+    width:min(86vw, 360px);
     height:auto;
     opacity:0;
-    transform:translateY(8px) scale(.97);
+    transform:translateY(6px);
+    /* keep pixels sharp while fading */
+    backface-visibility:hidden;
+    -webkit-backface-visibility:hidden;
   }
   .intro.play .intro-logo{
-    animation:introLogoIn .9s cubic-bezier(.22,.8,.3,1) .25s forwards;
+    animation:introLogoIn 1.35s cubic-bezier(.16,.84,.28,1) .2s forwards;
   }
   @keyframes introLogoIn{
-    from{opacity:0;transform:translateY(8px) scale(.97)}
-    to{opacity:1;transform:translateY(0) scale(1)}
+    0%{opacity:0;transform:translateY(6px)}
+    55%{opacity:.92;transform:translateY(1px)}
+    100%{opacity:1;transform:translateY(0)}
   }
   @keyframes introFade{to{opacity:0}}
   .preview-modal{
