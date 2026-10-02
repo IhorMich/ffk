@@ -446,6 +446,7 @@
     // Keep coach / other-device sessions intact.
     if(sb) await sb.auth.signOut({scope: 'local'});
   }
+
   function isNativeShell(){
     try{
       if(typeof global.isNativeApp === 'function') return !!global.isNativeApp();
@@ -455,15 +456,16 @@
     return false;
   }
   function authRedirectTo(){
-    if(isNativeShell()) return 'ffk://auth-callback';
+    // Native: HTTPS bridge page (Custom Tabs often fail on bare ffk:// redirects).
+    if(isNativeShell()) return 'https://ihormich.github.io/ffk/auth-callback.html';
     try{
       if(global.location && /^https:/i.test(global.location.href)){
         const path = String(global.location.pathname || '/');
         const base = path.includes('/ffk') ? path.replace(/\/[^/]*$/, '/') : '/ffk/';
-        return global.location.origin + (base.endsWith('/') ? base : base + '/');
+        return global.location.origin + (base.endsWith('/') ? base : base + '/') + 'auth-callback.html';
       }
     }catch(e){}
-    return 'https://ihormich.github.io/ffk/';
+    return 'https://ihormich.github.io/ffk/auth-callback.html';
   }
   function capPlugin(name){
     try{
@@ -494,47 +496,76 @@
   }
   function parseAuthCallbackUrl(rawUrl){
     const text = String(rawUrl || '');
-    if(!text) return {code: '', access_token: '', refresh_token: ''};
+    if(!text) return {code: '', access_token: '', refresh_token: '', error: '', error_description: ''};
     let normalized = text;
     if(/^ffk:/i.test(normalized)) normalized = normalized.replace(/^ffk:/i, 'https://ffk.local');
     try{
       const u = new URL(normalized);
       const hash = String(u.hash || '').replace(/^#/, '');
       const hashParams = new URLSearchParams(hash);
+      const get = (k) => u.searchParams.get(k) || hashParams.get(k) || '';
       return {
-        code: u.searchParams.get('code') || hashParams.get('code') || '',
-        access_token: u.searchParams.get('access_token') || hashParams.get('access_token') || '',
-        refresh_token: u.searchParams.get('refresh_token') || hashParams.get('refresh_token') || ''
+        code: get('code'),
+        access_token: get('access_token'),
+        refresh_token: get('refresh_token'),
+        error: get('error'),
+        error_description: get('error_description') || get('errorDescription')
       };
     }catch(e){
-      const code = (text.match(/[?&#]code=([^&#]+)/i) || [])[1] || '';
-      const access_token = (text.match(/[?&#]access_token=([^&#]+)/i) || [])[1] || '';
-      const refresh_token = (text.match(/[?&#]refresh_token=([^&#]+)/i) || [])[1] || '';
+      const pick = (name) => {
+        const m = text.match(new RegExp('[?&#]' + name + '=([^&#]+)', 'i'));
+        return m ? decodeURIComponent(m[1].replace(/\\+/g, ' ')) : '';
+      };
       return {
-        code: decodeURIComponent(code),
-        access_token: decodeURIComponent(access_token),
-        refresh_token: decodeURIComponent(refresh_token)
+        code: pick('code'),
+        access_token: pick('access_token'),
+        refresh_token: pick('refresh_token'),
+        error: pick('error'),
+        error_description: pick('error_description')
       };
     }
+  }
+  const seenOauthKeys = new Set();
+  let oauthBusy = false;
+  function oauthToast(msg){
+    try{
+      if(typeof showToast === 'function') showToast(msg);
+      else if(typeof global.showToast === 'function') global.showToast(msg);
+    }catch(e){}
   }
   async function handleAuthCallbackUrl(rawUrl){
     const sb = parentClient();
     if(!sb) throw new Error('no_cloud');
     const parts = parseAuthCallbackUrl(rawUrl);
-    let session = null;
-    if(parts.code){
-      const {data, error} = await sb.auth.exchangeCodeForSession(parts.code);
-      if(error) throw error;
-      session = data && data.session;
-    }else if(parts.access_token && parts.refresh_token){
-      const {data, error} = await sb.auth.setSession({
-        access_token: parts.access_token,
-        refresh_token: parts.refresh_token
-      });
-      if(error) throw error;
-      session = data && data.session;
+    if(parts.error){
+      throw new Error(String(parts.error_description || parts.error || 'oauth_error').slice(0, 120));
     }
-    await closeAuthBrowser();
+    const key = parts.code || (parts.access_token ? parts.access_token.slice(0, 24) : '');
+    if(key){
+      if(seenOauthKeys.has(key) || oauthBusy) return null;
+      seenOauthKeys.add(key);
+    }
+    oauthBusy = true;
+    let session = null;
+    try{
+      if(parts.code){
+        const {data, error} = await sb.auth.exchangeCodeForSession(parts.code);
+        if(error) throw error;
+        session = data && data.session;
+      }else if(parts.access_token && parts.refresh_token){
+        const {data, error} = await sb.auth.setSession({
+          access_token: parts.access_token,
+          refresh_token: parts.refresh_token
+        });
+        if(error) throw error;
+        session = data && data.session;
+      }else{
+        throw new Error('no_oauth_payload');
+      }
+    }finally{
+      oauthBusy = false;
+      await closeAuthBrowser();
+    }
     return session || null;
   }
   async function consumeAuthRedirectFromLocation(){
@@ -585,35 +616,47 @@
       if(!session) return;
       try{ if(typeof onSession === 'function') await onSession(session); }catch(e){}
     };
+    const handle = async (url) => {
+      const href = String(url || '');
+      if(!/auth-callback|[?&#](code|access_token|error)=/i.test(href)) return;
+      let role = '';
+      try{ role = localStorage.getItem('ffk_oauth_role') || ''; }catch(e){}
+      if(role === 'coach') return;
+      try{
+        const session = await handleAuthCallbackUrl(href);
+        if(session) await notify(session);
+      }catch(e){
+        console.warn('parent oauth', e);
+        const msg = String((e && (e.message || e.code)) || '');
+        oauthToast(msg && msg.length < 90 ? msg : (typeof t === 'function' ? t('accountErrGeneric') : 'Sign-in failed'));
+      }
+    };
     consumeAuthRedirectFromLocation().then(notify).catch(() => {});
     try{
       const App = capPlugin('App');
       if(App && typeof App.addListener === 'function'){
         App.addListener('appUrlOpen', async (event) => {
-          const url = event && event.url ? String(event.url) : '';
-          if(!/auth-callback|access_token=|code=/i.test(url)) return;
+          await handle(event && event.url ? String(event.url) : '');
+        });
+        if(typeof App.getLaunchUrl === 'function'){
+          App.getLaunchUrl().then(async (res) => {
+            await handle(res && res.url ? String(res.url) : '');
+          }).catch(() => {});
+        }
+      }
+    }catch(e){}
+    try{
+      const Browser = capPlugin('Browser');
+      if(Browser && typeof Browser.addListener === 'function'){
+        Browser.addListener('browserFinished', async () => {
           let role = '';
           try{ role = localStorage.getItem('ffk_oauth_role') || ''; }catch(e){}
           if(role === 'coach') return;
           try{
-            const session = await handleAuthCallbackUrl(url);
-            await notify(session);
+            const session = await getSession();
+            if(session && session.user && !session.user.is_anonymous) await notify(session);
           }catch(e){}
         });
-        if(typeof App.getLaunchUrl === 'function'){
-          App.getLaunchUrl().then(async (res) => {
-            const url = res && res.url ? String(res.url) : '';
-            if(!url) return;
-            if(!/auth-callback|access_token=|code=/i.test(url)) return;
-            let role = '';
-            try{ role = localStorage.getItem('ffk_oauth_role') || ''; }catch(e){}
-            if(role === 'coach') return;
-            try{
-              const session = await handleAuthCallbackUrl(url);
-              await notify(session);
-            }catch(e){}
-          }).catch(() => {});
-        }
       }
     }catch(e){}
   }

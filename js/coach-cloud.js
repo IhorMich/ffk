@@ -219,6 +219,7 @@
     }, 1500);
   }
 
+
   const OAUTH_ROLE_KEY = 'ffk_oauth_role';
   function isNativeShell(){
     try{
@@ -226,13 +227,15 @@
     }catch(e){ return false; }
   }
   function authRedirectTo(){
-    if(isNativeShell()) return 'ffk://auth-callback';
+    if(isNativeShell()) return 'https://ihormich.github.io/ffk/auth-callback.html';
     try{
       if(global.location && /^https?:/i.test(global.location.origin || '')){
-        return global.location.origin + (global.location.pathname || '/').replace(/\/?$/, '/') ;
+        const path = String(global.location.pathname || '/');
+        const base = path.includes('/ffk') ? path.replace(/\/[^/]*$/, '/') : '/';
+        return global.location.origin + (base.endsWith('/') ? base : base + '/') + 'auth-callback.html';
       }
     }catch(e){}
-    return 'https://ihormich.github.io/ffk/';
+    return 'https://ihormich.github.io/ffk/auth-callback.html';
   }
   function capPlugin(name){
     try{
@@ -263,48 +266,77 @@
   }
   function parseAuthCallbackUrl(rawUrl){
     const text = String(rawUrl || '');
-    if(!text) return {code: '', access_token: '', refresh_token: ''};
+    if(!text) return {code: '', access_token: '', refresh_token: '', error: '', error_description: ''};
     let normalized = text;
     if(/^ffk:/i.test(normalized)) normalized = normalized.replace(/^ffk:/i, 'https://ffk.local');
     try{
       const u = new URL(normalized);
       const hash = String(u.hash || '').replace(/^#/, '');
       const hashParams = new URLSearchParams(hash);
+      const get = (k) => u.searchParams.get(k) || hashParams.get(k) || '';
       return {
-        code: u.searchParams.get('code') || hashParams.get('code') || '',
-        access_token: u.searchParams.get('access_token') || hashParams.get('access_token') || '',
-        refresh_token: u.searchParams.get('refresh_token') || hashParams.get('refresh_token') || ''
+        code: get('code'),
+        access_token: get('access_token'),
+        refresh_token: get('refresh_token'),
+        error: get('error'),
+        error_description: get('error_description') || get('errorDescription')
       };
     }catch(e){
-      const code = (text.match(/[?&#]code=([^&#]+)/i) || [])[1] || '';
-      const access_token = (text.match(/[?&#]access_token=([^&#]+)/i) || [])[1] || '';
-      const refresh_token = (text.match(/[?&#]refresh_token=([^&#]+)/i) || [])[1] || '';
+      const pick = (name) => {
+        const m = text.match(new RegExp('[?&#]' + name + '=([^&#]+)', 'i'));
+        return m ? decodeURIComponent(m[1].replace(/\\+/g, ' ')) : '';
+      };
       return {
-        code: decodeURIComponent(code),
-        access_token: decodeURIComponent(access_token),
-        refresh_token: decodeURIComponent(refresh_token)
+        code: pick('code'),
+        access_token: pick('access_token'),
+        refresh_token: pick('refresh_token'),
+        error: pick('error'),
+        error_description: pick('error_description')
       };
     }
+  }
+  const seenOauthKeys = new Set();
+  let oauthBusy = false;
+  function oauthToast(msg){
+    try{
+      if(typeof showToast === 'function') showToast(msg);
+      else if(typeof global.showToast === 'function') global.showToast(msg);
+    }catch(e){}
   }
   async function handleAuthCallbackUrl(rawUrl){
     const sb = getClient();
     if(!sb) throw new Error('no_cloud');
     const parts = parseAuthCallbackUrl(rawUrl);
-    let session = null;
-    if(parts.code){
-      const {data, error} = await sb.auth.exchangeCodeForSession(parts.code);
-      if(error) throw error;
-      session = data && data.session;
-    }else if(parts.access_token && parts.refresh_token){
-      const {data, error} = await sb.auth.setSession({
-        access_token: parts.access_token,
-        refresh_token: parts.refresh_token
-      });
-      if(error) throw error;
-      session = data && data.session;
+    if(parts.error){
+      throw new Error(String(parts.error_description || parts.error || 'oauth_error').slice(0, 120));
     }
-    await closeAuthBrowser();
-    try{ localStorage.removeItem(OAUTH_ROLE_KEY); }catch(e){}
+    const key = parts.code || (parts.access_token ? parts.access_token.slice(0, 24) : '');
+    if(key){
+      if(seenOauthKeys.has(key) || oauthBusy) return null;
+      seenOauthKeys.add(key);
+    }
+    oauthBusy = true;
+    let session = null;
+    try{
+      if(parts.code){
+        const {data, error} = await sb.auth.exchangeCodeForSession(parts.code);
+        if(error) throw error;
+        session = data && data.session;
+      }else if(parts.access_token && parts.refresh_token){
+        const {data, error} = await sb.auth.setSession({
+          access_token: parts.access_token,
+          refresh_token: parts.refresh_token
+        });
+        if(error) throw error;
+        session = data && data.session;
+      }else{
+        throw new Error('no_oauth_payload');
+      }
+    }finally{
+      oauthBusy = false;
+      await closeAuthBrowser();
+      try{ localStorage.removeItem(OAUTH_ROLE_KEY); }catch(e){}
+    }
     return session || null;
   }
   async function signInWithGoogle(){
@@ -378,17 +410,24 @@
       try{
         const adopted = await adoptGoogleSession(session);
         if(typeof onSession === 'function') await onSession(adopted);
-      }catch(e){}
+      }catch(e){
+        console.warn('coach oauth adopt', e);
+        oauthToast(tt('accountErrGeneric', 'Could not sign in.'));
+      }
     };
     const maybeHandle = async (url) => {
-      if(!/auth-callback|access_token=|code=/i.test(url)) return;
+      if(!/auth-callback|[?&#](code|access_token|error)=/i.test(url)) return;
       let role = '';
       try{ role = localStorage.getItem(OAUTH_ROLE_KEY) || ''; }catch(e){}
       if(role && role !== 'coach') return;
       try{
         const session = await handleAuthCallbackUrl(url);
-        await notify(session);
-      }catch(e){}
+        if(session) await notify(session);
+      }catch(e){
+        console.warn('coach oauth', e);
+        const msg = String((e && (e.message || e.code)) || '');
+        oauthToast(msg && msg.length < 90 ? msg : tt('accountErrGeneric', 'Could not sign in.'));
+      }
     };
     try{
       if(global.location && /[?&#](code|access_token)=/i.test(String(global.location.href || ''))){
@@ -410,6 +449,23 @@
             await maybeHandle(res && res.url ? String(res.url) : '');
           }).catch(() => {});
         }
+      }
+    }catch(e){}
+    try{
+      const Browser = capPlugin('Browser');
+      if(Browser && typeof Browser.addListener === 'function'){
+        Browser.addListener('browserFinished', async () => {
+          let role = '';
+          try{ role = localStorage.getItem(OAUTH_ROLE_KEY) || ''; }catch(e){}
+          if(role && role !== 'coach') return;
+          try{
+            const sb = getClient();
+            if(!sb) return;
+            const {data} = await sb.auth.getSession();
+            const session = data && data.session;
+            if(session && session.user) await notify(session);
+          }catch(e){}
+        });
       }
     }catch(e){}
   }
