@@ -615,7 +615,7 @@
     const sid = String(id || '');
     if(!sid) return '';
     const player = personalPlayersWithMedia().find(p => p && String(p.id) === sid);
-    return player && player.photo ? String(player.photo) : '';
+    return player && usablePhoto(player.photo) ? String(player.photo) : '';
   }
   function personalPhotoByName(first, last){
     const list = personalPlayersWithMedia();
@@ -623,6 +623,26 @@
       if(!p || !p.photo) continue;
       if(namesSoftMatch(first, last, p.firstName, p.lastName)) return String(p.photo);
     }
+    return '';
+  }
+  /** Coach cloud links: team_player_id → personal_player_id (parent claim). */
+  function coachLinkedPersonalId(tp){
+    if(!tp || !tp.id) return '';
+    const tid = String(tp.id);
+    try{
+      const links = global.ParentCloud && typeof global.ParentCloud.coachLinks === 'function'
+        ? (global.ParentCloud.coachLinks() || [])
+        : [];
+      const hit = links.find(l => l && String(l.team_player_id || '') === tid && l.personal_player_id);
+      if(hit) return String(hit.personal_player_id);
+    }catch(e){}
+    try{
+      const raw = JSON.parse(localStorage.getItem('ffk_cloud_parent_links_v1') || '[]');
+      const hit = (Array.isArray(raw) ? raw : []).find(l =>
+        l && String(l.team_player_id || '') === tid && l.personal_player_id
+      );
+      if(hit) return String(hit.personal_player_id);
+    }catch(e){}
     return '';
   }
   function bindLegacyPersonalPhotoLinks(){
@@ -652,12 +672,17 @@
   /** Resolve the personal profile explicitly attached when the coach invite was claimed. */
   function linkedPersonalPhoto(tp){
     if(!tp || !tp.id) return '';
+    const personalId = coachLinkedPersonalId(tp);
+    if(personalId){
+      const byCloudLink = personalPhotoById(personalId);
+      if(byCloudLink) return byCloudLink;
+    }
     try{
       const links = global.ParentStore && typeof global.ParentStore.listLinks === 'function'
         ? global.ParentStore.listLinks()
         : [];
       const link = links.find(l => l && l.player && String(l.player.id) === String(tp.id));
-      if(!link) return '';
+      if(!link) return personalId ? '' : '';
       const byId = personalPhotoById(link.personal_player_id);
       if(byId) return byId;
       const byLinkedName = personalPhotoByName(link.player.first_name, link.player.last_name);
@@ -681,7 +706,9 @@
       if(typeof isUsablePhoto === 'function') return isUsablePhoto(src);
     }catch(e){}
     const p = String(src || '');
-    return p.startsWith('data:image/') && p.length > 64;
+    return (p.startsWith('data:image/') && p.length > 64)
+      || (p.startsWith('blob:') && p.length > 8)
+      || /^https?:\/\//i.test(p);
   }
   /** Photo for a coach roster player: IDB cache, stored field, else matching Free/Pro profile. */
   function resolveCoachPlayerPhoto(tp){
@@ -694,10 +721,59 @@
       }
     }catch(e){}
     const fromLink = linkedPersonalPhoto(tp);
-    if(fromLink) return fromLink;
+    if(fromLink){
+      try{
+        if(tp.id && typeof setCoachMediaPhoto === 'function') setCoachMediaPhoto(tp.id, fromLink);
+      }catch(e){}
+      return fromLink;
+    }
     const fromPersonal = personalPhotoByName(tp.first_name, tp.last_name);
-    if(fromPersonal) return fromPersonal;
+    if(fromPersonal){
+      try{
+        if(tp.id && typeof setCoachMediaPhoto === 'function') setCoachMediaPhoto(tp.id, fromPersonal);
+      }catch(e){}
+      return fromPersonal;
+    }
     return '';
+  }
+  /** If local cache is empty, pull durable photo from cloud personal profile. */
+  async function ensureCoachPlayerPhoto(tp){
+    if(!tp || !tp.id) return '';
+    const existing = resolveCoachPlayerPhoto(tp);
+    if(existing && String(existing).startsWith('data:image/')) return existing;
+    const personalId = coachLinkedPersonalId(tp) || '';
+    if(!personalId) return existing || '';
+    try{
+      const sb = global.CoachCloud && global.CoachCloud.getClient && global.CoachCloud.getClient();
+      if(!sb) return existing || '';
+      const {data: profile, error} = await sb.from('personal_players')
+        .select('id,photo_path')
+        .eq('id', personalId)
+        .maybeSingle();
+      if(error || !profile || !profile.photo_path) return existing || '';
+      const signed = await sb.storage.from('player-media').createSignedUrl(profile.photo_path, 3600);
+      if(signed.error || !signed.data || !signed.data.signedUrl) return existing || '';
+      let durable = '';
+      try{
+        const res = await fetch(signed.data.signedUrl);
+        if(res.ok){
+          const blob = await res.blob();
+          if(blob && String(blob.type || '').startsWith('image/')){
+            durable = await new Promise((resolve) => {
+              const reader = new FileReader();
+              reader.onload = () => resolve(String(reader.result || ''));
+              reader.onerror = () => resolve('');
+              reader.readAsDataURL(blob);
+            });
+          }
+        }
+      }catch(e){}
+      const photo = durable || String(signed.data.signedUrl);
+      if(typeof setCoachMediaPhoto === 'function') await setCoachMediaPhoto(tp.id, photo);
+      return photo;
+    }catch(e){
+      return existing || '';
+    }
   }
   function coachPlayerAvatarHtml(tp){
     const photo = resolveCoachPlayerPhoto(tp);
@@ -752,6 +828,11 @@
             try{
               if(typeof getCoachMediaPhoto === 'function') photo = getCoachMediaPhoto(tp.id) || '';
             }catch(e){}
+          }
+          // Last resort on this device: linked personal Free/Pro media by cloud link id.
+          if(!photo){
+            const pid = coachLinkedPersonalId(tp);
+            if(pid) photo = personalPhotoById(pid) || '';
           }
           if(!photo) return;
           let changed = false;
@@ -4037,6 +4118,18 @@
     closeAllCoachOverlays();
     if(typeof showView === 'function') showView('coach-child');
     try{ window.scrollTo({top:0, behavior:'instant'}); }catch(e){ window.scrollTo(0, 0); }
+    // Fill missing / expired photos from cloud → durable data URL, then refresh header.
+    Promise.resolve()
+      .then(() => ensureCoachPlayerPhoto(detail.player))
+      .then((photo) => {
+        if(!photo || !global.coachChildView || global.coachChildView.playerId !== playerId) return;
+        global.coachChildView.player = {...global.coachChildView.player, photo};
+        if(typeof syncCoachChildPlayerUi === 'function') syncCoachChildPlayerUi();
+        if(typeof renderCoachUi === 'function'){
+          try{ renderCoachUi(); }catch(e){}
+        }
+      })
+      .catch(() => {});
   }
 
   function removeCoachPlayerFromSheet(){
@@ -5479,5 +5572,6 @@
   global.closeCoachHistoryMatch = closeCoachHistoryMatch;
   global.openCoachChildPlayerPage = openCoachChildPlayerPage;
   global.resolveCoachPlayerPhoto = resolveCoachPlayerPhoto;
+  global.ensureCoachPlayerPhoto = ensureCoachPlayerPhoto;
   global.syncCoachPlayerPhotosFromPersonal = syncCoachPlayerPhotosFromPersonal;
 })(window);

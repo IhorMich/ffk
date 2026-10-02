@@ -2419,11 +2419,16 @@ function newPlayerId(){
   return 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 }
 function setBadge(el, photo, fallback){
+  if(!el) return;
   el.replaceChildren();
   if(photo){
     const img = document.createElement('img');
     img.alt = '';
     img.src = photo;
+    img.onerror = () => {
+      el.replaceChildren();
+      el.textContent = fallback || '';
+    };
     el.appendChild(img);
   } else {
     el.textContent = fallback;
