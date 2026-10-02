@@ -225,6 +225,81 @@
       refreshInboxBell();
     }catch(e){}
   }
+  async function pullPlayerChatFast(teamPlayerId){
+    const pid = String(teamPlayerId || '').trim();
+    if(!pid || !ready() || !global.InboxStore) return {ok: false, reason: 'bad'};
+    try{
+      const coachMode = typeof isCoachPlan === 'function' && isCoachPlan();
+      const preferred = coachMode ? 'coach' : 'parent';
+      const sb = client(preferred);
+      if(!sb) return {ok: false, reason: 'no_client'};
+      let session = null;
+      try{
+        const {data} = await sb.auth.getSession();
+        session = data && data.session;
+      }catch(e){}
+      if(!session && !coachMode){
+        try{ session = await ensureSession(false); }catch(e){}
+      }
+      if(!session) return {ok: false, reason: 'no_session'};
+      const {data, error} = await sb.from('player_chat_messages')
+        .select('*')
+        .eq('team_player_id', pid)
+        .order('created_at', {ascending: false})
+        .limit(50);
+      if(error) throw error;
+      (data || []).forEach(row => {
+        try{
+          global.InboxStore.importCloudChat({
+            ...row,
+            coach_name: String(row.broadcast_id || '').trim()
+              ? tt('chatTeamFromCoach', 'Head coach')
+              : ''
+          });
+        }catch(e){}
+      });
+      refreshChatUi();
+      return {ok: true, count: (data || []).length};
+    }catch(error){
+      console.warn('pullPlayerChatFast', error);
+      return {ok: false, error};
+    }
+  }
+
+  /** Instant local row from FCM so the open chat is not blank for seconds. */
+  function seedChatFromPush(payload){
+    try{
+      if(!global.InboxStore || typeof global.InboxStore.importCloudChat !== 'function') return null;
+      const data = (payload && payload.data) || payload || {};
+      const playerId = String(data.team_player_id || data.teamPlayerId || '').trim();
+      const messageId = String(data.message_id || data.messageId || '').trim();
+      const text = String(
+        (payload && payload.body) || data.body || data.text || ''
+      ).trim().slice(0, 500);
+      if(!playerId || !text) return null;
+      const coachMode = typeof isCoachPlan === 'function' && isCoachPlan();
+      const roleFromData = String(data.sender_role || data.senderRole || '').trim();
+      const senderRole = roleFromData === 'coach' || roleFromData === 'parent'
+        ? roleFromData
+        : (coachMode ? 'parent' : 'coach');
+      const broadcastId = String(data.broadcast_id || data.broadcastId || '').trim();
+      const imported = global.InboxStore.importCloudChat({
+        id: messageId || `push_${playerId}_${Date.now()}`,
+        team_player_id: playerId,
+        sender_role: senderRole,
+        body: text,
+        broadcast_id: broadcastId,
+        created_at: new Date().toISOString(),
+        read_by_parent: false,
+        read_by_coach: false,
+        coach_name: broadcastId ? tt('chatTeamFromCoach', 'Head coach') : ''
+      });
+      refreshChatUi();
+      return imported && imported.row ? imported.row : null;
+    }catch(e){
+      return null;
+    }
+  }
   async function pollInboxChats(opts){
     opts = opts || {};
     const push = !!opts.push;
@@ -1876,6 +1951,8 @@
     pullCoachData,
     startChatPoll,
     pollInboxChats,
+    pullPlayerChatFast,
+    seedChatFromPush,
     notifyChatPush,
     notifyChatBroadcast,
     pushChatMessage,

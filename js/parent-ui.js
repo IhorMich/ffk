@@ -286,6 +286,23 @@
     opts = opts || {};
     const kind = opts.kind === 'team' ? 'team' : 'personal';
     const wanted = String(teamPlayerId || '');
+    // If opened from a push, seed the preview text before first paint.
+    try{
+      if(opts.fromPush && opts.preview && global.ParentCloud && typeof global.ParentCloud.seedChatFromPush === 'function'){
+        global.ParentCloud.seedChatFromPush({
+          body: opts.preview.body,
+          data: {
+            ...(opts.preview.data || {}),
+            body: opts.preview.body,
+            team_player_id: wanted || opts.preview.team_player_id,
+            message_id: opts.preview.message_id,
+            broadcast_id: opts.preview.broadcast_id,
+            sender_role: opts.preview.sender_role,
+            chat_kind: kind
+          }
+        });
+      }
+    }catch(e){}
     const thread = wanted ? chatMessages(wanted, {kind}) : [];
     const lastMessage = thread.length ? thread[thread.length - 1] : null;
     const target = chatTargets().find(t => String(t.team_player_id) === wanted)
@@ -319,7 +336,11 @@
       setTimeout(() => document.getElementById('chatText')?.focus(), 80);
     }
     try{
-      if(global.ParentCloud && typeof global.ParentCloud.pollInboxChats === 'function'){
+      if(global.ParentCloud && typeof global.ParentCloud.pullPlayerChatFast === 'function'){
+        global.ParentCloud.pullPlayerChatFast(activeChat.team_player_id)
+          .then(() => { try{ renderChatThread(); }catch(e){} })
+          .catch(() => {});
+      }else if(global.ParentCloud && typeof global.ParentCloud.pollInboxChats === 'function'){
         global.ParentCloud.pollInboxChats({push: false}).catch(() => {});
       }
     }catch(e){}

@@ -149,18 +149,49 @@
       });
       Push.addListener('pushNotificationActionPerformed', (action) => {
         try{
-          const data = (action && action.notification && action.notification.data) || {};
+          const n = (action && action.notification) || {};
+          const data = n.data || {};
           const playerId = data.team_player_id || data.teamPlayerId || '';
           const chatKind = data.chat_kind || data.chatKind || '';
-          const opts = chatKind === 'team' ? {kind: 'team'} : undefined;
+          const opts = {
+            kind: chatKind === 'team' ? 'team' : 'personal',
+            fromPush: true,
+            preview: {
+              body: n.body || data.body || data.text || '',
+              title: n.title || data.title || '',
+              message_id: data.message_id || data.messageId || '',
+              broadcast_id: data.broadcast_id || data.broadcastId || '',
+              sender_role: data.sender_role || data.senderRole || '',
+              team_player_id: playerId,
+              data
+            }
+          };
+          // Seed local inbox immediately so the open thread is not blank.
+          try{
+            if(global.ParentCloud && typeof global.ParentCloud.seedChatFromPush === 'function'){
+              global.ParentCloud.seedChatFromPush({
+                body: opts.preview.body,
+                data: {
+                  ...data,
+                  body: opts.preview.body,
+                  team_player_id: playerId
+                }
+              });
+            }
+          }catch(e){}
           if(playerId && typeof global.openPlayerCoachChat === 'function'){
             global.openPlayerCoachChat(playerId, null, opts);
           }else if(playerId && global.ParentUI && typeof global.ParentUI.openPlayerCoachChat === 'function'){
             global.ParentUI.openPlayerCoachChat(playerId, null, opts);
           }
-          if(global.ParentCloud && typeof global.ParentCloud.pollInboxChats === 'function'){
-            global.ParentCloud.pollInboxChats({push: true}).catch(() => {});
-          }
+          // Fast single-thread pull (do not wait on full inbox sync).
+          try{
+            if(playerId && global.ParentCloud && typeof global.ParentCloud.pullPlayerChatFast === 'function'){
+              global.ParentCloud.pullPlayerChatFast(playerId).catch(() => {});
+            }else if(global.ParentCloud && typeof global.ParentCloud.pollInboxChats === 'function'){
+              global.ParentCloud.pollInboxChats({push: false}).catch(() => {});
+            }
+          }catch(e){}
         }catch(e){}
       });
     }catch(e){

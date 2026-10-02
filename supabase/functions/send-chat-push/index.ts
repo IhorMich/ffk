@@ -451,6 +451,8 @@ Deno.serve(async (req: Request) => {
         broadcast_id: broadcastId,
         team_player_id: teamPlayerId,
         message_id: repMessageId || broadcastId,
+        body: bodyText,
+        sender_role: "coach",
       },
     );
     // If FCM hard-failed after claims, release so a retry can wake phones.
@@ -550,6 +552,9 @@ Deno.serve(async (req: Request) => {
       broadcast_id: String(chat.broadcast_id || ""),
       team_player_id: String(chat.team_player_id || ""),
       message_id: String(chat.id || ""),
+      body: String(chat.body || "Новое сообщение").trim().slice(0, 180) ||
+        "Новое сообщение",
+      sender_role: String(chat.sender_role || "coach"),
     },
   );
   if (out.hardFail) {
