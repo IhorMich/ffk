@@ -770,7 +770,10 @@
   async function notifyChatPush(messageId, extra){
     const id = String(messageId || '').trim();
     if(!id || !ready()) return {ok: false, reason: 'no_cloud'};
-    if(!claimLocalPush(`msg:${id}`, 180000)) return {ok: true, skipped: 'local_dedupe'};
+    // Peek local dedupe without locking — only lock after a successful wake.
+    const dedupeKey = `msg:${id}`;
+    const prev = Number(recentPushClaims.get(dedupeKey) || 0);
+    if(prev && Date.now() - prev < 180000) return {ok: true, skipped: 'local_dedupe'};
     const sb = await senderClient('coach') || await senderClient('parent');
     if(!sb) return {ok: false, reason: 'no_client'};
     const body = {message_id: id};
@@ -778,6 +781,12 @@
     try{
       const {data, error} = await sb.functions.invoke('send-chat-push', {body});
       if(error) throw error;
+      const sent = Number(data && data.sent || 0);
+      const skipped = String(data && data.skipped || '');
+      // Lock only when cloud accepted or intentionally deduped there.
+      if(sent > 0 || skipped === 'message_deduped' || skipped === 'broadcast_deduped'){
+        recentPushClaims.set(dedupeKey, Date.now());
+      }
       return data || {ok: true};
     }catch(error){
       console.warn('Chat push', error);
@@ -787,7 +796,9 @@
   async function notifyChatBroadcast(broadcastId){
     const bc = String(broadcastId || '').trim();
     if(!bc || !ready()) return {ok: false, reason: 'no_cloud'};
-    if(!claimLocalPush(`bc:${bc}`, 180000)) return {ok: true, skipped: 'local_dedupe'};
+    const dedupeKey = `bc:${bc}`;
+    const prev = Number(recentPushClaims.get(dedupeKey) || 0);
+    if(prev && Date.now() - prev < 180000) return {ok: true, skipped: 'local_dedupe'};
     const sb = await senderClient('coach') || await senderClient('parent');
     if(!sb) return {ok: false, reason: 'no_client'};
     try{
@@ -795,6 +806,11 @@
         body: {broadcast_id: bc}
       });
       if(error) throw error;
+      const sent = Number(data && data.sent || 0);
+      const skipped = String(data && data.skipped || '');
+      if(sent > 0 || skipped === 'deduped_or_empty' || skipped === 'broadcast_deduped'){
+        recentPushClaims.set(dedupeKey, Date.now());
+      }
       return data || {ok: true};
     }catch(error){
       console.warn('Broadcast push', error);
@@ -818,24 +834,28 @@
   }
   async function requireSenderSession(senderRole){
     const preferred = senderRole === 'coach' ? 'coach' : 'parent';
-    const sb = preferred === 'coach' ? coachClient() : parentClient();
-    if(!sb) return {sb: null, session: null, reason: 'no_client'};
-    let session = null;
-    try{
-      const {data} = await sb.auth.getSession();
-      session = data && data.session;
-    }catch(e){}
-    if(session) return {sb, session, reason: ''};
+    const order = preferred === 'coach'
+      ? [coachClient, parentClient]
+      : [parentClient, coachClient];
+    for(const get of order){
+      const sb = typeof get === 'function' ? get() : null;
+      if(!sb) continue;
+      try{
+        const {data} = await sb.auth.getSession();
+        const session = data && data.session;
+        if(session) return {sb, session, reason: ''};
+      }catch(e){}
+    }
     // Parent may bootstrap anonymously; coach must already be signed into cloud.
     if(preferred === 'parent'){
       try{
-        session = await ensureSession(false);
+        const session = await ensureSession(false);
         return {sb: parentClient(), session, reason: session ? '' : 'no_session'};
       }catch(e){
-        return {sb, session: null, reason: 'no_session'};
+        return {sb: parentClient(), session: null, reason: 'no_session'};
       }
     }
-    return {sb, session: null, reason: 'coach_no_session'};
+    return {sb: coachClient(), session: null, reason: 'coach_no_session'};
   }
   async function resolveParentUserIds(sb, teamPlayerId){
     const pid = String(teamPlayerId || '');
@@ -938,7 +958,8 @@
         sender_user_id: message.sender_user_id || session.user.id,
         sender_role: senderRole,
         body: message.text || message.body || '',
-        broadcast_id: String(message.broadcast_id || ''),
+        // Column is NOT NULL — personal uses empty string; team uses real broadcast id.
+        broadcast_id: String(message.broadcast_id || '').trim(),
         edited_at: message.edited_at || null,
         read_by_parent: !!message.read_by_parent,
         read_by_coach: !!message.read_by_coach,

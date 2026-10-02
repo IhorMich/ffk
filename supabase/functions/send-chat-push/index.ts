@@ -222,28 +222,46 @@ Deno.serve(async (req: Request) => {
     title: string,
     text: string,
     data: Record<string, string>,
-  ) {
+  ): Promise<{ response: Response; sent: number; hardFail: boolean }> {
     if (!recipientIds.size) {
-      return json(200, { ok: true, sent: 0, reason: "no_recipients" });
+      return {
+        response: json(200, { ok: true, sent: 0, reason: "no_recipients" }),
+        sent: 0,
+        hardFail: false,
+      };
     }
     const { data: tokens, error: tokErr } = await admin
       .from("device_tokens")
       .select("token,user_id,platform")
       .in("user_id", [...recipientIds]);
-    if (tokErr) return json(500, { ok: false, error: tokErr.message });
+    if (tokErr) {
+      return {
+        response: json(500, { ok: false, error: tokErr.message }),
+        sent: 0,
+        hardFail: true,
+      };
+    }
     const list = (tokens || []).filter((t) => t && t.token);
     if (!list.length) {
-      return json(200, { ok: true, sent: 0, reason: "no_tokens" });
+      return {
+        response: json(200, { ok: true, sent: 0, reason: "no_tokens" }),
+        sent: 0,
+        hardFail: false,
+      };
     }
     let accessToken: string;
     try {
       accessToken = await googleAccessToken(sa);
     } catch (e) {
-      return json(500, {
-        ok: false,
-        error: "oauth",
-        detail: String((e as Error)?.message || e),
-      });
+      return {
+        response: json(500, {
+          ok: false,
+          error: "oauth",
+          detail: String((e as Error)?.message || e),
+        }),
+        sent: 0,
+        hardFail: true,
+      };
     }
     const results = [];
     for (const row of list) {
@@ -279,12 +297,40 @@ Deno.serve(async (req: Request) => {
       }
     }
     const sent = results.filter((r) => r.ok).length;
-    return json(200, {
-      ok: true,
+    return {
+      response: json(200, {
+        ok: true,
+        sent,
+        results,
+        via: hookOk ? "hook" : "user",
+      }),
       sent,
-      results,
-      via: hookOk ? "hook" : "user",
-    });
+      hardFail: false,
+    };
+  }
+
+  async function releaseMessageClaim(msgId: string) {
+    const id = String(msgId || "").trim();
+    if (!id) return;
+    try {
+      await admin.from("chat_push_claims").delete().eq("message_id", id);
+    } catch {
+      /* ignore */
+    }
+  }
+
+  async function releaseBroadcastClaims(bc: string, parentIds: string[]) {
+    const id = String(bc || "").trim();
+    if (!id || !parentIds.length) return;
+    try {
+      await admin
+        .from("chat_broadcast_pushes")
+        .delete()
+        .eq("broadcast_id", id)
+        .in("parent_user_id", parentIds);
+    } catch {
+      /* ignore */
+    }
   }
 
   if (noticeId) {
@@ -302,7 +348,7 @@ Deno.serve(async (req: Request) => {
     if (notice.parent_user_id) {
       recipientIds.add(String(notice.parent_user_id));
     }
-    return await deliver(
+    const out = await deliver(
       recipientIds,
       String(notice.title || "TEMPO").slice(0, 80) || "TEMPO",
       String(notice.body || "Новое уведомление").trim().slice(0, 180) ||
@@ -313,6 +359,7 @@ Deno.serve(async (req: Request) => {
         notice_id: String(notice.id || ""),
       },
     );
+    return out.response;
   }
 
   async function claimBroadcastParent(
@@ -393,7 +440,8 @@ Deno.serve(async (req: Request) => {
         broadcast_id: broadcastId,
       });
     }
-    return await deliver(
+    const claimedParents = [...recipientIds];
+    const out = await deliver(
       recipientIds,
       "Главный тренер",
       bodyText,
@@ -405,6 +453,12 @@ Deno.serve(async (req: Request) => {
         message_id: repMessageId || broadcastId,
       },
     );
+    // If FCM hard-failed after claims, release so a retry can wake phones.
+    if (out.hardFail || (out.sent === 0 && claimedParents.length)) {
+      // Only release when hardFail — no_tokens is not worth retry-storming.
+      if (out.hardFail) await releaseBroadcastClaims(broadcastId, claimedParents);
+    }
+    return out.response;
   }
 
   const { data: msg, error: msgErr } = await admin
@@ -485,7 +539,7 @@ Deno.serve(async (req: Request) => {
     }
   }
 
-  return await deliver(
+  const out = await deliver(
     recipientIds,
     isTeam ? "Главный тренер" : "TEMPO",
     String(chat.body || "Новое сообщение").trim().slice(0, 180) ||
@@ -498,4 +552,13 @@ Deno.serve(async (req: Request) => {
       message_id: String(chat.id || ""),
     },
   );
+  if (out.hardFail) {
+    if (!isTeam) await releaseMessageClaim(String(chat.id || messageId));
+    if (isTeam && chat.parent_user_id) {
+      await releaseBroadcastClaims(String(chat.broadcast_id || ""), [
+        String(chat.parent_user_id),
+      ]);
+    }
+  }
+  return out.response;
 });
