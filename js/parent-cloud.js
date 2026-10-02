@@ -817,6 +817,29 @@
       return {ok: false, error};
     }
   }
+  /** Live session from one Supabase auth client; refresh if access token is stale. */
+  async function liveSessionOn(sb){
+    if(!sb || !sb.auth) return null;
+    try{
+      const {data} = await sb.auth.getSession();
+      let session = data && data.session;
+      if(session && session.expires_at){
+        const skewSec = 60;
+        if(Number(session.expires_at) * 1000 <= Date.now() + skewSec * 1000){
+          session = null;
+        }
+      }
+      if(session) return session;
+    }catch(e){}
+    try{
+      if(typeof sb.auth.refreshSession !== 'function') return null;
+      const {data, error} = await sb.auth.refreshSession();
+      if(error) return null;
+      return (data && data.session) || null;
+    }catch(e){
+      return null;
+    }
+  }
   /** Prefer the auth client that actually has a live Supabase session. */
   async function senderClient(preferredRole){
     const order = preferredRole === 'parent'
@@ -825,37 +848,35 @@
     for(const get of order){
       const sb = typeof get === 'function' ? get() : null;
       if(!sb) continue;
-      try{
-        const {data} = await sb.auth.getSession();
-        if(data && data.session) return sb;
-      }catch(e){}
+      const session = await liveSessionOn(sb);
+      if(session) return sb;
     }
     return preferredRole === 'parent' ? parentClient() : coachClient();
   }
   async function requireSenderSession(senderRole){
     const preferred = senderRole === 'coach' ? 'coach' : 'parent';
-    const order = preferred === 'coach'
-      ? [coachClient, parentClient]
-      : [parentClient, coachClient];
+    // Coach chat must use the coach auth store — parent anon session is the wrong identity.
+    if(preferred === 'coach'){
+      const sb = coachClient();
+      if(!sb) return {sb: null, session: null, reason: 'no_client'};
+      const session = await liveSessionOn(sb);
+      if(session) return {sb, session, reason: ''};
+      return {sb, session: null, reason: 'coach_no_session'};
+    }
+    const order = [parentClient, coachClient];
     for(const get of order){
       const sb = typeof get === 'function' ? get() : null;
       if(!sb) continue;
-      try{
-        const {data} = await sb.auth.getSession();
-        const session = data && data.session;
-        if(session) return {sb, session, reason: ''};
-      }catch(e){}
+      const session = await liveSessionOn(sb);
+      if(session) return {sb, session, reason: ''};
     }
-    // Parent may bootstrap anonymously; coach must already be signed into cloud.
-    if(preferred === 'parent'){
-      try{
-        const session = await ensureSession(false);
-        return {sb: parentClient(), session, reason: session ? '' : 'no_session'};
-      }catch(e){
-        return {sb: parentClient(), session: null, reason: 'no_session'};
-      }
+    // Parent may bootstrap anonymously.
+    try{
+      const session = await ensureSession(false);
+      return {sb: parentClient(), session, reason: session ? '' : 'no_session'};
+    }catch(e){
+      return {sb: parentClient(), session: null, reason: 'no_session'};
     }
-    return {sb: coachClient(), session: null, reason: 'coach_no_session'};
   }
   async function resolveParentUserIds(sb, teamPlayerId){
     const pid = String(teamPlayerId || '');

@@ -4219,8 +4219,8 @@
           }catch(e){}
           const reason = String(cloudRes && cloudRes.reason || '');
           const map = {
-            coach_no_session: tt('coachCloudSessionGone', 'Coach cloud session expired. Sign in again in Coach settings.'),
-            no_session: tt('coachCloudSessionGone', 'Coach cloud session expired. Sign in again in Coach settings.'),
+            coach_no_session: tt('coachCloudSessionGone', 'No Coach cloud login. Open Coach settings and sign in to send chat pushes.'),
+            no_session: tt('coachCloudSessionGone', 'No Coach cloud login. Open Coach settings and sign in to send chat pushes.'),
             no_parent: tt('coachBroadcastNoParentLink', 'No linked parent found for these players.'),
             no_client: tt('coachBroadcastCloudFail', 'Saved on this PC, but phone push failed. Check coach cloud login.'),
             upsert_failed: tt('coachBroadcastUpsertFail', 'Could not save the message to the cloud (permissions).')
