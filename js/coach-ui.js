@@ -129,7 +129,9 @@
     }
 
     marketing.hidden = true;
-    auth.hidden = true;
+    // Keep workspace, but allow forced cloud re-auth panel (JWT dead / chat blocked).
+    const forceCloud = !!(auth.dataset && auth.dataset.forceCloud === '1');
+    auth.hidden = !forceCloud;
     work.hidden = false;
     work.dataset.started = '1';
     if(back) back.hidden = true;
@@ -141,6 +143,15 @@
     }
     renderWorkspace(session);
     syncPlanModeButtons();
+    // Soft check: if cloud JWT missing, surface re-auth without wiping local coach data.
+    Promise.resolve()
+      .then(async () => {
+        if(forceCloud) return;
+        if(!global.CoachCloud || typeof global.CoachCloud.ensureCloudSession !== 'function') return;
+        const cloud = await global.CoachCloud.ensureCloudSession();
+        if(!cloud) promptCoachCloudReauth();
+      })
+      .catch(() => {});
   }
 
   function enterCoachMode(){
@@ -2774,6 +2785,34 @@
     document.getElementById('coachEmail')?.focus();
   }
 
+  /** Local Coach profile can exist while Supabase JWT is dead — force cloud re-login UI. */
+  function promptCoachCloudReauth(){
+    try{
+      if(typeof showView === 'function') showView('coach');
+    }catch(e){}
+    const auth = document.getElementById('coachAuth');
+    const work = document.getElementById('coachWorkspace');
+    const marketing = document.getElementById('coachMarketing');
+    if(marketing) marketing.hidden = true;
+    if(auth){
+      auth.hidden = false;
+      auth.dataset.open = '1';
+      auth.dataset.forceCloud = '1';
+      try{
+        const lead = auth.querySelector('.coach-lead');
+        if(lead){
+          lead.textContent = tt(
+            'coachCloudReauthLead',
+            'Cloud session expired. Sign in again (Google or email) — teams on this device stay.'
+          );
+        }
+      }catch(e){}
+    }
+    if(work) work.hidden = false;
+    try{ auth && auth.scrollIntoView({behavior: 'smooth', block: 'start'}); }catch(e){}
+    try{ document.getElementById('coachGoogleBtn')?.focus(); }catch(e){}
+  }
+
   async function onSignUp(){
     const email = document.getElementById('coachEmail')?.value || '';
     const pass = document.getElementById('coachPassword')?.value || '';
@@ -2798,6 +2837,8 @@
     try{
       await global.CoachStore.signIn(email, pass);
       if(typeof setCoachPlan === 'function') setCoachPlan(true);
+      const auth = document.getElementById('coachAuth');
+      if(auth) delete auth.dataset.forceCloud;
       toast(tt('coachSignedIn', 'Signed in.'));
       renderCoachUi();
       if(typeof syncPersonalAccountUi === 'function') syncPersonalAccountUi();
@@ -2811,6 +2852,8 @@
       return;
     }
     try{
+      const auth = document.getElementById('coachAuth');
+      if(auth) delete auth.dataset.forceCloud;
       toast(tt('accountGoogleOpening', 'Opening Google…'));
       await global.CoachStore.signInWithGoogle();
     }catch(e){
@@ -4312,12 +4355,15 @@
           }catch(e){}
           const reason = String(cloudRes && cloudRes.reason || '');
           const map = {
-            coach_no_session: tt('coachCloudSessionGone', 'No Coach cloud login. Open Coach settings and sign in to send chat pushes.'),
-            no_session: tt('coachCloudSessionGone', 'No Coach cloud login. Open Coach settings and sign in to send chat pushes.'),
+            coach_no_session: tt('coachCloudSessionGone', 'Cloud login expired. Sign in again with Google — teams stay on this device.'),
+            no_session: tt('coachCloudSessionGone', 'Cloud login expired. Sign in again with Google — teams stay on this device.'),
             no_parent: tt('coachBroadcastNoParentLink', 'No linked parent found for these players.'),
             no_client: tt('coachBroadcastCloudFail', 'Saved on this PC, but phone push failed. Check coach cloud login.'),
             upsert_failed: tt('coachBroadcastUpsertFail', 'Could not save the message to the cloud (permissions).')
           };
+          if(reason === 'coach_no_session' || reason === 'no_session'){
+            try{ promptCoachCloudReauth(); }catch(e){}
+          }
           toast(map[reason] || tt('coachBroadcastCloudFail', 'Saved on this PC, but phone push failed. Check coach cloud login.'));
         }
       };

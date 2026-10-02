@@ -520,11 +520,16 @@
             }
             const reason = String(res && res.reason || '');
             const map = {
-              coach_no_session: tt('coachCloudSessionGone', 'No Coach cloud login. Open Coach settings and sign in to send chat pushes.'),
-              no_session: tt('coachCloudSessionGone', 'No Coach cloud login. Open Coach settings and sign in to send chat pushes.'),
+              coach_no_session: tt('coachCloudSessionGone', 'Cloud login expired. Sign in again with Google — teams stay on this device.'),
+              no_session: tt('coachCloudSessionGone', 'Cloud login expired. Sign in again with Google — teams stay on this device.'),
               no_parent: tt('coachBroadcastNoParentLink', 'No linked parent found for these players.'),
               upsert_failed: tt('coachBroadcastUpsertFail', 'Could not save the message to the cloud (permissions).')
             };
+            if(reason === 'coach_no_session' || reason === 'no_session'){
+              try{
+                if(typeof global.promptCoachCloudReauth === 'function') global.promptCoachCloudReauth();
+              }catch(e){}
+            }
             toast(map[reason] || tt('chatCloudPushFail', 'Message saved here, but the phone did not get a push.'));
           }).catch(err => {
             console.warn('Chat cloud push', err);
