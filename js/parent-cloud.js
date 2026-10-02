@@ -455,15 +455,15 @@
     return false;
   }
   function authRedirectTo(){
-    if(isNativeShell()) return 'https://ihormich.github.io/ffk/auth-callback.html';
+    if(isNativeShell()) return 'ffk://auth-callback';
     try{
       if(global.location && /^https:/i.test(global.location.href)){
         const path = String(global.location.pathname || '/');
         const base = path.includes('/ffk') ? path.replace(/\/[^/]*$/, '/') : '/ffk/';
-        return global.location.origin + (base.endsWith('/') ? base : base + '/') + 'auth-callback.html';
+        return global.location.origin + (base.endsWith('/') ? base : base + '/');
       }
     }catch(e){}
-    return 'https://ihormich.github.io/ffk/auth-callback.html';
+    return 'https://ihormich.github.io/ffk/';
   }
   function capPlugin(name){
     try{
@@ -494,111 +494,38 @@
   }
   function parseAuthCallbackUrl(rawUrl){
     const text = String(rawUrl || '');
-    if(!text) return {code: '', access_token: '', refresh_token: '', flow_id: '', error: '', error_description: ''};
+    if(!text) return {code: '', access_token: '', refresh_token: ''};
     let normalized = text;
     if(/^ffk:/i.test(normalized)) normalized = normalized.replace(/^ffk:/i, 'https://ffk.local');
     try{
       const u = new URL(normalized);
       const hash = String(u.hash || '').replace(/^#/, '');
       const hashParams = new URLSearchParams(hash);
-      const get = (k) => u.searchParams.get(k) || hashParams.get(k) || '';
       return {
-        code: get('code'),
-        access_token: get('access_token'),
-        refresh_token: get('refresh_token'),
-        flow_id: get('flow_id') || get('flowId'),
-        error: get('error'),
-        error_description: get('error_description') || get('errorDescription')
+        code: u.searchParams.get('code') || hashParams.get('code') || '',
+        access_token: u.searchParams.get('access_token') || hashParams.get('access_token') || '',
+        refresh_token: u.searchParams.get('refresh_token') || hashParams.get('refresh_token') || ''
       };
     }catch(e){
-      const pick = (name) => {
-        const m = text.match(new RegExp('[?&#]' + name + '=([^&#]+)', 'i'));
-        return m ? decodeURIComponent(m[1].replace(/\+/g, ' ')) : '';
-      };
+      const code = (text.match(/[?&#]code=([^&#]+)/i) || [])[1] || '';
+      const access_token = (text.match(/[?&#]access_token=([^&#]+)/i) || [])[1] || '';
+      const refresh_token = (text.match(/[?&#]refresh_token=([^&#]+)/i) || [])[1] || '';
       return {
-        code: pick('code'),
-        access_token: pick('access_token'),
-        refresh_token: pick('refresh_token'),
-        flow_id: pick('flow_id') || pick('flowId'),
-        error: pick('error'),
-        error_description: pick('error_description')
+        code: decodeURIComponent(code),
+        access_token: decodeURIComponent(access_token),
+        refresh_token: decodeURIComponent(refresh_token)
       };
     }
   }
-  function pkceStorageKey(sb){
-    try{ return String((sb && sb.auth && sb.auth.storageKey) || ''); }catch(e){ return ''; }
-  }
-  function backupPkceVerifier(sb){
-    try{
-      const sk = pkceStorageKey(sb);
-      if(!sk || !global.localStorage) return;
-      const verifier = localStorage.getItem(sk + '-code-verifier');
-      const flows = localStorage.getItem(sk + '-flows-code-verifier');
-      if(!verifier && !flows) return;
-      const payload = {sk, verifier: verifier || '', flows: flows || '', at: Date.now()};
-      // Also copy per-flow verifiers listed in flows.
-      try{
-        const list = flows ? JSON.parse(flows) : [];
-        if(Array.isArray(list)){
-          payload.flowMap = {};
-          list.forEach((id) => {
-            const v = localStorage.getItem(sk + '-flow-' + id + '-code-verifier');
-            if(v) payload.flowMap[id] = v;
-          });
-        }
-      }catch(e){}
-      localStorage.setItem('ffk_pkce_backup', JSON.stringify(payload));
-    }catch(e){}
-  }
-  function restorePkceVerifier(sb){
-    try{
-      const sk = pkceStorageKey(sb);
-      if(!sk || !global.localStorage) return;
-      const raw = localStorage.getItem('ffk_pkce_backup');
-      if(!raw) return;
-      const payload = JSON.parse(raw);
-      if(!payload || payload.sk !== sk) return;
-      if(payload.verifier && !localStorage.getItem(sk + '-code-verifier')){
-        localStorage.setItem(sk + '-code-verifier', payload.verifier);
-      }
-      if(payload.flows && !localStorage.getItem(sk + '-flows-code-verifier')){
-        localStorage.setItem(sk + '-flows-code-verifier', payload.flows);
-      }
-      if(payload.flowMap && typeof payload.flowMap === 'object'){
-        Object.keys(payload.flowMap).forEach((id) => {
-          const key = sk + '-flow-' + id + '-code-verifier';
-          if(payload.flowMap[id] && !localStorage.getItem(key)){
-            localStorage.setItem(key, payload.flowMap[id]);
-          }
-        });
-      }
-    }catch(e){}
-  }
-  const seenOauthCodes = new Set();
-  let oauthExchangeBusy = false;
   async function handleAuthCallbackUrl(rawUrl){
     const sb = parentClient();
     if(!sb) throw new Error('no_cloud');
     const parts = parseAuthCallbackUrl(rawUrl);
-    if(parts.error){
-      const detail = String(parts.error_description || parts.error || '').slice(0, 120);
-      throw new Error(detail || 'oauth_error');
-    }
     let session = null;
     if(parts.code){
-      if(seenOauthCodes.has(parts.code)) return null;
-      if(oauthExchangeBusy) return null;
-      oauthExchangeBusy = true;
-      seenOauthCodes.add(parts.code);
-      try{
-        restorePkceVerifier(sb);
-        const opts = parts.flow_id ? {flowId: parts.flow_id} : undefined;
-        const {data, error} = await sb.auth.exchangeCodeForSession(parts.code, opts);
-        if(error) throw error;
-        session = data && data.session;
-      }finally{
-        oauthExchangeBusy = false;
-      }
+      const {data, error} = await sb.auth.exchangeCodeForSession(parts.code);
+      if(error) throw error;
+      session = data && data.session;
     }else if(parts.access_token && parts.refresh_token){
       const {data, error} = await sb.auth.setSession({
         access_token: parts.access_token,
@@ -644,7 +571,6 @@
       }
     });
     if(error) throw error;
-    backupPkceVerifier(sb);
     if(native){
       if(!data || !data.url) throw new Error('auth');
       await openAuthUrl(data.url);
@@ -655,70 +581,39 @@
   function bindAuthDeepLinks(onSession){
     if(authDeepLinksBound) return;
     authDeepLinksBound = true;
-    const toastAuth = (msg) => {
-      try{
-        if(typeof showToast === 'function') showToast(msg);
-        else if(typeof global.showToast === 'function') global.showToast(msg);
-      }catch(e){}
-    };
     const notify = async (session) => {
       if(!session) return;
       try{ if(typeof onSession === 'function') await onSession(session); }catch(e){}
-    };
-    const handleUrl = async (rawUrl) => {
-      const url = String(rawUrl || '');
-      if(!url) return false;
-      if(!/auth-callback|[?&#](code|access_token)=/i.test(url)) return false;
-      let role = '';
-      try{ role = localStorage.getItem('ffk_oauth_role') || ''; }catch(e){}
-      if(role === 'coach') return false;
-      try{
-        const session = await handleAuthCallbackUrl(url);
-        if(session){
-          await notify(session);
-          return true;
-        }
-        toastAuth(typeof t === 'function' ? t('accountErrGeneric') : 'Sign-in failed');
-      }catch(e){
-        console.warn('parent oauth callback', e);
-        const code = String((e && e.code) || '');
-        const msg = String((e && e.message) || '');
-        if(/pkce_code_verifier_not_found|AuthPKCECodeVerifierMissing/i.test(code + msg)){
-          toastAuth(typeof t === 'function' ? t('accountGoogleRetry') : 'Try Google sign-in again');
-        }else{
-          toastAuth((msg && msg.length < 80) ? msg : (typeof t === 'function' ? t('accountErrGeneric') : 'Sign-in failed'));
-        }
-      }
-      return false;
     };
     consumeAuthRedirectFromLocation().then(notify).catch(() => {});
     try{
       const App = capPlugin('App');
       if(App && typeof App.addListener === 'function'){
         App.addListener('appUrlOpen', async (event) => {
-          await handleUrl(event && event.url ? String(event.url) : '');
-        });
-        if(typeof App.getLaunchUrl === 'function'){
-          App.getLaunchUrl().then(async (res) => {
-            await handleUrl(res && res.url ? String(res.url) : '');
-          }).catch(() => {});
-        }
-      }
-    }catch(e){}
-    try{
-      const Browser = capPlugin('Browser');
-      if(Browser && typeof Browser.addListener === 'function'){
-        Browser.addListener('browserFinished', async () => {
+          const url = event && event.url ? String(event.url) : '';
+          if(!/auth-callback|access_token=|code=/i.test(url)) return;
           let role = '';
           try{ role = localStorage.getItem('ffk_oauth_role') || ''; }catch(e){}
           if(role === 'coach') return;
           try{
-            const session = await getSession();
-            if(session && session.user && !session.user.is_anonymous){
-              await notify(session);
-            }
+            const session = await handleAuthCallbackUrl(url);
+            await notify(session);
           }catch(e){}
         });
+        if(typeof App.getLaunchUrl === 'function'){
+          App.getLaunchUrl().then(async (res) => {
+            const url = res && res.url ? String(res.url) : '';
+            if(!url) return;
+            if(!/auth-callback|access_token=|code=/i.test(url)) return;
+            let role = '';
+            try{ role = localStorage.getItem('ffk_oauth_role') || ''; }catch(e){}
+            if(role === 'coach') return;
+            try{
+              const session = await handleAuthCallbackUrl(url);
+              await notify(session);
+            }catch(e){}
+          }).catch(() => {});
+        }
       }
     }catch(e){}
   }
