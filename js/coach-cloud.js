@@ -25,7 +25,11 @@
     const auth = {
       persistSession: true,
       autoRefreshToken: true,
-      detectSessionInUrl: false
+      detectSessionInUrl: false,
+      // Multi-tab: one refresh at a time so rotation does not kill the other tab.
+      lock: typeof navigator !== 'undefined' && navigator.locks && typeof navigator.locks.request === 'function'
+        ? async (name, fn) => navigator.locks.request(name, fn)
+        : undefined
     };
     if(storageKey) auth.storageKey = storageKey;
     return global.supabase.createClient(c.supabaseUrl, c.supabaseAnonKey, {auth});
@@ -84,7 +88,7 @@
     if(sb) await sb.auth.signOut({scope: 'local'});
   }
 
-  /** Keep coach JWT alive across overnight / background without forcing a password re-login. */
+  /** Keep coach JWT alive like a normal app — silent refresh, no email re-login. */
   async function ensureCloudSession(){
     const sb = getClient();
     if(!sb) return null;
@@ -97,14 +101,19 @@
       session = data && data.session;
     }catch(e){}
     const expMs = session && session.expires_at ? Number(session.expires_at) * 1000 : 0;
-    const needsRefresh = !session || (expMs > 0 && expMs <= Date.now() + 90 * 1000);
+    // Access token ~1h — refresh when under 15 minutes remain (or missing).
+    const needsRefresh = !session || (expMs > 0 && expMs <= Date.now() + 15 * 60 * 1000);
     if(session && !needsRefresh) return session;
     try{
       if(typeof sb.auth.refreshSession === 'function'){
         const {data, error} = await sb.auth.refreshSession();
         if(!error && data && data.session) return data.session;
+        if(error) console.warn('Coach cloud refresh', error);
       }
-    }catch(e){}
+    }catch(e){
+      console.warn('Coach cloud refresh', e);
+    }
+    // Network blip: keep current token if not yet expired.
     if(session && session.access_token && (!expMs || expMs > Date.now())) return session;
     return null;
   }
@@ -126,6 +135,7 @@
   }
 
   let sessionWatchWired = false;
+  let keepAliveTimer = null;
   function watchCloudSession(){
     if(sessionWatchWired) return;
     sessionWatchWired = true;
@@ -136,21 +146,76 @@
         })
         .catch(() => {});
     };
+    const startKeepAlive = () => {
+      if(keepAliveTimer) return;
+      // Access JWT ~1h — refresh every 20m while the tab/app is open.
+      keepAliveTimer = setInterval(() => {
+        try{
+          if(typeof document !== 'undefined' && document.visibilityState === 'hidden') return;
+        }catch(e){}
+        poke();
+      }, 20 * 60 * 1000);
+    };
+    const stopKeepAlive = () => {
+      if(!keepAliveTimer) return;
+      clearInterval(keepAliveTimer);
+      keepAliveTimer = null;
+    };
     try{
       document.addEventListener('visibilitychange', () => {
-        if(document.visibilityState === 'visible') poke();
+        if(document.visibilityState === 'visible'){
+          poke();
+          startKeepAlive();
+        }else{
+          stopKeepAlive();
+        }
       });
+    }catch(e){}
+    try{
+      global.addEventListener('online', poke);
+      global.addEventListener('focus', poke);
     }catch(e){}
     try{
       const App = (global.Capacitor && global.Capacitor.Plugins && global.Capacitor.Plugins.App) || null;
       if(App && typeof App.addListener === 'function'){
         App.addListener('appStateChange', (state) => {
-          if(state && state.isActive) poke();
+          if(state && state.isActive){
+            poke();
+            startKeepAlive();
+          }else{
+            stopKeepAlive();
+          }
         });
       }
     }catch(e){}
-    // Warm once after boot.
-    setTimeout(poke, 1500);
+    try{
+      const sb = getClient();
+      if(sb && sb.auth && typeof sb.auth.onAuthStateChange === 'function'){
+        sb.auth.onAuthStateChange((event, session) => {
+          // Stay signed in across TOKEN_REFRESHED; only surface reauth if storage truly empty.
+          if(event === 'TOKEN_REFRESHED' && session) return;
+          if(event === 'SIGNED_OUT'){
+            // Soft recover — do not wipe local CoachStore; try refresh once.
+            setTimeout(() => {
+              ensureCloudSession().then((s) => {
+                if(!s && typeof global.promptCoachCloudReauth === 'function'){
+                  // Only prompt if user still has a local coach profile.
+                  try{
+                    const local = global.CoachStore && global.CoachStore.getSession && global.CoachStore.getSession();
+                    if(local && local.email) global.promptCoachCloudReauth();
+                  }catch(e){}
+                }
+              }).catch(() => {});
+            }, 400);
+          }
+        });
+      }
+    }catch(e){}
+    // Warm once after boot, then keep alive.
+    setTimeout(() => {
+      poke();
+      startKeepAlive();
+    }, 1500);
   }
 
   const OAUTH_ROLE_KEY = 'ffk_oauth_role';
