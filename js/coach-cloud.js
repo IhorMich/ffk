@@ -225,13 +225,15 @@
     }catch(e){ return false; }
   }
   function authRedirectTo(){
-    if(isNativeShell()) return 'ffk://auth-callback';
+    if(isNativeShell()) return 'https://ihormich.github.io/ffk/auth-callback.html';
     try{
       if(global.location && /^https?:/i.test(global.location.origin || '')){
-        return global.location.origin + (global.location.pathname || '/').replace(/\/?$/, '/') ;
+        const path = String(global.location.pathname || '/');
+        const base = path.includes('/ffk') ? path.replace(/\/[^/]*$/, '/') : '/';
+        return global.location.origin + (base.endsWith('/') ? base : base + '/') + 'auth-callback.html';
       }
     }catch(e){}
-    return 'https://ihormich.github.io/ffk/';
+    return 'https://ihormich.github.io/ffk/auth-callback.html';
   }
   function capPlugin(name){
     try{
@@ -372,22 +374,36 @@
   function bindAuthDeepLinks(onSession){
     if(authDeepLinksBound) return;
     authDeepLinksBound = true;
+    const toastAuth = (msg) => {
+      try{
+        if(typeof showToast === 'function') showToast(msg);
+        else if(typeof global.showToast === 'function') global.showToast(msg);
+      }catch(e){}
+    };
     const notify = async (session) => {
       if(!session) return;
       try{
         const adopted = await adoptGoogleSession(session);
         if(typeof onSession === 'function') await onSession(adopted);
-      }catch(e){}
+      }catch(e){
+        console.warn('coach oauth adopt', e);
+        toastAuth(tt('accountErrGeneric', 'Could not sign in.'));
+      }
     };
     const maybeHandle = async (url) => {
-      if(!/auth-callback|access_token=|code=/i.test(url)) return;
+      if(!/auth-callback|[?&#](code|access_token)=/i.test(url)) return;
       let role = '';
       try{ role = localStorage.getItem(OAUTH_ROLE_KEY) || ''; }catch(e){}
       if(role && role !== 'coach') return;
       try{
         const session = await handleAuthCallbackUrl(url);
-        await notify(session);
-      }catch(e){}
+        if(session) await notify(session);
+        else toastAuth(tt('accountErrGeneric', 'Could not sign in.'));
+      }catch(e){
+        console.warn('coach oauth callback', e);
+        const msg = String((e && e.message) || '');
+        toastAuth(msg && msg.length < 80 ? msg : tt('accountErrGeneric', 'Could not sign in.'));
+      }
     };
     try{
       if(global.location && /[?&#](code|access_token)=/i.test(String(global.location.href || ''))){
@@ -409,6 +425,23 @@
             await maybeHandle(res && res.url ? String(res.url) : '');
           }).catch(() => {});
         }
+      }
+    }catch(e){}
+    try{
+      const Browser = capPlugin('Browser');
+      if(Browser && typeof Browser.addListener === 'function'){
+        Browser.addListener('browserFinished', async () => {
+          let role = '';
+          try{ role = localStorage.getItem(OAUTH_ROLE_KEY) || ''; }catch(e){}
+          if(role && role !== 'coach') return;
+          try{
+            const sb = getClient();
+            if(!sb) return;
+            const {data} = await sb.auth.getSession();
+            const session = data && data.session;
+            if(session && session.user) await notify(session);
+          }catch(e){}
+        });
       }
     }catch(e){}
   }

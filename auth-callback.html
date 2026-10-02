@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#05060c">
+  <title>TEMPO</title>
+  <style>
+    :root{color-scheme:dark}
+    *{box-sizing:border-box}
+    body{margin:0;min-height:100vh;display:grid;place-items:center;padding:24px;background:#05060c;color:#f7f8ff;font-family:system-ui,-apple-system,sans-serif}
+    main{width:min(420px,100%);padding:28px;border:1px solid #292d40;border-radius:24px;background:#111421;text-align:center}
+    h1{margin:0 0 10px;font-size:1.5rem}
+    p{margin:0 0 20px;color:#b8bdd0;line-height:1.45}
+    a{display:block;padding:14px 18px;border-radius:14px;background:#F5B942;color:#08121C;font-weight:800;text-decoration:none}
+    small{display:block;margin-top:16px;color:#858ba3}
+  </style>
+</head>
+<body>
+  <main>
+    <h1>TEMPO</h1>
+    <p id="message">Opening the app…</p>
+    <a id="openApp" href="#">Open TEMPO</a>
+    <small id="hint">If nothing happens, tap the button.</small>
+  </main>
+  <script>
+  (function(){
+    const lang = (navigator.language || 'en').toLowerCase();
+    const text = lang.startsWith('ru')
+      ? {msg:'Возвращаем в приложение…', btn:'Открыть TEMPO', hint:'Если не открылось — нажми кнопку.', bad:'Нет данных входа. Закрой окно и попробуй снова.'}
+      : lang.startsWith('uk')
+        ? {msg:'Повертаємо в застосунок…', btn:'Відкрити TEMPO', hint:'Якщо не відкрилось — натисни кнопку.', bad:'Немає даних входу. Закрий вікно і спробуй знову.'}
+        : lang.startsWith('pl')
+          ? {msg:'Wracamy do aplikacji…', btn:'Otwórz TEMPO', hint:'Jeśli nic się nie dzieje — naciśnij przycisk.', bad:'Brak danych logowania. Zamknij okno i spróbuj ponownie.'}
+          : lang.startsWith('es')
+            ? {msg:'Volviendo a la app…', btn:'Abrir TEMPO', hint:'Si no pasa nada, toca el botón.', bad:'No hay datos de inicio. Cierra y vuelve a intentar.'}
+            : lang.startsWith('de')
+              ? {msg:'Zurück zur App…', btn:'TEMPO öffnen', hint:'Wenn nichts passiert — tippe auf den Button.', bad:'Keine Anmeldedaten. Fenster schließen und erneut versuchen.'}
+              : lang.startsWith('it')
+                ? {msg:'Torniamo all’app…', btn:'Apri TEMPO', hint:'Se non succede nulla, tocca il pulsante.', bad:'Nessun dato di accesso. Chiudi e riprova.'}
+                : lang.startsWith('fr')
+                  ? {msg:'Retour dans l’app…', btn:'Ouvrir TEMPO', hint:'Si rien ne se passe, touchez le bouton.', bad:'Pas de données de connexion. Fermez et réessayez.'}
+                  : lang.startsWith('pt')
+                    ? {msg:'A voltar à app…', btn:'Abrir TEMPO', hint:'Se nada acontecer, toque no botão.', bad:'Sem dados de login. Feche e tente de novo.'}
+                    : {msg:'Opening the app…', btn:'Open TEMPO', hint:'If nothing happens, tap the button.', bad:'No sign-in data. Close this window and try again.'};
+
+    const message = document.getElementById('message');
+    const button = document.getElementById('openApp');
+    const hint = document.getElementById('hint');
+    document.documentElement.lang = lang.slice(0, 2);
+
+    const search = String(location.search || '');
+    const hash = String(location.hash || '');
+    const hasAuth = /[?&#](code|access_token)=/i.test(search + hash);
+    if(!hasAuth){
+      message.textContent = text.bad;
+      button.hidden = true;
+      hint.hidden = true;
+      return;
+    }
+
+    // Preserve PKCE ?code=… and/or #access_token=… for the app.
+    const pathAndQuery = 'auth-callback' + search + hash;
+    const schemeUrl = 'ffk://' + pathAndQuery;
+    const androidIntent = 'intent://' + pathAndQuery
+      + '#Intent;scheme=ffk;package=app.ffk.rating;end';
+    const target = /Android/i.test(navigator.userAgent) ? androidIntent : schemeUrl;
+
+    message.textContent = text.msg;
+    button.textContent = text.btn;
+    button.href = target;
+    hint.textContent = text.hint;
+
+    try{ location.replace(target); }catch(e){
+      try{ location.href = target; }catch(err){}
+    }
+  })();
+  </script>
+</body>
+</html>

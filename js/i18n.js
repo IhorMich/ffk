@@ -4168,6 +4168,41 @@ ru:{
       accountErrAuth:'Неверный email или пароль.',
       accountErrGeneric:'Не удалось войти.',
       accountCloudMissing:'Облако не настроено. Проверь подключение.'
+    },
+    es:{
+      accountGoogle:'Continuar con Google',
+      accountOr:'o',
+      accountOrEmail:'o email y contraseña',
+      accountGoogleOpening:'Abriendo Google…',
+      accountGoogleDisabled:'El acceso con Google aún no está activado en la nube.'
+    },
+    de:{
+      accountGoogle:'Mit Google anmelden',
+      accountOr:'oder',
+      accountOrEmail:'oder E-Mail und Passwort',
+      accountGoogleOpening:'Google wird geöffnet…',
+      accountGoogleDisabled:'Google-Anmeldung ist in der Cloud noch nicht aktiviert.'
+    },
+    it:{
+      accountGoogle:'Continua con Google',
+      accountOr:'oppure',
+      accountOrEmail:'oppure email e password',
+      accountGoogleOpening:'Apertura di Google…',
+      accountGoogleDisabled:'Accesso Google non ancora abilitato nel cloud.'
+    },
+    fr:{
+      accountGoogle:'Continuer avec Google',
+      accountOr:'ou',
+      accountOrEmail:'ou e-mail et mot de passe',
+      accountGoogleOpening:'Ouverture de Google…',
+      accountGoogleDisabled:'La connexion Google n’est pas encore activée dans le cloud.'
+    },
+    pt:{
+      accountGoogle:'Continuar com Google',
+      accountOr:'ou',
+      accountOrEmail:'ou email e palavra-passe',
+      accountGoogleOpening:'A abrir o Google…',
+      accountGoogleDisabled:'O início de sessão com Google ainda não está ativo na nuvem.'
     }
   };
   LANGS.forEach(lang => {
