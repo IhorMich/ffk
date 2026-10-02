@@ -26,6 +26,8 @@
       persistSession: true,
       autoRefreshToken: true,
       detectSessionInUrl: false,
+      // Native Browser OAuth needs PKCE; implicit hash tokens break on Android intent://.
+      flowType: 'pkce',
       // Multi-tab: one refresh at a time so rotation does not kill the other tab.
       lock: typeof navigator !== 'undefined' && navigator.locks && typeof navigator.locks.request === 'function'
         ? async (name, fn) => navigator.locks.request(name, fn)
@@ -264,38 +266,110 @@
   }
   function parseAuthCallbackUrl(rawUrl){
     const text = String(rawUrl || '');
-    if(!text) return {code: '', access_token: '', refresh_token: ''};
+    if(!text) return {code: '', access_token: '', refresh_token: '', flow_id: '', error: '', error_description: ''};
     let normalized = text;
     if(/^ffk:/i.test(normalized)) normalized = normalized.replace(/^ffk:/i, 'https://ffk.local');
     try{
       const u = new URL(normalized);
       const hash = String(u.hash || '').replace(/^#/, '');
       const hashParams = new URLSearchParams(hash);
+      const get = (k) => u.searchParams.get(k) || hashParams.get(k) || '';
       return {
-        code: u.searchParams.get('code') || hashParams.get('code') || '',
-        access_token: u.searchParams.get('access_token') || hashParams.get('access_token') || '',
-        refresh_token: u.searchParams.get('refresh_token') || hashParams.get('refresh_token') || ''
+        code: get('code'),
+        access_token: get('access_token'),
+        refresh_token: get('refresh_token'),
+        flow_id: get('flow_id') || get('flowId'),
+        error: get('error'),
+        error_description: get('error_description') || get('errorDescription')
       };
     }catch(e){
-      const code = (text.match(/[?&#]code=([^&#]+)/i) || [])[1] || '';
-      const access_token = (text.match(/[?&#]access_token=([^&#]+)/i) || [])[1] || '';
-      const refresh_token = (text.match(/[?&#]refresh_token=([^&#]+)/i) || [])[1] || '';
+      const pick = (name) => {
+        const m = text.match(new RegExp('[?&#]' + name + '=([^&#]+)', 'i'));
+        return m ? decodeURIComponent(m[1].replace(/\+/g, ' ')) : '';
+      };
       return {
-        code: decodeURIComponent(code),
-        access_token: decodeURIComponent(access_token),
-        refresh_token: decodeURIComponent(refresh_token)
+        code: pick('code'),
+        access_token: pick('access_token'),
+        refresh_token: pick('refresh_token'),
+        flow_id: pick('flow_id') || pick('flowId'),
+        error: pick('error'),
+        error_description: pick('error_description')
       };
     }
   }
+  function pkceStorageKey(sb){
+    try{ return String((sb && sb.auth && sb.auth.storageKey) || ''); }catch(e){ return ''; }
+  }
+  function backupPkceVerifier(sb){
+    try{
+      const sk = pkceStorageKey(sb);
+      if(!sk || !global.localStorage) return;
+      const verifier = localStorage.getItem(sk + '-code-verifier');
+      const flows = localStorage.getItem(sk + '-flows-code-verifier');
+      if(!verifier && !flows) return;
+      const payload = {sk, verifier: verifier || '', flows: flows || '', at: Date.now()};
+      try{
+        const list = flows ? JSON.parse(flows) : [];
+        if(Array.isArray(list)){
+          payload.flowMap = {};
+          list.forEach((id) => {
+            const v = localStorage.getItem(sk + '-flow-' + id + '-code-verifier');
+            if(v) payload.flowMap[id] = v;
+          });
+        }
+      }catch(e){}
+      localStorage.setItem('ffk_pkce_backup_coach', JSON.stringify(payload));
+    }catch(e){}
+  }
+  function restorePkceVerifier(sb){
+    try{
+      const sk = pkceStorageKey(sb);
+      if(!sk || !global.localStorage) return;
+      const raw = localStorage.getItem('ffk_pkce_backup_coach');
+      if(!raw) return;
+      const payload = JSON.parse(raw);
+      if(!payload || payload.sk !== sk) return;
+      if(payload.verifier && !localStorage.getItem(sk + '-code-verifier')){
+        localStorage.setItem(sk + '-code-verifier', payload.verifier);
+      }
+      if(payload.flows && !localStorage.getItem(sk + '-flows-code-verifier')){
+        localStorage.setItem(sk + '-flows-code-verifier', payload.flows);
+      }
+      if(payload.flowMap && typeof payload.flowMap === 'object'){
+        Object.keys(payload.flowMap).forEach((id) => {
+          const key = sk + '-flow-' + id + '-code-verifier';
+          if(payload.flowMap[id] && !localStorage.getItem(key)){
+            localStorage.setItem(key, payload.flowMap[id]);
+          }
+        });
+      }
+    }catch(e){}
+  }
+  const seenOauthCodes = new Set();
+  let oauthExchangeBusy = false;
   async function handleAuthCallbackUrl(rawUrl){
     const sb = getClient();
     if(!sb) throw new Error('no_cloud');
     const parts = parseAuthCallbackUrl(rawUrl);
+    if(parts.error){
+      const detail = String(parts.error_description || parts.error || '').slice(0, 120);
+      throw new Error(detail || 'oauth_error');
+    }
     let session = null;
     if(parts.code){
-      const {data, error} = await sb.auth.exchangeCodeForSession(parts.code);
-      if(error) throw error;
-      session = data && data.session;
+      if(seenOauthCodes.has(parts.code)) return null;
+      if(oauthExchangeBusy) return null;
+      oauthExchangeBusy = true;
+      seenOauthCodes.add(parts.code);
+      try{
+        restorePkceVerifier(sb);
+        const opts = parts.flow_id ? {flowId: parts.flow_id} : undefined;
+        const {data, error} = await sb.auth.exchangeCodeForSession(parts.code, opts);
+        if(error) throw error;
+        session = data && data.session;
+      }finally{
+        oauthExchangeBusy = false;
+      }
     }else if(parts.access_token && parts.refresh_token){
       const {data, error} = await sb.auth.setSession({
         access_token: parts.access_token,
@@ -325,6 +399,7 @@
       }
     });
     if(error) throw error;
+    backupPkceVerifier(sb);
     if(native){
       if(!data || !data.url) throw new Error('auth');
       await openAuthUrl(data.url);

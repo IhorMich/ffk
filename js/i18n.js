@@ -4051,6 +4051,7 @@ ru:{
       accountOrEmail:'або email і пароль',
       accountGoogleOpening:'Відкриваємо Google…',
       accountGoogleDisabled:'Вхід через Google ще не увімкнено в хмарі.',
+      accountGoogleRetry:'Сесія Google збилась. Натисни ще раз «Увійти через Google».',
       accountCreated:'Free-акаунт створено.',
       accountSignedIn:'Ви увійшли.',
       accountSynced:'Дані синхронізовано з хмари.',
@@ -4085,6 +4086,7 @@ ru:{
       accountOrEmail:'lub email i hasło',
       accountGoogleOpening:'Otwieramy Google…',
       accountGoogleDisabled:'Logowanie Google nie jest jeszcze włączone w chmurze.',
+      accountGoogleRetry:'Sesja Google się zerwała. Naciśnij ponownie „Zaloguj przez Google”.',
       accountCreated:'Konto Free utworzone.',
       accountSignedIn:'Zalogowano.',
       accountSignedOut:'Wylogowano.',
@@ -4118,6 +4120,7 @@ ru:{
       accountOrEmail:'or email and password',
       accountGoogleOpening:'Opening Google…',
       accountGoogleDisabled:'Google sign-in is not enabled in the cloud yet.',
+      accountGoogleRetry:'Google session was lost. Tap Continue with Google again.',
       accountCreated:'Free account created.',
       accountSignedIn:'Signed in',
       accountSynced:'Data synced from the cloud.',
@@ -4152,6 +4155,7 @@ ru:{
       accountOrEmail:'или email и пароль',
       accountGoogleOpening:'Открываем Google…',
       accountGoogleDisabled:'Вход через Google ещё не включён в облаке.',
+      accountGoogleRetry:'Сессия Google сбилась. Нажми ещё раз «Войти через Google».',
       accountCreated:'Free-аккаунт создан.',
       accountSignedIn:'Вы вошли.',
       accountSynced:'Данные синхронизированы из облака.',
@@ -4174,35 +4178,40 @@ ru:{
       accountOr:'o',
       accountOrEmail:'o email y contraseña',
       accountGoogleOpening:'Abriendo Google…',
-      accountGoogleDisabled:'El acceso con Google aún no está activado en la nube.'
+      accountGoogleDisabled:'El acceso con Google aún no está activado en la nube.',
+      accountGoogleRetry:'Se perdió la sesión de Google. Pulsa Continuar con Google otra vez.'
     },
     de:{
       accountGoogle:'Mit Google anmelden',
       accountOr:'oder',
       accountOrEmail:'oder E-Mail und Passwort',
       accountGoogleOpening:'Google wird geöffnet…',
-      accountGoogleDisabled:'Google-Anmeldung ist in der Cloud noch nicht aktiviert.'
+      accountGoogleDisabled:'Google-Anmeldung ist in der Cloud noch nicht aktiviert.',
+      accountGoogleRetry:'Google-Sitzung verloren. Tippe erneut auf Mit Google anmelden.'
     },
     it:{
       accountGoogle:'Continua con Google',
       accountOr:'oppure',
       accountOrEmail:'oppure email e password',
       accountGoogleOpening:'Apertura di Google…',
-      accountGoogleDisabled:'Accesso Google non ancora abilitato nel cloud.'
+      accountGoogleDisabled:'Accesso Google non ancora abilitato nel cloud.',
+      accountGoogleRetry:'Sessione Google persa. Tocca di nuovo Continua con Google.'
     },
     fr:{
       accountGoogle:'Continuer avec Google',
       accountOr:'ou',
       accountOrEmail:'ou e-mail et mot de passe',
       accountGoogleOpening:'Ouverture de Google…',
-      accountGoogleDisabled:'La connexion Google n’est pas encore activée dans le cloud.'
+      accountGoogleDisabled:'La connexion Google n’est pas encore activée dans le cloud.',
+      accountGoogleRetry:'Session Google perdue. Appuyez encore sur Continuer avec Google.'
     },
     pt:{
       accountGoogle:'Continuar com Google',
       accountOr:'ou',
       accountOrEmail:'ou email e palavra-passe',
       accountGoogleOpening:'A abrir o Google…',
-      accountGoogleDisabled:'O início de sessão com Google ainda não está ativo na nuvem.'
+      accountGoogleDisabled:'O início de sessão com Google ainda não está ativo na nuvem.',
+      accountGoogleRetry:'Sessão Google perdida. Toque novamente em Continuar com Google.'
     }
   };
   LANGS.forEach(lang => {

@@ -50,8 +50,16 @@
     document.documentElement.lang = lang.slice(0, 2);
 
     const search = String(location.search || '');
-    const hash = String(location.hash || '');
-    const hasAuth = /[?&#](code|access_token)=/i.test(search + hash);
+    const hash = String(location.hash || '').replace(/^#/, '');
+    const q = new URLSearchParams(search.startsWith('?') ? search.slice(1) : search);
+    const h = new URLSearchParams(hash);
+    // Fold hash tokens into query — Android intent:// / some WebViews drop fragments.
+    ['code', 'access_token', 'refresh_token', 'expires_in', 'token_type', 'provider_token', 'provider_refresh_token', 'state', 'error', 'error_description', 'flow_id', 'type'].forEach((key) => {
+      const fromHash = h.get(key);
+      if(fromHash && !q.get(key)) q.set(key, fromHash);
+    });
+    const qs = q.toString();
+    const hasAuth = q.has('code') || q.has('access_token') || q.has('error');
     if(!hasAuth){
       message.textContent = text.bad;
       button.hidden = true;
@@ -59,12 +67,8 @@
       return;
     }
 
-    // Preserve PKCE ?code=… and/or #access_token=… for the app.
-    const pathAndQuery = 'auth-callback' + search + hash;
-    const schemeUrl = 'ffk://' + pathAndQuery;
-    const androidIntent = 'intent://' + pathAndQuery
-      + '#Intent;scheme=ffk;package=app.ffk.rating;end';
-    const target = /Android/i.test(navigator.userAgent) ? androidIntent : schemeUrl;
+    // Custom scheme only — do NOT use intent://…#Intent (it eats OAuth hash / & params).
+    const target = 'ffk://auth-callback' + (qs ? ('?' + qs) : '');
 
     message.textContent = text.msg;
     button.textContent = text.btn;
