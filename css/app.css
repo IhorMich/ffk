@@ -489,26 +489,30 @@
     border:0;
     font-family:"Plus Jakarta Sans", system-ui, sans-serif;
     font-weight:600;
-    font-size:clamp(0.7rem, 2.65vw, 0.92rem);
-    letter-spacing:0.22em;
+    font-size:clamp(0.58rem, 2.1vw, 0.75rem);
+    letter-spacing:0.2em;
     text-transform:uppercase;
     text-align:left;
     color:#fff;
     line-height:1;
     white-space:nowrap;
     opacity:0;
-    transform:translateY(6px);
+    will-change:opacity;
   }
   .intro.play .intro-logo{
     animation:introLogoIn 1.35s cubic-bezier(.16,.84,.28,1) .2s forwards;
   }
   .intro.play .intro-logo-sub{
-    animation:introLogoIn 1.35s cubic-bezier(.16,.84,.28,1) .38s forwards;
+    animation:introSubIn 1.1s ease .45s forwards;
   }
   @keyframes introLogoIn{
     0%{opacity:0;transform:translateY(6px)}
     55%{opacity:.92;transform:translateY(1px)}
     100%{opacity:1;transform:translateY(0)}
+  }
+  @keyframes introSubIn{
+    from{opacity:0}
+    to{opacity:1}
   }
   @keyframes introFade{to{opacity:0}}
   .preview-modal{
