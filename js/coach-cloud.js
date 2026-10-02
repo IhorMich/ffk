@@ -80,7 +80,54 @@
       syncTimer = null;
     }catch(e){}
     const sb = getClient();
-    if(sb) await sb.auth.signOut();
+    // Local only — do not revoke the phone session when signing out on desktop (or vice versa).
+    if(sb) await sb.auth.signOut({scope: 'local'});
+  }
+
+  /** Keep coach JWT alive across overnight / background without forcing a password re-login. */
+  async function ensureCloudSession(){
+    const sb = getClient();
+    if(!sb) return null;
+    try{
+      const {data} = await sb.auth.getSession();
+      let session = data && data.session;
+      if(session && session.expires_at){
+        const skewMs = 90 * 1000;
+        if(Number(session.expires_at) * 1000 > Date.now() + skewMs) return session;
+      }else if(session){
+        return session;
+      }
+    }catch(e){}
+    try{
+      if(typeof sb.auth.refreshSession !== 'function') return null;
+      const {data, error} = await sb.auth.refreshSession();
+      if(error) return null;
+      return (data && data.session) || null;
+    }catch(e){
+      return null;
+    }
+  }
+
+  let sessionWatchWired = false;
+  function watchCloudSession(){
+    if(sessionWatchWired) return;
+    sessionWatchWired = true;
+    const poke = () => { ensureCloudSession().catch(() => {}); };
+    try{
+      document.addEventListener('visibilitychange', () => {
+        if(document.visibilityState === 'visible') poke();
+      });
+    }catch(e){}
+    try{
+      const App = (global.Capacitor && global.Capacitor.Plugins && global.Capacitor.Plugins.App) || null;
+      if(App && typeof App.addListener === 'function'){
+        App.addListener('appStateChange', (state) => {
+          if(state && state.isActive) poke();
+        });
+      }
+    }catch(e){}
+    // Warm once after boot.
+    setTimeout(poke, 1500);
   }
 
   const OAUTH_ROLE_KEY = 'ffk_oauth_role';
@@ -851,6 +898,8 @@
     cloudSignUp,
     cloudSignIn,
     cloudSignOut,
+    ensureCloudSession,
+    watchCloudSession,
     signInWithGoogle,
     handleAuthCallbackUrl,
     bindAuthDeepLinks,
@@ -872,4 +921,5 @@
   };
 
   global.CoachCloud = CoachCloud;
+  try{ watchCloudSession(); }catch(e){}
 })(window);

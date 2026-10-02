@@ -368,7 +368,8 @@
   }
   async function signOut(){
     const sb = parentClient();
-    if(sb) await sb.auth.signOut();
+    // Keep coach / other-device sessions intact.
+    if(sb) await sb.auth.signOut({scope: 'local'});
   }
   function isNativeShell(){
     try{
