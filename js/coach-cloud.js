@@ -25,11 +25,9 @@
     const auth = {
       persistSession: true,
       autoRefreshToken: true,
-      detectSessionInUrl: false,
-      // Multi-tab: one refresh at a time so rotation does not kill the other tab.
-      lock: typeof navigator !== 'undefined' && navigator.locks && typeof navigator.locks.request === 'function'
-        ? async (name, fn) => navigator.locks.request(name, fn)
-        : undefined
+      detectSessionInUrl: false
+      // Built-in supabase navigatorLock handles Web Locks correctly
+      // (custom lock broke signUp: LockManager.request got a timeout number as arg 2).
     };
     if(storageKey) auth.storageKey = storageKey;
     return global.supabase.createClient(c.supabaseUrl, c.supabaseAnonKey, {auth});
