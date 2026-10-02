@@ -451,44 +451,48 @@
   .intro{
     position:fixed;inset:0;z-index:200;
     background:#000;
-    display:flex;align-items:center;justify-content:center;
+    display:block;
     opacity:1;overflow:hidden;
   }
   .intro[hidden]{display:none !important;}
   .intro.out{animation:introFade .4s ease forwards;pointer-events:none;}
   .intro-name{
-    position:relative;z-index:1;
-    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    position:absolute;left:0;right:0;top:50%;
+    z-index:1;
+    transform:translateY(-50%);
+    display:flex;justify-content:center;
     width:100%;
     padding:0 24px;
-    gap:0.55rem;
+    box-sizing:border-box;
   }
   .intro-lockup{
     --logo-w: min(84vw, 340px);
-    /* left edge of TEMPO in mark asset (665 / 3000) */
+    --logo-h: calc(var(--logo-w) * 594 / 3000);
+    --sub-h: 1.2em;
+    --gap: 0.5rem;
     --tempo-left: 22.17%;
+    position:relative;
     width: var(--logo-w);
-    display:flex;flex-direction:column;align-items:stretch;
-    gap:0.5rem;
+    height: calc(var(--logo-h) + var(--gap) + var(--sub-h));
   }
   .intro-logo{
+    position:absolute;left:0;top:0;
     display:block;
     width:100%;
-    height:auto;
-    aspect-ratio:3000 / 594;
+    height:var(--logo-h);
+    object-fit:contain;
+    object-position:center;
     opacity:0;
-    transform:translateY(6px);
-    image-rendering:auto;
-    backface-visibility:hidden;
-    -webkit-backface-visibility:hidden;
   }
   .intro-logo-sub{
-    display:block;
+    position:absolute;left:0;right:0;
+    top:calc(var(--logo-h) + var(--gap));
+    height:var(--sub-h);
+    display:flex;align-items:center;
     box-sizing:border-box;
     margin:0;
     padding:0 0 0 var(--tempo-left);
     border:0;
-    /* system font only: avoids webfont swap jump after fade-in */
     font-family:system-ui, -apple-system, "Segoe UI", sans-serif;
     font-weight:600;
     font-size:clamp(0.58rem, 2.1vw, 0.75rem);
@@ -496,21 +500,19 @@
     text-transform:uppercase;
     text-align:left;
     color:#fff;
-    line-height:1.15;
-    min-height:1.15em;
+    line-height:1;
     white-space:nowrap;
     opacity:0;
   }
   .intro.play .intro-logo{
-    animation:introLogoIn 1.35s cubic-bezier(.16,.84,.28,1) .2s forwards;
+    animation:introLogoFade 1.15s ease .15s forwards;
   }
   .intro.play .intro-logo-sub{
-    animation:introSubIn 1.05s ease .5s forwards;
+    animation:introSubIn 1s ease .55s forwards;
   }
-  @keyframes introLogoIn{
-    0%{opacity:0;transform:translateY(6px)}
-    55%{opacity:.92;transform:translateY(1px)}
-    100%{opacity:1;transform:translateY(0)}
+  @keyframes introLogoFade{
+    from{opacity:0}
+    to{opacity:1}
   }
   @keyframes introSubIn{
     from{opacity:0}
