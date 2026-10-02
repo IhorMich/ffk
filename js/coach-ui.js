@@ -5606,6 +5606,7 @@
   global.renderCoachUi = renderCoachUi;
   global.bindCoachUi = bindCoachUi;
   global.openCoachQuickRate = openCoachQuickRate;
+  global.promptCoachCloudReauth = promptCoachCloudReauth;
   global.closeCoachQuickRate = closeCoachQuickRate;
   global.closeCoachPlayerSheet = closeCoachPlayerSheet;
   global.closeAllCoachOverlays = closeAllCoachOverlays;
