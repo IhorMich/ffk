@@ -89,23 +89,24 @@
     const sb = getClient();
     if(!sb) return null;
     try{
+      if(typeof sb.auth.initialize === 'function') await sb.auth.initialize();
+    }catch(e){}
+    let session = null;
+    try{
       const {data} = await sb.auth.getSession();
-      let session = data && data.session;
-      if(session && session.expires_at){
-        const skewMs = 90 * 1000;
-        if(Number(session.expires_at) * 1000 > Date.now() + skewMs) return session;
-      }else if(session){
-        return session;
+      session = data && data.session;
+    }catch(e){}
+    const expMs = session && session.expires_at ? Number(session.expires_at) * 1000 : 0;
+    const needsRefresh = !session || (expMs > 0 && expMs <= Date.now() + 90 * 1000);
+    if(session && !needsRefresh) return session;
+    try{
+      if(typeof sb.auth.refreshSession === 'function'){
+        const {data, error} = await sb.auth.refreshSession();
+        if(!error && data && data.session) return data.session;
       }
     }catch(e){}
-    try{
-      if(typeof sb.auth.refreshSession !== 'function') return null;
-      const {data, error} = await sb.auth.refreshSession();
-      if(error) return null;
-      return (data && data.session) || null;
-    }catch(e){
-      return null;
-    }
+    if(session && session.access_token && (!expMs || expMs > Date.now())) return session;
+    return null;
   }
 
   async function refreshCoachPhotosUi(){

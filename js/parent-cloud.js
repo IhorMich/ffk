@@ -822,24 +822,25 @@
   async function liveSessionOn(sb){
     if(!sb || !sb.auth) return null;
     try{
-      const {data} = await sb.auth.getSession();
-      let session = data && data.session;
-      if(session && session.expires_at){
-        const skewSec = 60;
-        if(Number(session.expires_at) * 1000 <= Date.now() + skewSec * 1000){
-          session = null;
-        }
-      }
-      if(session) return session;
+      if(typeof sb.auth.initialize === 'function') await sb.auth.initialize();
     }catch(e){}
+    let session = null;
     try{
-      if(typeof sb.auth.refreshSession !== 'function') return null;
-      const {data, error} = await sb.auth.refreshSession();
-      if(error) return null;
-      return (data && data.session) || null;
-    }catch(e){
-      return null;
-    }
+      const {data} = await sb.auth.getSession();
+      session = data && data.session;
+    }catch(e){}
+    const expMs = session && session.expires_at ? Number(session.expires_at) * 1000 : 0;
+    const needsRefresh = !session || (expMs > 0 && expMs <= Date.now() + 90 * 1000);
+    if(session && !needsRefresh) return session;
+    try{
+      if(typeof sb.auth.refreshSession === 'function'){
+        const {data, error} = await sb.auth.refreshSession();
+        if(!error && data && data.session) return data.session;
+      }
+    }catch(e){}
+    // Keep a still-valid access token even if refresh failed (offline / race).
+    if(session && session.access_token && (!expMs || expMs > Date.now())) return session;
+    return null;
   }
   /** Prefer the auth client that actually has a live Supabase session. */
   async function senderClient(preferredRole){
@@ -860,7 +861,13 @@
     if(preferred === 'coach'){
       const sb = coachClient();
       if(!sb) return {sb: null, session: null, reason: 'no_client'};
-      const session = await liveSessionOn(sb);
+      let session = null;
+      try{
+        if(global.CoachCloud && typeof global.CoachCloud.ensureCloudSession === 'function'){
+          session = await global.CoachCloud.ensureCloudSession();
+        }
+      }catch(e){}
+      if(!session) session = await liveSessionOn(sb);
       if(session) return {sb, session, reason: ''};
       return {sb, session: null, reason: 'coach_no_session'};
     }
