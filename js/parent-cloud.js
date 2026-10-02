@@ -1788,15 +1788,43 @@
         .in('id', profileIds);
       if(profilesRes.error) throw profilesRes.error;
       const profiles = new Map((profilesRes.data || []).map(p => [String(p.id), p]));
+      async function signedPhotoToDataUrl(url){
+        try{
+          const res = await fetch(String(url || ''));
+          if(!res.ok) return '';
+          const blob = await res.blob();
+          if(!blob || !String(blob.type || '').startsWith('image/')) return '';
+          return await new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(String(reader.result || ''));
+            reader.onerror = () => resolve('');
+            reader.readAsDataURL(blob);
+          });
+        }catch(e){
+          return '';
+        }
+      }
       for(const link of nextLinks){
         const profile = profiles.get(String(link.personal_player_id));
         if(!profile || !profile.photo_path || typeof setCoachMediaPhoto !== 'function') continue;
         const signed = await sb.storage.from('player-media').createSignedUrl(profile.photo_path, 3600);
-        if(!signed.error && signed.data && signed.data.signedUrl){
-          try{ setCoachMediaPhoto(link.team_player_id, signed.data.signedUrl); }catch(e){}
-        }
+        if(signed.error || !signed.data || !signed.data.signedUrl) continue;
+        const durable = await signedPhotoToDataUrl(signed.data.signedUrl);
+        const photo = durable || String(signed.data.signedUrl);
+        try{ await setCoachMediaPhoto(link.team_player_id, photo); }catch(e){}
       }
     }
+    try{
+      if(typeof hydrateCoachMedia === 'function') await hydrateCoachMedia();
+    }catch(e){}
+    try{
+      if(typeof syncCoachPlayerPhotosFromPersonal === 'function') syncCoachPlayerPhotosFromPersonal();
+    }catch(e){}
+    try{
+      if(typeof renderCoachUi === 'function' && typeof isCoachPlan === 'function' && isCoachPlan()){
+        renderCoachUi();
+      }
+    }catch(e){}
     const chatLinks = (nextLinks && nextLinks.length) ? nextLinks : coachLinks();
     const chatRes = await syncChats(session, chatLinks, 'coach');
     notifyIncomingChats(chatRes && chatRes.incoming);

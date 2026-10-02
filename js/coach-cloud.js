@@ -108,11 +108,33 @@
     }
   }
 
+  async function refreshCoachPhotosUi(){
+    try{
+      if(typeof hydrateCoachMedia === 'function') await hydrateCoachMedia();
+    }catch(e){}
+    try{
+      if(typeof syncCoachPlayerPhotosFromPersonal === 'function') syncCoachPlayerPhotosFromPersonal();
+    }catch(e){}
+    try{
+      if(typeof renderCoachUi === 'function' && typeof isCoachPlan === 'function' && isCoachPlan()){
+        renderCoachUi();
+      }else if(typeof refreshCoachMediaUi === 'function'){
+        refreshCoachMediaUi();
+      }
+    }catch(e){}
+  }
+
   let sessionWatchWired = false;
   function watchCloudSession(){
     if(sessionWatchWired) return;
     sessionWatchWired = true;
-    const poke = () => { ensureCloudSession().catch(() => {}); };
+    const poke = () => {
+      ensureCloudSession()
+        .then((session) => {
+          if(session) return refreshCoachPhotosUi();
+        })
+        .catch(() => {});
+    };
     try{
       document.addEventListener('visibilitychange', () => {
         if(document.visibilityState === 'visible') poke();
@@ -774,6 +796,7 @@
     }
     localStorage.setItem('ffk_coach_v1', JSON.stringify(db));
     localStorage.setItem('ffk_coach_session_v1', JSON.stringify({userId: uid, email, cloud: true}));
+    try{ await refreshCoachPhotosUi(); }catch(e){}
     return {ok: true};
   }
 
@@ -900,6 +923,7 @@
     cloudSignOut,
     ensureCloudSession,
     watchCloudSession,
+    refreshCoachPhotosUi,
     signInWithGoogle,
     handleAuthCallbackUrl,
     bindAuthDeepLinks,

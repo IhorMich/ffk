@@ -116,8 +116,27 @@ function getCoachMediaPhoto(id){
 }
 function setCoachMediaPhoto(id, photo){
   const key = coachMediaKey(id);
-  const nextPhoto = isUsablePhoto(photo) ? String(photo) : '';
-  return idbPutMedia(key, nextPhoto, '');
+  const incoming = String(photo || '');
+  // Explicit clear only when caller passes empty string.
+  if(!incoming){
+    return idbPutMedia(key, '', '');
+  }
+  if(!isUsablePhoto(incoming)){
+    // Never wipe a good cached photo with a bad/unsupported value.
+    return Promise.resolve();
+  }
+  try{
+    const prev = mediaCache[key] && mediaCache[key].photo;
+    // Prefer durable data-URLs over short-lived signed https links.
+    if(
+      prev &&
+      String(prev).startsWith('data:image/') &&
+      /^https?:\/\//i.test(incoming)
+    ){
+      return Promise.resolve();
+    }
+  }catch(e){}
+  return idbPutMedia(key, incoming, '');
 }
 async function hydrateAllMedia(){
   const ids = roster.ids.length ? roster.ids : (player && player.id ? [player.id] : []);
@@ -152,30 +171,51 @@ async function hydrateAllMedia(){
 }
 async function hydrateCoachMedia(){
   try{
-    const store = typeof CoachStore !== 'undefined' ? CoachStore : (window.CoachStore || null);
-    const session = store && store.getSession && store.getSession();
-    if(!store || !session || typeof store.myAcademy !== 'function') return;
-    const academy = store.myAcademy(session);
-    if(!academy || typeof store.listTeams !== 'function') return;
-    const teams = store.listTeams(session, academy.id) || [];
-    for(const team of teams){
-      if(!team) continue;
-      const players = store.listPlayers(session, team.id) || [];
-      for(const tp of players){
-        if(!tp || !tp.id) continue;
-        const key = coachMediaKey(tp.id);
-        const rec = await idbGetMedia(key);
-        if(rec && (rec.photo || rec.cover)){
-          mediaCache[key] = {photo: rec.photo || '', cover: rec.cover || ''};
-        }else if(isUsablePhoto(tp.photo)){
-          // Migrate legacy LS-embedded photos into IDB, then drop from coach DB later.
-          mediaCache[key] = {photo: String(tp.photo), cover: ''};
-          await idbPutMedia(key, String(tp.photo), '');
-        }
+    const playerIds = new Set();
+    try{
+      const raw = JSON.parse(localStorage.getItem('ffk_coach_v1') || '{}');
+      (Array.isArray(raw.team_players) ? raw.team_players : []).forEach(tp => {
+        if(tp && tp.id) playerIds.add(String(tp.id));
+      });
+    }catch(e){}
+    try{
+      const store = typeof CoachStore !== 'undefined' ? CoachStore : (window.CoachStore || null);
+      const session = store && store.getSession && store.getSession();
+      if(store && session && typeof store.myAcademy === 'function'){
+        const academy = store.myAcademy(session);
+        const teams = academy && typeof store.listTeams === 'function'
+          ? (store.listTeams(session, academy.id) || [])
+          : [];
+        teams.forEach(team => {
+          if(!team || typeof store.listPlayers !== 'function') return;
+          (store.listPlayers(session, team.id) || []).forEach(tp => {
+            if(tp && tp.id) playerIds.add(String(tp.id));
+          });
+        });
+      }
+    }catch(e){}
+    for(const id of playerIds){
+      if(!id) continue;
+      const key = coachMediaKey(id);
+      const rec = await idbGetMedia(key);
+      if(rec && (rec.photo || rec.cover)){
+        mediaCache[key] = {photo: rec.photo || '', cover: rec.cover || ''};
+      }else{
+        // Migrate legacy LS-embedded photos into IDB when present on the player row.
+        try{
+          const raw = JSON.parse(localStorage.getItem('ffk_coach_v1') || '{}');
+          const tp = (Array.isArray(raw.team_players) ? raw.team_players : [])
+            .find(p => p && String(p.id) === String(id));
+          if(tp && isUsablePhoto(tp.photo)){
+            mediaCache[key] = {photo: String(tp.photo), cover: ''};
+            await idbPutMedia(key, String(tp.photo), '');
+          }
+        }catch(e){}
       }
     }
   }catch(e){}
 }
+window.hydrateCoachMedia = hydrateCoachMedia;
 
 function loadSettings(){
   try{
