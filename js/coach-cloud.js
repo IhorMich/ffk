@@ -200,13 +200,14 @@
             // Soft recover — do not wipe local CoachStore; try refresh once.
             setTimeout(() => {
               ensureCloudSession().then((s) => {
-                if(!s && typeof global.promptCoachCloudReauth === 'function'){
-                  // Only prompt if user still has a local coach profile.
-                  try{
-                    const local = global.CoachStore && global.CoachStore.getSession && global.CoachStore.getSession();
-                    if(local && local.email) global.promptCoachCloudReauth();
-                  }catch(e){}
-                }
+                if(s) return;
+                try{
+                  if(typeof isCoachPlan === 'function' && !isCoachPlan()) return;
+                  const local = global.CoachStore && global.CoachStore.getSession && global.CoachStore.getSession();
+                  if(local && local.email && typeof global.promptCoachCloudReauth === 'function'){
+                    global.promptCoachCloudReauth();
+                  }
+                }catch(e){}
               }).catch(() => {});
             }, 400);
           }

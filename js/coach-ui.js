@@ -144,9 +144,13 @@
     renderWorkspace(session);
     syncPlanModeButtons();
     // Soft check: if cloud JWT missing, surface re-auth without wiping local coach data.
+    // Only while the user is actually in Coach mode — never on Personal / player home.
     Promise.resolve()
       .then(async () => {
         if(forceCloud) return;
+        try{
+          if(typeof isCoachPlan === 'function' && !isCoachPlan()) return;
+        }catch(e){ return; }
         if(!global.CoachCloud || typeof global.CoachCloud.ensureCloudSession !== 'function') return;
         const cloud = await global.CoachCloud.ensureCloudSession();
         if(!cloud) promptCoachCloudReauth();
@@ -2787,6 +2791,12 @@
 
   /** Local Coach profile can exist while Supabase JWT is dead — force cloud re-login UI. */
   function promptCoachCloudReauth(){
+    // Never hijack Personal / player home with the coach login panel.
+    try{
+      if(typeof isCoachPlan === 'function' && !isCoachPlan()) return;
+      if(global.MatchcardAccount && typeof global.MatchcardAccount.isCoachPlan === 'function'
+        && !global.MatchcardAccount.isCoachPlan()) return;
+    }catch(e){}
     try{
       if(typeof showView === 'function') showView('coach');
     }catch(e){}
