@@ -475,6 +475,7 @@
     display:block;
     width:100%;
     height:auto;
+    aspect-ratio:3000 / 594;
     opacity:0;
     transform:translateY(6px);
     image-rendering:auto;
@@ -487,23 +488,24 @@
     margin:0;
     padding:0 0 0 var(--tempo-left);
     border:0;
-    font-family:"Plus Jakarta Sans", system-ui, sans-serif;
+    /* system font only: avoids webfont swap jump after fade-in */
+    font-family:system-ui, -apple-system, "Segoe UI", sans-serif;
     font-weight:600;
     font-size:clamp(0.58rem, 2.1vw, 0.75rem);
     letter-spacing:0.2em;
     text-transform:uppercase;
     text-align:left;
     color:#fff;
-    line-height:1;
+    line-height:1.15;
+    min-height:1.15em;
     white-space:nowrap;
     opacity:0;
-    will-change:opacity;
   }
   .intro.play .intro-logo{
     animation:introLogoIn 1.35s cubic-bezier(.16,.84,.28,1) .2s forwards;
   }
   .intro.play .intro-logo-sub{
-    animation:introSubIn 1.1s ease .45s forwards;
+    animation:introSubIn 1.05s ease .5s forwards;
   }
   @keyframes introLogoIn{
     0%{opacity:0;transform:translateY(6px)}

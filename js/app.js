@@ -5602,10 +5602,30 @@ function playIntro(){
   el.hidden = false;
   el.classList.remove('out', 'play');
   void el.offsetWidth;
-  el.classList.add('play');
-  requestAnimationFrame(() => requestAnimationFrame(hideNativeSplash));
+  let started = false;
+  const start = () => {
+    if(started || !el || el.hidden) return;
+    started = true;
+    el.classList.add('play');
+    requestAnimationFrame(() => requestAnimationFrame(hideNativeSplash));
+    window.setTimeout(finishIntro, 3200);
+  };
+  const waits = [];
+  const img = el.querySelector('.intro-logo');
+  if(img){
+    if(typeof img.decode === 'function') waits.push(img.decode().catch(() => {}));
+    else if(!img.complete) waits.push(new Promise(resolve => {
+      img.addEventListener('load', resolve, {once:true});
+      img.addEventListener('error', resolve, {once:true});
+    }));
+  }
+  if(waits.length){
+    Promise.all(waits).then(start);
+    window.setTimeout(start, 500);
+  }else{
+    start();
+  }
   el.addEventListener('click', finishIntro, {once:true});
-  window.setTimeout(finishIntro, 3200);
   return true;
 }
 function finishOnboard(){
