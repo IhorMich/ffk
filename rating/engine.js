@@ -126,7 +126,10 @@
     { name: 'shortGoal', pos: 'fwd', counts: { goals: 1 }, behaviors: {}, minutes: 15, matchLen: 60, overall: 6.6, action: 6.6, effort: 6 },
     { name: 'tour60', pos: 'fwd', counts: { goals: 1 }, behaviors: {}, minutes: 60, matchLen: 60, kind: 'tournament', overall: 6.7, action: 6.7, effort: 6 },
     { name: 'tour15', pos: 'fwd', counts: { goals: 1 }, behaviors: {}, minutes: 15, matchLen: 15, kind: 'tournament', overall: 6.2, action: 6.2, effort: 6 },
-    { name: 'tour10', pos: 'fwd', counts: { goals: 1 }, behaviors: {}, minutes: 10, matchLen: 10, kind: 'tournament', overall: 6.1, action: 6.1, effort: 6 }
+    { name: 'tour10', pos: 'fwd', counts: { goals: 1 }, behaviors: {}, minutes: 10, matchLen: 10, kind: 'tournament', overall: 6.1, action: 6.1, effort: 6 },
+    { name: 'cup15', pos: 'fwd', counts: { goals: 1 }, behaviors: {}, minutes: 15, matchLen: 15, kind: 'cup', overall: 6.2, action: 6.2, effort: 6 },
+    { name: 'cup10', pos: 'fwd', counts: { goals: 1 }, behaviors: {}, minutes: 10, matchLen: 10, kind: 'cup', overall: 6.1, action: 6.1, effort: 6 },
+    { name: 'cup60', pos: 'fwd', counts: { goals: 1 }, behaviors: {}, minutes: 60, matchLen: 60, kind: 'cup', overall: 6.7, action: 6.7, effort: 6 }
   ];
 
   R.ratingFixtureFail = function () {

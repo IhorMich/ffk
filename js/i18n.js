@@ -6853,3 +6853,20 @@ ru:{
     Object.assign(I18N[lang], pack.en, pack[lang] || {});
   });
 })();
+
+(function mergeCupI18n(){
+  const pack = {
+    en:{ stCupAvg:'cup rating', cupScaleHint:'Cup {n} min: action points ×{p} versus a championship' },
+    uk:{ stCupAvg:'оцінка кубка', cupScaleHint:'Кубок {n} хв: бали за дії ×{p} від чемпіонату' },
+    pl:{ stCupAvg:'ocena pucharu', cupScaleHint:'Puchar {n} min: punkty za akcje ×{p} względem ligi' },
+    ru:{ stCupAvg:'оценка кубка', cupScaleHint:'Кубок {n} мин: баллы за действия ×{p} от чемпионата' },
+    es:{ stCupAvg:'nota de la copa', cupScaleHint:'Copa {n} min: puntos de acciones ×{p} frente al campeonato' },
+    de:{ stCupAvg:'Pokalnote', cupScaleHint:'Pokal {n} Min: Aktionspunkte ×{p} gegenüber der Meisterschaft' },
+    it:{ stCupAvg:'voto della coppa', cupScaleHint:'Coppa {n} min: punti azioni ×{p} rispetto al campionato' },
+    fr:{ stCupAvg:'note de la coupe', cupScaleHint:'Coupe {n} min : points d’actions ×{p} par rapport au championnat' },
+    pt:{ stCupAvg:'nota da taça', cupScaleHint:'Taça {n} min: pontos de ações ×{p} face ao campeonato' }
+  };
+  LANGS.forEach(lang => {
+    Object.assign(I18N[lang], pack.en, pack[lang] || {});
+  });
+})();

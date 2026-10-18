@@ -1700,7 +1700,7 @@
       const row = {...rating};
       const kind = (match && match.kind) || row.kind || '';
       const len = clampMatchLen(match && match.match_len != null ? match.match_len : row.matchLen);
-      if(kind === 'tournament' && len < 60){
+      if((kind === 'tournament' || kind === 'cup') && len < 60){
         const storedMin = Number(row.minutes) || 60;
         row.minutes = storedMin >= 60 ? len : Math.min(len, storedMin);
         row.matchLen = len;
@@ -1715,7 +1715,7 @@
               pitchPos: row.pitchPos,
               minutes: row.minutes,
               matchLen: len,
-              kind: 'tournament'
+              kind: kind
             });
             if(scored && Number.isFinite(Number(scored.overall))) row.rating = scored.overall;
             if(scored && Number.isFinite(Number(scored.action))) row.actionRating = scored.action;

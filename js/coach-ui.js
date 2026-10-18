@@ -45,7 +45,7 @@
       const has = Object.keys(counts).some(k => Number(counts[k]) > 0);
       let rating = Number(r.rating) || 6;
       let actionRating = Number(r.actionRating) || 6;
-      if(match.kind === 'tournament' && has){
+      if((match.kind === 'tournament' || match.kind === 'cup') && has){
         const scored = calculateRating({
           counts,
           behaviors: r.behaviors,
@@ -53,7 +53,7 @@
           pitchPos: r.pitchPos,
           minutes: len,
           matchLen: len,
-          kind: 'tournament'
+          kind: match.kind
         });
         if(scored){
           rating = scored.overall;
@@ -2601,7 +2601,9 @@
     }).filter(Boolean).join('');
     const avgLabel = group.kind === 'tournament'
       ? tt('stTournamentAvg', 'tournament rating')
-      : tt('stSeasonAvg', 'avg');
+      : group.kind === 'cup'
+        ? tt('stCupAvg', 'cup rating')
+        : tt('stSeasonAvg', 'avg');
     return `<section class="kind-board">
       <div class="kind-head">
         <div class="kind-name">${esc(group.title)}</div>
@@ -3777,9 +3779,14 @@
     const meetup = readCoachMeetup(root);
     const endTime = readCoachMatchEnd(root);
     const feeInfo = readCoachFee(root);
-    const tournament = kind === 'friendly'
+    const matchLen = readCoachMatchLen(root.querySelector('.js-cm-matchlen') || document.getElementById('coachMatchLen'));
+    let tournament = kind === 'friendly'
       ? ''
       : String(root.querySelector('.js-cm-tournament')?.value || '').trim();
+    if((kind === 'cup' || kind === 'tournament') && !tournament && matchLen < 60){
+      tournament = tt(kind === 'cup' ? 'kindCup' : 'kindTournament', kind === 'cup' ? 'Cup' : 'Tournament');
+      root.querySelectorAll('.js-cm-tournament').forEach(el => { el.value = tournament; });
+    }
     const picker = root.querySelector('#coachMatchCreate .js-cm-squad')
       || document.querySelector('#coachMatchCreate .js-cm-squad');
     let squad = selectedSquadFrom(picker || root);
@@ -3808,7 +3815,7 @@
         fee_type: feeInfo.fee_type,
         fee: feeInfo.fee,
         tournament,
-        match_len: readCoachMatchLen(root.querySelector('.js-cm-matchlen') || document.getElementById('coachMatchLen')),
+        match_len: matchLen,
         score: '',
         squad,
         status: 'upcoming'

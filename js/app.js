@@ -1338,8 +1338,8 @@ function nextWeightLabel(key, pos){
 }
 function tourScaleHint(){
   const {scale, matchLen, kind} = liveMatchScale();
-  if(kind !== 'tournament' || !(scale < 0.999)) return '';
-  return t('tourScaleHint', {n: matchLen, p: fmtNum(scale, 2)});
+  if((kind !== 'tournament' && kind !== 'cup') || !(scale < 0.999)) return '';
+  return t(kind === 'cup' ? 'cupScaleHint' : 'tourScaleHint', {n: matchLen, p: fmtNum(scale, 2)});
 }
 function paintWeight(key){
   const shown = nextWeightLabel(key, metricPos(key));
@@ -2736,7 +2736,7 @@ function renderPlayerFeed(){
     const row = (g, bad) => `<div class="pf-row${bad ? ' bad' : ''}"><span class="pf-lab"><span class="ic">${metricIconSvg(g.m.key)}</span>${escapeHtml(profileMetricLabel(g.m.key))}</span><span class="g">${fmtNum(g.grade, 1)}</span></div>`;
   const note = profileCoachNote(list, strengths, focus, mainPos);
   const rateHtml = groups.length > 1
-    ? groups.map(g => `<div class="pf-kind"><div class="pf-rate">${fmtNum(avgRating(g.list), 2)}<small>${escapeHtml(g.kind === 'tournament' ? t('stTournamentAvg') : g.title)}</small></div><p class="kind-record">${escapeHtml(recordLine(g.list))}</p></div>`).join('')
+    ? groups.map(g => `<div class="pf-kind"><div class="pf-rate">${fmtNum(avgRating(g.list), 2)}<small>${escapeHtml(kindAvgLabel(g.kind))}</small></div><p class="kind-record">${escapeHtml(recordLine(g.list))}</p></div>`).join('')
     : `<div class="pf-rate">${fmtNum(avg, 2)}<small>${escapeHtml(season ? t('pfSeasonAvg') : t('pfAllAvg'))}</small></div><p class="kind-record">${escapeHtml(recordLine(list))}</p>`;
   el.innerHTML = `<div class="pf-card">
       ${rateHtml}
@@ -3628,9 +3628,31 @@ function scoresNow(){
   });
   return {action: scored.action, effort: scored.effort, overall: scored.overall, pos: scored.position, minutes, matchLen};
 }
+function formHasActions(){
+  const counts = form && form.counts ? form.counts : {};
+  if(Object.keys(counts).some(k => Number(counts[k]) > 0)) return true;
+  const buckets = form && form.posCounts;
+  if(!buckets || typeof buckets !== 'object') return false;
+  return Object.keys(buckets).some(pos => {
+    const bucket = buckets[pos] || {};
+    return Object.keys(bucket).some(k => Number(bucket[k]) > 0);
+  });
+}
+function openCompAverage(){
+  const comp = player && player.openComp;
+  if(!comp || (comp.kind !== 'cup' && comp.kind !== 'tournament')) return null;
+  const formKind = document.getElementById('f-kind')?.value || '';
+  const formName = String(document.getElementById('f-tournament')?.value || '').trim();
+  if(formKind !== comp.kind || formName !== comp.name) return null;
+  const list = compMatches(comp);
+  if(!list.length) return null;
+  return {avg: avgRating(list), kind: comp.kind, n: list.length};
+}
 function updateHero(){
   const s = scoresNow();
-  const overall = fmtNum(s.overall, 2) + '<small>/10</small>';
+  const cupSoFar = !formHasActions() ? openCompAverage() : null;
+  const shown = cupSoFar && cupSoFar.avg != null ? cupSoFar.avg : s.overall;
+  const overall = fmtNum(shown, 2) + '<small>/10</small>';
   const heroScore = document.getElementById('heroScore');
   if(heroScore) heroScore.innerHTML = overall;
   const liveScore = document.getElementById('liveScore');
@@ -3658,9 +3680,11 @@ function updateHero(){
   setBar('pinActionBar', s.action);
   setBar('pinEffortBar', s.effort);
   const matchKind = document.getElementById('f-kind')?.value || '';
-  const labelText = isShortOuting(s.minutes, s.matchLen)
+  const labelText = cupSoFar
+    ? kindAvgLabel(cupSoFar.kind)
+    : isShortOuting(s.minutes, s.matchLen)
     ? t('ratingForMins', {n: s.minutes})
-    : (matchKind === 'tournament' && s.matchLen < 60)
+    : ((matchKind === 'tournament' || matchKind === 'cup') && s.matchLen < 60)
       ? t('ratingMatchLen', {n: s.matchLen})
       : t('heroOverall');
   const label = document.getElementById('heroLabel');
@@ -3883,6 +3907,19 @@ function maybeShareMilestonePrompt(){
   }catch(e){}
 }
 
+function ensureSeriesName(row){
+  if(!row || (row.kind !== 'cup' && row.kind !== 'tournament')) return;
+  if(String(row.tournament || '').trim()) return;
+  const len = Number(row.matchLen) || 60;
+  if(!(len < 60)) return;
+  row.tournament = (row.kind === 'cup' ? t('kindCup') : t('kindTournament')).slice(0, 48);
+  const input = document.getElementById('f-tournament');
+  if(input && !String(input.value || '').trim()) input.value = row.tournament;
+}
+function compMatches(comp){
+  if(!comp) return [];
+  return matches.filter(m => m.kind === comp.kind && String(m.tournament || '').trim() === comp.name);
+}
 function rememberOpenComp(row){
   if(!row || (row.kind !== 'tournament' && row.kind !== 'cup')) return;
   const name = String(row.tournament || '').trim().slice(0, 48);
@@ -3899,8 +3936,7 @@ function rememberOpenComp(row){
   renderOpenCompBar();
 }
 function compMatchCount(comp){
-  if(!comp) return 0;
-  return matches.filter(m => m.kind === comp.kind && String(m.tournament || '').trim() === comp.name).length;
+  return compMatches(comp).length;
 }
 function renderOpenCompBar(){
   const bar = document.getElementById('openCompBar');
@@ -3915,8 +3951,13 @@ function renderOpenCompBar(){
   const title = document.getElementById('openCompTitle');
   const meta = document.getElementById('openCompMeta');
   const btn = document.getElementById('openCompCloseBtn');
-  if(title) title.textContent = (comp.kind === 'cup' ? t('kindCup') : t('kindTournament')) + ' · ' + comp.name;
-  if(meta) meta.textContent = t('compNextMatch', {n: done + 1, done});
+  if(title){
+    const kindName = comp.kind === 'cup' ? t('kindCup') : t('kindTournament');
+    title.textContent = comp.name === kindName ? kindName : (kindName + ' · ' + comp.name);
+  }
+  const avg = avgRating(compMatches(comp));
+  const avgBit = avg == null ? '' : ' · ' + kindAvgLabel(comp.kind) + ' ' + fmtNum(avg, 2);
+  if(meta) meta.textContent = t('compNextMatch', {n: done + 1, done}) + avgBit;
   if(btn) btn.textContent = comp.kind === 'cup' ? t('compCloseCup') : t('compClose');
 }
 function applyOpenCompToForm(){
@@ -4005,6 +4046,7 @@ function saveCurrentMatch(){
   }
   const wasEdit = !!editingId;
   const firstPersonalSave = !editingId && matches.length === 0;
+  ensureSeriesName(row);
   if(editingId) matches = matches.map(m => m.id === editingId ? row : m);
   else matches.push(row);
   if(!editingId) historyPage = 1;
@@ -5031,6 +5073,11 @@ const KIND_ORDER = ['league', 'cup', 'tournament', 'friendly'];
 function matchKindKey(m){
   return KIND_ORDER.includes(m && m.kind) ? m.kind : 'league';
 }
+function kindAvgLabel(kind){
+  if(kind === 'tournament') return t('stTournamentAvg');
+  if(kind === 'cup') return t('stCupAvg');
+  return t('stSeasonAvg');
+}
 function seasonKindGroups(list){
   const map = new Map();
   (list || []).forEach(m => {
@@ -5112,7 +5159,7 @@ function kindBoardHtml(group){
     </div>
     <p class="dyn-hint">${escapeHtml(t('stDynHint', {n: win.w}))}</p>`;
   }
-  const avgLabel = group.kind === 'tournament' ? t('stTournamentAvg') : t('stSeasonAvg');
+  const avgLabel = kindAvgLabel(group.kind);
   return `<section class="kind-board">
     <div class="kind-head">
       <div class="kind-name">${escapeHtml(group.title)}</div>
