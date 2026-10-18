@@ -53,12 +53,15 @@
     return delta * R.outingFactor(minutes, matchLen);
   };
 
-  // Short tournament and cup actions scale with the match length.
-  // 60 minutes is a full game (today's weights). 15 minutes is a quarter, 10 a sixth.
+  // Short tournament and cup actions are worth less than a 60-minute game,
+  // but not a flat fraction of the length: a huge stat line can still reach 10.
+  // 10 min ≈ ×0.47, 15 min ≈ ×0.56, 60 min = ×1.
   R.lengthFactor = function (matchLen, kind) {
     if (kind !== 'tournament' && kind !== 'cup') return 1;
     var full = Math.max(1, Number(matchLen) || 60);
-    return Math.min(1, full / 60);
+    var span = Math.min(1, full / 60);
+    if (span >= 1) return 1;
+    return Math.pow(span, 0.42);
   };
 
   R.actionScale = function (minutes, matchLen, kind) {

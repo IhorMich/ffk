@@ -203,6 +203,7 @@ window.ffkIsNative = function () {
         <div class="open-comp-text">
           <b id="openCompTitle"></b>
           <span id="openCompMeta"></span>
+          <span id="openCompNote" hidden></span>
         </div>
         <button type="button" class="ghost-btn" id="openCompCloseBtn"></button>
       </div>
@@ -235,6 +236,7 @@ window.ffkIsNative = function () {
         <div class="hero-kick">
           <div class="live-clock" id="formClock"></div>
           <button class="ghost-btn js-match-clock-btn" id="formKickBtn" type="button" data-i18n="liveKick">Старт матча</button>
+          <button class="ghost-btn extra-btn js-extra-btn" id="formExtraBtn" type="button" hidden>Продление</button>
         </div>
       </div>
       <details class="match-context" id="matchContext">
@@ -1689,6 +1691,7 @@ window.ffkIsNative = function () {
       <div class="hero-kick">
         <div class="live-clock" id="liveClock"></div>
         <button class="ghost-btn js-match-clock-btn" id="liveKickBtn" type="button" data-i18n="liveKick">Старт матча</button>
+        <button class="ghost-btn extra-btn js-extra-btn" id="liveExtraBtn" type="button" hidden>Продление</button>
       </div>
     </div>
   </div>

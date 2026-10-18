@@ -569,7 +569,9 @@ function normalizeMatch(m){
   const kind = ['league','friendly','cup','tournament'].includes(m.kind) ? m.kind : 'league';
   const formatRaw = String(m.format || '');
   const format = (FORMAT_MIN[formatRaw] || formatRaw === 'custom' || /^\d+x\d+$/.test(formatRaw)) ? formatRaw : '2x30';
-  const matchLen = formatLength(format, m.matchLen || m.minutes);
+  const scheduled = formatLength(format, m.matchLen || m.minutes);
+  const storedLen = Math.floor(Number(m.matchLen) || 0);
+  const matchLen = (storedLen > scheduled && storedLen <= 120) ? storedLen : scheduled;
   const minutes = Math.min(120, Math.max(1, Number(m.minutes) || matchLen));
   const date = /^\d{4}-\d{2}-\d{2}$/.test(m.date) ? m.date : todayStr();
   const scored = calculateRating({

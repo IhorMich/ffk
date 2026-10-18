@@ -125,11 +125,13 @@
     { name: 'minEffort', pos: 'fwd', counts: {}, behaviors: { effort: 1, team: 1, coach: 1, discipline: 1 }, overall: 5, action: 6, effort: 2 },
     { name: 'shortGoal', pos: 'fwd', counts: { goals: 1 }, behaviors: {}, minutes: 15, matchLen: 60, overall: 6.6, action: 6.6, effort: 6 },
     { name: 'tour60', pos: 'fwd', counts: { goals: 1 }, behaviors: {}, minutes: 60, matchLen: 60, kind: 'tournament', overall: 6.7, action: 6.7, effort: 6 },
-    { name: 'tour15', pos: 'fwd', counts: { goals: 1 }, behaviors: {}, minutes: 15, matchLen: 15, kind: 'tournament', overall: 6.2, action: 6.2, effort: 6 },
-    { name: 'tour10', pos: 'fwd', counts: { goals: 1 }, behaviors: {}, minutes: 10, matchLen: 10, kind: 'tournament', overall: 6.1, action: 6.1, effort: 6 },
-    { name: 'cup15', pos: 'fwd', counts: { goals: 1 }, behaviors: {}, minutes: 15, matchLen: 15, kind: 'cup', overall: 6.2, action: 6.2, effort: 6 },
-    { name: 'cup10', pos: 'fwd', counts: { goals: 1 }, behaviors: {}, minutes: 10, matchLen: 10, kind: 'cup', overall: 6.1, action: 6.1, effort: 6 },
-    { name: 'cup60', pos: 'fwd', counts: { goals: 1 }, behaviors: {}, minutes: 60, matchLen: 60, kind: 'cup', overall: 6.7, action: 6.7, effort: 6 }
+    { name: 'tour15', pos: 'fwd', counts: { goals: 1 }, behaviors: {}, minutes: 15, matchLen: 15, kind: 'tournament', overall: 6.4, action: 6.4, effort: 6 },
+    { name: 'tour10', pos: 'fwd', counts: { goals: 1 }, behaviors: {}, minutes: 10, matchLen: 10, kind: 'tournament', overall: 6.3, action: 6.3, effort: 6 },
+    { name: 'cup15', pos: 'fwd', counts: { goals: 1 }, behaviors: {}, minutes: 15, matchLen: 15, kind: 'cup', overall: 6.4, action: 6.4, effort: 6 },
+    { name: 'cup10', pos: 'fwd', counts: { goals: 1 }, behaviors: {}, minutes: 10, matchLen: 10, kind: 'cup', overall: 6.3, action: 6.3, effort: 6 },
+    { name: 'cup60', pos: 'fwd', counts: { goals: 1 }, behaviors: {}, minutes: 60, matchLen: 60, kind: 'cup', overall: 6.7, action: 6.7, effort: 6 },
+    { name: 'tourBurst', pos: 'fwd', counts: { goals: 20, assists: 10, shots: 10 }, behaviors: {}, minutes: 10, matchLen: 10, kind: 'tournament', overall: 10, action: 10, effort: 6 },
+    { name: 'cupBurst', pos: 'fwd', counts: { goals: 20, assists: 10, shots: 10 }, behaviors: {}, minutes: 10, matchLen: 10, kind: 'cup', overall: 10, action: 10, effort: 6 }
   ];
 
   R.ratingFixtureFail = function () {

@@ -1037,7 +1037,7 @@ function localClock(ms){
   }
 }
 function emptyClock(){
-  return {startedAt:null, pausedAt:null, pauseMs:0, events:[], period:1, phase:'idle', periodPlayMs:0, periodRunAt:null, playMs:0};
+  return {startedAt:null, pausedAt:null, pauseMs:0, events:[], period:1, phase:'idle', periodPlayMs:0, periodRunAt:null, playMs:0, extras:[]};
 }
 
 function currentPitch(){
@@ -1178,6 +1178,35 @@ function periodShape(fmt, custom){
   }
   return {parts: 2, each: 30};
 }
+function extraMinutes(){
+  const list = matchClock && matchClock.extras;
+  if(!Array.isArray(list)) return 0;
+  return list.reduce((sum, n) => sum + Math.max(0, Math.floor(Number(n) || 0)), 0);
+}
+function scheduledMatchLen(){
+  const fmt = document.getElementById('f-format')?.value || '2x30';
+  const base = formatLength(fmt, document.getElementById('f-matchlen')?.value);
+  return Math.min(120, base + extraMinutes());
+}
+function extraRoom(){
+  const fmt = document.getElementById('f-format')?.value || '2x30';
+  const base = formatLength(fmt, document.getElementById('f-matchlen')?.value);
+  return Math.max(0, 120 - base - extraMinutes());
+}
+function liveShape(){
+  const base = periodShape();
+  const extras = Array.isArray(matchClock.extras) ? matchClock.extras : [];
+  const period = Math.max(1, Number(matchClock.period) || 1);
+  const extraIndex = period - base.parts - 1;
+  const each = extraIndex >= 0 && extras[extraIndex]
+    ? Math.max(1, Math.floor(Number(extras[extraIndex]) || 1))
+    : base.each;
+  return {parts: base.parts + extras.length, each};
+}
+function canAddExtra(){
+  const kind = document.getElementById('f-kind')?.value || '';
+  return (kind === 'tournament' || kind === 'cup') && clockPhase() === 'done' && extraRoom() >= 1;
+}
 function formatTag(fmt, custom){
   const {parts, each} = periodShape(fmt, custom);
   if(parts === 1) return t('fmtOnePeriod', {n: each});
@@ -1230,7 +1259,7 @@ function playingMs(now){
 }
 function clockStamp(now){
   now = now || Date.now();
-  const {parts, each} = periodShape();
+  const {parts, each} = liveShape();
   const period = Math.min(parts, Math.max(1, Number(matchClock.period) || 1));
   const playMin = periodPlayNow(now) / 60000;
   const minute = Math.max(1, Math.floor(playMin));
@@ -1251,7 +1280,10 @@ function hydrateClock(raw){
       phase: raw.phase,
       periodPlayMs: Number(raw.periodPlayMs) || 0,
       periodRunAt: Number(raw.periodRunAt) || null,
-      playMs: Number(raw.playMs) || 0
+      playMs: Number(raw.playMs) || 0,
+      extras: Array.isArray(raw.extras)
+        ? raw.extras.map(n => Math.max(1, Math.floor(Number(n) || 0))).filter(Boolean).slice(0, 6)
+        : []
     };
   }
   const startedAt = Number(raw.startedAt) || null;
@@ -1269,7 +1301,8 @@ function hydrateClock(raw){
     startedAt, pausedAt, pauseMs: 0, events,
     period, phase, periodPlayMs,
     periodRunAt: phase === 'run' ? Date.now() - periodPlayMs : null,
-    playMs: (period - 1) * eachMs
+    playMs: (period - 1) * eachMs,
+    extras: []
   };
 }
 function syncFormatFields(fromSettings){
@@ -1321,9 +1354,7 @@ function fmtWeight(w){
 }
 function liveMatchScale(){
   const minutes = Number(document.getElementById('f-minutes')?.value) || 60;
-  const fmt = document.getElementById('f-format')?.value || '2x30';
-  const shape = periodShape(fmt);
-  const matchLen = shape.parts * shape.each;
+  const matchLen = scheduledMatchLen();
   const kind = document.getElementById('f-kind')?.value || '';
   const scale = (typeof actionScale === 'function') ? actionScale(minutes, matchLen, kind) : 1;
   return {scale, matchLen, kind, minutes};
@@ -3615,7 +3646,7 @@ function bindBehaviorSlider(){
 function scoresNow(){
   const pos = currentPos();
   const minutes = Number(document.getElementById('f-minutes').value) || 60;
-  const matchLen = formatLength(document.getElementById('f-format').value, document.getElementById('f-matchlen').value);
+  const matchLen = scheduledMatchLen();
   const scored = calculateRating({
     counts: form.counts,
     posCounts: form.posCounts,
@@ -3648,7 +3679,14 @@ function openCompAverage(){
   if(!list.length) return null;
   return {avg: avgRating(list), kind: comp.kind, n: list.length};
 }
+function syncSeriesNote(){
+  const note = document.getElementById('openCompNote');
+  if(!note || note.hidden) return;
+  const opp = (document.getElementById('f-opponent')?.value || '').trim();
+  if(formHasActions() || opp) note.hidden = true;
+}
 function updateHero(){
+  syncSeriesNote();
   const s = scoresNow();
   const cupSoFar = !formHasActions() ? openCompAverage() : null;
   const shown = cupSoFar && cupSoFar.avg != null ? cupSoFar.avg : s.overall;
@@ -3810,7 +3848,11 @@ function storedMatchFormat(){
 }
 function collectMatch(){
   const format = storedMatchFormat();
-  const matchLen = formatLength(format, document.getElementById('f-matchlen').value);
+  let matchLen = scheduledMatchLen();
+  if(editingId && !extraMinutes()){
+    const prev = matches.find(m => m.id === editingId);
+    if(prev) matchLen = Math.max(matchLen, Math.min(120, Math.floor(Number(prev.matchLen) || 0)));
+  }
   const minutes = Math.min(120, Math.max(1, Number(document.getElementById('f-minutes').value) || matchLen));
   const scored = calculateRating({
     counts: form.counts,
@@ -4069,8 +4111,26 @@ function saveCurrentMatch(){
   if(series){
     rememberOpenComp(row);
     prepareNextCompMatch();
+    const savedComp = player && player.openComp;
+    const savedList = savedComp ? compMatches(savedComp) : [];
+    const savedAvg = avgRating(savedList);
+    const note = document.getElementById('openCompNote');
+    if(note && savedComp){
+      note.hidden = false;
+      note.textContent = t('compSavedNote', {
+        n: savedList.length,
+        avg: savedAvg == null ? '—' : fmtNum(savedAvg, 2),
+        name: savedComp.name
+      });
+    }
     showView('new');
-    showToast(t('toastSavedNext'));
+    document.getElementById('openCompBar')?.scrollIntoView({block:'nearest'});
+    document.getElementById('f-opponent')?.focus();
+    showToast(t('toastSavedNext', {
+      n: savedList.length,
+      avg: savedAvg == null ? '—' : fmtNum(savedAvg, 2),
+      name: row.tournament
+    }));
     ffkLog('match_saved', {edit: wasEdit, rating: row.rating, season: row.season || '', series: row.kind});
     return true;
   }
@@ -4158,6 +4218,96 @@ function refreshBackupBanner(){
     if(stale) hist.textContent = t('backupRemind', {n: matches.length});
   }
 }
+const historyOpenBlocks = {};
+let historyBlockIds = [];
+function dayIndex(iso){
+  const m = String(iso || '').match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if(!m) return null;
+  return Math.floor(Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3])) / 86400000);
+}
+function historyBlocks(list){
+  const chrono = [...list].reverse();
+  const blocks = [];
+  const open = new Map();
+  chrono.forEach(m => {
+    const kind = m.kind || 'league';
+    const name = String(m.tournament || '').trim();
+    const day = dayIndex(m.date);
+    if((kind === 'tournament' || kind === 'cup') && name && day != null){
+      const key = kind + '\n' + name.toLowerCase();
+      const cluster = open.get(key);
+      if(cluster && day >= cluster.startDay && day - cluster.startDay <= 1){
+        cluster.matches.push(m);
+        cluster.endDay = day;
+        return;
+      }
+      const block = {
+        type: 'comp',
+        kind,
+        name,
+        matches: [m],
+        startDay: day,
+        endDay: day,
+        id: kind + '|' + name.toLowerCase() + '|' + day
+      };
+      open.set(key, block);
+      blocks.push(block);
+      return;
+    }
+    blocks.push({type: 'match', match: m});
+  });
+  const stamp = block => {
+    const m = block.type === 'match' ? block.match : block.matches[block.matches.length - 1];
+    return String(m.date || '') + '|' + String(m.id || 0).padStart(16, '0');
+  };
+  return blocks.sort((a, b) => stamp(b).localeCompare(stamp(a)));
+}
+function historyMatchCard(m, showSeason){
+  return `<div class="match-card">
+      <div class="match-card-top" onclick="toggleDetails(${m.id})">
+        <div class="match-meta">
+          <span class="match-date">${escapeHtml(formatDate(m.date))}${showSeason ? ' · ' + escapeHtml(matchSeason(m)) : ''} · ${escapeHtml(matchMinsLabel(m))} · ${escapeHtml(matchPosDisplay(m))}</span>
+          <span class="match-opp">${escapeHtml(m.opponent || t('unnamed'))}</span>
+          <span class="match-score">${scoreLineHtml(m)}</span>
+        </div>
+        <div class="match-rating ${ratingClass(m.rating)}${isShortOuting(m.minutes, m.matchLen) ? ' short' : ''}">${fmtNum(m.rating, 2)}${isShortOuting(m.minutes, m.matchLen) ? `<small>${escapeHtml(matchMinsLabel(m))}</small>` : ''}</div>
+      </div>
+      <div class="match-details" id="details-${m.id}">
+        ${renderReportHtml(m, true)}
+        ${m.comment ? `<div>${escapeHtml(m.comment)}</div>` : ''}
+        <div class="card-actions">
+          <button class="share-btn" type="button" onclick="shareMatch(${m.id})">${escapeHtml(t('cardBtn'))}</button>
+          <button class="share-btn" type="button" onclick="toggleStory(${m.id})">${escapeHtml(t('storyTitle'))}</button>
+          <button class="edit-btn" type="button" onclick="editMatch(${m.id})">${escapeHtml(t('editBtn'))}</button>
+          <button class="del-btn" type="button" onclick="deleteMatch(${m.id})">${escapeHtml(t('delBtn'))}</button>
+        </div>
+        <div class="match-story" id="story-${m.id}" hidden>${matchStoryHtml(m)}</div>
+      </div>
+    </div>`;
+}
+function historyCompCard(block, showSeason, index){
+  const open = !!historyOpenBlocks[block.id];
+  const first = block.matches[0];
+  const last = block.matches[block.matches.length - 1];
+  const dates = first.date === last.date
+    ? formatDate(first.date)
+    : (formatDate(first.date) + ' – ' + formatDate(last.date));
+  const kindName = kindLabel(block.kind);
+  const title = block.name === kindName ? kindName : (kindName + ' · ' + block.name);
+  const avg = avgRating(block.matches);
+  const inner = block.matches.map(m => historyMatchCard(m, showSeason)).join('');
+  return `<div class="match-card comp-block${open ? ' open' : ''}">
+      <div class="match-card-top" onclick="toggleCompBlock(${index})">
+        <div class="match-meta">
+          <span class="match-date">${escapeHtml(dates)}${showSeason ? ' · ' + escapeHtml(matchSeason(first)) : ''} · ${open ? '▴' : '▾'}</span>
+          <span class="match-opp">${escapeHtml(title)}</span>
+          <span class="match-score">${escapeHtml(recordLine(block.matches))}</span>
+        </div>
+        <div class="match-rating ${avg == null ? '' : ratingClass(avg)}">${avg == null ? '—' : fmtNum(avg, 2)}<small>${escapeHtml(kindAvgLabel(block.kind))}</small></div>
+      </div>
+      <div class="comp-matches${open ? ' open' : ''}">${inner}</div>
+    </div>`;
+}
 function renderHistory(){
   refreshBackupBanner();
   const el = document.getElementById('historyList');
@@ -4185,34 +4335,19 @@ function renderHistory(){
     hidePager();
     return;
   }
-  const pages = Math.max(1, Math.ceil(list.length / HISTORY_PAGE));
+  const blocks = historyBlocks(list);
+  const pages = Math.max(1, Math.ceil(blocks.length / HISTORY_PAGE));
   if(historyPage > pages) historyPage = pages;
   if(historyPage < 1) historyPage = 1;
   const start = (historyPage - 1) * HISTORY_PAGE;
-  const slice = list.slice(start, start + HISTORY_PAGE);
+  const slice = blocks.slice(start, start + HISTORY_PAGE);
   const showSeason = currentSeasonFilter === 'all';
-  el.innerHTML = slice.map(m => {
-    return `<div class="match-card">
-      <div class="match-card-top" onclick="toggleDetails(${m.id})">
-        <div class="match-meta">
-          <span class="match-date">${escapeHtml(formatDate(m.date))}${showSeason ? ' · ' + escapeHtml(matchSeason(m)) : ''} · ${escapeHtml(matchMinsLabel(m))} · ${escapeHtml(matchPosDisplay(m))}</span>
-          <span class="match-opp">${escapeHtml(m.opponent || t('unnamed'))}</span>
-          <span class="match-score">${scoreLineHtml(m)}</span>
-        </div>
-        <div class="match-rating ${ratingClass(m.rating)}${isShortOuting(m.minutes, m.matchLen) ? ' short' : ''}">${fmtNum(m.rating, 2)}${isShortOuting(m.minutes, m.matchLen) ? `<small>${escapeHtml(matchMinsLabel(m))}</small>` : ''}</div>
-      </div>
-      <div class="match-details" id="details-${m.id}">
-        ${renderReportHtml(m, true)}
-        ${m.comment ? `<div>${escapeHtml(m.comment)}</div>` : ''}
-        <div class="card-actions">
-          <button class="share-btn" type="button" onclick="shareMatch(${m.id})">${escapeHtml(t('cardBtn'))}</button>
-          <button class="share-btn" type="button" onclick="toggleStory(${m.id})">${escapeHtml(t('storyTitle'))}</button>
-          <button class="edit-btn" type="button" onclick="editMatch(${m.id})">${escapeHtml(t('editBtn'))}</button>
-          <button class="del-btn" type="button" onclick="deleteMatch(${m.id})">${escapeHtml(t('delBtn'))}</button>
-        </div>
-        <div class="match-story" id="story-${m.id}" hidden>${matchStoryHtml(m)}</div>
-      </div>
-    </div>`;
+  historyBlockIds = [];
+  el.innerHTML = slice.map(block => {
+    if(block.type === 'match') return historyMatchCard(block.match, showSeason);
+    const index = historyBlockIds.length;
+    historyBlockIds.push(block.id);
+    return historyCompCard(block, showSeason, index);
   }).join('');
   if(!pager) return;
   if(pages <= 1){ hidePager(); return; }
@@ -4226,11 +4361,17 @@ function renderHistory(){
   for(let i = a; i <= b; i++) nums.push(i);
   pager.hidden = false;
   pager.innerHTML =
-    `<div class="hist-meta">${escapeHtml(t('histRange', {from, to, total: list.length}))} · ${escapeHtml(t('histPage', {n: historyPage, total: pages}))}</div>` +
+    `<div class="hist-meta">${escapeHtml(t('histRange', {from, to, total: blocks.length}))} · ${escapeHtml(t('histPage', {n: historyPage, total: pages}))}</div>` +
     `<button type="button" ${historyPage <= 1 ? 'disabled' : ''} onclick="historyGo(${historyPage - 1})">${escapeHtml(t('histPrev'))}</button>` +
     nums.map(n => `<button type="button" class="${n === historyPage ? 'on' : ''}" onclick="historyGo(${n})">${n}</button>`).join('') +
     `<button type="button" ${historyPage >= pages ? 'disabled' : ''} onclick="historyGo(${historyPage + 1})">${escapeHtml(t('histNext'))}</button>`;
 }
+window.toggleCompBlock = function(index){
+  const id = historyBlockIds[index];
+  if(!id) return;
+  historyOpenBlocks[id] = !historyOpenBlocks[id];
+  renderHistory();
+};
 window.historyGo = function(p){
   historyPage = p;
   renderHistory();
@@ -5411,7 +5552,7 @@ function renderLiveClock(){
   const phase = clockPhase();
   const stamp = matchClock.startedAt ? clockStamp(now) : null;
   const fmt = formatTag();
-  const {parts} = periodShape();
+  const {parts} = liveShape();
   let text = t('liveClockWait', {clock: localClock(now) + ' · ' + tzShort(), fmt});
   let btnText = t('liveKick');
   let running = false;
@@ -5439,6 +5580,11 @@ function renderLiveClock(){
     btn.textContent = btnText;
     btn.disabled = phase === 'done';
     btn.classList.toggle('go', phase === 'idle' || phase === 'break');
+  });
+  document.querySelectorAll('.js-extra-btn').forEach(btn => {
+    const show = canAddExtra();
+    btn.hidden = !show;
+    if(show) btn.textContent = t('extraBtn');
   });
   const startBtn = document.getElementById('liveStartBtn');
   if(startBtn) startBtn.disabled = phase === 'done';
@@ -5495,6 +5641,7 @@ function startMatchClock(){
     matchClock.periodPlayMs = 0;
     matchClock.playMs = Number(matchClock.playMs) || 0;
   } else if(phase !== 'run'){
+    matchClock.extras = [];
     matchClock.startedAt = matchClock.startedAt || now;
     matchClock.period = 1;
     matchClock.periodPlayMs = 0;
@@ -5516,7 +5663,7 @@ function endCurrentPeriod(){
   matchClock.periodPlayMs = played;
   matchClock.periodRunAt = null;
   matchClock.pausedAt = now;
-  const {parts} = periodShape();
+  const {parts} = liveShape();
   const period = Number(matchClock.period) || 1;
   matchClock.phase = period < parts ? 'break' : 'done';
   matchCue(matchClock.phase === 'done' ? 'end' : 'break');
@@ -5526,6 +5673,32 @@ function endCurrentPeriod(){
   }
   renderLiveClock();
   persistDraft();
+}
+function addExtraTime(){
+  if(!canAddExtra()) return;
+  const room = extraRoom();
+  const suggested = Math.min(periodShape().each, room);
+  const raw = window.prompt(t('extraAsk'), String(suggested));
+  if(raw == null) return;
+  const mins = Math.round(Number(String(raw).replace(',', '.')));
+  if(!mins || mins < 1) return;
+  const add = Math.min(room, mins);
+  if(!Array.isArray(matchClock.extras)) matchClock.extras = [];
+  const base = periodShape();
+  matchClock.extras.push(add);
+  matchClock.period = base.parts + matchClock.extras.length;
+  matchClock.periodPlayMs = 0;
+  matchClock.phase = 'run';
+  matchClock.periodRunAt = Date.now();
+  matchClock.pausedAt = null;
+  matchCue('start');
+  startClockTick();
+  renderLiveClock();
+  renderMetrics();
+  renderLiveGrid();
+  updateHero();
+  persistDraft();
+  showToast(t('extraAdded', {n: add}));
 }
 function toggleMatchClock(){
   const phase = clockPhase();
@@ -5557,6 +5730,9 @@ document.getElementById('liveStartBtn').addEventListener('click', openLive);
 document.getElementById('liveUndoBtn').addEventListener('click', () => undoLastLive());
 document.querySelectorAll('.js-match-clock-btn').forEach(btn => {
   btn.addEventListener('click', toggleMatchClock);
+});
+document.querySelectorAll('.js-extra-btn').forEach(btn => {
+  btn.addEventListener('click', addExtraTime);
 });
 document.getElementById('heroBlock')?.addEventListener('click', e => {
   if(e.target.closest('.hero-kick, .js-match-clock-btn')) return;

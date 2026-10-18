@@ -6734,117 +6734,117 @@ ru:{
     en:{
       labelPeriods:'Periods', labelPeriodMin:'Minutes per period',
       fmtOnePeriod:'1 period · {n} min', fmtPeriods:'{parts}×{each}',
-      tourScaleHint:'Tournament {n} min: action points ×{p} versus a championship',
+      tourScaleHint:'Tournament {n} min: action points ×{p}. A big game still reaches 10',
       compNextMatch:'Match {n} · {done} played',
       compClose:'Finish tournament', compCloseCup:'Finish cup',
       compCloseAsk:'Finish tournament “{name}”? Matches stay in history. New ones will not be added.',
       compCloseAskCup:'Finish cup “{name}”? Matches stay in history. New ones will not be added.',
       compClosed:'Tournament finished', compClosedCup:'Cup finished',
-      toastSavedNext:'Match saved. Record the next one.',
+      toastSavedNext:'Match {n} saved · rating {avg}. Next opponent in “{name}”.',
       coachCompOpen:'Tournament stays open — add the next match.',
       coachCompOpenCup:'Cup stays open — add the next match.'
     },
     uk:{
       labelPeriods:'Таймів', labelPeriodMin:'Хвилин у таймі',
       fmtOnePeriod:'1 тайм · {n} хв', fmtPeriods:'{parts}×{each}',
-      tourScaleHint:'Турнір {n} хв: бали за дії ×{p} від чемпіонату',
+      tourScaleHint:'Турнір {n} хв: бали за дії ×{p}. Яскрава гра доходить до 10',
       compNextMatch:'Матч {n} · зіграно {done}',
       compClose:'Закінчити турнір', compCloseCup:'Закінчити кубок',
       compCloseAsk:'Закінчити турнір «{name}»? Матчі залишаться в історії. Нові в нього вже не підуть.',
       compCloseAskCup:'Закінчити кубок «{name}»? Матчі залишаться в історії. Нові в нього вже не підуть.',
       compClosed:'Турнір закінчено', compClosedCup:'Кубок закінчено',
-      toastSavedNext:'Матч збережено. Можна записати наступний.',
+      toastSavedNext:'Матч {n} збережено · оцінка {avg}. Далі — наступний у «{name}».',
       coachCompOpen:'Турнір відкритий — додайте наступний матч.',
       coachCompOpenCup:'Кубок відкритий — додайте наступний матч.'
     },
     pl:{
       labelPeriods:'Części', labelPeriodMin:'Minut w części',
       fmtOnePeriod:'1 część · {n} min', fmtPeriods:'{parts}×{each}',
-      tourScaleHint:'Turniej {n} min: punkty za akcje ×{p} względem ligi',
+      tourScaleHint:'Turniej {n} min: punkty za akcje ×{p}. Mocny mecz i tak dochodzi do 10',
       compNextMatch:'Mecz {n} · rozegrane {done}',
       compClose:'Zakończ turniej', compCloseCup:'Zakończ puchar',
       compCloseAsk:'Zakończyć turniej „{name}”? Mecze zostaną w historii. Nowe już do niego nie wejdą.',
       compCloseAskCup:'Zakończyć puchar „{name}”? Mecze zostaną w historii. Nowe już do niego nie wejdą.',
       compClosed:'Turniej zakończony', compClosedCup:'Puchar zakończony',
-      toastSavedNext:'Mecz zapisany. Można wpisać następny.',
+      toastSavedNext:'Mecz {n} zapisany · ocena {avg}. Dalej — następny w „{name}”.',
       coachCompOpen:'Turniej jest otwarty — dodaj następny mecz.',
       coachCompOpenCup:'Puchar jest otwarty — dodaj następny mecz.'
     },
     ru:{
       labelPeriods:'Таймов', labelPeriodMin:'Минут в тайме',
       fmtOnePeriod:'1 тайм · {n} мин', fmtPeriods:'{parts}×{each}',
-      tourScaleHint:'Турнир {n} мин: баллы за действия ×{p} от чемпионата',
+      tourScaleHint:'Турнир {n} мин: баллы за действия ×{p}. Яркая игра доходит до 10',
       compNextMatch:'Матч {n} · сыграно {done}',
       compClose:'Закончить турнир', compCloseCup:'Закончить кубок',
       compCloseAsk:'Закончить турнир «{name}»? Матчи останутся в истории. Новые в него уже не попадут.',
       compCloseAskCup:'Закончить кубок «{name}»? Матчи останутся в истории. Новые в него уже не попадут.',
       compClosed:'Турнир закончен', compClosedCup:'Кубок закончен',
-      toastSavedNext:'Матч сохранён. Можно записать следующий.',
+      toastSavedNext:'Матч {n} сохранён · оценка {avg}. Дальше — следующий в «{name}».',
       coachCompOpen:'Турнир открыт — добавьте следующий матч.',
       coachCompOpenCup:'Кубок открыт — добавьте следующий матч.'
     },
     es:{
       labelPeriods:'Tiempos', labelPeriodMin:'Minutos por tiempo',
       fmtOnePeriod:'1 tiempo · {n} min', fmtPeriods:'{parts}×{each}',
-      tourScaleHint:'Torneo {n} min: puntos de acciones ×{p} frente al campeonato',
+      tourScaleHint:'Torneo {n} min: puntos de acciones ×{p}. Un gran partido llega a 10',
       compNextMatch:'Partido {n} · jugados {done}',
       compClose:'Cerrar torneo', compCloseCup:'Cerrar copa',
       compCloseAsk:'¿Cerrar el torneo «{name}»? Los partidos siguen en el historial. Los nuevos ya no entran.',
       compCloseAskCup:'¿Cerrar la copa «{name}»? Los partidos siguen en el historial. Los nuevos ya no entran.',
       compClosed:'Torneo cerrado', compClosedCup:'Copa cerrada',
-      toastSavedNext:'Partido guardado. Puedes anotar el siguiente.',
+      toastSavedNext:'Partido {n} guardado · nota {avg}. Siguiente rival en «{name}».',
       coachCompOpen:'El torneo sigue abierto: añade el siguiente partido.',
       coachCompOpenCup:'La copa sigue abierta: añade el siguiente partido.'
     },
     de:{
       labelPeriods:'Halbzeiten', labelPeriodMin:'Minuten pro Halbzeit',
       fmtOnePeriod:'1 Halbzeit · {n} Min', fmtPeriods:'{parts}×{each}',
-      tourScaleHint:'Turnier {n} Min: Aktionspunkte ×{p} gegenüber der Meisterschaft',
+      tourScaleHint:'Turnier {n} Min: Aktionspunkte ×{p}. Ein starkes Spiel erreicht 10',
       compNextMatch:'Spiel {n} · gespielt {done}',
       compClose:'Turnier beenden', compCloseCup:'Pokal beenden',
       compCloseAsk:'Turnier „{name}“ beenden? Die Spiele bleiben in der Historie. Neue kommen nicht mehr dazu.',
       compCloseAskCup:'Pokal „{name}“ beenden? Die Spiele bleiben in der Historie. Neue kommen nicht mehr dazu.',
       compClosed:'Turnier beendet', compClosedCup:'Pokal beendet',
-      toastSavedNext:'Spiel gespeichert. Das nächste kann eingetragen werden.',
+      toastSavedNext:'Spiel {n} gespeichert · Note {avg}. Weiter mit dem nächsten in „{name}“.',
       coachCompOpen:'Turnier bleibt offen — nächstes Spiel hinzufügen.',
       coachCompOpenCup:'Pokal bleibt offen — nächstes Spiel hinzufügen.'
     },
     it:{
       labelPeriods:'Tempi', labelPeriodMin:'Minuti per tempo',
       fmtOnePeriod:'1 tempo · {n} min', fmtPeriods:'{parts}×{each}',
-      tourScaleHint:'Torneo {n} min: punti azioni ×{p} rispetto al campionato',
+      tourScaleHint:'Torneo {n} min: punti azioni ×{p}. Una grande partita arriva a 10',
       compNextMatch:'Partita {n} · giocate {done}',
       compClose:'Chiudi torneo', compCloseCup:'Chiudi coppa',
       compCloseAsk:'Chiudere il torneo «{name}»? Le partite restano nello storico. Quelle nuove non entrano più.',
       compCloseAskCup:'Chiudere la coppa «{name}»? Le partite restano nello storico. Quelle nuove non entrano più.',
       compClosed:'Torneo chiuso', compClosedCup:'Coppa chiusa',
-      toastSavedNext:'Partita salvata. Puoi registrare la successiva.',
+      toastSavedNext:'Partita {n} salvata · voto {avg}. La prossima è in «{name}».',
       coachCompOpen:'Il torneo resta aperto: aggiungi la partita successiva.',
       coachCompOpenCup:'La coppa resta aperta: aggiungi la partita successiva.'
     },
     fr:{
       labelPeriods:'Périodes', labelPeriodMin:'Minutes par période',
       fmtOnePeriod:'1 période · {n} min', fmtPeriods:'{parts}×{each}',
-      tourScaleHint:'Tournoi {n} min : points d’actions ×{p} par rapport au championnat',
+      tourScaleHint:'Tournoi {n} min : points d’actions ×{p}. Un gros match atteint 10',
       compNextMatch:'Match {n} · joués {done}',
       compClose:'Terminer le tournoi', compCloseCup:'Terminer la coupe',
       compCloseAsk:'Terminer le tournoi « {name} » ? Les matchs restent dans l’historique. Les nouveaux n’y entrent plus.',
       compCloseAskCup:'Terminer la coupe « {name} » ? Les matchs restent dans l’historique. Les nouveaux n’y entrent plus.',
       compClosed:'Tournoi terminé', compClosedCup:'Coupe terminée',
-      toastSavedNext:'Match enregistré. Vous pouvez saisir le suivant.',
+      toastSavedNext:'Match {n} enregistré · note {avg}. Le suivant est dans « {name} ».',
       coachCompOpen:'Le tournoi reste ouvert — ajoutez le match suivant.',
       coachCompOpenCup:'La coupe reste ouverte — ajoutez le match suivant.'
     },
     pt:{
       labelPeriods:'Partes', labelPeriodMin:'Minutos por parte',
       fmtOnePeriod:'1 parte · {n} min', fmtPeriods:'{parts}×{each}',
-      tourScaleHint:'Torneio {n} min: pontos de ações ×{p} face ao campeonato',
+      tourScaleHint:'Torneio {n} min: pontos de ações ×{p}. Um grande jogo chega a 10',
       compNextMatch:'Jogo {n} · jogados {done}',
       compClose:'Terminar torneio', compCloseCup:'Terminar taça',
       compCloseAsk:'Terminar o torneio «{name}»? Os jogos ficam no histórico. Os novos já não entram.',
       compCloseAskCup:'Terminar a taça «{name}»? Os jogos ficam no histórico. Os novos já não entram.',
       compClosed:'Torneio terminado', compClosedCup:'Taça terminada',
-      toastSavedNext:'Jogo guardado. Podes registar o seguinte.',
+      toastSavedNext:'Jogo {n} guardado · nota {avg}. O seguinte é em «{name}».',
       coachCompOpen:'O torneio fica aberto — adiciona o jogo seguinte.',
       coachCompOpenCup:'A taça fica aberta — adiciona o jogo seguinte.'
     }
@@ -6856,15 +6856,77 @@ ru:{
 
 (function mergeCupI18n(){
   const pack = {
-    en:{ stCupAvg:'cup rating', cupScaleHint:'Cup {n} min: action points ×{p} versus a championship' },
-    uk:{ stCupAvg:'оцінка кубка', cupScaleHint:'Кубок {n} хв: бали за дії ×{p} від чемпіонату' },
-    pl:{ stCupAvg:'ocena pucharu', cupScaleHint:'Puchar {n} min: punkty za akcje ×{p} względem ligi' },
-    ru:{ stCupAvg:'оценка кубка', cupScaleHint:'Кубок {n} мин: баллы за действия ×{p} от чемпионата' },
-    es:{ stCupAvg:'nota de la copa', cupScaleHint:'Copa {n} min: puntos de acciones ×{p} frente al campeonato' },
-    de:{ stCupAvg:'Pokalnote', cupScaleHint:'Pokal {n} Min: Aktionspunkte ×{p} gegenüber der Meisterschaft' },
-    it:{ stCupAvg:'voto della coppa', cupScaleHint:'Coppa {n} min: punti azioni ×{p} rispetto al campionato' },
-    fr:{ stCupAvg:'note de la coupe', cupScaleHint:'Coupe {n} min : points d’actions ×{p} par rapport au championnat' },
-    pt:{ stCupAvg:'nota da taça', cupScaleHint:'Taça {n} min: pontos de ações ×{p} face ao campeonato' }
+    en:{ stCupAvg:'cup rating', cupScaleHint:'Cup {n} min: action points ×{p}. A big game still reaches 10' },
+    uk:{ stCupAvg:'оцінка кубка', cupScaleHint:'Кубок {n} хв: бали за дії ×{p}. Яскрава гра доходить до 10' },
+    pl:{ stCupAvg:'ocena pucharu', cupScaleHint:'Puchar {n} min: punkty za akcje ×{p}. Mocny mecz i tak dochodzi do 10' },
+    ru:{ stCupAvg:'оценка кубка', cupScaleHint:'Кубок {n} мин: баллы за действия ×{p}. Яркая игра доходит до 10' },
+    es:{ stCupAvg:'nota de la copa', cupScaleHint:'Copa {n} min: puntos de acciones ×{p}. Un gran partido llega a 10' },
+    de:{ stCupAvg:'Pokalnote', cupScaleHint:'Pokal {n} Min: Aktionspunkte ×{p}. Ein starkes Spiel erreicht 10' },
+    it:{ stCupAvg:'voto della coppa', cupScaleHint:'Coppa {n} min: punti azioni ×{p}. Una grande partita arriva a 10' },
+    fr:{ stCupAvg:'note de la coupe', cupScaleHint:'Coupe {n} min : points d’actions ×{p}. Un gros match atteint 10' },
+    pt:{ stCupAvg:'nota da taça', cupScaleHint:'Taça {n} min: pontos de ações ×{p}. Um grande jogo chega a 10' }
+  };
+  LANGS.forEach(lang => {
+    Object.assign(I18N[lang], pack.en, pack[lang] || {});
+  });
+})();
+
+(function mergeSeriesI18n(){
+  const pack = {
+    en:{
+      compSavedNote:'Match {n} is in this competition · rating {avg}. Type the next opponent.',
+      extraBtn:'Extra time',
+      extraAsk:'Extra time, minutes',
+      extraAdded:'Extra time {n} min'
+    },
+    uk:{
+      compSavedNote:'Матч {n} уже в цьому турнірі · оцінка {avg}. Впиши наступного суперника.',
+      extraBtn:'Додатковий час',
+      extraAsk:'Додатковий час, хвилин',
+      extraAdded:'Додатковий час {n} хв'
+    },
+    pl:{
+      compSavedNote:'Mecz {n} jest już w tych rozgrywkach · ocena {avg}. Wpisz następnego rywala.',
+      extraBtn:'Dogrywka',
+      extraAsk:'Dogrywka, minut',
+      extraAdded:'Dogrywka {n} min'
+    },
+    ru:{
+      compSavedNote:'Матч {n} уже в этом турнире · оценка {avg}. Впиши следующего соперника.',
+      extraBtn:'Продление',
+      extraAsk:'Продление, минут',
+      extraAdded:'Продление {n} мин'
+    },
+    es:{
+      compSavedNote:'Partido {n} ya está en esta competición · nota {avg}. Escribe el siguiente rival.',
+      extraBtn:'Prórroga',
+      extraAsk:'Prórroga, minutos',
+      extraAdded:'Prórroga {n} min'
+    },
+    de:{
+      compSavedNote:'Spiel {n} ist in diesem Wettbewerb · Note {avg}. Nächsten Gegner eintragen.',
+      extraBtn:'Verlängerung',
+      extraAsk:'Verlängerung, Minuten',
+      extraAdded:'Verlängerung {n} Min'
+    },
+    it:{
+      compSavedNote:'Partita {n} è già in questa competizione · voto {avg}. Scrivi il prossimo avversario.',
+      extraBtn:'Tempi supplementari',
+      extraAsk:'Tempi supplementari, minuti',
+      extraAdded:'Supplementari {n} min'
+    },
+    fr:{
+      compSavedNote:'Match {n} est dans cette compétition · note {avg}. Indique le prochain adversaire.',
+      extraBtn:'Prolongations',
+      extraAsk:'Prolongations, minutes',
+      extraAdded:'Prolongations {n} min'
+    },
+    pt:{
+      compSavedNote:'Jogo {n} já está nesta competição · nota {avg}. Escreve o próximo adversário.',
+      extraBtn:'Prolongamento',
+      extraAsk:'Prolongamento, minutos',
+      extraAdded:'Prolongamento {n} min'
+    }
   };
   LANGS.forEach(lang => {
     Object.assign(I18N[lang], pack.en, pack[lang] || {});
