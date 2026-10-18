@@ -1052,8 +1052,22 @@
   .file-meta{display:block;font-size:.78rem;color:var(--text-soft);font-weight:600;margin-top:8px;}
   .row2{display:flex;gap:10px;}
   .row2 .field{flex:1;}
-  .row2-opp .field:first-child{flex:1 1 auto;min-width:0;}
+  .row2-opp .field:first-child{position:relative;z-index:4;flex:1 1 auto;min-width:0;}
   .row2-opp .field:last-child{flex:0 0 148px;}
+  .opp-suggest{
+    position:absolute;left:0;right:0;top:calc(100% - 8px);z-index:5;
+    display:grid;gap:2px;margin:0;padding:6px;
+    border:1px solid var(--card-line);border-radius:14px;
+    background:var(--card-paper);
+    box-shadow:0 12px 28px rgba(0,0,0,.35);
+  }
+  .opp-suggest[hidden]{display:none;}
+  .opp-suggest button{
+    width:100%;margin:0;padding:10px 12px;border:0;border-radius:10px;
+    background:transparent;color:var(--card-ink);
+    font:inherit;font-size:.92rem;font-weight:700;text-align:left;
+  }
+  .opp-suggest button:active{background:rgba(127,160,255,.16);}
   .row2-opp .score-pair input{padding-left:6px;padding-right:6px;}
   .hint{
     font-size:.78rem;color:var(--text-soft);margin:8px 0 0;font-weight:600;

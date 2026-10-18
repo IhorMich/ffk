@@ -3494,31 +3494,45 @@ function renderOppList(){
   const tours = [...new Set(matches.map(m => m.tournament).filter(Boolean))].sort();
   document.getElementById('tourList').innerHTML = tours.map(n => `<option value="${escapeHtml(n)}">`).join('');
   const input = document.getElementById('f-opponent');
-  if(input && !input.dataset.oppBound){
+  const box = document.getElementById('oppSuggest');
+  if(input && box && !input.dataset.oppBound){
     input.dataset.oppBound = '1';
     input.addEventListener('input', syncOppSuggestions);
     input.addEventListener('focus', syncOppSuggestions);
+    box.addEventListener('pointerdown', e => {
+      const btn = e.target.closest('button');
+      if(!btn) return;
+      e.preventDefault();
+      input.value = btn.dataset.name || '';
+      box.hidden = true;
+      input.dispatchEvent(new Event('input', {bubbles:true}));
+    });
+    document.addEventListener('pointerdown', e => {
+      if(e.target === input || box.contains(e.target)) return;
+      box.hidden = true;
+    });
   }
   syncOppSuggestions();
 }
 function syncOppSuggestions(){
   const input = document.getElementById('f-opponent');
-  const list = document.getElementById('oppList');
-  if(!input || !list) return;
+  const box = document.getElementById('oppSuggest');
+  if(!input || !box) return;
   const q = input.value.trim().toLowerCase();
   const names = q.length < 1 ? [] : [...new Set(matches.map(m => m.opponent).filter(Boolean))]
     .filter(n => {
       const low = n.toLowerCase();
       return low.startsWith(q) && low !== q;
     })
-    .sort((a, b) => a.localeCompare(b));
+    .sort((a, b) => a.localeCompare(b))
+    .slice(0, 6);
   if(!names.length){
-    input.removeAttribute('list');
-    list.innerHTML = '';
+    box.hidden = true;
+    box.innerHTML = '';
     return;
   }
-  list.innerHTML = names.map(n => `<option value="${escapeHtml(n)}">`).join('');
-  input.setAttribute('list', 'oppList');
+  box.innerHTML = names.map(n => `<button type="button" data-name="${escapeHtml(n)}">${escapeHtml(n)}</button>`).join('');
+  box.hidden = false;
 }
 function haptic(style){
   const Haptics = capPlugin('Haptics');
