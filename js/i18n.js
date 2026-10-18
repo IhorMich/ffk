@@ -6740,6 +6740,7 @@ ru:{
       compCloseAsk:'Finish tournament “{name}”? Matches stay in history. New ones will not be added.',
       compCloseAskCup:'Finish cup “{name}”? Matches stay in history. New ones will not be added.',
       compClosed:'Tournament finished', compClosedCup:'Cup finished',
+      compLive:'In progress', compFinished:'Finished',
       toastSavedNext:'Match {n} saved · rating {avg}. Next opponent in “{name}”.',
       coachCompOpen:'Tournament stays open — add the next match.',
       coachCompOpenCup:'Cup stays open — add the next match.'
@@ -6753,6 +6754,7 @@ ru:{
       compCloseAsk:'Закінчити турнір «{name}»? Матчі залишаться в історії. Нові в нього вже не підуть.',
       compCloseAskCup:'Закінчити кубок «{name}»? Матчі залишаться в історії. Нові в нього вже не підуть.',
       compClosed:'Турнір закінчено', compClosedCup:'Кубок закінчено',
+      compLive:'Триває', compFinished:'Закінчено',
       toastSavedNext:'Матч {n} збережено · оцінка {avg}. Далі — наступний у «{name}».',
       coachCompOpen:'Турнір відкритий — додайте наступний матч.',
       coachCompOpenCup:'Кубок відкритий — додайте наступний матч.'
@@ -6766,6 +6768,7 @@ ru:{
       compCloseAsk:'Zakończyć turniej „{name}”? Mecze zostaną w historii. Nowe już do niego nie wejdą.',
       compCloseAskCup:'Zakończyć puchar „{name}”? Mecze zostaną w historii. Nowe już do niego nie wejdą.',
       compClosed:'Turniej zakończony', compClosedCup:'Puchar zakończony',
+      compLive:'Trwa', compFinished:'Zakończony',
       toastSavedNext:'Mecz {n} zapisany · ocena {avg}. Dalej — następny w „{name}”.',
       coachCompOpen:'Turniej jest otwarty — dodaj następny mecz.',
       coachCompOpenCup:'Puchar jest otwarty — dodaj następny mecz.'
@@ -6779,6 +6782,7 @@ ru:{
       compCloseAsk:'Закончить турнир «{name}»? Матчи останутся в истории. Новые в него уже не попадут.',
       compCloseAskCup:'Закончить кубок «{name}»? Матчи останутся в истории. Новые в него уже не попадут.',
       compClosed:'Турнир закончен', compClosedCup:'Кубок закончен',
+      compLive:'Идёт', compFinished:'Закончен',
       toastSavedNext:'Матч {n} сохранён · оценка {avg}. Дальше — следующий в «{name}».',
       coachCompOpen:'Турнир открыт — добавьте следующий матч.',
       coachCompOpenCup:'Кубок открыт — добавьте следующий матч.'
@@ -6792,6 +6796,7 @@ ru:{
       compCloseAsk:'¿Cerrar el torneo «{name}»? Los partidos siguen en el historial. Los nuevos ya no entran.',
       compCloseAskCup:'¿Cerrar la copa «{name}»? Los partidos siguen en el historial. Los nuevos ya no entran.',
       compClosed:'Torneo cerrado', compClosedCup:'Copa cerrada',
+      compLive:'En curso', compFinished:'Terminado',
       toastSavedNext:'Partido {n} guardado · nota {avg}. Siguiente rival en «{name}».',
       coachCompOpen:'El torneo sigue abierto: añade el siguiente partido.',
       coachCompOpenCup:'La copa sigue abierta: añade el siguiente partido.'
@@ -6805,6 +6810,7 @@ ru:{
       compCloseAsk:'Turnier „{name}“ beenden? Die Spiele bleiben in der Historie. Neue kommen nicht mehr dazu.',
       compCloseAskCup:'Pokal „{name}“ beenden? Die Spiele bleiben in der Historie. Neue kommen nicht mehr dazu.',
       compClosed:'Turnier beendet', compClosedCup:'Pokal beendet',
+      compLive:'Läuft', compFinished:'Beendet',
       toastSavedNext:'Spiel {n} gespeichert · Note {avg}. Weiter mit dem nächsten in „{name}“.',
       coachCompOpen:'Turnier bleibt offen — nächstes Spiel hinzufügen.',
       coachCompOpenCup:'Pokal bleibt offen — nächstes Spiel hinzufügen.'
@@ -6818,6 +6824,7 @@ ru:{
       compCloseAsk:'Chiudere il torneo «{name}»? Le partite restano nello storico. Quelle nuove non entrano più.',
       compCloseAskCup:'Chiudere la coppa «{name}»? Le partite restano nello storico. Quelle nuove non entrano più.',
       compClosed:'Torneo chiuso', compClosedCup:'Coppa chiusa',
+      compLive:'In corso', compFinished:'Finito',
       toastSavedNext:'Partita {n} salvata · voto {avg}. La prossima è in «{name}».',
       coachCompOpen:'Il torneo resta aperto: aggiungi la partita successiva.',
       coachCompOpenCup:'La coppa resta aperta: aggiungi la partita successiva.'
@@ -6831,6 +6838,7 @@ ru:{
       compCloseAsk:'Terminer le tournoi « {name} » ? Les matchs restent dans l’historique. Les nouveaux n’y entrent plus.',
       compCloseAskCup:'Terminer la coupe « {name} » ? Les matchs restent dans l’historique. Les nouveaux n’y entrent plus.',
       compClosed:'Tournoi terminé', compClosedCup:'Coupe terminée',
+      compLive:'En cours', compFinished:'Terminé',
       toastSavedNext:'Match {n} enregistré · note {avg}. Le suivant est dans « {name} ».',
       coachCompOpen:'Le tournoi reste ouvert — ajoutez le match suivant.',
       coachCompOpenCup:'La coupe reste ouverte — ajoutez le match suivant.'
@@ -6844,6 +6852,7 @@ ru:{
       compCloseAsk:'Terminar o torneio «{name}»? Os jogos ficam no histórico. Os novos já não entram.',
       compCloseAskCup:'Terminar a taça «{name}»? Os jogos ficam no histórico. Os novos já não entram.',
       compClosed:'Torneio terminado', compClosedCup:'Taça terminada',
+      compLive:'A decorrer', compFinished:'Terminado',
       toastSavedNext:'Jogo {n} guardado · nota {avg}. O seguinte é em «{name}».',
       coachCompOpen:'O torneio fica aberto — adiciona o jogo seguinte.',
       coachCompOpenCup:'A taça fica aberta — adiciona o jogo seguinte.'

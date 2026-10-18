@@ -2668,7 +2668,7 @@
   .open-comp-text span{display:block;margin-top:2px;font-size:.78rem;color:var(--card-muted);line-height:1.35;}
   #openCompNote{font-weight:700;color:var(--card-accent);}
   #openCompNote[hidden]{display:none !important;}
-  .open-comp .ghost-btn{
+  .open-comp .save-btn,.open-comp .ghost-btn{
     width:100%;margin:0;padding:12px 14px;font-size:.92rem;
     white-space:nowrap;border-radius:14px;
   }

@@ -2767,7 +2767,7 @@ function renderPlayerFeed(){
     const row = (g, bad) => `<div class="pf-row${bad ? ' bad' : ''}"><span class="pf-lab"><span class="ic">${metricIconSvg(g.m.key)}</span>${escapeHtml(profileMetricLabel(g.m.key))}</span><span class="g">${fmtNum(g.grade, 1)}</span></div>`;
   const note = profileCoachNote(list, strengths, focus, mainPos);
   const rateHtml = groups.length > 1
-    ? groups.map(g => `<div class="pf-kind"><div class="pf-rate">${fmtNum(avgRating(g.list), 2)}<small>${escapeHtml(kindAvgLabel(g.kind))}</small></div><p class="kind-record">${escapeHtml(recordLine(g.list))}</p></div>`).join('')
+    ? groups.map(g => `<div class="pf-kind"><div class="pf-rate">${fmtNum(displayRating(g.list), 2)}<small>${escapeHtml(kindAvgLabel(g.kind))}</small></div><p class="kind-record">${escapeHtml(recordLine(g.list))}</p></div>`).join('')
     : `<div class="pf-rate">${fmtNum(avg, 2)}<small>${escapeHtml(season ? t('pfSeasonAvg') : t('pfAllAvg'))}</small></div><p class="kind-record">${escapeHtml(recordLine(list))}</p>`;
   el.innerHTML = `<div class="pf-card">
       ${rateHtml}
@@ -3737,7 +3737,7 @@ function liveSeriesAverage(){
     rows.push({rating: s.overall, minutes: s.minutes, matchLen: s.matchLen});
   }
   if(!rows.length) return null;
-  const avg = avgRating(rows);
+  const avg = shortSeriesRating(rows);
   if(avg == null) return null;
   return {avg, kind: comp.kind};
 }
@@ -4053,7 +4053,8 @@ function renderOpenCompBar(){
     const kindName = comp.kind === 'cup' ? t('kindCup') : t('kindTournament');
     title.textContent = comp.name === kindName ? kindName : (kindName + ' · ' + comp.name);
   }
-  const avg = avgRating(compMatches(comp));
+  const saved = compMatches(comp);
+  const avg = saved.every(isShortCompMatch) ? shortSeriesRating(saved) : avgRating(saved);
   const avgBit = avg == null ? '' : ' · ' + kindAvgLabel(comp.kind) + ' ' + fmtNum(avg, 2);
   if(meta) meta.textContent = t('compNextMatch', {n: done + 1, done}) + avgBit;
   if(btn) btn.textContent = comp.kind === 'cup' ? t('compCloseCup') : t('compClose');
@@ -4169,7 +4170,7 @@ function saveCurrentMatch(){
     prepareNextCompMatch();
     const savedComp = player && player.openComp;
     const savedList = savedComp ? compMatches(savedComp) : [];
-    const savedAvg = avgRating(savedList);
+    const savedAvg = savedList.every(isShortCompMatch) ? shortSeriesRating(savedList) : avgRating(savedList);
     const note = document.getElementById('openCompNote');
     if(note && savedComp){
       note.hidden = false;
@@ -4374,8 +4375,10 @@ function historyCompCard(block, showSeason, index){
     : (formatDate(first.date) + ' – ' + formatDate(last.date));
   const kindName = kindLabel(block.kind);
   const sameName = block.name === kindName;
-  const avg = avgRating(block.matches);
   const shortSeries = block.matches.every(isShortCompMatch);
+  const avg = shortSeries ? shortSeriesRating(block.matches) : avgRating(block.matches);
+  const openNow = player && player.openComp && player.openComp.kind === block.kind && player.openComp.name === block.name;
+  const status = shortSeries ? (openNow ? t('compLive') : t('compFinished')) : '';
   const inner = block.matches.map(m => historyMatchCard(m, showSeason, shortSeries, true)).join('');
   return `<div class="match-card comp-block${open ? ' open' : ''}">
       <div class="match-card-top" onclick="toggleCompBlock(${index})">
@@ -4383,7 +4386,7 @@ function historyCompCard(block, showSeason, index){
           ${sameName ? '' : `<span class="match-kind">${escapeHtml(kindName)}</span>`}
           <span class="match-date">${escapeHtml(dates)}${showSeason ? ' · ' + escapeHtml(matchSeason(first)) : ''} · ${open ? '▴' : '▾'}</span>
           <span class="match-opp">${escapeHtml(sameName ? kindName : block.name)}</span>
-          <span class="match-score">${escapeHtml(recordLine(block.matches))}</span>
+          <span class="match-score">${escapeHtml(recordLine(block.matches))}${status ? ' · ' + escapeHtml(status) : ''}</span>
         </div>
         <div class="match-rating ${avg == null ? '' : ratingClass(avg)}">${avg == null ? '—' : fmtNum(avg, 2)}<small>${escapeHtml(kindAvgLabel(block.kind))}</small></div>
       </div>
@@ -5334,7 +5337,7 @@ function recordLine(list){
 }
 function kindBoardHtml(group){
   const list = group.list;
-  const avg = avgRating(list);
+  const avg = displayRating(list);
   const starts = list.filter(m => m.role !== 'sub').length;
   const subs = list.length - starts;
   const minutes = list.reduce((a,m)=>a+(m.minutes||0),0);
@@ -5418,6 +5421,38 @@ function renderSeasonBoard(){
     </div>
     ${groups.map(kindBoardHtml).join('')}
   </article>`;
+}
+function displayRating(list){
+  if(!list.length) return null;
+  if(!list.every(isShortCompMatch)) return avgRating(list);
+  const groups = new Map();
+  list.forEach(m => {
+    const key = (m.kind || '') + '\n' + String(m.tournament || '').trim().toLowerCase();
+    if(!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(m);
+  });
+  if(groups.size <= 1) return shortSeriesRating(list);
+  let sum = 0, w = 0;
+  groups.forEach(rows => {
+    const score = shortSeriesRating(rows);
+    if(score == null) return;
+    sum += score * rows.length;
+    w += rows.length;
+  });
+  return w ? sum / w : null;
+}
+function shortSeriesRating(list){
+  if(!list.length) return null;
+  let delta = 0;
+  let any = false;
+  list.forEach(m => {
+    const rating = Number(m.rating);
+    if(!isFinite(rating)) return;
+    any = true;
+    delta += rating - 6;
+  });
+  if(!any) return null;
+  return Math.max(0, Math.min(10, 6 + delta));
 }
 function avgRating(list){
   if(!list.length) return null;
