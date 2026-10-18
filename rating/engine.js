@@ -4,6 +4,43 @@
   var R = root.MatchcardRating = root.MatchcardRating || {};
 
   R.BASE_RATING = 6.0;
+  R.ROLE_BUCKETS = ['fwd', 'mid', 'def', 'gk'];
+
+  R.normalizePosCounts = function (raw) {
+    var out = {};
+    if (!raw || typeof raw !== 'object') return out;
+    R.ROLE_BUCKETS.forEach(function (pos) {
+      if (!raw[pos]) return;
+      var counts = R.normalizeCounts(raw[pos]);
+      var any = R.METRICS.some(function (m) { return counts[m.key] > 0; });
+      if (any) out[pos] = counts;
+    });
+    return out;
+  };
+
+  R.posCountsActive = function (posCounts) {
+    return !!posCounts && Object.keys(posCounts).length > 0;
+  };
+
+  R.actionSumAll = function (posCounts) {
+    var sum = 0;
+    R.ROLE_BUCKETS.forEach(function (pos) {
+      if (posCounts && posCounts[pos]) sum += R.actionSum(posCounts[pos], pos);
+    });
+    return sum;
+  };
+
+  R.mergedCounts = function (posCounts) {
+    var counts = R.emptyCounts();
+    R.ROLE_BUCKETS.forEach(function (pos) {
+      var bucket = posCounts && posCounts[pos];
+      if (!bucket) return;
+      R.METRICS.forEach(function (m) {
+        counts[m.key] += bucket[m.key] || 0;
+      });
+    });
+    return counts;
+  };
 
   R.emptyForm = function () {
     return { counts: R.emptyCounts(), behaviors: R.emptyBehaviors() };
@@ -37,10 +74,17 @@
    */
   R.calculateRating = function (match) {
     var n = R.normalizeMatchInput(match);
-    var overall = R.overallScore(n.counts, n.behaviors, n.position, n.minutes, n.matchLen);
-    var action = R.actionScore(n.counts, n.position, n.minutes, n.matchLen);
+    var buckets = R.normalizePosCounts(match && match.posCounts);
+    var multi = R.posCountsActive(buckets);
+    var counts = multi ? R.mergedCounts(buckets) : n.counts;
+    var actionDelta = multi ? R.actionSumAll(buckets) : R.actionSum(n.counts, n.position);
+    var behaviorDelta = R.behaviorDelta(n.behaviors);
+    var overall = R.clampScore(R.BASE_RATING + R.withOuting(actionDelta + behaviorDelta, n.minutes, n.matchLen));
+    var action = R.clampScore(R.BASE_RATING + R.withOuting(actionDelta, n.minutes, n.matchLen));
     var effort = R.effortScore(n.behaviors);
-    var split = R.actionSplit(n.counts, n.position, n.minutes, n.matchLen);
+    var split = multi
+      ? R.actionSplitAll(buckets, n.minutes, n.matchLen)
+      : R.actionSplit(n.counts, n.position, n.minutes, n.matchLen);
     var factor = R.outingFactor(n.minutes, n.matchLen);
     return {
       overall: overall,
@@ -56,11 +100,14 @@
       base: R.BASE_RATING,
       outingFactor: Math.round(factor * 1000) / 1000,
       shortOuting: R.isShortOuting(n.minutes, n.matchLen),
-      blank: R.matchIsBlank({ counts: n.counts, behaviors: n.behaviors }),
+      blank: R.matchIsBlank({ counts: counts, behaviors: n.behaviors }),
       split: split,
-      contributions: R.explainContributions(n.counts, n.position, n.minutes, n.matchLen),
+      contributions: multi
+        ? R.explainContributionsAll(buckets, n.minutes, n.matchLen)
+        : R.explainContributions(n.counts, n.position, n.minutes, n.matchLen),
       behaviors: R.explainBehaviors(n.behaviors),
-      counts: n.counts,
+      counts: counts,
+      posCounts: multi ? buckets : null,
       behaviorValues: n.behaviors
     };
   };
@@ -92,6 +139,21 @@
     var n0 = Math.round(R.nextStackedWeight(0, 0.2) * 100) / 100;
     var n1 = Math.round(R.nextStackedWeight(1, 0.2) * 100) / 100;
     if (n0 !== 0.2 || n1 !== 0.18) return 'nextDecay ' + n0 + '/' + n1;
+    var kept = R.calculateRating({
+      position: 'gk',
+      pitchPos: 'GK',
+      counts: { goals: 1, saves: 1 },
+      posCounts: { fwd: { goals: 1 }, gk: { saves: 1 } },
+      behaviors: {}
+    });
+    if (kept.overallDisplay !== 7.1) return 'multiPos ' + kept.overallDisplay;
+    var oneRole = R.calculateRating({
+      position: 'fwd',
+      counts: { goals: 1 },
+      posCounts: { fwd: { goals: 1 } },
+      behaviors: {}
+    });
+    if (oneRole.overallDisplay !== 6.7) return 'bucketOne ' + oneRole.overallDisplay;
     return '';
   };
 

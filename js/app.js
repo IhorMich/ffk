@@ -1008,6 +1008,7 @@ function startCoachPlayerRating(matchId, teamPlayerId){
 window.startCoachPlayerRating = startCoachPlayerRating;
 window.clearCoachRateContext = clearCoachRateContext;
 let form = emptyForm();
+let playedRole = 'fwd';
 let liveStack = [];
 let matchClock = emptyClock();
 let liveClockTimer = 0;
@@ -1043,6 +1044,109 @@ function currentPitch(){
   return isPitchCode(v) ? v : defaultPitch();
 }
 function currentPos(){ return ratingPosOf(document.getElementById('f-position').value || defaultPitch()); }
+
+function freshPosState(){
+  form.posCounts = {};
+  form.posOrder = [];
+  form.pitchTrail = [];
+}
+function notePitch(pitch){
+  const raw = String(pitch || currentPitch() || '');
+  const code = isPosCode(raw.toUpperCase())
+    ? raw.toUpperCase()
+    : (isRoleCode(raw.toLowerCase()) ? raw.toLowerCase() : '');
+  if(!code) return;
+  if(!Array.isArray(form.pitchTrail)) form.pitchTrail = [];
+  if(!Array.isArray(form.posOrder)) form.posOrder = [];
+  if(form.pitchTrail[form.pitchTrail.length - 1] !== code) form.pitchTrail.push(code);
+  const pos = ratingPosOf(code);
+  if(form.posOrder[form.posOrder.length - 1] !== pos) form.posOrder.push(pos);
+}
+function countInPos(pos, key){
+  const bucket = form.posCounts && form.posCounts[pos];
+  return Math.max(0, Math.floor(Number(bucket && bucket[key]) || 0));
+}
+function bucketsHaveActions(){
+  const bags = form.posCounts || {};
+  return Object.keys(bags).some(pos => Object.keys(bags[pos] || {}).some(k => Number(bags[pos][k]) > 0));
+}
+function adoptLegacyCounts(pos){
+  if(bucketsHaveActions()) return;
+  const role = ['fwd','mid','def','gk'].includes(pos) ? pos : ratingPosOf(pos || 'fwd');
+  const bucket = {};
+  let any = false;
+  Object.keys(form.counts || {}).forEach(k => {
+    const n = Math.max(0, Math.floor(Number(form.counts[k]) || 0));
+    if(n){ bucket[k] = n; any = true; }
+  });
+  form.posCounts = {};
+  if(any){
+    form.posCounts[role] = bucket;
+    if(!Array.isArray(form.posOrder) || !form.posOrder.length) form.posOrder = [role];
+  }
+}
+function ensureBuckets(){
+  if(bucketsHaveActions()) return;
+  if(Object.values(form.counts || {}).some(n => Number(n) > 0)) adoptLegacyCounts(currentPos());
+  else if(!form.posCounts) form.posCounts = {};
+}
+function syncAggregateCounts(){
+  const next = emptyForm().counts;
+  ['fwd','mid','def','gk'].forEach(pos => {
+    const bucket = form.posCounts && form.posCounts[pos];
+    if(!bucket) return;
+    Object.keys(next).forEach(k => {
+      next[k] += Math.max(0, Math.floor(Number(bucket[k]) || 0));
+    });
+  });
+  form.counts = next;
+}
+function metricPos(key){
+  const cur = currentPos();
+  const met = METRICS.find(m => m.key === key);
+  if(!met) return cur;
+  const scores = pos => met.positions.indexOf(pos) !== -1 && weightOf(met, pos);
+  if(scores(cur)) return cur;
+  const order = Array.isArray(form.posOrder) ? form.posOrder : [];
+  for(let i = order.length - 1; i >= 0; i--){
+    if(scores(order[i])) return order[i];
+  }
+  return cur;
+}
+function decrementPos(key){
+  const cur = metricPos(key);
+  if(countInPos(cur, key) > 0) return cur;
+  const order = (Array.isArray(form.posOrder) ? form.posOrder : []).slice().reverse();
+  for(const pos of order){
+    if(countInPos(pos, key) > 0) return pos;
+  }
+  for(const pos of ['fwd','mid','def','gk']){
+    if(countInPos(pos, key) > 0) return pos;
+  }
+  return cur;
+}
+function pitchTrailLabel(){
+  const trail = Array.isArray(form.pitchTrail) ? form.pitchTrail.filter(Boolean) : [];
+  const uniq = [];
+  trail.forEach(c => { if(!uniq.includes(c)) uniq.push(c); });
+  if(!uniq.length) return String(currentPitch() || 'ST').toUpperCase();
+  return uniq.slice(-4).map(c => String(c).toUpperCase()).join(' · ');
+}
+function padMetricMap(pos){
+  const byKey = {};
+  metricsFor(pos).forEach(m => { byKey[m.key] = m; });
+  METRICS.forEach(m => {
+    if(byKey[m.key]) return;
+    if((form.counts[m.key] || 0) > 0) byKey[m.key] = m;
+  });
+  return byKey;
+}
+function matchSplit(m){
+  if(m && m.posCounts && typeof posCountsActive === 'function' && posCountsActive(normalizePosCounts(m.posCounts))){
+    return actionSplitAll(normalizePosCounts(m.posCounts), m.minutes, m.matchLen);
+  }
+  return actionSplit(m.counts, m.position, m.minutes, m.matchLen);
+}
 
 const FORMAT_MIN = { '3x15':45, '3x20':60, '3x25':75, '2x25':50, '2x30':60, '2x35':70, '2x40':80, '2x45':90 };
 function formatLength(id, custom){
@@ -1171,11 +1275,11 @@ function fmtWeight(w){
 function nextWeightLabel(key, pos){
   const met = METRICS.find(x => x.key === key);
   if(!met) return fmtNum(0, 2);
-  return fmtWeight(nextStackedWeight(form.counts[key] || 0, weightOf(met, pos)));
+  const use = pos || metricPos(key);
+  return fmtWeight(nextStackedWeight(countInPos(use, key), weightOf(met, use)));
 }
 function paintWeight(key){
-  const pos = currentPos();
-  const shown = nextWeightLabel(key, pos);
+  const shown = nextWeightLabel(key, metricPos(key));
   const a = document.getElementById('wgt-'+key);
   if(a) a.textContent = shown;
   const b = document.getElementById('live-wgt-'+key);
@@ -1444,7 +1548,7 @@ function outingCaption(m){
   return t('heroOverall');
 }
 function renderReportHtml(m, compact){
-  const split = actionSplit(m.counts, m.position, m.minutes, m.matchLen);
+  const split = matchSplit(m);
   const lines = reportLines(m);
   const mins = matchMinsLabel(m);
   const vs = `${escapeHtml(m.opponent || t('unnamed'))}${m.score ? ' · ' + scoreLineHtml(m) : ''}${mins ? ' · ' + escapeHtml(mins) : ''}`;
@@ -3168,6 +3272,9 @@ function persistDraft(){
     role: document.getElementById('f-role').value,
     comment: document.getElementById('f-comment').value,
     counts: form.counts,
+    posCounts: form.posCounts || {},
+    posOrder: form.posOrder || [],
+    pitchTrail: form.pitchTrail || [],
     behaviors: form.behaviors,
     editingId,
     matchClock
@@ -3191,14 +3298,19 @@ function restoreDraft(){
     if(d.venue) document.getElementById('f-venue').value = d.venue;
     if(d.role) document.getElementById('f-role').value = d.role;
     if(d.comment) document.getElementById('f-comment').value = d.comment;
-    if(d.counts) form.counts = {...form.counts, ...d.counts};
+    if(d.counts) form.counts = {...emptyForm().counts, ...d.counts};
     if(d.behaviors) form.behaviors = {...form.behaviors, ...d.behaviors};
+    form.pitchTrail = Array.isArray(d.pitchTrail) ? d.pitchTrail.filter(c => isPitchCode(c)) : [];
+    form.posOrder = Array.isArray(d.posOrder) ? d.posOrder.filter(p => ['fwd','mid','def','gk'].includes(p)) : [];
+    if(d.posCounts && typeof d.posCounts === 'object') form.posCounts = d.posCounts;
+    else adoptLegacyCounts(ratingPosOf(d.position || currentPos()));
+    playedRole = currentPos();
     if(d.editingId){ editingId = d.editingId; setEditUi(true); }
     if(d.matchClock && typeof d.matchClock === 'object'){
       matchClock = hydrateClock(d.matchClock);
     }
     if(Array.isArray(matchClock.events) && matchClock.events.length){
-      liveStack = matchClock.events.map(e => e.key);
+      liveStack = matchClock.events.map(e => ({key: e.key, pos: e.pos || playedRole}));
     }
   }catch(e){}
   syncScoreVenueSide();
@@ -3209,7 +3321,8 @@ function metricGroupTitle(id){
   return t(id === 'attack' ? 'grpAttack' : (id === 'defense' ? 'grpDefense' : 'grpDiscipline'));
 }
 function metricTileHtml(m, pos){
-  const shown = nextWeightLabel(m.key, pos);
+  const use = metricPos(m.key);
+  const shown = nextWeightLabel(m.key, use);
   const keyRow = (m.live || []).includes(pos);
   return `<div class="metric-tile${keyRow ? ' key' : ''}">
       <div class="metric-icon">${metricIconSvg(m.key)}</div>
@@ -3226,8 +3339,7 @@ function metricTileHtml(m, pos){
 function renderMetrics(){
   const pos = currentPos();
   document.getElementById('weightsHint').textContent = t(({gk:'hintGk', fwd:'hintFwd', mid:'hintMid', def:'hintDef'})[pos] || 'hintOut');
-  const byKey = {};
-  metricsFor(pos).forEach(m => { byKey[m.key] = m; });
+  const byKey = padMetricMap(pos);
   document.getElementById('metricsList').innerHTML = METRIC_GROUPS.map(g => {
     const rows = g.keys.map(k => byKey[k]).filter(Boolean);
     if(!rows.length) return '';
@@ -3315,17 +3427,27 @@ window.undoLastLive = function(){
     showToast(t('toastNoUndo'));
     return;
   }
-  stepMetric(liveStack[liveStack.length - 1], -1);
+  const last = liveStack[liveStack.length - 1];
+  const key = last && typeof last === 'object' ? last.key : last;
+  const pos = last && typeof last === 'object' ? last.pos : '';
+  stepMetric(key, -1, pos || undefined);
 };
-window.stepMetric = function(key, dir){
-  const next = Math.max(0, (form.counts[key]||0) + dir);
-  form.counts[key] = next;
+window.stepMetric = function(key, dir, fromPos){
+  ensureBuckets();
+  notePitch(currentPitch());
+  const pos = dir < 0 ? (fromPos || decrementPos(key)) : metricPos(key);
+  if(!form.posCounts[pos]) form.posCounts[pos] = {};
+  const cur = countInPos(pos, key);
+  if(dir < 0 && cur <= 0) return;
+  form.posCounts[pos][key] = Math.max(0, cur + (dir < 0 ? -1 : 1));
+  syncAggregateCounts();
+  const total = form.counts[key] || 0;
   const el = document.getElementById('cnt-'+key);
-  if(el) el.textContent = next;
+  if(el) el.textContent = total;
   const live = document.getElementById('live-cnt-'+key);
-  if(live) live.textContent = next;
+  if(live) live.textContent = total;
   if(dir === 1){
-    liveStack.push(key);
+    liveStack.push({key, pos});
     const phase = clockPhase();
     // Only auto-start the clock from 'idle' (parent forgot to press "start
     // match"). From 'break' we must NEVER auto-start: that phase means a
@@ -3338,13 +3460,24 @@ window.stepMetric = function(key, dir){
     else if(phase === 'break') showToast(t('toastClockPaused'));
     if(matchClock.startedAt){
       const stamp = clockStamp();
-      matchClock.events.push({key, at: Date.now(), minute: stamp.matchMin, period: stamp.period, inPeriod: stamp.minute});
+      matchClock.events.push({key, pos, at: Date.now(), minute: stamp.matchMin, period: stamp.period, inPeriod: stamp.minute});
     }
   } else {
-    const i = liveStack.lastIndexOf(key);
-    if(i >= 0) liveStack.splice(i, 1);
+    for(let i = liveStack.length - 1; i >= 0; i--){
+      const entry = liveStack[i];
+      const entryKey = entry && typeof entry === 'object' ? entry.key : entry;
+      const entryPos = entry && typeof entry === 'object' ? entry.pos : '';
+      if(entryKey === key && (!fromPos || !entryPos || entryPos === pos)){
+        liveStack.splice(i, 1);
+        break;
+      }
+    }
     for(let j = matchClock.events.length - 1; j >= 0; j--){
-      if(matchClock.events[j].key === key){ matchClock.events.splice(j, 1); break; }
+      const ev = matchClock.events[j];
+      if(ev.key === key && (!fromPos || !ev.pos || ev.pos === pos)){
+        matchClock.events.splice(j, 1);
+        break;
+      }
     }
   }
   updateHero();
@@ -3411,6 +3544,7 @@ function scoresNow(){
   const matchLen = formatLength(document.getElementById('f-format').value, document.getElementById('f-matchlen').value);
   const scored = calculateRating({
     counts: form.counts,
+    posCounts: form.posCounts,
     behaviors: form.behaviors,
     position: pos,
     pitchPos: currentPitch(),
@@ -3455,7 +3589,8 @@ function updateHero(){
   if(label) label.textContent = labelText;
   const pinLabel = document.getElementById('pinLabel');
   if(pinLabel) pinLabel.textContent = labelText;
-  const pitch = String(currentPitch() || 'ST').toUpperCase();
+  notePitch(currentPitch());
+  const pitch = pitchTrailLabel();
   ['heroPosTag','livePosTag','pinPosTag'].forEach(id => {
     const el = document.getElementById(id);
     if(el) el.textContent = pitch;
@@ -3482,6 +3617,8 @@ function setEditUi(on){
 function resetForm(keepDraft){
   editingId = null;
   form = emptyForm();
+  freshPosState();
+  playedRole = ratingPosOf(defaultPitch());
   liveStack = [];
   matchClock = emptyClock();
   stopClockTick();
@@ -3495,6 +3632,7 @@ function resetForm(keepDraft){
   document.getElementById('f-venue').value = 'home';
   document.getElementById('f-role').value = 'start';
   fillMatchPitchSelects(defaultPitch());
+  playedRole = currentPos();
   document.getElementById('f-format').value = settings.format || '2x30';
   document.getElementById('f-matchlen').value = settings.minutes;
   syncPlayedDefault(true);
@@ -3530,12 +3668,27 @@ function fillForm(m){
   document.getElementById('f-venue').value = m.venue === 'away' ? 'away' : 'home';
   document.getElementById('f-role').value = m.role === 'sub' ? 'sub' : 'start';
   document.getElementById('f-comment').value = m.comment;
+  form.pitchTrail = Array.isArray(m.pitchTrail) ? m.pitchTrail.filter(c => isPitchCode(c)) : [];
+  form.posOrder = [];
+  if(m.posCounts && typeof m.posCounts === 'object'){
+    form.posCounts = JSON.parse(JSON.stringify(m.posCounts));
+    form.posOrder = ['fwd','mid','def','gk'].filter(p => form.posCounts[p]);
+  }else{
+    form.posCounts = {};
+    adoptLegacyCounts(ratingPosOf(m.pitchPos || m.position));
+  }
+  if(!form.pitchTrail.length){
+    const code = isPitchCode(m.pitchPos) ? m.pitchPos : (isPitchCode(m.position) ? m.position : '');
+    if(code) form.pitchTrail = [code];
+  }
+  playedRole = currentPos();
   matchClock = hydrateClock({
     startedAt: m.kickoffAt || null,
     events: Array.isArray(m.timeline) ? m.timeline.slice() : [],
     phase: m.kickoffAt ? 'done' : 'idle',
     period: periodShape(m.format, m.matchLen).parts
   });
+  liveStack = (matchClock.events || []).map(e => ({key: e.key, pos: e.pos || playedRole}));
   syncCompetitionField();
   syncScoreVenueSide();
   setEditUi(true);
@@ -3555,6 +3708,7 @@ function collectMatch(){
   const matchLen = formatLength(format, document.getElementById('f-matchlen').value);
   const scored = calculateRating({
     counts: form.counts,
+    posCounts: form.posCounts,
     behaviors: form.behaviors,
     position: currentPos(),
     pitchPos: currentPitch(),
@@ -3582,6 +3736,8 @@ function collectMatch(){
       ? ((window.CoachStore?.getTeam(window.CoachStore.getSession(), coachRateCtx.teamId) || {}).name || '')
       : ((editingId && matches.find(x => x.id === editingId)?.team) || player.team || player.club || ''),
     counts: {...scored.counts},
+    posCounts: scored.posCounts || null,
+    pitchTrail: (form.pitchTrail || []).slice(-8),
     behaviors: {...scored.behaviorValues},
     timeline: matchClock.events.slice(),
     kickoffAt: matchClock.startedAt || 0,
@@ -3710,7 +3866,10 @@ document.getElementById('cancelEditBtn').addEventListener('click', () => {
   const el = document.getElementById(id);
   const onChange = () => {
     if(id === 'f-position'){
+      adoptLegacyCounts(playedRole);
       document.getElementById('live-position').value = currentPitch();
+      notePitch(currentPitch());
+      playedRole = currentPos();
       renderMetrics(); renderLiveGrid();
     }
     if(id === 'f-kind') syncCompetitionField();
@@ -4901,18 +5060,18 @@ function drawChart(list){
 
 function renderLiveGrid(){
   const pos = ratingPosOf(document.getElementById('live-position').value || currentPitch());
-  const byKey = {};
-  metricsFor(pos).forEach(m => { byKey[m.key] = m; });
+  const byKey = padMetricMap(pos);
   document.getElementById('liveGrid').innerHTML = METRIC_GROUPS.map(g => {
     const rows = g.keys.map(k => byKey[k]).filter(Boolean);
     if(!rows.length) return '';
     return `<section class="live-group">
       <div class="metric-group-title">${escapeHtml(metricGroupTitle(g.id))}</div>
       <div class="live-grid-inner">${rows.map(m => {
-        const neg = weightOf(m, pos) < 0;
+        const use = metricPos(m.key);
+        const neg = weightOf(m, use) < 0;
         return `<div class="live-cell ${neg?'neg':''}">
           <button class="live-plus" type="button" onclick="stepMetric('${m.key}',1)">
-            ${escapeHtml(metricLabel(m.key))}<span class="live-w" id="live-wgt-${m.key}">${nextWeightLabel(m.key, pos)}</span><span class="n" id="live-cnt-${m.key}">${form.counts[m.key]||0}</span>
+            ${escapeHtml(metricLabel(m.key))}<span class="live-w" id="live-wgt-${m.key}">${nextWeightLabel(m.key, use)}</span><span class="n" id="live-cnt-${m.key}">${form.counts[m.key]||0}</span>
           </button>
           <button class="live-minus" type="button" onclick="stepMetric('${m.key}',-1)">−</button>
         </div>`;
@@ -5493,10 +5652,14 @@ document.addEventListener('click', (e) => {
   if(go) showView(go.dataset.goView);
 });
 document.getElementById('live-position').addEventListener('change', () => {
+  adoptLegacyCounts(playedRole);
   document.getElementById('f-position').value = document.getElementById('live-position').value;
+  notePitch(currentPitch());
+  playedRole = currentPos();
   renderLiveGrid();
   renderMetrics();
   updateHero();
+  persistDraft();
 });
 
 document.querySelectorAll('.theme-toggle').forEach(btn => btn.addEventListener('click', toggleTheme));
@@ -6502,7 +6665,7 @@ function shareHistoryCard(){
 }
 async function drawMatchCardCanvas(m, mode){
   const lines = reportLines(m);
-  const split = actionSplit(m.counts, m.position, m.minutes, m.matchLen);
+  const split = matchSplit(m);
   // Prefer an explicit photo on the match payload (coach player cards).
   // Fall back to the active Free/Pro child only for personal cards.
   const photoSrc = (m && (m.photo || m.cardPhoto))

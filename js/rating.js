@@ -18,7 +18,8 @@
     'emptyForm', 'metricsFor', 'weightOf', 'clamp10', 'clampScore',
     'behaviorAvg', 'stackedDecay', 'nextStackedWeight', 'stackedWeight',
     'playedMinutes', 'isShortOuting', 'outingFactor', 'withOuting',
-    'actionSum', 'actionScore', 'effortScore', 'overallScore', 'actionSplit',
+    'actionSum', 'actionSumAll', 'actionScore', 'effortScore', 'overallScore', 'actionSplit', 'actionSplitAll',
+    'ROLE_BUCKETS', 'normalizePosCounts', 'posCountsActive', 'mergedCounts',
     'eventSign', 'metricGrade', 'countOf', 'behaviorOf', 'matchIsBlank',
     'RATING_FIXTURES', 'ratingFixtureFail', 'calculateRating',
     'normalizeMatchInput', 'explainContributions'

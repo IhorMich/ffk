@@ -562,6 +562,7 @@ function normalizeMatch(m){
   const date = /^\d{4}-\d{2}-\d{2}$/.test(m.date) ? m.date : todayStr();
   const scored = calculateRating({
     counts: m.counts,
+    posCounts: m.posCounts,
     behaviors: m.behaviors,
     position: m.position,
     pitchPos: m.pitchPos,
@@ -587,6 +588,8 @@ function normalizeMatch(m){
     minutes,
     comment: String(m.comment || ''),
     counts: scored.counts,
+    posCounts: scored.posCounts || null,
+    pitchTrail: Array.isArray(m.pitchTrail) ? m.pitchTrail.filter(c => isPitchCode(c)).slice(-8) : [],
     behaviors: scored.behaviorValues,
     timeline: normalizeTimeline(m.timeline),
     kickoffAt: Number(m.kickoffAt) || 0,
@@ -601,13 +604,15 @@ function normalizeTimeline(raw){
   const out = [];
   raw.slice(0, 80).forEach(ev => {
     if(!ev || !ev.key) return;
-    out.push({
+    const row = {
       key: String(ev.key),
       at: Number(ev.at) || 0,
       minute: Math.max(1, Number(ev.minute) || 1),
       period: Math.max(1, Number(ev.period) || 1),
       inPeriod: Math.max(1, Number(ev.inPeriod) || Number(ev.minute) || 1)
-    });
+    };
+    if(['fwd','mid','def','gk'].includes(ev.pos)) row.pos = ev.pos;
+    out.push(row);
   });
   return out;
 }

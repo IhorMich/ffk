@@ -23,6 +23,18 @@
     return { plus: Math.round(plus * 100) / 100, minus: Math.round(minus * 100) / 100 };
   };
 
+  R.actionSplitAll = function (posCounts, minutes, matchLen) {
+    var plus = 0;
+    var minus = 0;
+    R.ROLE_BUCKETS.forEach(function (pos) {
+      if (!posCounts || !posCounts[pos]) return;
+      var part = R.actionSplit(posCounts[pos], pos, minutes, matchLen);
+      plus += part.plus;
+      minus += part.minus;
+    });
+    return { plus: Math.round(plus * 100) / 100, minus: Math.round(minus * 100) / 100 };
+  };
+
   /** Per-metric contribution after outing factor (JSON-friendly). */
   R.explainContributions = function (counts, pos, minutes, matchLen) {
     var f = R.outingFactor(minutes, matchLen);
@@ -40,6 +52,29 @@
         delta: Math.round(delta * 1000) / 1000,
         sign: delta > 0 ? 1 : -1
       });
+    });
+    rows.sort(function (a, b) { return Math.abs(b.delta) - Math.abs(a.delta); });
+    return rows;
+  };
+
+  /** Same key from several roles in one match: counts and points add up. */
+  R.explainContributionsAll = function (posCounts, minutes, matchLen) {
+    var byKey = {};
+    R.ROLE_BUCKETS.forEach(function (pos) {
+      if (!posCounts || !posCounts[pos]) return;
+      R.explainContributions(posCounts[pos], pos, minutes, matchLen).forEach(function (row) {
+        if (!byKey[row.key]) {
+          byKey[row.key] = { key: row.key, count: 0, delta: 0, weight: row.weight, sign: row.sign };
+        }
+        byKey[row.key].count += row.count;
+        byKey[row.key].delta += row.delta;
+      });
+    });
+    var rows = Object.keys(byKey).map(function (k) {
+      var row = byKey[k];
+      row.delta = Math.round(row.delta * 1000) / 1000;
+      row.sign = row.delta > 0 ? 1 : -1;
+      return row;
     });
     rows.sort(function (a, b) { return Math.abs(b.delta) - Math.abs(a.delta); });
     return rows;
