@@ -2830,12 +2830,22 @@
       `<div class="stat-card"><div class="num ${c.cls || ''}">${esc(c.num)}</div><div class="lbl">${esc(c.lbl)}</div></div>`
     ).join('') : '';
 
-    const seasonName = coachStatsSeason === 'all'
+    const seasonBit = coachStatsSeason === 'all'
       ? tt('seasonAll', 'All seasons')
       : coachStatsSeason;
-    const seasonBoard = seasonPool.length
-      ? coachSeasonBoardHtml(session, team, seasonPool, seasonName)
-      : '';
+    const periodLab = ({
+      '10': tt('chart10', '10 matches'),
+      '100': tt('chart100', '100 matches'),
+      '7d': tt('periodWeek', 'Week'),
+      '30d': tt('periodMonth', 'Month'),
+      'year': tt('periodYear', 'Year')
+    })[coachStatsPeriod] || '';
+    const seasonName = periodLab ? `${seasonBit} · ${periodLab}` : seasonBit;
+    const seasonBoard = filtered.length
+      ? coachSeasonBoardHtml(session, team, filtered, seasonName)
+      : (seasonPool.length
+        ? `<div class="inbox-empty coach-tab-empty">${esc(tt('noPeriod', 'No matches in this period.'))}</div>`
+        : '');
     const compareBoard = seasonPool.length
       ? coachCompareBoardHtml(session, team, seasonPool)
       : '';

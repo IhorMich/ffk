@@ -4933,10 +4933,15 @@ function kindBoardHtml(group){
     ${dyn}
   </section>`;
 }
+function boardMatches(){
+  if(currentRange === 'season') return seasonPool();
+  return periodSlice(seasonPool(), currentRange);
+}
 function renderSeasonBoard(){
   const el = document.getElementById('seasonBoard');
-  const list = seasonPool();
-  const name = seasonNameLabel();
+  const list = boardMatches();
+  const whole = currentRange === 'season' || currentRange === 'all';
+  const name = whole ? seasonNameLabel() : cardPeriodLabel(currentRange);
   if(!list.length){
     el.innerHTML = emptyCtaHtml(t(matches.length ? 'noPeriod' : 'noMatches'));
     return;
@@ -4944,7 +4949,7 @@ function renderSeasonBoard(){
   const groups = seasonKindGroups(list);
   el.innerHTML = `<article class="season-board">
     <div class="season-head">
-      <div class="season-kicker">${escapeHtml(t('stSeasonTitle'))}</div>
+      <div class="season-kicker">${escapeHtml(whole ? t('stSeasonTitle') : t('stPeriodCards'))}</div>
       <div class="season-name">${escapeHtml(name)}</div>
     </div>
     ${groups.map(kindBoardHtml).join('')}
