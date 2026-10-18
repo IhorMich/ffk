@@ -29,6 +29,58 @@
   function toast(msg){
     if(typeof showToast === 'function') showToast(msg);
   }
+  function readCoachMatchLen(el){
+    const n = Math.round(Number(el && el.value));
+    if(!Number.isFinite(n)) return 60;
+    return Math.min(120, Math.max(5, n));
+  }
+  function refreshCoachMatchRatings(session, matchId){
+    const store = global.CoachStore;
+    const match = store.getMatch(session, matchId);
+    if(!match || typeof calculateRating !== 'function') return;
+    const len = readCoachMatchLen({value: match.match_len});
+    const format = len === 60 ? '2x30' : 'custom';
+    store.listRatings(session, matchId).forEach(r => {
+      const counts = r.counts && typeof r.counts === 'object' ? r.counts : {};
+      const has = Object.keys(counts).some(k => Number(counts[k]) > 0);
+      let rating = Number(r.rating) || 6;
+      let actionRating = Number(r.actionRating) || 6;
+      if(match.kind === 'tournament' && has){
+        const scored = calculateRating({
+          counts,
+          behaviors: r.behaviors,
+          position: r.position,
+          pitchPos: r.pitchPos,
+          minutes: len,
+          matchLen: len,
+          kind: 'tournament'
+        });
+        if(scored){
+          rating = scored.overall;
+          actionRating = scored.action;
+        }
+      }
+      store.upsertRating(session, {
+        match_id: matchId,
+        team_player_id: r.team_player_id,
+        player_name: r.player_name,
+        pitchPos: r.pitchPos,
+        position: r.position,
+        minutes: len,
+        format,
+        matchLen: len,
+        role: r.role,
+        comment: r.comment,
+        counts,
+        behaviors: r.behaviors,
+        timeline: r.timeline,
+        actionRating,
+        effortRating: r.effortRating,
+        rating,
+        score: match.score || ''
+      });
+    });
+  }
   function tt(key, fallback){
     try{
       if(typeof t === 'function'){
@@ -2193,6 +2245,9 @@
         venueLab,
         kindLab,
         match.tournament || '',
+        readCoachMatchLen({value: match.match_len}) !== 60
+          ? tt('minLbl', '{n} min').replace('{n}', String(readCoachMatchLen({value: match.match_len})))
+          : '',
         match.address || ''
       ].filter(Boolean);
       summary.innerHTML = `<div class="coach-match-row-top">
@@ -2219,6 +2274,8 @@
       if(venueEl) venueEl.value = match.venue === 'away' ? 'away' : 'home';
       if(kindEl) kindEl.value = ['league','friendly','cup','tournament'].includes(match.kind) ? match.kind : 'league';
       if(tourEl) tourEl.value = match.tournament || '';
+      const lenEl = document.getElementById('coachHistoryMatchLen');
+      if(lenEl) lenEl.value = String(readCoachMatchLen({value: match.match_len}));
       if(addrEl) addrEl.value = match.address || '';
       setHistoryMeetup(match.meetup || '');
       setHistoryKickoff(match.kickoff || '');
@@ -2391,7 +2448,9 @@
     const store = global.CoachStore;
     const out = [];
     (matches || []).forEach(m => {
-      store.listRatings(session, m.id).forEach(r => out.push(r));
+      store.listRatings(session, m.id).forEach(r => {
+        out.push(store._ratingForStats ? store._ratingForStats(m, r) : r);
+      });
     });
     return out;
   }
@@ -2437,7 +2496,9 @@
     );
     const points = [];
     list.forEach(m => {
-      const ratings = store.listRatings(session, m.id);
+      const ratings = store.listRatings(session, m.id).map(r =>
+        store._ratingForStats ? store._ratingForStats(m, r) : r
+      );
       if(!ratings.length) return;
       const sum = ratings.reduce((s, r) => s + (Number(r.rating) || 0), 0);
       const avg = Math.round((sum / ratings.length) * 10) / 10;
@@ -2473,20 +2534,46 @@
     return `<tr><td><span class="cmp-name">${esc(label)}</span><span class="cmp-n">${esc(String(n))} ${esc(tt('coachGames', 'games'))}</span></td><td class="${cls}">${esc(coachFmtChartNum(avg, 2))}</td></tr>`;
   }
 
-  function coachSeasonBoardHtml(session, team, seasonMatches, seasonName){
-    const ratings = coachCollectRatings(session, seasonMatches);
-    const points = coachTeamChartPoints(session, seasonMatches);
+  function coachKindSections(matches){
+    if(typeof seasonKindGroups === 'function') return seasonKindGroups(matches);
+    const order = ['league', 'cup', 'tournament', 'friendly'];
+    const map = new Map();
+    (matches || []).forEach(m => {
+      const kind = order.includes(m.kind) ? m.kind : 'league';
+      if(!map.has(kind)) map.set(kind, []);
+      map.get(kind).push(m);
+    });
+    return order.filter(k => map.has(k)).map(k => ({
+      kind: k,
+      title: coachKindLabel(k),
+      list: map.get(k)
+    }));
+  }
+  function coachRecordLine(list){
+    if(typeof recordLine === 'function') return recordLine(list);
+    let win = 0, draw = 0, loss = 0;
+    (list || []).forEach(m => {
+      const s = String(m.score || '').trim().match(/^(\d+)\s*[:\-]\s*(\d+)$/);
+      if(!s) return;
+      const us = Number(s[1]), them = Number(s[2]);
+      if(us > them) win += 1;
+      else if(us < them) loss += 1;
+      else draw += 1;
+    });
+    if(!(win + draw + loss)) return `${list.length}`;
+    return `${list.length} · ${win} ${tt('coachMatchWin', 'Win')} · ${draw} ${tt('coachMatchDraw', 'Draw')} · ${loss} ${tt('coachMatchLoss', 'Loss')}`;
+  }
+  function coachKindSectionHtml(session, group){
+    const list = group.list;
+    const ratings = coachCollectRatings(session, list);
+    const points = coachTeamChartPoints(session, list);
     const avg = points.length ? coachAvgNum(points.map(p => p.rating)) : null;
     const minutes = ratings.reduce((a, r) => a + Math.max(0, Number(r.minutes) || 0), 0);
-    const starts = ratings.filter(r => r.role !== 'sub').length;
-    const subs = ratings.length - starts;
     const goals = coachCountSum(ratings, 'goals');
     const assists = coachCountSum(ratings, 'assists');
     const kpis = [
-      [seasonMatches.length, tt('coachStatMatches', 'Matches')],
+      [list.length, tt('coachStatMatches', 'Matches')],
       [ratings.length, tt('coachStatRatings', 'Ratings')],
-      [starts, tt('coachStatStarts', 'Starts')],
-      [subs, tt('coachStatSubs', 'Subs')],
       [Math.round(minutes), tt('stMins', 'Minutes')],
       [goals, tt('stGoals', 'Goals')],
       [assists, metricLab('assists')]
@@ -2506,48 +2593,27 @@
       if(!n) return '';
       return `<div class="act-row${bad ? ' bad' : ''}"><span class="n">${esc(String(n))}</span><span>${esc(metricLab(key))}</span></div>`;
     }).filter(Boolean).join('');
-    let dyn = '';
-    if(points.length >= 4){
-      const w = points.length >= 10 ? 5 : (points.length >= 6 ? Math.floor(points.length / 2) : 2);
-      const start = points.slice(0, w);
-      const now = points.slice(-w);
-      const r0 = coachAvgNum(start.map(p => p.rating)) || 0;
-      const r1 = coachAvgNum(now.map(p => p.rating)) || 0;
-      const rateStart = coachCollectRatings(session, seasonMatches.slice().sort((a, b) =>
-        String(a.date || '').localeCompare(String(b.date || ''))
-      ).slice(0, w));
-      const rateNow = coachCollectRatings(session, seasonMatches.slice().sort((a, b) =>
-        String(a.date || '').localeCompare(String(b.date || ''))
-      ).slice(-w));
-      const perMatch = (list, key) => {
-        const ids = new Set(list.map(r => r.match_id));
-        const n = ids.size || 1;
-        return coachCountSum(list, key) / n;
-      };
-      const rows = [
-        [tt('dyn_rating', 'Rating'), coachFmtChartNum(r0, 2), coachFmtChartNum(r1, 2), coachDynCls(r1, r0, false)],
-        [metricLab('goals'), coachFmtChartNum(perMatch(rateStart, 'goals'), 1), coachFmtChartNum(perMatch(rateNow, 'goals'), 1), coachDynCls(perMatch(rateNow, 'goals'), perMatch(rateStart, 'goals'), false)],
-        [metricLab('assists'), coachFmtChartNum(perMatch(rateStart, 'assists'), 1), coachFmtChartNum(perMatch(rateNow, 'assists'), 1), coachDynCls(perMatch(rateNow, 'assists'), perMatch(rateStart, 'assists'), false)],
-        [metricLab('losses'), coachFmtChartNum(perMatch(rateStart, 'losses'), 1), coachFmtChartNum(perMatch(rateNow, 'losses'), 1), coachDynCls(perMatch(rateNow, 'losses'), perMatch(rateStart, 'losses'), true)]
-      ].map(r => `<tr><td>${esc(r[0])}</td><td>${esc(r[1])}</td><td class="${r[3]}">${esc(r[2])}</td></tr>`).join('');
-      dyn = `<div class="board-block">
-        <h3>${esc(tt('stDynamics', 'Dynamics'))}</h3>
-        <table class="dyn-table">
-          <thead><tr><th>${esc(tt('stDynMetric', 'Metric'))}</th><th>${esc(tt('stDynStart', 'Start'))}</th><th>${esc(tt('stDynNow', 'Now'))}</th></tr></thead>
-          <tbody>${rows}</tbody>
-        </table>
-        <p class="dyn-hint">${esc(tt('stDynHint', 'First and last {n} matches').replace('{n}', String(w)))}</p>
-      </div>`;
-    }
+    const avgLabel = group.kind === 'tournament'
+      ? tt('stTournamentAvg', 'tournament rating')
+      : tt('stSeasonAvg', 'avg');
+    return `<section class="kind-board">
+      <div class="kind-head">
+        <div class="kind-name">${esc(group.title)}</div>
+        <div class="season-avg">${esc(avg == null ? '—' : coachFmtChartNum(avg, 2))}<small>${esc(avgLabel)}</small></div>
+        <p class="kind-record">${esc(coachRecordLine(list))}</p>
+      </div>
+      <div class="kpi-grid">${kpis}</div>
+      ${acts ? `<div class="board-block"><h3>${esc(tt('stActions', 'Actions'))}</h3>${acts}</div>` : ''}
+    </section>`;
+  }
+  function coachSeasonBoardHtml(session, team, seasonMatches, seasonName){
+    const groups = coachKindSections(seasonMatches);
     return `<article class="season-board coach-season-board">
       <div class="season-head">
         <div class="season-kicker">${esc(tt('stSeasonTitle', 'Season'))}</div>
         <div class="season-name">${esc(seasonName)}</div>
-        <div class="season-avg">${esc(avg == null ? '—' : coachFmtChartNum(avg, 2))}<small>${esc(tt('stSeasonAvg', 'avg'))}</small></div>
       </div>
-      <div class="kpi-grid">${kpis}</div>
-      ${acts ? `<div class="board-block"><h3>${esc(tt('stActions', 'Actions'))}</h3>${acts}</div>` : ''}
-      ${dyn}
+      ${groups.map(g => coachKindSectionHtml(session, g)).join('')}
     </article>`;
   }
 
@@ -2562,7 +2628,8 @@
       ? tt('cmpLast10', 'Last 10')
       : tt('cmpLastN', 'Last {n}').replace('{n}', String(last.length));
     let main = coachCmpRowHtml(lastLbl, coachAvgNum(last.map(p => p.rating)), last.length, career);
-    if(seasonPts.length && coachStatsSeason !== 'all'){
+    const seasonKinds = new Set((seasonMatches || []).map(m => m.kind || 'league'));
+    if(seasonPts.length && coachStatsSeason !== 'all' && seasonKinds.size < 2){
       main += coachCmpRowHtml(
         `${tt('cmpSeason', 'Season')} ${coachStatsSeason}`,
         coachAvgNum(seasonPts.map(p => p.rating)),
@@ -2747,11 +2814,14 @@
     const minutes = periodRatings.reduce((s, r) => s + Math.max(0, Number(r.minutes) || 0), 0);
     const goals = coachCountSum(periodRatings, 'goals');
     const pointRatings = chartPoints.map(p => Number(p.rating) || 0);
+    const mixedKinds = new Set(filtered.map(m => m.kind || 'league')).size > 1;
     const gridCards = filtered.length ? [
-      {num: coachFmtChartNum(coachAvgNum(pointRatings) || 0, 2), lbl: tt('stAvg', 'Average')},
-      {num: trendMark + coachFmtSigned(trend, 2), lbl: tt('stTrend', 'Trend'), cls: trendCls},
-      {num: pointRatings.length ? coachFmtChartNum(Math.max(...pointRatings), 2) : '—', lbl: tt('stBest', 'Best')},
-      {num: pointRatings.length ? coachFmtChartNum(Math.min(...pointRatings), 2) : '—', lbl: tt('stWorst', 'Worst')},
+      ...(mixedKinds ? [] : [
+        {num: coachFmtChartNum(coachAvgNum(pointRatings) || 0, 2), lbl: tt('stAvg', 'Average')},
+        {num: trendMark + coachFmtSigned(trend, 2), lbl: tt('stTrend', 'Trend'), cls: trendCls},
+        {num: pointRatings.length ? coachFmtChartNum(Math.max(...pointRatings), 2) : '—', lbl: tt('stBest', 'Best')},
+        {num: pointRatings.length ? coachFmtChartNum(Math.min(...pointRatings), 2) : '—', lbl: tt('stWorst', 'Worst')}
+      ]),
       {num: String(filtered.length), lbl: tt('stMatches', 'Matches')},
       {num: String(Math.round(minutes)), lbl: tt('stMins', 'Minutes')},
       {num: String(goals), lbl: tt('stGoals', 'Goals')},
@@ -2790,10 +2860,10 @@
         <button type="button" class="coach-stat-jump" data-coach-jump="ratings">
           <b>${a.ratings}</b><span>${esc(tt('coachStatRatings', 'Ratings'))}</span>
         </button>
-        <div><b>${esc(avg)}</b><span>${esc(tt('coachStatAvg', 'Team avg'))}</span></div>
-        <div><b>${esc(fmtScore(a.best))}</b><span>${esc(tt('coachStatBest', 'Best'))}</span></div>
+        ${mixedKinds ? '' : `<div><b>${esc(avg)}</b><span>${esc(tt('coachStatAvg', 'Team avg'))}</span></div>`}
+        ${mixedKinds ? '' : `<div><b>${esc(fmtScore(a.best))}</b><span>${esc(tt('coachStatBest', 'Best'))}</span></div>`}
       </div>
-      ${recordHtml}
+      ${mixedKinds ? '' : recordHtml}
       ${chartHtml}
       ${gridCards ? `<div class="stat-grid coach-stat-grid">${gridCards}</div>` : `<div class="inbox-empty coach-tab-empty">${esc(tt('noPeriod', 'No matches in this period.'))}</div>`}
       ${band}
@@ -3521,8 +3591,10 @@
         venue: document.getElementById('coachHistoryVenue')?.value === 'away' ? 'away' : 'home',
         kind,
         tournament,
+        match_len: readCoachMatchLen(document.getElementById('coachHistoryMatchLen')),
         address: document.getElementById('coachHistoryAddress')?.value || ''
       });
+      refreshCoachMatchRatings(session, coachHistoryMatchId);
       toast(tt('coachHistoryMetaSaved', 'Match details saved.'));
       setCoachHistoryMetaOpen(false);
       renderCoachUi();
@@ -3720,6 +3792,7 @@
         fee_type: feeInfo.fee_type,
         fee: feeInfo.fee,
         tournament,
+        match_len: readCoachMatchLen(root.querySelector('.js-cm-matchlen') || document.getElementById('coachMatchLen')),
         score: '',
         squad,
         status: 'upcoming'
@@ -3858,6 +3931,8 @@
       date: match.date,
       score: match.score || '',
       rating: existing ? clampQuickScore(existing.rating) : 6,
+      kind: match.kind || 'league',
+      matchLen: readCoachMatchLen({value: match.match_len}),
       counts,
       comment: existing ? String(existing.comment || '') : ''
     };
@@ -4552,9 +4627,11 @@
     const matchId = quickRate.matchId;
     const playerId = quickRate.teamPlayerId;
     const comment = document.getElementById('coachRateComment')?.value || '';
-    const minutes = 60;
-    const matchLen = 60;
-    const format = '2x30';
+    const match = store.getMatch(session, matchId);
+    const matchLen = readCoachMatchLen({value: (match && match.match_len) || quickRate.matchLen});
+    const minutes = matchLen;
+    const format = matchLen === 60 ? '2x30' : 'custom';
+    const kind = (match && match.kind) || quickRate.kind || 'league';
     const behaviors = (typeof emptyForm === 'function') ? emptyForm().behaviors : {};
     const scored = (typeof calculateRating === 'function')
       ? calculateRating({
@@ -4563,7 +4640,8 @@
           position: quickRate.position,
           pitchPos: quickRate.pitchPos,
           minutes,
-          matchLen
+          matchLen,
+          kind
         })
       : null;
     const action = scored ? scored.action : ((typeof actionScore === 'function')

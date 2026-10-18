@@ -213,6 +213,11 @@
     );
   }
 
+  function clampMatchLen(v){
+    const n = Math.round(Number(v));
+    if(!Number.isFinite(n)) return 60;
+    return Math.min(120, Math.max(5, n));
+  }
   function normalizeKickoff(raw){
     const s = String(raw || '').trim();
     if(!s) return '';
@@ -889,6 +894,7 @@
         fee: feeInfo.fee,
         tournament,
         event_id: eventId,
+        match_len: clampMatchLen(fields.match_len),
         comment: String(fields.comment || '').trim().slice(0, 400),
         created_at: new Date().toISOString()
       };
@@ -971,6 +977,9 @@
       }
       if(fields && Object.prototype.hasOwnProperty.call(fields, 'event_id')){
         next.event_id = String(fields.event_id || '').trim().slice(0, 40);
+      }
+      if(fields && Object.prototype.hasOwnProperty.call(fields, 'match_len')){
+        next.match_len = clampMatchLen(fields.match_len);
       }
       if(fields && fields.status === 'played') next.status = 'played';
       if(fields && fields.status === 'upcoming') next.status = 'upcoming';
@@ -1687,6 +1696,34 @@
       writeDb(db);
       return row;
     },
+    _ratingForStats(match, rating){
+      const row = {...rating};
+      const kind = (match && match.kind) || row.kind || '';
+      const len = clampMatchLen(match && match.match_len != null ? match.match_len : row.matchLen);
+      if(kind === 'tournament' && len < 60){
+        const storedMin = Number(row.minutes) || 60;
+        row.minutes = storedMin >= 60 ? len : Math.min(len, storedMin);
+        row.matchLen = len;
+        const counts = row.counts && typeof row.counts === 'object' ? row.counts : {};
+        const has = Object.keys(counts).some(k => Number(counts[k]) > 0);
+        if(has && typeof calculateRating === 'function'){
+          try{
+            const scored = calculateRating({
+              counts,
+              behaviors: row.behaviors,
+              position: row.position,
+              pitchPos: row.pitchPos,
+              minutes: row.minutes,
+              matchLen: len,
+              kind: 'tournament'
+            });
+            if(scored && Number.isFinite(Number(scored.overall))) row.rating = scored.overall;
+            if(scored && Number.isFinite(Number(scored.action))) row.actionRating = scored.action;
+          }catch(e){}
+        }
+      }
+      return row;
+    },
     _playerStatsFromRatings(list){
       const sorted = (list || []).slice().sort((a, b) =>
         String(a.date || '').localeCompare(String(b.date || '')) ||
@@ -1756,7 +1793,10 @@
       }
       const playedList = matches.filter(m => m.status === 'played' || !!String(m.score || '').trim());
       const matchIds = new Set(playedList.map(m => m.id));
-      const ratings = db.ratings.filter(r => matchIds.has(r.match_id));
+      const matchById = new Map(playedList.map(m => [m.id, m]));
+      const ratings = db.ratings.filter(r => matchIds.has(r.match_id)).map(r =>
+        this._ratingForStats(matchById.get(r.match_id), r)
+      );
       const byPlayer = {};
       ratings.forEach(r => {
         if(!byPlayer[r.team_player_id]) byPlayer[r.team_player_id] = [];
@@ -1841,7 +1881,11 @@
       const team = this.getTeam(session, player.team_id);
       const academy = this.myAcademy(session);
       const profile = this.getProfile(session);
-      const ratings = this.listRatingsForPlayer(session, playerId);
+      const db = readDb();
+      const matchById = new Map(db.team_matches.map(m => [m.id, m]));
+      const ratings = this.listRatingsForPlayer(session, playerId).map(r =>
+        this._ratingForStats(matchById.get(r.match_id), r)
+      );
       const st = this._playerStatsFromRatings(ratings);
       return {
         player,

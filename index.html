@@ -508,6 +508,10 @@ window.ffkIsNative = function () {
                 <input class="js-cm-tournament" id="coachMatchTournament" type="text" maxlength="48" list="coachTourList" data-i18n-placeholder="phCompLeague" placeholder="Название лиги">
                 <datalist id="coachTourList"></datalist>
               </div>
+              <div class="field">
+                <label data-i18n="labelMatchLen">Длина матча, мин</label>
+                <input class="js-cm-matchlen" id="coachMatchLen" type="number" min="5" max="120" value="60" inputmode="numeric">
+              </div>
               <div class="field coach-match-create-wide">
                 <label data-i18n="coachMatchAddress">Адрес матча</label>
                 <input class="js-cm-address" type="text" maxlength="120" data-i18n-placeholder="coachMatchAddressPh" placeholder="Стадион / улица, город">
@@ -810,6 +814,10 @@ window.ffkIsNative = function () {
                   <div class="field" id="coachHistoryCompWrap">
                     <label id="coachHistoryCompLabel" data-i18n="labelCompLeague">Лига</label>
                     <input class="js-ch-tournament" id="coachHistoryTournament" type="text" maxlength="48" list="coachTourList" data-i18n-placeholder="phCompLeague" placeholder="Название лиги">
+                  </div>
+                  <div class="field">
+                    <label data-i18n="labelMatchLen">Длина матча, мин</label>
+                    <input class="js-ch-matchlen" id="coachHistoryMatchLen" type="number" min="5" max="120" value="60" inputmode="numeric">
                   </div>
                   <div class="field coach-match-create-wide">
                     <label data-i18n="coachMatchAddress">Адрес матча</label>

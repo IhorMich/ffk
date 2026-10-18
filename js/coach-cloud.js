@@ -848,6 +848,15 @@
         coach_notes: String(p.coach_notes || '').slice(0, 2000)
       }));
     const keepPlayerIds = new Set(pulledPlayers.map(p => String(p.id)));
+    const localMatchLen = {};
+    (live.team_matches || raw.team_matches || []).forEach(m => {
+      if(m && m.id && Number(m.match_len)) localMatchLen[m.id] = Number(m.match_len);
+    });
+    const lenByMatch = {};
+    (ratings || []).forEach(r => {
+      const n = Number(r && (r.match_len || r.matchLen));
+      if(r && r.match_id && n) lenByMatch[r.match_id] = n;
+    });
     const db = {
       version: 5,
       accounts: (live.accounts && Object.keys(live.accounts).length ? live.accounts : raw.accounts) || {},
@@ -867,6 +876,7 @@
         fee: m.fee_type === 'paid' ? (m.fee || '') : '',
         tournament: m.tournament || '',
         event_id: m.event_id || '',
+        match_len: Number(m.match_len) || Number((localMatchLen[m.id] || 0)) || Number(lenByMatch[m.id]) || 60,
         comment: m.comment || ''
       })),
       training_rules: (trainingRules || []).map(r => ({
