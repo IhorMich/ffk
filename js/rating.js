@@ -17,7 +17,7 @@
     'isRoleCode', 'isPosCode', 'isPitchCode', 'guessPos', 'ratingPosOf',
     'emptyForm', 'metricsFor', 'weightOf', 'clamp10', 'clampScore',
     'behaviorAvg', 'stackedDecay', 'nextStackedWeight', 'stackedWeight',
-    'playedMinutes', 'isShortOuting', 'outingFactor', 'withOuting',
+    'playedMinutes', 'isShortOuting', 'outingFactor', 'withOuting', 'lengthFactor', 'actionScale',
     'actionSum', 'actionSumAll', 'actionScore', 'effortScore', 'overallScore', 'actionSplit', 'actionSplitAll',
     'ROLE_BUCKETS', 'normalizePosCounts', 'posCountsActive', 'mergedCounts',
     'eventSign', 'metricGrade', 'countOf', 'behaviorOf', 'matchIsBlank',

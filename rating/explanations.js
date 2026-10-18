@@ -11,8 +11,8 @@
     return !acted && !shifted;
   };
 
-  R.actionSplit = function (counts, pos, minutes, matchLen) {
-    var f = R.outingFactor(minutes, matchLen);
+  R.actionSplit = function (counts, pos, minutes, matchLen, kind) {
+    var f = R.actionScale(minutes, matchLen, kind);
     var plus = 0;
     var minus = 0;
     R.metricsFor(pos).forEach(function (m) {
@@ -23,12 +23,12 @@
     return { plus: Math.round(plus * 100) / 100, minus: Math.round(minus * 100) / 100 };
   };
 
-  R.actionSplitAll = function (posCounts, minutes, matchLen) {
+  R.actionSplitAll = function (posCounts, minutes, matchLen, kind) {
     var plus = 0;
     var minus = 0;
     R.ROLE_BUCKETS.forEach(function (pos) {
       if (!posCounts || !posCounts[pos]) return;
-      var part = R.actionSplit(posCounts[pos], pos, minutes, matchLen);
+      var part = R.actionSplit(posCounts[pos], pos, minutes, matchLen, kind);
       plus += part.plus;
       minus += part.minus;
     });
@@ -36,8 +36,8 @@
   };
 
   /** Per-metric contribution after outing factor (JSON-friendly). */
-  R.explainContributions = function (counts, pos, minutes, matchLen) {
-    var f = R.outingFactor(minutes, matchLen);
+  R.explainContributions = function (counts, pos, minutes, matchLen, kind) {
+    var f = R.actionScale(minutes, matchLen, kind);
     var rows = [];
     R.metricsFor(pos).forEach(function (m) {
       var n = Math.max(0, Math.floor(Number(counts && counts[m.key]) || 0));
@@ -58,11 +58,11 @@
   };
 
   /** Same key from several roles in one match: counts and points add up. */
-  R.explainContributionsAll = function (posCounts, minutes, matchLen) {
+  R.explainContributionsAll = function (posCounts, minutes, matchLen, kind) {
     var byKey = {};
     R.ROLE_BUCKETS.forEach(function (pos) {
       if (!posCounts || !posCounts[pos]) return;
-      R.explainContributions(posCounts[pos], pos, minutes, matchLen).forEach(function (row) {
+      R.explainContributions(posCounts[pos], pos, minutes, matchLen, kind).forEach(function (row) {
         if (!byKey[row.key]) {
           byKey[row.key] = { key: row.key, count: 0, delta: 0, weight: row.weight, sign: row.sign };
         }

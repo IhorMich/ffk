@@ -1143,9 +1143,9 @@ function padMetricMap(pos){
 }
 function matchSplit(m){
   if(m && m.posCounts && typeof posCountsActive === 'function' && posCountsActive(normalizePosCounts(m.posCounts))){
-    return actionSplitAll(normalizePosCounts(m.posCounts), m.minutes, m.matchLen);
+    return actionSplitAll(normalizePosCounts(m.posCounts), m.minutes, m.matchLen, m.kind);
   }
-  return actionSplit(m.counts, m.position, m.minutes, m.matchLen);
+  return actionSplit(m.counts, m.position, m.minutes, m.matchLen, m.kind);
 }
 
 const FORMAT_MIN = { '3x15':45, '3x20':60, '3x25':75, '2x25':50, '2x30':60, '2x35':70, '2x40':80, '2x45':90 };
@@ -2644,6 +2644,7 @@ function renderPlayerFeed(){
     return;
   }
   const avg = avgRating(list);
+  const groups = seasonKindGroups(list);
   const last = list[list.length - 1];
   const trend = lastFiveDelta(list);
   const trendHtml = trend
@@ -2671,8 +2672,11 @@ function renderPlayerFeed(){
   const focus = (weakNeg.length ? weakNeg : weakPos).slice(0, 3);
     const row = (g, bad) => `<div class="pf-row${bad ? ' bad' : ''}"><span class="pf-lab"><span class="ic">${metricIconSvg(g.m.key)}</span>${escapeHtml(profileMetricLabel(g.m.key))}</span><span class="g">${fmtNum(g.grade, 1)}</span></div>`;
   const note = profileCoachNote(list, strengths, focus, mainPos);
+  const rateHtml = groups.length > 1
+    ? groups.map(g => `<div class="pf-kind"><div class="pf-rate">${fmtNum(avgRating(g.list), 2)}<small>${escapeHtml(g.kind === 'tournament' ? t('stTournamentAvg') : g.title)}</small></div><p class="kind-record">${escapeHtml(recordLine(g.list))}</p></div>`).join('')
+    : `<div class="pf-rate">${fmtNum(avg, 2)}<small>${escapeHtml(season ? t('pfSeasonAvg') : t('pfAllAvg'))}</small></div><p class="kind-record">${escapeHtml(recordLine(list))}</p>`;
   el.innerHTML = `<div class="pf-card">
-      <div class="pf-rate">${fmtNum(avg, 2)}<small>${escapeHtml(season ? t('pfSeasonAvg') : t('pfAllAvg'))}</small></div>
+      ${rateHtml}
       ${trendHtml}
       <div class="pf-grid">
         <div class="pf-kpi"><div class="n">${fmtNum(last.rating, 2)}</div><div class="l">${escapeHtml(isShortOuting(last.minutes, last.matchLen) ? t('ratingForMins', {n: last.minutes}) : t('pfLast'))}</div></div>
@@ -2945,11 +2949,14 @@ function applyHeader(){
   const meta = [age != null ? ageLabel(age) : '', posLine()].filter(Boolean).join(' · ');
   const clubBits = [...new Set([player.team, player.club, player.season].map(x => String(x||'').trim()).filter(Boolean))].join(' · ');
   const avgEl = document.getElementById('playerSeasonAvg');
-  const seasonAvg = avgRating(feedList().list);
+  const headerGroups = seasonKindGroups(feedList().list);
+  const headerPick = headerGroups.find(g => g.kind === 'league') || headerGroups[0];
+  const seasonAvg = headerPick ? avgRating(headerPick.list) : null;
   if(seasonAvg == null) avgEl.hidden = true;
   else {
     avgEl.hidden = false;
     avgEl.textContent = '⭐ ' + fmtNum(seasonAvg, 2);
+    avgEl.title = headerGroups.length > 1 ? headerPick.title : '';
   }
   document.getElementById('playerMetaLine').textContent = meta;
   document.getElementById('playerClubLine').textContent = clubBits;
@@ -3549,7 +3556,8 @@ function scoresNow(){
     position: pos,
     pitchPos: currentPitch(),
     minutes,
-    matchLen
+    matchLen,
+    kind: document.getElementById('f-kind').value
   });
   return {action: scored.action, effort: scored.effort, overall: scored.overall, pos: scored.position, minutes, matchLen};
 }
@@ -3582,9 +3590,12 @@ function updateHero(){
   setBar('liveEffortBar', s.effort);
   setBar('pinActionBar', s.action);
   setBar('pinEffortBar', s.effort);
+  const matchKind = document.getElementById('f-kind')?.value || '';
   const labelText = isShortOuting(s.minutes, s.matchLen)
     ? t('ratingForMins', {n: s.minutes})
-    : t('heroOverall');
+    : (matchKind === 'tournament' && s.matchLen < 60)
+      ? t('ratingMatchLen', {n: s.matchLen})
+      : t('heroOverall');
   const label = document.getElementById('heroLabel');
   if(label) label.textContent = labelText;
   const pinLabel = document.getElementById('pinLabel');
@@ -3713,7 +3724,8 @@ function collectMatch(){
     position: currentPos(),
     pitchPos: currentPitch(),
     minutes,
-    matchLen
+    matchLen,
+    kind: document.getElementById('f-kind').value
   });
   return {
     id: editingId || Date.now(),
@@ -4821,15 +4833,44 @@ function dynCls(now, start, invert){
   const better = invert ? d < 0 : d > 0;
   return better ? 'up' : 'down';
 }
-function renderSeasonBoard(){
-  const el = document.getElementById('seasonBoard');
-  const list = seasonPool();
-  const name = seasonNameLabel();
-  if(!list.length){
-    el.innerHTML = emptyCtaHtml(t(matches.length ? 'noPeriod' : 'noMatches'));
-    return;
+const KIND_ORDER = ['league', 'cup', 'tournament', 'friendly'];
+function matchKindKey(m){
+  return KIND_ORDER.includes(m && m.kind) ? m.kind : 'league';
+}
+function seasonKindGroups(list){
+  const map = new Map();
+  (list || []).forEach(m => {
+    const kind = matchKindKey(m);
+    if(!map.has(kind)) map.set(kind, []);
+    map.get(kind).push(m);
+  });
+  return KIND_ORDER.filter(k => map.has(k)).map(k => {
+    const rows = map.get(k);
+    const names = [...new Set(rows.map(m => String(m.tournament || '').trim()).filter(Boolean))];
+    const title = names.length === 1 ? `${kindLabel(k)} · ${names[0]}` : kindLabel(k);
+    return {kind: k, title, list: rows};
+  });
+}
+function recordCounts(list){
+  const rec = {win: 0, draw: 0, loss: 0};
+  list.forEach(m => {
+    const r = matchResult(m);
+    if(r === 'win' || r === 'draw' || r === 'loss') rec[r] += 1;
+  });
+  rec.scored = rec.win + rec.draw + rec.loss;
+  return rec;
+}
+function recordLine(list){
+  const parts = [countPhrase(list.length, 'mn_matches')];
+  const rec = recordCounts(list);
+  if(rec.scored){
+    parts.push(countPhrase(rec.win, 'mn_wins'), countPhrase(rec.draw, 'mn_draws'), countPhrase(rec.loss, 'mn_defeats'));
   }
-  const avg = list.reduce((a,m)=>a+m.rating,0)/list.length;
+  return parts.join(' · ');
+}
+function kindBoardHtml(group){
+  const list = group.list;
+  const avg = avgRating(list);
   const starts = list.filter(m => m.role !== 'sub').length;
   const subs = list.length - starts;
   const minutes = list.reduce((a,m)=>a+(m.minutes||0),0);
@@ -4877,11 +4918,12 @@ function renderSeasonBoard(){
     </div>
     <p class="dyn-hint">${escapeHtml(t('stDynHint', {n: win.w}))}</p>`;
   }
-  el.innerHTML = `<article class="season-board">
-    <div class="season-head">
-      <div class="season-kicker">${escapeHtml(t('stSeasonTitle'))}</div>
-      <div class="season-name">${escapeHtml(name)}</div>
-      <div class="season-avg">${escapeHtml(fmtNum(avg, 2))}<small>${escapeHtml(t('stSeasonAvg'))}</small></div>
+  const avgLabel = group.kind === 'tournament' ? t('stTournamentAvg') : t('stSeasonAvg');
+  return `<section class="kind-board">
+    <div class="kind-head">
+      <div class="kind-name">${escapeHtml(group.title)}</div>
+      <div class="season-avg">${escapeHtml(fmtNum(avg, 2))}<small>${escapeHtml(avgLabel)}</small></div>
+      <p class="kind-record">${escapeHtml(recordLine(list))}</p>
     </div>
     <div class="kpi-grid">${kpis}</div>
     <div class="board-block">
@@ -4889,6 +4931,23 @@ function renderSeasonBoard(){
       ${acts}
     </div>
     ${dyn}
+  </section>`;
+}
+function renderSeasonBoard(){
+  const el = document.getElementById('seasonBoard');
+  const list = seasonPool();
+  const name = seasonNameLabel();
+  if(!list.length){
+    el.innerHTML = emptyCtaHtml(t(matches.length ? 'noPeriod' : 'noMatches'));
+    return;
+  }
+  const groups = seasonKindGroups(list);
+  el.innerHTML = `<article class="season-board">
+    <div class="season-head">
+      <div class="season-kicker">${escapeHtml(t('stSeasonTitle'))}</div>
+      <div class="season-name">${escapeHtml(name)}</div>
+    </div>
+    ${groups.map(kindBoardHtml).join('')}
   </article>`;
 }
 function avgRating(list){
@@ -4946,7 +5005,9 @@ function renderCompare(){
   const who = (player.firstName || displayName() || '—').trim();
   const lastLbl = last.length === 10 ? t('cmpLast10') : t('cmpLastN', {n: last.length});
   let main = cmpRow(lastLbl, last, career);
-  if(seasonList.length) main += cmpRow(`${t('cmpSeason')} ${seasonName}`, seasonList, career);
+  if(seasonList.length && seasonKindGroups(seasonList).length < 2){
+    main += cmpRow(`${t('cmpSeason')} ${seasonName}`, seasonList, career);
+  }
   const posGroups = groupedAvgs(all, matchPosKey).filter(g => g.key);
   const posRows = posGroups.length > 1
     ? posGroups.map(g => cmpRow(isPitchCode(g.key) ? pitchPosLabel(g.key) : posLabel(g.key), g.list, career)).join('')
@@ -4959,6 +5020,10 @@ function renderCompare(){
   const teamRows = teamGroups.length > 1
     ? teamGroups.map(g => cmpRow(g.key, g.list, career)).join('')
     : '';
+  const kindGroups = seasonKindGroups(all);
+  const kindRows = kindGroups.length > 1
+    ? kindGroups.map(g => cmpRow(g.title, g.list, career)).join('')
+    : '';
   el.innerHTML = `<article class="season-board compare-board">
     <div class="season-head">
       <div class="season-kicker">${escapeHtml(t('cmpTitle'))}</div>
@@ -4966,6 +5031,7 @@ function renderCompare(){
       <div class="season-avg">${fmtNum(career, 2)}<small>${escapeHtml(t('cmpAll'))}</small></div>
     </div>
     <table class="cmp-table"><tbody>${main}</tbody></table>
+    ${cmpSection(t('cmpKinds'), kindRows)}
     ${cmpSection(t('cmpPos'), posRows)}
     ${cmpSection(t('cmpSeasons'), seasonRows)}
     ${cmpSection(t('cmpTeams'), teamRows)}
@@ -4994,16 +5060,23 @@ function renderStats(){
   const trend = ratingTrend(list);
   const trendCls = trend > 0.05 ? 'up' : (trend < -0.05 ? 'down' : '');
   const trendMark = trend > 0.05 ? '↗ ' : (trend < -0.05 ? '↘ ' : '→ ');
-  grid.innerHTML = [
-    {num:fmtNum(avg(ratings), 2), lbl:t('stAvg')},
-    {num:trendMark + fmtSigned(trend, 2), lbl:t('stTrend'), cls:trendCls},
-    {num:fmtNum(Math.max(...ratings), 2), lbl:t('stBest')},
-    {num:fmtNum(Math.min(...ratings), 2), lbl:t('stWorst')},
+  const mixed = seasonKindGroups(list).length > 1;
+  const cards = [];
+  if(!mixed){
+    cards.push(
+      {num:fmtNum(avg(ratings), 2), lbl:t('stAvg')},
+      {num:trendMark + fmtSigned(trend, 2), lbl:t('stTrend'), cls:trendCls},
+      {num:fmtNum(Math.max(...ratings), 2), lbl:t('stBest')},
+      {num:fmtNum(Math.min(...ratings), 2), lbl:t('stWorst')}
+    );
+  }
+  cards.push(
     {num:list.length, lbl:t('stMatches')},
     {num:minutes, lbl:t('stMins')},
     {num:sum('goals'), lbl:t('stGoals')},
-    {num:minutes?fmtNum(sum('goals')*90/minutes, 1):fmtNum(0, 1), lbl:t('stG90')},
-  ].map(c=>`<div class="stat-card"><div class="num ${c.cls||''}">${c.num}</div><div class="lbl">${c.lbl}</div></div>`).join('');
+    {num:minutes?fmtNum(sum('goals')*90/minutes, 1):fmtNum(0, 1), lbl:t('stG90')}
+  );
+  grid.innerHTML = cards.map(c=>`<div class="stat-card"><div class="num ${c.cls||''}">${c.num}</div><div class="lbl">${c.lbl}</div></div>`).join('');
   drawChart(chartList);
 }
 function drawChart(list){

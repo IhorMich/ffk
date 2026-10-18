@@ -53,6 +53,18 @@
     return delta * R.outingFactor(minutes, matchLen);
   };
 
+  // Tournament actions scale with the match length. 60 minutes is a full
+  // game (today's weights). 15 minutes is a quarter of that, 10 minutes a sixth.
+  R.lengthFactor = function (matchLen, kind) {
+    if (kind !== 'tournament') return 1;
+    var full = Math.max(1, Number(matchLen) || 60);
+    return Math.min(1, full / 60);
+  };
+
+  R.actionScale = function (minutes, matchLen, kind) {
+    return R.outingFactor(minutes, matchLen) * R.lengthFactor(matchLen, kind);
+  };
+
   R.countOf = function (m, key) {
     return Math.max(0, Math.floor(Number(m && m.counts && m.counts[key]) || 0));
   };
@@ -90,13 +102,17 @@
     var position = R.ratingPosOf(m.pitchPos || m.position || pitchPos);
     var matchLen = Math.max(1, Number(m.matchLen) || 60);
     var minutes = Math.min(120, Math.max(1, Number(m.minutes) || matchLen));
+    var kind = (m.kind === 'league' || m.kind === 'friendly' || m.kind === 'cup' || m.kind === 'tournament')
+      ? m.kind
+      : '';
     return {
       counts: R.normalizeCounts(m.counts),
       behaviors: R.normalizeBehaviors(m.behaviors),
       position: position,
       pitchPos: pitchPos,
       minutes: minutes,
-      matchLen: matchLen
+      matchLen: matchLen,
+      kind: kind
     };
   };
 

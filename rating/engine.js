@@ -79,13 +79,15 @@
     var counts = multi ? R.mergedCounts(buckets) : n.counts;
     var actionDelta = multi ? R.actionSumAll(buckets) : R.actionSum(n.counts, n.position);
     var behaviorDelta = R.behaviorDelta(n.behaviors);
-    var overall = R.clampScore(R.BASE_RATING + R.withOuting(actionDelta + behaviorDelta, n.minutes, n.matchLen));
-    var action = R.clampScore(R.BASE_RATING + R.withOuting(actionDelta, n.minutes, n.matchLen));
+    var scale = R.actionScale(n.minutes, n.matchLen, n.kind);
+    var outing = R.outingFactor(n.minutes, n.matchLen);
+    var overall = R.clampScore(R.BASE_RATING + actionDelta * scale + behaviorDelta * outing);
+    var action = R.clampScore(R.BASE_RATING + actionDelta * scale);
     var effort = R.effortScore(n.behaviors);
     var split = multi
-      ? R.actionSplitAll(buckets, n.minutes, n.matchLen)
-      : R.actionSplit(n.counts, n.position, n.minutes, n.matchLen);
-    var factor = R.outingFactor(n.minutes, n.matchLen);
+      ? R.actionSplitAll(buckets, n.minutes, n.matchLen, n.kind)
+      : R.actionSplit(n.counts, n.position, n.minutes, n.matchLen, n.kind);
+    var factor = outing;
     return {
       overall: overall,
       action: action,
@@ -99,12 +101,14 @@
       matchLen: n.matchLen,
       base: R.BASE_RATING,
       outingFactor: Math.round(factor * 1000) / 1000,
+      lengthFactor: Math.round(R.lengthFactor(n.matchLen, n.kind) * 1000) / 1000,
+      kind: n.kind,
       shortOuting: R.isShortOuting(n.minutes, n.matchLen),
       blank: R.matchIsBlank({ counts: counts, behaviors: n.behaviors }),
       split: split,
       contributions: multi
-        ? R.explainContributionsAll(buckets, n.minutes, n.matchLen)
-        : R.explainContributions(n.counts, n.position, n.minutes, n.matchLen),
+        ? R.explainContributionsAll(buckets, n.minutes, n.matchLen, n.kind)
+        : R.explainContributions(n.counts, n.position, n.minutes, n.matchLen, n.kind),
       behaviors: R.explainBehaviors(n.behaviors),
       counts: counts,
       posCounts: multi ? buckets : null,
@@ -119,7 +123,10 @@
     { name: 'gkSaves', pos: 'gk', counts: { saves: 4, claims: 1 }, behaviors: {}, overall: 7.6, action: 7.6, effort: 6 },
     { name: 'maxEffort', pos: 'fwd', counts: {}, behaviors: { effort: 5, team: 5, coach: 5, discipline: 5 }, overall: 7, action: 6, effort: 10 },
     { name: 'minEffort', pos: 'fwd', counts: {}, behaviors: { effort: 1, team: 1, coach: 1, discipline: 1 }, overall: 5, action: 6, effort: 2 },
-    { name: 'shortGoal', pos: 'fwd', counts: { goals: 1 }, behaviors: {}, minutes: 15, matchLen: 60, overall: 6.6, action: 6.6, effort: 6 }
+    { name: 'shortGoal', pos: 'fwd', counts: { goals: 1 }, behaviors: {}, minutes: 15, matchLen: 60, overall: 6.6, action: 6.6, effort: 6 },
+    { name: 'tour60', pos: 'fwd', counts: { goals: 1 }, behaviors: {}, minutes: 60, matchLen: 60, kind: 'tournament', overall: 6.7, action: 6.7, effort: 6 },
+    { name: 'tour15', pos: 'fwd', counts: { goals: 1 }, behaviors: {}, minutes: 15, matchLen: 15, kind: 'tournament', overall: 6.2, action: 6.2, effort: 6 },
+    { name: 'tour10', pos: 'fwd', counts: { goals: 1 }, behaviors: {}, minutes: 10, matchLen: 10, kind: 'tournament', overall: 6.1, action: 6.1, effort: 6 }
   ];
 
   R.ratingFixtureFail = function () {
@@ -130,7 +137,8 @@
         behaviors: f.behaviors,
         position: f.pos,
         minutes: f.minutes,
-        matchLen: f.matchLen
+        matchLen: f.matchLen,
+        kind: f.kind
       });
       if (got.overallDisplay !== f.overall || got.actionDisplay !== f.action || got.effortDisplay !== f.effort) {
         return f.name + ' got ' + got.overallDisplay + '/' + got.actionDisplay + '/' + got.effortDisplay;

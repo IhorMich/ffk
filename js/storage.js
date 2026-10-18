@@ -567,7 +567,8 @@ function normalizeMatch(m){
     position: m.position,
     pitchPos: m.pitchPos,
     minutes,
-    matchLen
+    matchLen,
+    kind
   });
   return {
     id: (Number(m.id) > 0 ? Math.floor(Number(m.id)) : 0) || Date.now(),
