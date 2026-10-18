@@ -4293,12 +4293,21 @@ function shortStatLine(m){
   });
   return bits.join(' · ');
 }
-function historyMatchCard(m, showSeason, hideRating){
+function historyKindLine(m){
+  const kind = (m && m.kind) || 'league';
+  const label = kindLabel(kind);
+  const name = String(m && m.tournament || '').trim();
+  if(kind === 'friendly' || !name || name.toLowerCase() === label.toLowerCase()) return label;
+  return label + ' · ' + name;
+}
+function historyMatchCard(m, showSeason, hideRating, inBlock){
   const stats = hideRating ? shortStatLine(m) : '';
   const rating = hideRating ? '' : `<div class="match-rating ${ratingClass(m.rating)}${isShortOuting(m.minutes, m.matchLen) ? ' short' : ''}">${fmtNum(m.rating, 2)}${isShortOuting(m.minutes, m.matchLen) ? `<small>${escapeHtml(matchMinsLabel(m))}</small>` : ''}</div>`;
+  const kindHtml = inBlock ? '' : `<span class="match-kind">${escapeHtml(historyKindLine(m))}</span>`;
   return `<div class="match-card">
       <div class="match-card-top" onclick="toggleDetails(${m.id})">
         <div class="match-meta">
+          ${kindHtml}
           <span class="match-date">${escapeHtml(formatDate(m.date))}${showSeason ? ' · ' + escapeHtml(matchSeason(m)) : ''} · ${escapeHtml(matchMinsLabel(m))} · ${escapeHtml(matchPosDisplay(m))}</span>
           <span class="match-opp">${escapeHtml(m.opponent || t('unnamed'))}</span>
           <span class="match-score">${scoreLineHtml(m)}${stats ? ' · ' + escapeHtml(stats) : ''}</span>
@@ -4326,15 +4335,16 @@ function historyCompCard(block, showSeason, index){
     ? formatDate(first.date)
     : (formatDate(first.date) + ' – ' + formatDate(last.date));
   const kindName = kindLabel(block.kind);
-  const title = block.name === kindName ? kindName : (kindName + ' · ' + block.name);
+  const sameName = block.name === kindName;
   const avg = avgRating(block.matches);
   const shortSeries = block.matches.every(isShortCompMatch);
-  const inner = block.matches.map(m => historyMatchCard(m, showSeason, shortSeries)).join('');
+  const inner = block.matches.map(m => historyMatchCard(m, showSeason, shortSeries, true)).join('');
   return `<div class="match-card comp-block${open ? ' open' : ''}">
       <div class="match-card-top" onclick="toggleCompBlock(${index})">
         <div class="match-meta">
+          ${sameName ? '' : `<span class="match-kind">${escapeHtml(kindName)}</span>`}
           <span class="match-date">${escapeHtml(dates)}${showSeason ? ' · ' + escapeHtml(matchSeason(first)) : ''} · ${open ? '▴' : '▾'}</span>
-          <span class="match-opp">${escapeHtml(title)}</span>
+          <span class="match-opp">${escapeHtml(sameName ? kindName : block.name)}</span>
           <span class="match-score">${escapeHtml(recordLine(block.matches))}</span>
         </div>
         <div class="match-rating ${avg == null ? '' : ratingClass(avg)}">${avg == null ? '—' : fmtNum(avg, 2)}<small>${escapeHtml(kindAvgLabel(block.kind))}</small></div>

@@ -225,15 +225,13 @@
     }catch(e){ return false; }
   }
   function authRedirectTo(){
-    if(isNativeShell()) return 'https://ihormich.github.io/ffk/auth-callback.html';
+    if(isNativeShell()) return 'ffk://auth-callback';
     try{
       if(global.location && /^https?:/i.test(global.location.origin || '')){
-        const path = String(global.location.pathname || '/');
-        const base = path.includes('/ffk') ? path.replace(/\/[^/]*$/, '/') : '/';
-        return global.location.origin + (base.endsWith('/') ? base : base + '/') + 'auth-callback.html';
+        return global.location.origin + (global.location.pathname || '/').replace(/\/?$/, '/');
       }
     }catch(e){}
-    return 'https://ihormich.github.io/ffk/auth-callback.html';
+    return 'https://ihormich.github.io/ffk/';
   }
   function capPlugin(name){
     try{

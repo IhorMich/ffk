@@ -456,16 +456,16 @@
     return false;
   }
   function authRedirectTo(){
-    // Native: HTTPS bridge page (Custom Tabs often fail on bare ffk:// redirects).
-    if(isNativeShell()) return 'https://ihormich.github.io/ffk/auth-callback.html';
+    // Same return path the working Google icon used: the app itself, not a bridge page.
+    if(isNativeShell()) return 'ffk://auth-callback';
     try{
       if(global.location && /^https:/i.test(global.location.href)){
         const path = String(global.location.pathname || '/');
         const base = path.includes('/ffk') ? path.replace(/\/[^/]*$/, '/') : '/ffk/';
-        return global.location.origin + (base.endsWith('/') ? base : base + '/') + 'auth-callback.html';
+        return global.location.origin + (base.endsWith('/') ? base : base + '/');
       }
     }catch(e){}
-    return 'https://ihormich.github.io/ffk/auth-callback.html';
+    return 'https://ihormich.github.io/ffk/';
   }
   function capPlugin(name){
     try{
