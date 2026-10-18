@@ -270,6 +270,7 @@ function applyI18n(){
   renderExtraChips();
   syncCompetitionField();
   syncDateShown();
+  syncScoreVenueSide();
   updatePhotoMeta();
   renderRoster();
   if(lastReportMatch){
@@ -1477,6 +1478,24 @@ function clampScorePart(raw){
   const n = parseInt(raw, 10);
   if(!Number.isFinite(n)) return '';
   return String(Math.max(0, Math.min(99, n)));
+}
+function syncScoreVenueSide(){
+  const pair = document.getElementById('scorePair');
+  const venue = document.getElementById('f-venue');
+  if(!pair || !venue) return;
+  pair.classList.toggle('is-away', venue.value === 'away');
+  const usName = pair.querySelector('.score-side-us .score-side-name');
+  const themName = pair.querySelector('.score-side-them .score-side-name');
+  const usLabel = String((player && (player.club || player.team)) || '').trim();
+  const themLabel = String(document.getElementById('f-opponent')?.value || '').trim();
+  if(usName){
+    usName.textContent = usLabel || t('scoreUsShort');
+    usName.title = usName.textContent;
+  }
+  if(themName){
+    themName.textContent = themLabel || t('scoreThemShort');
+    themName.title = themName.textContent;
+  }
 }
 function scoreFromFields(){
   const usEl = document.getElementById('f-score-us');
@@ -3182,6 +3201,7 @@ function restoreDraft(){
       liveStack = matchClock.events.map(e => e.key);
     }
   }catch(e){}
+  syncScoreVenueSide();
   syncMatchContextFold();
 }
 
@@ -3484,6 +3504,7 @@ function resetForm(keepDraft){
   renderBehaviors();
   updateHero();
   syncDateShown();
+  syncScoreVenueSide();
   const ctx = document.getElementById('matchContext');
   if(ctx && !keepDraft) ctx.open = false;
   if(!keepDraft){
@@ -3516,6 +3537,7 @@ function fillForm(m){
     period: periodShape(m.format, m.matchLen).parts
   });
   syncCompetitionField();
+  syncScoreVenueSide();
   setEditUi(true);
   renderMetrics();
   renderBehaviors();
@@ -3697,6 +3719,7 @@ document.getElementById('cancelEditBtn').addEventListener('click', () => {
       scoreFallback = '';
       syncScoreResultHint();
     }
+    if(id === 'f-venue' || id === 'f-opponent') syncScoreVenueSide();
     if(id === 'f-format'){ syncPlayedDefault(true); renderLiveClock(); }
     if(id === 'f-matchlen' && document.getElementById('f-format').value === 'custom'){
       document.getElementById('f-minutes').value = document.getElementById('f-matchlen').value;

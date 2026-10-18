@@ -263,10 +263,16 @@ window.ffkIsNative = function () {
         </div>
         <div class="field">
           <label data-i18n="labelScore">Счёт</label>
-          <div class="score-pair">
-            <input type="number" id="f-score-us" min="0" max="99" inputmode="numeric" data-i18n-aria="scoreUsAria">
+          <div class="score-pair" id="scorePair">
+            <span class="score-side score-side-us">
+              <span class="score-side-name" data-i18n="scoreUsShort">Мы</span>
+              <input type="number" id="f-score-us" min="0" max="99" inputmode="numeric" data-i18n-aria="scoreUsAria">
+            </span>
             <span class="score-colon" aria-hidden="true">:</span>
-            <input type="number" id="f-score-them" min="0" max="99" inputmode="numeric" data-i18n-aria="scoreThemAria">
+            <span class="score-side score-side-them">
+              <span class="score-side-name" data-i18n="scoreThemShort">Они</span>
+              <input type="number" id="f-score-them" min="0" max="99" inputmode="numeric" data-i18n-aria="scoreThemAria">
+            </span>
           </div>
           <p class="hint match-result" id="scoreResultHint" hidden></p>
         </div>
@@ -616,9 +622,15 @@ window.ffkIsNative = function () {
               <div class="coach-score-row">
                 <label data-i18n="labelScore">Счёт</label>
                 <div class="score-split coach-score-split">
-                  <input class="js-cm-score-us" type="number" min="0" max="99" inputmode="numeric" data-i18n-aria="scoreUsAria" aria-label="Our goals">
+                  <span class="score-side score-side-us">
+                    <span class="score-side-name" data-i18n="scoreUsShort">Мы</span>
+                    <input class="js-cm-score-us" type="number" min="0" max="99" inputmode="numeric" data-i18n-aria="scoreUsAria" aria-label="Our goals">
+                  </span>
                   <span class="score-colon" aria-hidden="true">:</span>
-                  <input class="js-cm-score-them" type="number" min="0" max="99" inputmode="numeric" data-i18n-aria="scoreThemAria" aria-label="Opponent goals">
+                  <span class="score-side score-side-them">
+                    <span class="score-side-name" data-i18n="scoreThemShort">Они</span>
+                    <input class="js-cm-score-them" type="number" min="0" max="99" inputmode="numeric" data-i18n-aria="scoreThemAria" aria-label="Opponent goals">
+                  </span>
                 </div>
                 <button class="save-btn js-cm-save-score" type="button" data-i18n="coachMatchSaveScore">Сохранить</button>
               </div>
@@ -708,9 +720,15 @@ window.ffkIsNative = function () {
               <div class="coach-score-row" id="coachHistoryScoreRow">
                 <label data-i18n="labelScore">Счёт</label>
                 <div class="score-split coach-score-split">
-                  <input id="coachHistoryScoreUs" class="js-cm-score-us" type="number" min="0" max="99" inputmode="numeric" data-i18n-aria="scoreUsAria" aria-label="Our goals">
+                  <span class="score-side score-side-us">
+                    <span class="score-side-name" data-i18n="scoreUsShort">Мы</span>
+                    <input id="coachHistoryScoreUs" class="js-cm-score-us" type="number" min="0" max="99" inputmode="numeric" data-i18n-aria="scoreUsAria" aria-label="Our goals">
+                  </span>
                   <span class="score-colon" aria-hidden="true">:</span>
-                  <input id="coachHistoryScoreThem" class="js-cm-score-them" type="number" min="0" max="99" inputmode="numeric" data-i18n-aria="scoreThemAria" aria-label="Opponent goals">
+                  <span class="score-side score-side-them">
+                    <span class="score-side-name" data-i18n="scoreThemShort">Они</span>
+                    <input id="coachHistoryScoreThem" class="js-cm-score-them" type="number" min="0" max="99" inputmode="numeric" data-i18n-aria="scoreThemAria" aria-label="Opponent goals">
+                  </span>
                 </div>
                 <button class="save-btn" id="coachHistorySaveScore" type="button" data-i18n="coachMatchSaveScore">Сохранить</button>
               </div>

@@ -1088,6 +1088,33 @@
     if(us && document.activeElement !== us) us.value = p.us;
     if(them && document.activeElement !== them) them.value = p.them;
   }
+  function syncCoachScoreSide(root, match){
+    const scope = root || document;
+    const split = scope.querySelector?.('.coach-score-split');
+    if(!split) return;
+    const history = !!(scope.id === 'coachHistoryScoreRow' || scope.closest?.('#coachHistoryDetail'));
+    const venueEl = history ? document.getElementById('coachHistoryVenue') : null;
+    const oppEl = history ? document.getElementById('coachHistoryOpponent') : null;
+    const away = venueEl
+      ? venueEl.value === 'away'
+      : !!(match && match.venue === 'away');
+    split.classList.toggle('is-away', away);
+    const store = global.CoachStore;
+    const session = store && store.getSession ? store.getSession() : null;
+    const team = match && session && store.getTeam ? store.getTeam(session, match.team_id) : null;
+    const usName = split.querySelector('.score-side-us .score-side-name');
+    const themName = split.querySelector('.score-side-them .score-side-name');
+    const usLabel = (team && team.name) || tt('scoreUsShort', 'Us');
+    const themLabel = String((oppEl && oppEl.value) || (match && match.opponent) || '').trim() || tt('scoreThemShort', 'Them');
+    if(usName){
+      usName.textContent = usLabel;
+      usName.title = usLabel;
+    }
+    if(themName){
+      themName.textContent = themLabel;
+      themName.title = themLabel;
+    }
+  }
   function setCoachMatchCreateOpen(on){
     const box = document.getElementById('coachMatchCreate');
     if(box) box.hidden = !on;
@@ -1574,6 +1601,7 @@
       }
     }else{
       fillCoachScoreFields(document.getElementById('coachMatchPlayedBox'), activeMatch.score || '');
+      syncCoachScoreSide(document.getElementById('coachMatchPlayedBox'), activeMatch);
       document.querySelectorAll('.js-cm-rates').forEach(el => {
         el.innerHTML = matchRatesListHtml(session, activeMatch, {
           emptyHint: tt('coachSquadEmpty', 'Select who plays in this match.')
@@ -2198,6 +2226,7 @@
       syncHistoryCompetitionField();
     }
     fillCoachScoreFields(document.getElementById('coachHistoryScoreRow'), match.score || '');
+    syncCoachScoreSide(document.getElementById('coachHistoryScoreRow'), match);
     if(commentEl && document.activeElement !== commentEl){
       commentEl.value = match.comment || '';
     }
@@ -5101,6 +5130,14 @@
     document.getElementById('coachHistoryDeleteBtn')?.addEventListener('click', () => {
       onDeleteHistoryMatch();
     });
+    const syncHistoryScoreSide = () => {
+      const store = global.CoachStore;
+      const session = store && store.getSession ? store.getSession() : null;
+      const match = coachHistoryMatchId && session ? store.getMatch(session, coachHistoryMatchId) : null;
+      syncCoachScoreSide(document.getElementById('coachHistoryScoreRow'), match);
+    };
+    document.getElementById('coachHistoryVenue')?.addEventListener('change', syncHistoryScoreSide);
+    document.getElementById('coachHistoryOpponent')?.addEventListener('input', syncHistoryScoreSide);
     document.getElementById('coachHistoryKind')?.addEventListener('change', () => {
       syncHistoryCompetitionField();
     });

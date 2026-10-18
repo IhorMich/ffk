@@ -1052,7 +1052,7 @@
   .row2{display:flex;gap:10px;}
   .row2 .field{flex:1;}
   .row2-opp .field:first-child{flex:1 1 auto;min-width:0;}
-  .row2-opp .field:last-child{flex:0 0 122px;}
+  .row2-opp .field:last-child{flex:0 0 148px;}
   .row2-opp .score-pair input{padding-left:6px;padding-right:6px;}
   .hint{
     font-size:.78rem;color:var(--text-soft);margin:8px 0 0;font-weight:600;
@@ -2021,10 +2021,12 @@
     .coach-match-actions-row{grid-template-columns:1fr;}
   }
   .coach-score-split{
-    display:flex;align-items:center;gap:6px;
+    display:flex;align-items:flex-start;gap:6px;
   }
+  .coach-score-split.is-away{flex-direction:row-reverse;}
+  .coach-score-split .score-side{flex:1;min-width:0;}
   .coach-score-split input{
-    flex:1;min-width:0;width:auto;text-align:center;font-size:1.05rem;font-weight:800;
+    flex:none;width:100%;min-width:0;text-align:center;font-size:1.05rem;font-weight:800;
     padding:8px 6px;border-radius:10px;border:1px solid var(--card-line);
     background:var(--surface);color:var(--text);
   }
@@ -2622,9 +2624,18 @@
   .match-clock-bar .live-kick,.match-clock-bar .ghost-btn{margin:8px 0 0;}
   #liveStartBtn{display:none;}
   #formClock{margin:0 0 8px;}
-  .score-pair{display:flex;align-items:center;gap:8px;}
-  .score-pair input{flex:1;min-width:0;text-align:center;font-variant-numeric:tabular-nums;font-weight:800;}
-  .score-colon{font-size:1.35rem;font-weight:800;color:var(--text-soft);flex-shrink:0;}
+  .score-pair{display:flex;align-items:flex-start;gap:8px;}
+  .score-pair.is-away{flex-direction:row-reverse;}
+  .score-side{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;}
+  .score-side-name{
+    order:2;
+    font-size:.62rem;font-weight:800;line-height:1.15;text-align:center;color:var(--text-soft);
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  }
+  .score-side-us .score-side-name{color:var(--card-accent);}
+  .score-pair input,.coach-score-split .score-side input{order:1;}
+  .score-pair input{width:100%;min-width:0;text-align:center;font-variant-numeric:tabular-nums;font-weight:800;}
+  .score-colon{font-size:1.35rem;font-weight:800;color:var(--text-soft);flex-shrink:0;line-height:1;padding-top:12px;}
   .empty-card{
     background:var(--card-paper);color:var(--card-ink);
     border:1px solid var(--card-line);border-radius:18px;
