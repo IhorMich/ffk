@@ -3491,10 +3491,34 @@ function renderBehaviors(){
   }).join('');
 }
 function renderOppList(){
-  const names = [...new Set(matches.map(m => m.opponent).filter(Boolean))].sort();
-  document.getElementById('oppList').innerHTML = names.map(n => `<option value="${escapeHtml(n)}">`).join('');
   const tours = [...new Set(matches.map(m => m.tournament).filter(Boolean))].sort();
   document.getElementById('tourList').innerHTML = tours.map(n => `<option value="${escapeHtml(n)}">`).join('');
+  const input = document.getElementById('f-opponent');
+  if(input && !input.dataset.oppBound){
+    input.dataset.oppBound = '1';
+    input.addEventListener('input', syncOppSuggestions);
+    input.addEventListener('focus', syncOppSuggestions);
+  }
+  syncOppSuggestions();
+}
+function syncOppSuggestions(){
+  const input = document.getElementById('f-opponent');
+  const list = document.getElementById('oppList');
+  if(!input || !list) return;
+  const q = input.value.trim().toLowerCase();
+  const names = q.length < 1 ? [] : [...new Set(matches.map(m => m.opponent).filter(Boolean))]
+    .filter(n => {
+      const low = n.toLowerCase();
+      return low.startsWith(q) && low !== q;
+    })
+    .sort((a, b) => a.localeCompare(b));
+  if(!names.length){
+    input.removeAttribute('list');
+    list.innerHTML = '';
+    return;
+  }
+  list.innerHTML = names.map(n => `<option value="${escapeHtml(n)}">`).join('');
+  input.setAttribute('list', 'oppList');
 }
 function haptic(style){
   const Haptics = capPlugin('Haptics');
