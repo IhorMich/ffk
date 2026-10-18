@@ -1334,6 +1334,12 @@
     const kind = document.getElementById('coachMatchKindSelect')?.value
       || document.querySelector('#coachMatchCreate .js-cm-kind')?.value
       || 'league';
+    const closeBtn = document.getElementById('coachCompCloseBtn');
+    if(closeBtn){
+      const series = kind === 'cup' || kind === 'tournament';
+      closeBtn.hidden = !series;
+      closeBtn.textContent = kind === 'cup' ? tt('compCloseCup', 'Finish cup') : tt('compClose', 'Finish tournament');
+    }
     const wrap = document.getElementById('coachMatchCompWrap');
     const label = document.getElementById('coachMatchCompLabel');
     const input = document.getElementById('coachMatchTournament');
@@ -3807,15 +3813,16 @@
         squad,
         status: 'upcoming'
       });
+      const series = kind === 'tournament' || kind === 'cup';
       root.querySelectorAll('.js-cm-opponent').forEach(el => { el.value = ''; });
       root.querySelectorAll('.js-cm-address').forEach(el => { el.value = ''; });
       clearCoachMeetup();
       clearCoachKickoff();
       clearCoachMatchEnd();
       clearCoachFee();
-      root.querySelectorAll('.js-cm-tournament').forEach(el => { el.value = ''; });
+      if(!series) root.querySelectorAll('.js-cm-tournament').forEach(el => { el.value = ''; });
       document.querySelectorAll('#coachMatchCreate .js-cm-squad').forEach(el => { el.dataset.dirty = ''; });
-      setCoachMatchCreateOpen(false);
+      setCoachMatchCreateOpen(series);
       const notify = await notifyMatchParents(match.id, {silent: true});
       const delivered = notify.delivered || 0;
       const waiting = notify.waiting || 0;
@@ -3830,11 +3837,19 @@
       }else{
         toast(tt('coachMatchCreated', 'Match created.'));
       }
+      if(series){
+        toast(tt(kind === 'cup' ? 'coachCompOpenCup' : 'coachCompOpen', 'Add the next match.'));
+        if(global.CoachStore.setActiveMatchId) global.CoachStore.setActiveMatchId('');
+        setCoachMatchCreateOpen(true);
+      }
       renderCoachUi();
-      if(typeof showView === 'function') showView('new');
-      try{
-        document.getElementById('coachMatchDetail')?.scrollIntoView({behavior:'smooth', block:'start'});
-      }catch(e){}
+      if(series) setCoachMatchCreateOpen(true);
+      else if(typeof showView === 'function') showView('new');
+      if(!series){
+        try{
+          document.getElementById('coachMatchDetail')?.scrollIntoView({behavior:'smooth', block:'start'});
+        }catch(e){}
+      }
     }catch(e){
       const map = {
         opponent: tt('coachErrOpponent', 'Enter opponent.'),
@@ -5285,6 +5300,15 @@
     });
     document.getElementById('coachMatchCreateCancel')?.addEventListener('click', () => {
       setCoachMatchCreateOpen(false);
+      renderCoachUi();
+    });
+    document.getElementById('coachCompCloseBtn')?.addEventListener('click', () => {
+      const kind = document.getElementById('coachMatchKindSelect')?.value || 'tournament';
+      document.querySelectorAll('#coachMatchCreate .js-cm-tournament').forEach(el => { el.value = ''; });
+      document.querySelectorAll('#coachMatchCreate .js-cm-kind, #coachMatchKindSelect').forEach(el => { el.value = 'league'; });
+      syncCoachCompetitionField();
+      setCoachMatchCreateOpen(false);
+      toast(tt(kind === 'cup' ? 'compClosedCup' : 'compClosed', 'Finished'));
       renderCoachUi();
     });
     document.getElementById('coachMatchKindSelect')?.addEventListener('change', () => {

@@ -20,7 +20,7 @@ uk:{
   pageTitle:'TEMPO:Football Assistant', settingsAria:'Налаштування', themeAria:'Тема',
   heroOverall:'загальна оцінка', heroShort:'короткий вихід', heroAction:'вклад', heroEffort:'старання', ratingMatchLen:'матч {n} хв',
   liveStart:'Швидкий режим', livePitch:'Швидкий доступ', matchDetails:'Деталі матчу', labelDate:'Дата', labelPos:'Позиція', labelOpp:'Суперник', phOpp:'Команда',
-  labelScore:'Рахунок', scoreUsAria:'Наші голи', scoreThemAria:'Голи суперника', scoreUsShort:'Ми', scoreThemShort:'Вони', emptyGoMatch:'Записати матч', labelMin:'Хвилини на полі', labelFormat:'Формат матчу', labelMatchLen:'Довжина матчу, хв', fmtCustom:'Свій',
+  labelScore:'Рахунок', scoreUsAria:'Наші голи', scoreThemAria:'Голи суперника', scoreUsShort:'Ми', scoreThemShort:'Суперник', emptyGoMatch:'Записати матч', labelMin:'Хвилини на полі', labelFormat:'Формат матчу', labelMatchLen:'Довжина матчу, хв', fmtCustom:'Свій',
   labelKind:'Тип гри', labelTournament:'Турнір', phTournament:'Назва турніру',
   labelVenue:'Де граєте', venueHome:'Вдома', venueAway:'На виїзді', labelRole:'Вихід',
   labelComment:'Коментар', phComment:'Що запам’яталось',
@@ -250,7 +250,7 @@ pl:{
   pageTitle:'TEMPO:Football Assistant', settingsAria:'Ustawienia', themeAria:'Motyw',
   heroOverall:'ocena ogólna', heroShort:'krótki występ', heroAction:'wkład', heroEffort:'zaangażowanie', ratingMatchLen:'mecz {n} min',
   liveStart:'Tryb szybki', livePitch:'Szybki dostęp', matchDetails:'Szczegóły meczu', labelDate:'Data', labelPos:'Pozycja', labelOpp:'Rywal', phOpp:'Drużyna',
-  labelScore:'Wynik', scoreUsAria:'Nasze gole', scoreThemAria:'Gole rywala', scoreUsShort:'My', scoreThemShort:'Oni', emptyGoMatch:'Zapisz mecz', labelMin:'Minuty na boisku', labelFormat:'Format meczu', labelMatchLen:'Długość meczu, min', fmtCustom:'Własny',
+  labelScore:'Wynik', scoreUsAria:'Nasze gole', scoreThemAria:'Gole rywala', scoreUsShort:'My', scoreThemShort:'Rywal', emptyGoMatch:'Zapisz mecz', labelMin:'Minuty na boisku', labelFormat:'Format meczu', labelMatchLen:'Długość meczu, min', fmtCustom:'Własny',
   labelKind:'Typ meczu', labelTournament:'Turniej', phTournament:'Nazwa turnieju',
   labelVenue:'Gdzie grasz', venueHome:'U siebie', venueAway:'Na wyjeździe', labelRole:'Skład',
   labelComment:'Komentarz', phComment:'Co zapadło w pamięć',
@@ -480,7 +480,7 @@ en:{
   pageTitle:'TEMPO:Football Assistant', settingsAria:'Settings', themeAria:'Theme',
   heroOverall:'overall rating', heroShort:'short appearance', heroAction:'impact', heroEffort:'effort', ratingMatchLen:'{n}-min match',
   liveStart:'Quick mode', livePitch:'Quick access', matchDetails:'Match details', labelDate:'Date', labelPos:'Position', labelOpp:'Opponent', phOpp:'Team',
-  labelScore:'Score', scoreUsAria:'Our goals', scoreThemAria:'Opponent goals', scoreUsShort:'Us', scoreThemShort:'Them', emptyGoMatch:'Record a match', labelMin:'Minutes on the pitch', labelFormat:'Match format', labelMatchLen:'Match length, min', fmtCustom:'Custom',
+  labelScore:'Score', scoreUsAria:'Our goals', scoreThemAria:'Opponent goals', scoreUsShort:'Us', scoreThemShort:'Opponent', emptyGoMatch:'Record a match', labelMin:'Minutes on the pitch', labelFormat:'Match format', labelMatchLen:'Match length, min', fmtCustom:'Custom',
   labelKind:'Match type', labelTournament:'Competition', phTournament:'Competition name',
   labelVenue:'Where you play', venueHome:'Home', venueAway:'Away', labelRole:'Line-up',
   labelComment:'Comment', phComment:'What stood out',
@@ -721,7 +721,7 @@ es:{
   scoreUsAria:'Nuestros goles',
   scoreThemAria:'Goles del rival',
   scoreUsShort:'Nos',
-  scoreThemShort:'Ellos',
+  scoreThemShort:'Rival',
   emptyGoMatch:'Registrar partido',
   labelDate:'Fecha',
   labelPos:'Posición',
@@ -1693,7 +1693,7 @@ it:{
   scoreUsAria:'I nostri gol',
   scoreThemAria:'Gol avversari',
   scoreUsShort:'Noi',
-  scoreThemShort:'Loro',
+  scoreThemShort:'Avversario',
   emptyGoMatch:'Registra partita',
   labelDate:'Data',
   labelPos:'Ruolo',
@@ -2179,7 +2179,7 @@ fr:{
   scoreUsAria:'Nos buts',
   scoreThemAria:'Buts adverses',
   scoreUsShort:'Nous',
-  scoreThemShort:'Eux',
+  scoreThemShort:'Adversaire',
   emptyGoMatch:'Enregistrer un match',
   labelDate:'Date',
   labelPos:'Poste',
@@ -2665,7 +2665,7 @@ pt:{
   scoreUsAria:'Os nossos golos',
   scoreThemAria:'Golos do adversário',
   scoreUsShort:'Nós',
-  scoreThemShort:'Eles',
+  scoreThemShort:'Adversário',
   emptyGoMatch:'Registar jogo',
   labelDate:'Data',
   labelPos:'Posição',
@@ -3141,7 +3141,7 @@ ru:{
   pageTitle:'TEMPO:Football Assistant', settingsAria:'Настройки', themeAria:'Тема',
   heroOverall:'общая оценка', heroShort:'короткий выход', heroAction:'вклад', heroEffort:'старание', ratingMatchLen:'матч {n} мин',
   liveStart:'Быстрый режим', livePitch:'Быстрый доступ', matchDetails:'Детали матча', labelDate:'Дата', labelPos:'Позиция', labelOpp:'Соперник', phOpp:'Команда',
-  labelScore:'Счёт', scoreUsAria:'Наши голы', scoreThemAria:'Голы соперника', scoreUsShort:'Мы', scoreThemShort:'Они', emptyGoMatch:'Записать матч', labelMin:'Минуты на поле', labelFormat:'Формат матча', labelMatchLen:'Длина матча, мин', fmtCustom:'Свой',
+  labelScore:'Счёт', scoreUsAria:'Наши голы', scoreThemAria:'Голы соперника', scoreUsShort:'Мы', scoreThemShort:'Соперник', emptyGoMatch:'Записать матч', labelMin:'Минуты на поле', labelFormat:'Формат матча', labelMatchLen:'Длина матча, мин', fmtCustom:'Свой',
   labelKind:'Тип игры', labelTournament:'Турнир', phTournament:'Название турнира',
   labelVenue:'Где играете', venueHome:'Дома', venueAway:'На выезде', labelRole:'Выход',
   labelComment:'Комментарий', phComment:'Что запомнилось',
@@ -6726,5 +6726,130 @@ ru:{
   };
   LANGS.forEach(lang => {
     Object.assign(I18N[lang], extra.en, extra[lang] || {});
+  });
+})();
+
+(function mergeCompI18n(){
+  const pack = {
+    en:{
+      labelPeriods:'Periods', labelPeriodMin:'Minutes per period',
+      fmtOnePeriod:'1 period · {n} min', fmtPeriods:'{parts}×{each}',
+      tourScaleHint:'Tournament {n} min: action points ×{p} versus a championship',
+      compNextMatch:'Match {n} · {done} played',
+      compClose:'Finish tournament', compCloseCup:'Finish cup',
+      compCloseAsk:'Finish tournament “{name}”? Matches stay in history. New ones will not be added.',
+      compCloseAskCup:'Finish cup “{name}”? Matches stay in history. New ones will not be added.',
+      compClosed:'Tournament finished', compClosedCup:'Cup finished',
+      toastSavedNext:'Match saved. Record the next one.',
+      coachCompOpen:'Tournament stays open — add the next match.',
+      coachCompOpenCup:'Cup stays open — add the next match.'
+    },
+    uk:{
+      labelPeriods:'Таймів', labelPeriodMin:'Хвилин у таймі',
+      fmtOnePeriod:'1 тайм · {n} хв', fmtPeriods:'{parts}×{each}',
+      tourScaleHint:'Турнір {n} хв: бали за дії ×{p} від чемпіонату',
+      compNextMatch:'Матч {n} · зіграно {done}',
+      compClose:'Закінчити турнір', compCloseCup:'Закінчити кубок',
+      compCloseAsk:'Закінчити турнір «{name}»? Матчі залишаться в історії. Нові в нього вже не підуть.',
+      compCloseAskCup:'Закінчити кубок «{name}»? Матчі залишаться в історії. Нові в нього вже не підуть.',
+      compClosed:'Турнір закінчено', compClosedCup:'Кубок закінчено',
+      toastSavedNext:'Матч збережено. Можна записати наступний.',
+      coachCompOpen:'Турнір відкритий — додайте наступний матч.',
+      coachCompOpenCup:'Кубок відкритий — додайте наступний матч.'
+    },
+    pl:{
+      labelPeriods:'Części', labelPeriodMin:'Minut w części',
+      fmtOnePeriod:'1 część · {n} min', fmtPeriods:'{parts}×{each}',
+      tourScaleHint:'Turniej {n} min: punkty za akcje ×{p} względem ligi',
+      compNextMatch:'Mecz {n} · rozegrane {done}',
+      compClose:'Zakończ turniej', compCloseCup:'Zakończ puchar',
+      compCloseAsk:'Zakończyć turniej „{name}”? Mecze zostaną w historii. Nowe już do niego nie wejdą.',
+      compCloseAskCup:'Zakończyć puchar „{name}”? Mecze zostaną w historii. Nowe już do niego nie wejdą.',
+      compClosed:'Turniej zakończony', compClosedCup:'Puchar zakończony',
+      toastSavedNext:'Mecz zapisany. Można wpisać następny.',
+      coachCompOpen:'Turniej jest otwarty — dodaj następny mecz.',
+      coachCompOpenCup:'Puchar jest otwarty — dodaj następny mecz.'
+    },
+    ru:{
+      labelPeriods:'Таймов', labelPeriodMin:'Минут в тайме',
+      fmtOnePeriod:'1 тайм · {n} мин', fmtPeriods:'{parts}×{each}',
+      tourScaleHint:'Турнир {n} мин: баллы за действия ×{p} от чемпионата',
+      compNextMatch:'Матч {n} · сыграно {done}',
+      compClose:'Закончить турнир', compCloseCup:'Закончить кубок',
+      compCloseAsk:'Закончить турнир «{name}»? Матчи останутся в истории. Новые в него уже не попадут.',
+      compCloseAskCup:'Закончить кубок «{name}»? Матчи останутся в истории. Новые в него уже не попадут.',
+      compClosed:'Турнир закончен', compClosedCup:'Кубок закончен',
+      toastSavedNext:'Матч сохранён. Можно записать следующий.',
+      coachCompOpen:'Турнир открыт — добавьте следующий матч.',
+      coachCompOpenCup:'Кубок открыт — добавьте следующий матч.'
+    },
+    es:{
+      labelPeriods:'Tiempos', labelPeriodMin:'Minutos por tiempo',
+      fmtOnePeriod:'1 tiempo · {n} min', fmtPeriods:'{parts}×{each}',
+      tourScaleHint:'Torneo {n} min: puntos de acciones ×{p} frente al campeonato',
+      compNextMatch:'Partido {n} · jugados {done}',
+      compClose:'Cerrar torneo', compCloseCup:'Cerrar copa',
+      compCloseAsk:'¿Cerrar el torneo «{name}»? Los partidos siguen en el historial. Los nuevos ya no entran.',
+      compCloseAskCup:'¿Cerrar la copa «{name}»? Los partidos siguen en el historial. Los nuevos ya no entran.',
+      compClosed:'Torneo cerrado', compClosedCup:'Copa cerrada',
+      toastSavedNext:'Partido guardado. Puedes anotar el siguiente.',
+      coachCompOpen:'El torneo sigue abierto: añade el siguiente partido.',
+      coachCompOpenCup:'La copa sigue abierta: añade el siguiente partido.'
+    },
+    de:{
+      labelPeriods:'Halbzeiten', labelPeriodMin:'Minuten pro Halbzeit',
+      fmtOnePeriod:'1 Halbzeit · {n} Min', fmtPeriods:'{parts}×{each}',
+      tourScaleHint:'Turnier {n} Min: Aktionspunkte ×{p} gegenüber der Meisterschaft',
+      compNextMatch:'Spiel {n} · gespielt {done}',
+      compClose:'Turnier beenden', compCloseCup:'Pokal beenden',
+      compCloseAsk:'Turnier „{name}“ beenden? Die Spiele bleiben in der Historie. Neue kommen nicht mehr dazu.',
+      compCloseAskCup:'Pokal „{name}“ beenden? Die Spiele bleiben in der Historie. Neue kommen nicht mehr dazu.',
+      compClosed:'Turnier beendet', compClosedCup:'Pokal beendet',
+      toastSavedNext:'Spiel gespeichert. Das nächste kann eingetragen werden.',
+      coachCompOpen:'Turnier bleibt offen — nächstes Spiel hinzufügen.',
+      coachCompOpenCup:'Pokal bleibt offen — nächstes Spiel hinzufügen.'
+    },
+    it:{
+      labelPeriods:'Tempi', labelPeriodMin:'Minuti per tempo',
+      fmtOnePeriod:'1 tempo · {n} min', fmtPeriods:'{parts}×{each}',
+      tourScaleHint:'Torneo {n} min: punti azioni ×{p} rispetto al campionato',
+      compNextMatch:'Partita {n} · giocate {done}',
+      compClose:'Chiudi torneo', compCloseCup:'Chiudi coppa',
+      compCloseAsk:'Chiudere il torneo «{name}»? Le partite restano nello storico. Quelle nuove non entrano più.',
+      compCloseAskCup:'Chiudere la coppa «{name}»? Le partite restano nello storico. Quelle nuove non entrano più.',
+      compClosed:'Torneo chiuso', compClosedCup:'Coppa chiusa',
+      toastSavedNext:'Partita salvata. Puoi registrare la successiva.',
+      coachCompOpen:'Il torneo resta aperto: aggiungi la partita successiva.',
+      coachCompOpenCup:'La coppa resta aperta: aggiungi la partita successiva.'
+    },
+    fr:{
+      labelPeriods:'Périodes', labelPeriodMin:'Minutes par période',
+      fmtOnePeriod:'1 période · {n} min', fmtPeriods:'{parts}×{each}',
+      tourScaleHint:'Tournoi {n} min : points d’actions ×{p} par rapport au championnat',
+      compNextMatch:'Match {n} · joués {done}',
+      compClose:'Terminer le tournoi', compCloseCup:'Terminer la coupe',
+      compCloseAsk:'Terminer le tournoi « {name} » ? Les matchs restent dans l’historique. Les nouveaux n’y entrent plus.',
+      compCloseAskCup:'Terminer la coupe « {name} » ? Les matchs restent dans l’historique. Les nouveaux n’y entrent plus.',
+      compClosed:'Tournoi terminé', compClosedCup:'Coupe terminée',
+      toastSavedNext:'Match enregistré. Vous pouvez saisir le suivant.',
+      coachCompOpen:'Le tournoi reste ouvert — ajoutez le match suivant.',
+      coachCompOpenCup:'La coupe reste ouverte — ajoutez le match suivant.'
+    },
+    pt:{
+      labelPeriods:'Partes', labelPeriodMin:'Minutos por parte',
+      fmtOnePeriod:'1 parte · {n} min', fmtPeriods:'{parts}×{each}',
+      tourScaleHint:'Torneio {n} min: pontos de ações ×{p} face ao campeonato',
+      compNextMatch:'Jogo {n} · jogados {done}',
+      compClose:'Terminar torneio', compCloseCup:'Terminar taça',
+      compCloseAsk:'Terminar o torneio «{name}»? Os jogos ficam no histórico. Os novos já não entram.',
+      compCloseAskCup:'Terminar a taça «{name}»? Os jogos ficam no histórico. Os novos já não entram.',
+      compClosed:'Torneio terminado', compClosedCup:'Taça terminada',
+      toastSavedNext:'Jogo guardado. Podes registar o seguinte.',
+      coachCompOpen:'O torneio fica aberto — adiciona o jogo seguinte.',
+      coachCompOpenCup:'A taça fica aberta — adiciona o jogo seguinte.'
+    }
+  };
+  LANGS.forEach(lang => {
+    Object.assign(I18N[lang], pack.en, pack[lang] || {});
   });
 })();

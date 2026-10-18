@@ -449,6 +449,16 @@ function loadPlayer(){
   extraSelected = [...(player.extra || [])];
   syncSettingsFromPlayer();
 }
+function sanitizeOpenComp(raw){
+  if(!raw || typeof raw !== 'object') return null;
+  const kind = raw.kind === 'cup' || raw.kind === 'tournament' ? raw.kind : '';
+  const name = String(raw.name || '').trim().slice(0, 48);
+  if(!kind || !name) return null;
+  const periods = Math.min(4, Math.max(1, Number(raw.periods) || 1));
+  const each = Math.min(120, Math.max(1, Number(raw.each) || 10));
+  const format = /^\d+x\d+$/.test(String(raw.format || '')) ? String(raw.format).slice(0, 12) : (periods + 'x' + each);
+  return {kind, name, format, periods, each};
+}
 function normalizePlayer(p, id){
   const d = defaultPlayer();
   if(!p || typeof p !== 'object') return {...d, id: String(id || d.id || '')};
@@ -468,7 +478,8 @@ function normalizePlayer(p, id){
     primary,
     extra,
     season: String(p.season || currentSeason()).slice(0,16),
-    seasonOpen: p.seasonOpen !== false
+    seasonOpen: p.seasonOpen !== false,
+    openComp: sanitizeOpenComp(p.openComp)
   };
 }
 function savePlayer(){
@@ -556,7 +567,8 @@ function saveMatches(){
 function normalizeMatch(m){
   if(!m || typeof m !== 'object') return null;
   const kind = ['league','friendly','cup','tournament'].includes(m.kind) ? m.kind : 'league';
-  const format = (FORMAT_MIN[m.format] || m.format === 'custom') ? m.format : '2x30';
+  const formatRaw = String(m.format || '');
+  const format = (FORMAT_MIN[formatRaw] || formatRaw === 'custom' || /^\d+x\d+$/.test(formatRaw)) ? formatRaw : '2x30';
   const matchLen = formatLength(format, m.matchLen || m.minutes);
   const minutes = Math.min(120, Math.max(1, Number(m.minutes) || matchLen));
   const date = /^\d{4}-\d{2}-\d{2}$/.test(m.date) ? m.date : todayStr();

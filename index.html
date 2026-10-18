@@ -199,6 +199,13 @@ window.ffkIsNative = function () {
     </div>
     <div class="view active" id="view-new">
       <div id="personalMatchRoot">
+      <div class="open-comp" id="openCompBar" hidden>
+        <div class="open-comp-text">
+          <b id="openCompTitle"></b>
+          <span id="openCompMeta"></span>
+        </div>
+        <button type="button" class="ghost-btn" id="openCompCloseBtn"></button>
+      </div>
       <div class="coach-banner" id="coachRateBanner"></div>
       <div class="match-col match-col-ctx">
       <div class="hero" id="heroBlock">
@@ -270,7 +277,7 @@ window.ffkIsNative = function () {
             </span>
             <span class="score-colon" aria-hidden="true">:</span>
             <span class="score-side score-side-them">
-              <span class="score-side-name" data-i18n="scoreThemShort">Они</span>
+              <span class="score-side-name" data-i18n="scoreThemShort">Соперник</span>
               <input type="number" id="f-score-them" min="0" max="99" inputmode="numeric" data-i18n-aria="scoreThemAria">
             </span>
           </div>
@@ -314,9 +321,18 @@ window.ffkIsNative = function () {
         </div>
       </div>
       <div class="row2">
+        <div class="field" id="customPeriodsWrap" hidden>
+          <label data-i18n="labelPeriods">Таймов</label>
+          <select id="f-periods">
+            <option value="1" selected>1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+          </select>
+        </div>
         <div class="field" id="customLengthWrap" hidden>
-          <label data-i18n="labelMatchLen">Длина матча, мин</label>
-          <input type="number" id="f-matchlen" min="1" max="120" value="60">
+          <label id="customLengthLabel" data-i18n="labelPeriodMin">Минут в тайме</label>
+          <input type="number" id="f-matchlen" min="1" max="120" value="10">
         </div>
         <div class="field">
           <label data-i18n="labelMin">Минуты на поле</label>
@@ -529,6 +545,7 @@ window.ffkIsNative = function () {
             </div>
             <div class="coach-match-create-actions">
               <button class="save-btn js-cm-create" type="button" data-i18n="coachCreateMatchBtn">Создать матч</button>
+              <button class="ghost-btn" type="button" id="coachCompCloseBtn" hidden>Закончить турнир</button>
               <button class="ghost-btn" type="button" id="coachMatchCreateCancel" data-i18n="previewCancel">Отмена</button>
             </div>
           </div>
@@ -632,7 +649,7 @@ window.ffkIsNative = function () {
                   </span>
                   <span class="score-colon" aria-hidden="true">:</span>
                   <span class="score-side score-side-them">
-                    <span class="score-side-name" data-i18n="scoreThemShort">Они</span>
+                    <span class="score-side-name" data-i18n="scoreThemShort">Соперник</span>
                     <input class="js-cm-score-them" type="number" min="0" max="99" inputmode="numeric" data-i18n-aria="scoreThemAria" aria-label="Opponent goals">
                   </span>
                 </div>
@@ -730,7 +747,7 @@ window.ffkIsNative = function () {
                   </span>
                   <span class="score-colon" aria-hidden="true">:</span>
                   <span class="score-side score-side-them">
-                    <span class="score-side-name" data-i18n="scoreThemShort">Они</span>
+                    <span class="score-side-name" data-i18n="scoreThemShort">Соперник</span>
                     <input id="coachHistoryScoreThem" class="js-cm-score-them" type="number" min="0" max="99" inputmode="numeric" data-i18n-aria="scoreThemAria" aria-label="Opponent goals">
                   </span>
                 </div>

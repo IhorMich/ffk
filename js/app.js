@@ -269,6 +269,7 @@ function applyI18n(){
   fillMatchPitchSelects(document.getElementById('f-position').value);
   renderExtraChips();
   syncCompetitionField();
+  renderOpenCompBar();
   syncDateShown();
   syncScoreVenueSide();
   updatePhotoMeta();
@@ -1149,21 +1150,57 @@ function matchSplit(m){
 }
 
 const FORMAT_MIN = { '3x15':45, '3x20':60, '3x25':75, '2x25':50, '2x30':60, '2x35':70, '2x40':80, '2x45':90 };
+function clampParts(n){ return Math.min(4, Math.max(1, Math.floor(Number(n) || 1))); }
+function clampEach(n){ return Math.min(120, Math.max(1, Math.floor(Number(n) || 1))); }
+function readPeriodCount(){
+  return clampParts(document.getElementById('f-periods')?.value || 1);
+}
 function formatLength(id, custom){
-  if(id === 'custom') return Math.min(120, Math.max(1, Number(custom) || 60));
+  const parsed = String(id || '').match(/^(\d+)x(\d+)$/);
+  if(parsed) return Math.min(120, clampParts(parsed[1]) * clampEach(parsed[2]));
+  if(id === 'custom'){
+    const parts = readPeriodCount();
+    const each = Math.min(clampEach(custom || 10), Math.floor(120 / parts));
+    return parts * each;
+  }
   return FORMAT_MIN[id] || 60;
 }
 function periodShape(fmt, custom){
-  fmt = fmt || document.getElementById('f-format')?.value || '2x30';
-  if(custom === undefined) custom = document.getElementById('f-matchlen')?.value;
-  const m = String(fmt).match(/^(\d+)x(\d+)$/);
-  if(m) return {parts: Number(m[1]), each: Number(m[2])};
-  const len = formatLength(fmt, custom);
-  return {parts: 2, each: Math.max(1, Math.round(len / 2))};
+  if(fmt == null || fmt === '') fmt = document.getElementById('f-format')?.value || '2x30';
+  const parsed = String(fmt).match(/^(\d+)x(\d+)$/);
+  if(parsed) return {parts: clampParts(parsed[1]), each: clampEach(parsed[2])};
+  if(fmt === 'custom'){
+    const live = custom === undefined;
+    const parts = live ? readPeriodCount() : 1;
+    const rawEach = live ? document.getElementById('f-matchlen')?.value : custom;
+    const each = Math.min(clampEach(rawEach || 10), Math.floor(120 / parts));
+    return {parts, each};
+  }
+  return {parts: 2, each: 30};
 }
 function formatTag(fmt, custom){
   const {parts, each} = periodShape(fmt, custom);
-  return parts + '×' + each;
+  if(parts === 1) return t('fmtOnePeriod', {n: each});
+  return t('fmtPeriods', {parts, each});
+}
+function applyMatchFormat(fmt, matchLen){
+  const sel = document.getElementById('f-format');
+  const periods = document.getElementById('f-periods');
+  const lenEl = document.getElementById('f-matchlen');
+  const parsed = String(fmt || '').match(/^(\d+)x(\d+)$/);
+  if(parsed && FORMAT_MIN[fmt]){
+    sel.value = fmt;
+  }else if(parsed){
+    sel.value = 'custom';
+    if(periods) periods.value = String(clampParts(parsed[1]));
+    if(lenEl) lenEl.value = String(clampEach(parsed[2]));
+  }else if(fmt === 'custom'){
+    sel.value = 'custom';
+    if(lenEl && matchLen) lenEl.value = String(clampEach(matchLen));
+  }else if(FORMAT_MIN[fmt]){
+    sel.value = fmt;
+  }
+  syncFormatFields(false);
 }
 function clockPhase(){
   if(matchClock.phase) return matchClock.phase;
@@ -1235,12 +1272,22 @@ function hydrateClock(raw){
     playMs: (period - 1) * eachMs
   };
 }
-function syncPlayedDefault(fromSettings){
+function syncFormatFields(fromSettings){
   const fmt = document.getElementById('f-format').value;
-  const custom = document.getElementById('f-matchlen').value;
-  const len = formatLength(fmt, custom);
-  document.getElementById('customLengthWrap').hidden = fmt !== 'custom';
-  if(fromSettings) document.getElementById('f-minutes').value = String(len);
+  const custom = fmt === 'custom';
+  const lenWrap = document.getElementById('customLengthWrap');
+  const perWrap = document.getElementById('customPeriodsWrap');
+  if(lenWrap) lenWrap.hidden = !custom;
+  if(perWrap) perWrap.hidden = !custom;
+  const lenLabel = document.getElementById('customLengthLabel');
+  if(lenLabel) lenLabel.textContent = t('labelPeriodMin');
+  if(fromSettings){
+    const shape = periodShape();
+    document.getElementById('f-minutes').value = String(shape.parts * shape.each);
+  }
+}
+function syncPlayedDefault(fromSettings){
+  syncFormatFields(fromSettings);
 }
 // Ratings are kept with all their decimals, so 6.55 must show as 6.6. Plain
 // toFixed would give 6.5 because the binary value is 6.5499…, hence the
@@ -1272,11 +1319,27 @@ function fmtWeight(w){
   if(!n) return fmtNum(0, 2);
   return (n > 0 ? '+' : '−') + fmtNum(Math.abs(n), 2);
 }
+function liveMatchScale(){
+  const minutes = Number(document.getElementById('f-minutes')?.value) || 60;
+  const fmt = document.getElementById('f-format')?.value || '2x30';
+  const shape = periodShape(fmt);
+  const matchLen = shape.parts * shape.each;
+  const kind = document.getElementById('f-kind')?.value || '';
+  const scale = (typeof actionScale === 'function') ? actionScale(minutes, matchLen, kind) : 1;
+  return {scale, matchLen, kind, minutes};
+}
 function nextWeightLabel(key, pos){
   const met = METRICS.find(x => x.key === key);
   if(!met) return fmtNum(0, 2);
   const use = pos || metricPos(key);
-  return fmtWeight(nextStackedWeight(countInPos(use, key), weightOf(met, use)));
+  const raw = nextStackedWeight(countInPos(use, key), weightOf(met, use));
+  const scale = liveMatchScale().scale;
+  return fmtWeight(raw * (Number(scale) || 1));
+}
+function tourScaleHint(){
+  const {scale, matchLen, kind} = liveMatchScale();
+  if(kind !== 'tournament' || !(scale < 0.999)) return '';
+  return t('tourScaleHint', {n: matchLen, p: fmtNum(scale, 2)});
 }
 function paintWeight(key){
   const shown = nextWeightLabel(key, metricPos(key));
@@ -3083,6 +3146,7 @@ function applyPlayerContext(){
   document.getElementById('app').classList.remove('live-on');
   resetForm(true);
   restoreDraft();
+  resumeOpenComp();
   applyHeader();
   fillPlayerForm();
   fillSeasonSelects();
@@ -3245,7 +3309,8 @@ function collectPlayer(){
     primary,
     extra: extraSelected.filter(x => x !== primary),
     season: seasonIsOpen() ? (document.getElementById('p-season').value.trim() || player.season || currentSeason()) : (player.season || currentSeason()),
-    seasonOpen: player.seasonOpen !== false
+    seasonOpen: player.seasonOpen !== false,
+    openComp: player.openComp || null
   }, player.id);
 }
 function compressImage(file, w, h){
@@ -3272,6 +3337,7 @@ function persistDraft(){
     score: scoreFromFields(),
     minutes: document.getElementById('f-minutes').value,
     format: document.getElementById('f-format').value,
+    periods: document.getElementById('f-periods')?.value || '1',
     matchLen: document.getElementById('f-matchlen').value,
     kind: document.getElementById('f-kind').value,
     tournament: document.getElementById('f-tournament').value,
@@ -3297,9 +3363,9 @@ function restoreDraft(){
     if(d.opponent) document.getElementById('f-opponent').value = d.opponent;
     if(d.score) fillScoreFields(d.score);
     if(d.minutes) document.getElementById('f-minutes').value = d.minutes;
-    if(d.format) document.getElementById('f-format').value = d.format;
+    if(d.periods && document.getElementById('f-periods')) document.getElementById('f-periods').value = String(clampParts(d.periods));
     if(d.matchLen) document.getElementById('f-matchlen').value = d.matchLen;
-    document.getElementById('customLengthWrap').hidden = document.getElementById('f-format').value !== 'custom';
+    if(d.format) applyMatchFormat(d.format, d.matchLen);
     if(d.kind) document.getElementById('f-kind').value = d.kind;
     if(d.tournament) document.getElementById('f-tournament').value = d.tournament;
     if(d.venue) document.getElementById('f-venue').value = d.venue;
@@ -3345,7 +3411,8 @@ function metricTileHtml(m, pos){
 }
 function renderMetrics(){
   const pos = currentPos();
-  document.getElementById('weightsHint').textContent = t(({gk:'hintGk', fwd:'hintFwd', mid:'hintMid', def:'hintDef'})[pos] || 'hintOut');
+  const scaleNote = tourScaleHint();
+  document.getElementById('weightsHint').textContent = t(({gk:'hintGk', fwd:'hintFwd', mid:'hintMid', def:'hintDef'})[pos] || 'hintOut') + (scaleNote ? ' ' + scaleNote : '');
   const byKey = padMetricMap(pos);
   document.getElementById('metricsList').innerHTML = METRIC_GROUPS.map(g => {
     const rows = g.keys.map(k => byKey[k]).filter(Boolean);
@@ -3671,9 +3738,7 @@ function fillForm(m){
   document.getElementById('f-opponent').value = m.opponent;
   fillScoreFields(m.score);
   document.getElementById('f-minutes').value = m.minutes;
-  document.getElementById('f-format').value = m.format || '2x30';
-  document.getElementById('f-matchlen').value = m.matchLen || m.minutes;
-  document.getElementById('customLengthWrap').hidden = document.getElementById('f-format').value !== 'custom';
+  applyMatchFormat(m.format || '2x30', m.matchLen || m.minutes);
   document.getElementById('f-kind').value = m.kind || 'league';
   document.getElementById('f-tournament').value = m.tournament || '';
   document.getElementById('f-venue').value = m.venue === 'away' ? 'away' : 'home';
@@ -3713,10 +3778,16 @@ function fillForm(m){
   syncMatchContextFold();
 }
 
+function storedMatchFormat(){
+  const selected = document.getElementById('f-format').value;
+  if(selected !== 'custom') return selected;
+  const shape = periodShape('custom');
+  return shape.parts + 'x' + shape.each;
+}
 function collectMatch(){
-  const minutes = Math.min(120, Math.max(1, Number(document.getElementById('f-minutes').value) || formatLength(document.getElementById('f-format').value, document.getElementById('f-matchlen').value)));
-  const format = document.getElementById('f-format').value;
+  const format = storedMatchFormat();
   const matchLen = formatLength(format, document.getElementById('f-matchlen').value);
+  const minutes = Math.min(120, Math.max(1, Number(document.getElementById('f-minutes').value) || matchLen));
   const scored = calculateRating({
     counts: form.counts,
     posCounts: form.posCounts,
@@ -3812,6 +3883,114 @@ function maybeShareMilestonePrompt(){
   }catch(e){}
 }
 
+function rememberOpenComp(row){
+  if(!row || (row.kind !== 'tournament' && row.kind !== 'cup')) return;
+  const name = String(row.tournament || '').trim().slice(0, 48);
+  if(!name) return;
+  const parsed = String(row.format || '').match(/^(\d+)x(\d+)$/);
+  player.openComp = sanitizeOpenComp({
+    kind: row.kind,
+    name,
+    format: parsed ? (parsed[1] + 'x' + parsed[2]) : (row.format || '2x30'),
+    periods: parsed ? Number(parsed[1]) : 1,
+    each: parsed ? Number(parsed[2]) : (Number(row.matchLen) || 60)
+  });
+  savePlayer();
+  renderOpenCompBar();
+}
+function compMatchCount(comp){
+  if(!comp) return 0;
+  return matches.filter(m => m.kind === comp.kind && String(m.tournament || '').trim() === comp.name).length;
+}
+function renderOpenCompBar(){
+  const bar = document.getElementById('openCompBar');
+  const comp = player && player.openComp;
+  if(!bar) return;
+  if(!comp || (comp.kind !== 'tournament' && comp.kind !== 'cup') || !comp.name){
+    bar.hidden = true;
+    return;
+  }
+  bar.hidden = false;
+  const done = compMatchCount(comp);
+  const title = document.getElementById('openCompTitle');
+  const meta = document.getElementById('openCompMeta');
+  const btn = document.getElementById('openCompCloseBtn');
+  if(title) title.textContent = (comp.kind === 'cup' ? t('kindCup') : t('kindTournament')) + ' · ' + comp.name;
+  if(meta) meta.textContent = t('compNextMatch', {n: done + 1, done});
+  if(btn) btn.textContent = comp.kind === 'cup' ? t('compCloseCup') : t('compClose');
+}
+function applyOpenCompToForm(){
+  const comp = player && player.openComp;
+  if(!comp) return;
+  document.getElementById('f-kind').value = comp.kind;
+  document.getElementById('f-tournament').value = comp.name;
+  applyMatchFormat(comp.format, comp.each);
+  syncPlayedDefault(true);
+  syncCompetitionField();
+  const ctx = document.getElementById('matchContext');
+  if(ctx) ctx.open = true;
+  renderOpenCompBar();
+}
+function formMatchBusy(){
+  const counts = form && form.counts ? form.counts : {};
+  return !!editingId || Object.keys(counts).some(k => Number(counts[k]) > 0) || !!(document.getElementById('f-opponent')?.value || '').trim();
+}
+function resumeOpenComp(){
+  renderOpenCompBar();
+  if(player && player.openComp && !formMatchBusy()) applyOpenCompToForm();
+}
+function closeOpenComp(){
+  const comp = player && player.openComp;
+  if(!comp) return;
+  const ask = t(comp.kind === 'cup' ? 'compCloseAskCup' : 'compCloseAsk', {name: comp.name});
+  if(!confirm(ask)) return;
+  player.openComp = null;
+  savePlayer();
+  if(!formMatchBusy()){
+    document.getElementById('f-kind').value = 'league';
+    document.getElementById('f-tournament').value = '';
+    syncCompetitionField();
+    updateHero();
+    renderMetrics();
+    renderLiveGrid();
+    persistDraft();
+  }
+  renderOpenCompBar();
+  showToast(t(comp.kind === 'cup' ? 'compClosedCup' : 'compClosed'));
+}
+function prepareNextCompMatch(){
+  editingId = null;
+  form = emptyForm();
+  freshPosState();
+  playedRole = currentPos();
+  liveStack = [];
+  matchClock = emptyClock();
+  stopClockTick();
+  setEditUi(false);
+  document.getElementById('f-opponent').value = '';
+  fillScoreFields('');
+  document.getElementById('f-comment').value = '';
+  document.getElementById('f-date').value = todayStr();
+  const comp = player && player.openComp;
+  if(comp){
+    document.getElementById('f-kind').value = comp.kind;
+    document.getElementById('f-tournament').value = comp.name;
+    applyMatchFormat(comp.format, comp.each);
+    syncPlayedDefault(true);
+  }
+  syncCompetitionField();
+  renderMetrics();
+  renderBehaviors();
+  renderLiveGrid();
+  renderLiveClock();
+  updateHero();
+  syncDateShown();
+  syncScoreVenueSide();
+  renderOpenCompBar();
+  const ctx = document.getElementById('matchContext');
+  if(ctx) ctx.open = true;
+  persistDraft();
+}
 function saveCurrentMatch(){
   if(isCoachRateMode()) return saveCoachRatingFromForm();
   const row = collectMatch();
@@ -3841,11 +4020,20 @@ function saveCurrentMatch(){
       window.ParentCloud.scheduleSync();
     }
   }catch(e){}
-  showToast(editingId ? t('toastUpdated') : t('toastSaved'));
-  resetForm();
+  const series = !wasEdit && (row.kind === 'tournament' || row.kind === 'cup') && String(row.tournament || '').trim();
   renderHistory();
   renderStats();
   renderOppList();
+  if(series){
+    rememberOpenComp(row);
+    prepareNextCompMatch();
+    showView('new');
+    showToast(t('toastSavedNext'));
+    ffkLog('match_saved', {edit: wasEdit, rating: row.rating, season: row.season || '', series: row.kind});
+    return true;
+  }
+  showToast(wasEdit ? t('toastUpdated') : t('toastSaved'));
+  resetForm();
   showView('report');
   ffkLog('match_saved', {edit: wasEdit, rating: row.rating, season: row.season || ''});
   if(!wasEdit){
@@ -3862,6 +4050,7 @@ function saveCurrentMatch(){
   return true;
 }
 document.getElementById('saveBtn').addEventListener('click', saveCurrentMatch);
+document.getElementById('openCompCloseBtn')?.addEventListener('click', closeOpenComp);
 
 document.getElementById('cancelEditBtn').addEventListener('click', () => {
   if(isCoachRateMode()){
@@ -3874,8 +4063,9 @@ document.getElementById('cancelEditBtn').addEventListener('click', () => {
   resetForm();
 });
 
-['f-date','f-position','f-opponent','f-score-us','f-score-them','f-minutes','f-format','f-matchlen','f-kind','f-tournament','f-venue','f-role','f-comment'].forEach(id => {
+['f-date','f-position','f-opponent','f-score-us','f-score-them','f-minutes','f-format','f-periods','f-matchlen','f-kind','f-tournament','f-venue','f-role','f-comment'].forEach(id => {
   const el = document.getElementById(id);
+  if(!el) return;
   const onChange = () => {
     if(id === 'f-position'){
       adoptLegacyCounts(playedRole);
@@ -3891,10 +4081,14 @@ document.getElementById('cancelEditBtn').addEventListener('click', () => {
       syncScoreResultHint();
     }
     if(id === 'f-venue' || id === 'f-opponent') syncScoreVenueSide();
-    if(id === 'f-format'){ syncPlayedDefault(true); renderLiveClock(); }
+    if(id === 'f-format' || id === 'f-periods'){ syncPlayedDefault(true); renderLiveClock(); }
     if(id === 'f-matchlen' && document.getElementById('f-format').value === 'custom'){
-      document.getElementById('f-minutes').value = document.getElementById('f-matchlen').value;
+      syncPlayedDefault(true);
       renderLiveClock();
+    }
+    if(id === 'f-kind' || id === 'f-format' || id === 'f-periods' || id === 'f-matchlen' || id === 'f-minutes'){
+      renderMetrics();
+      renderLiveGrid();
     }
     updateHero(); persistDraft();
   };
@@ -6947,6 +7141,7 @@ async function shareCard(m){
     syncFilterChips();
     applyHeader();
     restoreDraft();
+    resumeOpenComp();
     applyI18n();
     applyTheme();
     renderOppList();
