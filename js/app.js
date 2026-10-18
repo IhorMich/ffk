@@ -3685,10 +3685,28 @@ function syncSeriesNote(){
   const opp = (document.getElementById('f-opponent')?.value || '').trim();
   if(formHasActions() || opp) note.hidden = true;
 }
+function liveSeriesAverage(){
+  const comp = player && player.openComp;
+  if(!comp || (comp.kind !== 'tournament' && comp.kind !== 'cup')) return null;
+  const kind = document.getElementById('f-kind')?.value || '';
+  const name = String(document.getElementById('f-tournament')?.value || '').trim();
+  if(kind !== comp.kind || name !== comp.name) return null;
+  if(!(scheduledMatchLen() < 60)) return null;
+  const saved = compMatches(comp).filter(m => !editingId || m.id !== editingId);
+  const rows = saved.slice();
+  if(formHasActions()){
+    const s = scoresNow();
+    rows.push({rating: s.overall, minutes: s.minutes, matchLen: s.matchLen});
+  }
+  if(!rows.length) return null;
+  const avg = avgRating(rows);
+  if(avg == null) return null;
+  return {avg, kind: comp.kind};
+}
 function updateHero(){
   syncSeriesNote();
   const s = scoresNow();
-  const cupSoFar = !formHasActions() ? openCompAverage() : null;
+  const cupSoFar = liveSeriesAverage();
   const shown = cupSoFar && cupSoFar.avg != null ? cupSoFar.avg : s.overall;
   const overall = fmtNum(shown, 2) + '<small>/10</small>';
   const heroScore = document.getElementById('heroScore');
@@ -4262,15 +4280,30 @@ function historyBlocks(list){
   };
   return blocks.sort((a, b) => stamp(b).localeCompare(stamp(a)));
 }
-function historyMatchCard(m, showSeason){
+function isShortCompMatch(m){
+  if(!m || (m.kind !== 'tournament' && m.kind !== 'cup')) return false;
+  const len = Number(m.matchLen) || Number(m.minutes) || 60;
+  return len < 60;
+}
+function shortStatLine(m){
+  const bits = [];
+  ['goals','assists','shots','saves'].forEach(key => {
+    const n = Math.max(0, Math.floor(Number(m && m.counts && m.counts[key]) || 0));
+    if(n) bits.push(countPhrase(n, 'mn_' + key));
+  });
+  return bits.join(' · ');
+}
+function historyMatchCard(m, showSeason, hideRating){
+  const stats = hideRating ? shortStatLine(m) : '';
+  const rating = hideRating ? '' : `<div class="match-rating ${ratingClass(m.rating)}${isShortOuting(m.minutes, m.matchLen) ? ' short' : ''}">${fmtNum(m.rating, 2)}${isShortOuting(m.minutes, m.matchLen) ? `<small>${escapeHtml(matchMinsLabel(m))}</small>` : ''}</div>`;
   return `<div class="match-card">
       <div class="match-card-top" onclick="toggleDetails(${m.id})">
         <div class="match-meta">
           <span class="match-date">${escapeHtml(formatDate(m.date))}${showSeason ? ' · ' + escapeHtml(matchSeason(m)) : ''} · ${escapeHtml(matchMinsLabel(m))} · ${escapeHtml(matchPosDisplay(m))}</span>
           <span class="match-opp">${escapeHtml(m.opponent || t('unnamed'))}</span>
-          <span class="match-score">${scoreLineHtml(m)}</span>
+          <span class="match-score">${scoreLineHtml(m)}${stats ? ' · ' + escapeHtml(stats) : ''}</span>
         </div>
-        <div class="match-rating ${ratingClass(m.rating)}${isShortOuting(m.minutes, m.matchLen) ? ' short' : ''}">${fmtNum(m.rating, 2)}${isShortOuting(m.minutes, m.matchLen) ? `<small>${escapeHtml(matchMinsLabel(m))}</small>` : ''}</div>
+        ${rating}
       </div>
       <div class="match-details" id="details-${m.id}">
         ${renderReportHtml(m, true)}
@@ -4295,7 +4328,8 @@ function historyCompCard(block, showSeason, index){
   const kindName = kindLabel(block.kind);
   const title = block.name === kindName ? kindName : (kindName + ' · ' + block.name);
   const avg = avgRating(block.matches);
-  const inner = block.matches.map(m => historyMatchCard(m, showSeason)).join('');
+  const shortSeries = block.matches.every(isShortCompMatch);
+  const inner = block.matches.map(m => historyMatchCard(m, showSeason, shortSeries)).join('');
   return `<div class="match-card comp-block${open ? ' open' : ''}">
       <div class="match-card-top" onclick="toggleCompBlock(${index})">
         <div class="match-meta">
