@@ -554,8 +554,8 @@
   }
   .onboard-card::before{content:none;}
   .onboard-kicker{font-size:.72rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#8D9AB5;}
-  .onboard-card h2{margin:8px 0 8px;font-size:1.72rem;line-height:1.15;letter-spacing:-.03em;color:#EDF1F7;}
-  .onboard-card p{margin:0 0 22px;font-size:1.02rem;font-weight:600;color:#C5CEDD;line-height:1.45;max-width:22em;}
+  .onboard-card h2{margin:8px 0 8px;font-size:1.55rem;line-height:1.18;letter-spacing:-.03em;color:#EDF1F7;}
+  .onboard-card p{margin:0 0 22px;font-size:1rem;font-weight:600;color:#C5CEDD;line-height:1.45;max-width:24em;}
   .onboard-stage{
     flex:1;min-height:220px;margin:0 0 8px;
     display:flex;align-items:center;justify-content:center;
@@ -563,7 +563,56 @@
   .onboard-fig{display:none;width:100%;}
   .onboard-card[data-step="0"] .onboard-fig[data-fig="0"],
   .onboard-card[data-step="1"] .onboard-fig[data-fig="1"],
-  .onboard-card[data-step="2"] .onboard-fig[data-fig="2"]{display:block;}
+  .onboard-card[data-step="2"] .onboard-fig[data-fig="2"],
+  .onboard-card[data-step="3"] .onboard-fig[data-fig="3"]{display:block;}
+  .onboard-profile{
+    width:min(260px,100%);margin:0 auto;
+    display:flex;align-items:center;gap:14px;
+    padding:16px 16px;border-radius:20px;
+    border:1px solid rgba(237,241,247,.16);
+    background:rgba(237,241,247,.06);
+  }
+  .onboard-ava{
+    width:54px;height:54px;border-radius:50%;flex:none;
+    background:
+      radial-gradient(circle at 50% 38%, #EDF1F7 0 7px, transparent 8px),
+      radial-gradient(circle at 50% 78%, #EDF1F7 0 16px, transparent 17px),
+      rgba(237,241,247,.12);
+  }
+  .onboard-lines{flex:1;display:flex;flex-direction:column;gap:8px;}
+  .onboard-lines i{display:block;height:8px;border-radius:99px;background:rgba(237,241,247,.34);}
+  .onboard-lines i:first-child{width:78%;}
+  .onboard-lines i:last-child{width:46%;background:var(--card-accent);}
+  .onboard-log{width:min(240px,100%);margin:0 auto;display:flex;flex-direction:column;gap:10px;}
+  .onboard-log div{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:10px 14px;border-radius:14px;
+    border:1px solid rgba(237,241,247,.14);
+    background:rgba(237,241,247,.05);
+  }
+  .onboard-log i{width:72px;height:8px;border-radius:99px;background:rgba(237,241,247,.22);}
+  .onboard-log b{font-size:1rem;font-variant-numeric:tabular-nums;letter-spacing:.04em;}
+  .onboard-bars{
+    width:min(220px,100%);margin:0 auto;height:120px;
+    display:flex;align-items:flex-end;justify-content:center;gap:14px;
+  }
+  .onboard-bars i{
+    display:block;width:28px;height:calc(var(--p)*100%);border-radius:10px 10px 6px 6px;
+    background:linear-gradient(180deg, var(--card-accent), rgba(237,241,247,.35));
+  }
+  .onboard-path{
+    width:8px;margin:0 auto;display:flex;flex-direction:column;align-items:center;gap:22px;
+    position:relative;
+  }
+  .onboard-path::before{
+    content:"";position:absolute;left:50%;top:6px;bottom:6px;width:2px;margin-left:-1px;
+    background:rgba(237,241,247,.22);border-radius:2px;
+  }
+  .onboard-path span{
+    position:relative;width:12px;height:12px;border-radius:50%;
+    background:#05060c;border:2px solid rgba(237,241,247,.55);
+  }
+  .onboard-path span:last-child{background:var(--card-accent);border-color:var(--card-accent);}
   .onboard-mini{
     width:min(260px,100%);margin:0 auto;position:relative;overflow:hidden;
     background:linear-gradient(180deg, #1b1e2a 0%, #0b0c14 100%);
@@ -2814,6 +2863,20 @@
   html.pc-ui .onboard-card p,
   html.pc-ui .onboard-kicker,
   html.pc-ui .onboard-card .ghost-btn{color:var(--card-muted);}
+  html.pc-ui .onboard-profile,
+  html.pc-ui .onboard-log div{border-color:var(--card-line);background:rgba(0,0,0,.03);}
+  html.pc-ui .onboard-ava{
+    background:
+      radial-gradient(circle at 50% 38%, var(--card-ink) 0 7px, transparent 8px),
+      radial-gradient(circle at 50% 78%, var(--card-ink) 0 16px, transparent 17px),
+      rgba(0,0,0,.06);
+  }
+  html.pc-ui .onboard-lines i,
+  html.pc-ui .onboard-log i{background:rgba(0,0,0,.16);}
+  html.pc-ui .onboard-lines i:last-child{background:var(--card-accent);}
+  html.pc-ui .onboard-path::before{background:rgba(0,0,0,.16);}
+  html.pc-ui .onboard-path span{background:var(--card-paper);border-color:rgba(0,0,0,.35);}
+  html.pc-ui .onboard-path span:last-child{background:var(--card-accent);border-color:var(--card-accent);}
   html.pc-ui .photo-sheet{
     left:50%;right:auto;bottom:auto;top:50%;
     transform:translate(-50%,-50%);

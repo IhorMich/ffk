@@ -6537,111 +6537,111 @@ ru:{
   const extra = {
     uk:{
       onboardProgress:'{n} з {total}',
-      onboardStepPos:'Позиція', onboardStepAct:'Дія', onboardStepRate:'Оцінка',
-      onboardChipUp:'гол', onboardChipDown:'помилка', onboardShareTag:'у чат',
-      onboard1Title:'Запиши матч біля бровки',
-      onboard1Body:'Спочатку позиція, потім дії. Оцінка з’явиться сама.',
-      onboard2Title:'Старт завжди 6.0',
-      onboard2Body:'Корисна дія піднімає. Помилка опускає.',
-      onboard3Title:'Картка після матчу',
-      onboard3Body:'Її можна одразу надіслати в сімейний чат.',
-      onboardDone:'Записати матч'
+      onboard1Title:'Увесь футбольний шлях — в одному місці',
+      onboard1Body:'Створи профіль свого юного футболіста. Зберігай інформацію про гравця, його позиції та футбольну кар’єру.',
+      onboard2Title:'Жоден матч не залишиться забутим',
+      onboard2Body:'Записуй матчі, зберігай результати й відмічай ігрові події. Збирай історію футбольних виступів в одному місці.',
+      onboard3Title:'Стеж за прогресом на полі',
+      onboard3Body:'Відстежуй особисту статистику, порівнюй показники й дивись, як змінюється гра дитини від матчу до матчу.',
+      onboard4Title:'Кожен матч — частина великої історії',
+      onboard4Body:'Зберігай досягнення, важливі моменти й результати. Створюй футбольну історію, до якої ви зможете повертатися знову і знову.',
+      onboardDone:'Почати'
     },
     pl:{
       onboardProgress:'{n} z {total}',
-      onboardStepPos:'Pozycja', onboardStepAct:'Akcja', onboardStepRate:'Ocena',
-      onboardChipUp:'gol', onboardChipDown:'błąd', onboardShareTag:'na czat',
-      onboard1Title:'Zapisz mecz przy linii',
-      onboard1Body:'Najpierw pozycja, potem akcje. Ocena pojawi się sama.',
-      onboard2Title:'Zawsze od 6.0',
-      onboard2Body:'Dobra akcja podnosi. Błąd obniża.',
-      onboard3Title:'Karta po meczu',
-      onboard3Body:'Możesz od razu wysłać ją na czat rodzinny.',
-      onboardDone:'Zapisz mecz'
+      onboard1Title:'Cała piłkarska droga — w jednym miejscu',
+      onboard1Body:'Utwórz profil swojego młodego piłkarza. Zapisuj informacje o zawodniku, jego pozycjach i karierze.',
+      onboard2Title:'Żaden mecz nie zostanie zapomniany',
+      onboard2Body:'Zapisuj mecze, wyniki i wydarzenia na boisku. Zbieraj historię występów w jednym miejscu.',
+      onboard3Title:'Śledź postępy na boisku',
+      onboard3Body:'Obserwuj statystyki, porównuj liczby i patrz, jak gra dziecka zmienia się z meczu na mecz.',
+      onboard4Title:'Każdy mecz jest częścią większej historii',
+      onboard4Body:'Zapisuj osiągnięcia, ważne momenty i wyniki. Twórz piłkarską historię, do której będziecie wracać.',
+      onboardDone:'Zacznij'
     },
     en:{
       onboardProgress:'{n} of {total}',
-      onboardStepPos:'Position', onboardStepAct:'Action', onboardStepRate:'Rating',
-      onboardChipUp:'goal', onboardChipDown:'mistake', onboardShareTag:'to chat',
-      onboard1Title:'Log the match from the sideline',
-      onboard1Body:'Pick a position, then the actions. The rating appears on its own.',
-      onboard2Title:'Always starts at 6.0',
-      onboard2Body:'A useful action lifts it. A mistake drops it.',
-      onboard3Title:'A card after the match',
-      onboard3Body:'Send it straight to the family chat.',
-      onboardDone:'Log a match'
+      onboard1Title:'The whole football path, in one place',
+      onboard1Body:'Create a profile for your young player. Keep their details, positions, and football career together.',
+      onboard2Title:'No match gets forgotten',
+      onboard2Body:'Log matches, save the score, and mark what happened. Build a history of every appearance in one place.',
+      onboard3Title:'Follow progress on the pitch',
+      onboard3Body:'Track personal stats, compare the numbers, and see how your child’s game changes from match to match.',
+      onboard4Title:'Every match is part of a bigger story',
+      onboard4Body:'Save the achievements, the moments, and the results. Build a football story you can come back to.',
+      onboardDone:'Start'
     },
     ru:{
       onboardProgress:'{n} из {total}',
-      onboardStepPos:'Позиция', onboardStepAct:'Действие', onboardStepRate:'Оценка',
-      onboardChipUp:'гол', onboardChipDown:'ошибка', onboardShareTag:'в чат',
-      onboard1Title:'Запиши матч у бровки',
-      onboard1Body:'Сначала позиция, потом действия. Оценка появится сама.',
-      onboard2Title:'Старт всегда 6.0',
-      onboard2Body:'Полезное действие поднимает. Ошибка опускает.',
-      onboard3Title:'Карточка после матча',
-      onboard3Body:'Её можно сразу отправить в семейный чат.',
-      onboardDone:'Записать матч'
+      onboard1Title:'Весь футбольный путь — в одном месте',
+      onboard1Body:'Создай профиль своего юного футболиста. Сохраняй информацию об игроке, его позиции и футбольной карьере.',
+      onboard2Title:'Ни один матч не останется забытым',
+      onboard2Body:'Записывай матчи, сохраняй результаты и отмечай игровые события. Собирай историю футбольных выступлений в одном месте.',
+      onboard3Title:'Следи за прогрессом на поле',
+      onboard3Body:'Отслеживай личную статистику, сравнивай показатели и наблюдай, как меняется игра ребёнка от матча к матчу.',
+      onboard4Title:'Каждый матч — часть большой истории',
+      onboard4Body:'Сохраняй достижения, важные моменты и результаты. Создавай футбольную историю, к которой вы сможете возвращаться снова и снова.',
+      onboardDone:'Начать'
     },
     es:{
       onboardProgress:'{n} de {total}',
-      onboardStepPos:'Posición', onboardStepAct:'Acción', onboardStepRate:'Nota',
-      onboardChipUp:'gol', onboardChipDown:'error', onboardShareTag:'al chat',
-      onboard1Title:'Apunta el partido desde la banda',
-      onboard1Body:'Primero la posición, luego las acciones. La nota aparece sola.',
-      onboard2Title:'Siempre empieza en 6.0',
-      onboard2Body:'Una acción útil sube. Un error baja.',
-      onboard3Title:'Una carta después del partido',
-      onboard3Body:'Puedes enviarla al chat familiar.',
-      onboardDone:'Apuntar el partido'
+      onboard1Title:'Todo el camino del fútbol, en un solo lugar',
+      onboard1Body:'Crea el perfil de tu joven futbolista. Guarda sus datos, sus posiciones y su carrera.',
+      onboard2Title:'Ningún partido se queda en el olvido',
+      onboard2Body:'Apunta los partidos, guarda los resultados y marca lo que pasó. Reúne el historial de cada aparición en un solo lugar.',
+      onboard3Title:'Sigue el progreso en el campo',
+      onboard3Body:'Mira las estadísticas, compara los números y observa cómo cambia el juego de partido a partido.',
+      onboard4Title:'Cada partido es parte de una historia más grande',
+      onboard4Body:'Guarda los logros, los momentos y los resultados. Crea una historia del fútbol a la que podáis volver.',
+      onboardDone:'Empezar'
     },
     de:{
       onboardProgress:'{n} von {total}',
-      onboardStepPos:'Position', onboardStepAct:'Aktion', onboardStepRate:'Note',
-      onboardChipUp:'Tor', onboardChipDown:'Fehler', onboardShareTag:'in den Chat',
-      onboard1Title:'Spiel von der Seitenlinie eintragen',
-      onboard1Body:'Zuerst die Position, dann die Aktionen. Die Note kommt von selbst.',
-      onboard2Title:'Start immer bei 6.0',
-      onboard2Body:'Eine gute Aktion hebt. Ein Fehler senkt.',
-      onboard3Title:'Eine Karte nach dem Spiel',
-      onboard3Body:'Du kannst sie direkt in den Familienchat schicken.',
-      onboardDone:'Spiel eintragen'
+      onboard1Title:'Der ganze Fußballweg an einem Ort',
+      onboard1Body:'Lege ein Profil für dein Kind an. Spieler, Positionen und die Laufbahn bleiben zusammen.',
+      onboard2Title:'Kein Spiel geht verloren',
+      onboard2Body:'Trag Spiele ein, speichere Ergebnisse und markiere die Momente. Die Einsätze sammeln sich an einem Ort.',
+      onboard3Title:'Fortschritt auf dem Platz verfolgen',
+      onboard3Body:'Sieh die eigenen Zahlen, vergleiche sie und beobachte, wie sich das Spiel von Partie zu Partie verändert.',
+      onboard4Title:'Jedes Spiel ist Teil einer größeren Geschichte',
+      onboard4Body:'Bewahre Erfolge, wichtige Momente und Ergebnisse. So entsteht eine Fußballgeschichte, zu der ihr zurückkehren könnt.',
+      onboardDone:'Starten'
     },
     it:{
       onboardProgress:'{n} di {total}',
-      onboardStepPos:'Ruolo', onboardStepAct:'Azione', onboardStepRate:'Voto',
-      onboardChipUp:'gol', onboardChipDown:'errore', onboardShareTag:'in chat',
-      onboard1Title:'Segna la partita dalla linea',
-      onboard1Body:'Prima il ruolo, poi le azioni. Il voto compare da solo.',
-      onboard2Title:'Si parte sempre da 6.0',
-      onboard2Body:'Un’azione utile alza. Un errore abbassa.',
-      onboard3Title:'La carta dopo la partita',
-      onboard3Body:'Puoi inviarla subito nella chat di famiglia.',
-      onboardDone:'Segna la partita'
+      onboard1Title:'Tutto il percorso calcistico, in un solo posto',
+      onboard1Body:'Crea il profilo del tuo giovane calciatore. Tieni insieme dati, ruoli e carriera.',
+      onboard2Title:'Nessuna partita resta dimenticata',
+      onboard2Body:'Segna le partite, salva i risultati e annota cosa è successo. La storia delle presenze sta in un solo posto.',
+      onboard3Title:'Segui i progressi in campo',
+      onboard3Body:'Guarda le statistiche, confronta i numeri e osserva come cambia il gioco da una partita all’altra.',
+      onboard4Title:'Ogni partita è parte di una storia più grande',
+      onboard4Body:'Conserva i traguardi, i momenti e i risultati. Crea una storia del calcio a cui potete tornare.',
+      onboardDone:'Inizia'
     },
     fr:{
       onboardProgress:'{n} sur {total}',
-      onboardStepPos:'Poste', onboardStepAct:'Action', onboardStepRate:'Note',
-      onboardChipUp:'but', onboardChipDown:'erreur', onboardShareTag:'au chat',
-      onboard1Title:'Note le match au bord du terrain',
-      onboard1Body:'D’abord le poste, puis les actions. La note apparaît toute seule.',
-      onboard2Title:'Toujours à partir de 6.0',
-      onboard2Body:'Une action utile monte. Une erreur baisse.',
-      onboard3Title:'La carte après le match',
-      onboard3Body:'Tu peux l’envoyer tout de suite dans le chat familial.',
-      onboardDone:'Noter le match'
+      onboard1Title:'Tout le parcours football, au même endroit',
+      onboard1Body:'Crée le profil de ton jeune joueur. Garde ses infos, ses postes et sa carrière ensemble.',
+      onboard2Title:'Aucun match n’est oublié',
+      onboard2Body:'Note les matchs, garde les résultats et marque les actions. L’historique des matchs reste au même endroit.',
+      onboard3Title:'Suis la progression sur le terrain',
+      onboard3Body:'Regarde les stats, compare les chiffres et vois comment le jeu change d’un match à l’autre.',
+      onboard4Title:'Chaque match fait partie d’une plus grande histoire',
+      onboard4Body:'Garde les réussites, les moments et les résultats. Construis une histoire du football à laquelle vous pourrez revenir.',
+      onboardDone:'Commencer'
     },
     pt:{
       onboardProgress:'{n} de {total}',
-      onboardStepPos:'Posição', onboardStepAct:'Ação', onboardStepRate:'Nota',
-      onboardChipUp:'golo', onboardChipDown:'erro', onboardShareTag:'no chat',
-      onboard1Title:'Regista o jogo à beira do campo',
-      onboard1Body:'Primeiro a posição, depois as ações. A nota aparece sozinha.',
-      onboard2Title:'Começa sempre em 6.0',
-      onboard2Body:'Uma ação útil sobe. Um erro desce.',
-      onboard3Title:'O cartão depois do jogo',
-      onboard3Body:'Podes enviá-lo já para o chat da família.',
-      onboardDone:'Registar o jogo'
+      onboard1Title:'Todo o percurso no futebol, num só lugar',
+      onboard1Body:'Cria o perfil do teu jovem jogador. Guarda os dados, as posições e a carreira juntos.',
+      onboard2Title:'Nenhum jogo fica esquecido',
+      onboard2Body:'Regista os jogos, guarda os resultados e marca o que aconteceu. O historial fica num só lugar.',
+      onboard3Title:'Acompanha o progresso em campo',
+      onboard3Body:'Vê as estatísticas, compara os números e observa como o jogo muda de jogo para jogo.',
+      onboard4Title:'Cada jogo faz parte de uma história maior',
+      onboard4Body:'Guarda as conquistas, os momentos e os resultados. Cria uma história do futebol à qual podem voltar.',
+      onboardDone:'Começar'
     }
   };
   LANGS.forEach(lang => {
@@ -6666,10 +6666,7 @@ ru:{
       shareInviteText:'Make a TEMPO for your match\n{url}',
       milestoneShareAsk:'You have {n} matches this season. Share the season card?',
       previewPreparing:'Preparing card…',
-      previewSharing:'Sharing…',
-      onboard3Title:'A card after the match',
-      onboard3Body:'Send it straight to the family chat.',
-      onboardDone:'Log a match'
+      previewSharing:'Sharing…'
     },
     uk:{
       reportShareCta:'Поділитися карткою',
@@ -6677,10 +6674,7 @@ ru:{
       shareInviteText:'Зроби картку свого матчу в TEMPO\n{url}',
       milestoneShareAsk:'У сезоні вже {n} матчів. Поділитися карткою сезону?',
       previewPreparing:'Готуємо картку…',
-      previewSharing:'Надсилаю…',
-      onboard3Title:'Картка після матчу',
-      onboard3Body:'Її можна одразу надіслати в сімейний чат.',
-      onboardDone:'Записати матч'
+      previewSharing:'Надсилаю…'
     },
     pl:{
       reportShareCta:'Udostępnij kartę',
@@ -6688,10 +6682,7 @@ ru:{
       shareInviteText:'Zrób kartę swojego meczu w TEMPO\n{url}',
       milestoneShareAsk:'Masz już {n} meczów w sezonie. Udostępnić kartę sezonu?',
       previewPreparing:'Przygotowuję kartę…',
-      previewSharing:'Udostępniam…',
-      onboard3Title:'Karta po meczu',
-      onboard3Body:'Możesz od razu wysłać ją na czat rodzinny.',
-      onboardDone:'Zapisz mecz'
+      previewSharing:'Udostępniam…'
     },
     ru:{
       reportShareCta:'Поделиться карточкой',
@@ -6699,10 +6690,7 @@ ru:{
       shareInviteText:'Сделай карточку своего матча в TEMPO\n{url}',
       milestoneShareAsk:'В сезоне уже {n} матчей. Поделиться карточкой сезона?',
       previewPreparing:'Готовим карточку…',
-      previewSharing:'Отправляю…',
-      onboard3Title:'Карточка после матча',
-      onboard3Body:'Её можно сразу отправить в семейный чат.',
-      onboardDone:'Записать матч'
+      previewSharing:'Отправляю…'
     },
     es:{
       reportShareCta:'Compartir carta',
@@ -6710,10 +6698,7 @@ ru:{
       shareInviteText:'Haz la carta de tu partido en TEMPO\n{url}',
       milestoneShareAsk:'Ya tienes {n} partidos esta temporada. ¿Compartir la carta de temporada?',
       previewPreparing:'Preparando la carta…',
-      previewSharing:'Compartiendo…',
-      onboard3Title:'Una carta después del partido',
-      onboard3Body:'Puedes enviarla al chat familiar.',
-      onboardDone:'Apuntar el partido'
+      previewSharing:'Compartiendo…'
     },
     de:{
       reportShareCta:'Karte teilen',
@@ -6721,10 +6706,7 @@ ru:{
       shareInviteText:'Mach deine Matchkarte in TEMPO\n{url}',
       milestoneShareAsk:'Du hast schon {n} Spiele in der Saison. Saisonkarte teilen?',
       previewPreparing:'Karte wird vorbereitet…',
-      previewSharing:'Teilen…',
-      onboard3Title:'Eine Karte nach dem Spiel',
-      onboard3Body:'Du kannst sie direkt in den Familienchat schicken.',
-      onboardDone:'Spiel eintragen'
+      previewSharing:'Teilen…'
     },
     it:{
       reportShareCta:'Condividi la carta',
@@ -6732,10 +6714,7 @@ ru:{
       shareInviteText:'Crea la carta della tua partita su TEMPO\n{url}',
       milestoneShareAsk:'Hai già {n} partite in stagione. Condividere la carta stagione?',
       previewPreparing:'Preparazione carta…',
-      previewSharing:'Condivisione…',
-      onboard3Title:'La carta dopo la partita',
-      onboard3Body:'Puoi inviarla subito nella chat di famiglia.',
-      onboardDone:'Segna la partita'
+      previewSharing:'Condivisione…'
     },
     fr:{
       reportShareCta:'Partager la carte',
@@ -6743,10 +6722,7 @@ ru:{
       shareInviteText:'Fais la carte de ton match sur TEMPO\n{url}',
       milestoneShareAsk:'Tu as déjà {n} matchs cette saison. Partager la carte de saison ?',
       previewPreparing:'Préparation de la carte…',
-      previewSharing:'Partage…',
-      onboard3Title:'La carte après le match',
-      onboard3Body:'Tu peux l’envoyer tout de suite dans le chat familial.',
-      onboardDone:'Noter le match'
+      previewSharing:'Partage…'
     },
     pt:{
       reportShareCta:'Partilhar cartão',
@@ -6754,10 +6730,7 @@ ru:{
       shareInviteText:'Faz o cartão do teu jogo no TEMPO\n{url}',
       milestoneShareAsk:'Já tens {n} jogos esta época. Partilhar o cartão da época?',
       previewPreparing:'A preparar o cartão…',
-      previewSharing:'A partilhar…',
-      onboard3Title:'O cartão depois do jogo',
-      onboard3Body:'Podes enviá-lo já para o chat da família.',
-      onboardDone:'Registar o jogo'
+      previewSharing:'A partilhar…'
     }
   };
   LANGS.forEach(lang => {

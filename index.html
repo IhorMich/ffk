@@ -1594,33 +1594,31 @@ window.ffkIsNative = function () {
     <div class="onboard-card" id="onboardCard" data-step="0">
       <div class="onboard-stage" aria-hidden="true">
         <div class="onboard-fig" data-fig="0">
-          <ol class="onboard-steps">
-            <li><b>1</b><span id="onboardStepPos"></span></li>
-            <li><b>2</b><span id="onboardStepAct"></span></li>
-            <li><b>3</b><span id="onboardStepRate"></span></li>
-          </ol>
+          <div class="onboard-profile">
+            <span class="onboard-ava"></span>
+            <span class="onboard-lines"><i></i><i></i></span>
+          </div>
         </div>
         <div class="onboard-fig" data-fig="1">
-          <div class="onboard-rate">
-            <span class="onboard-chip up" id="onboardChipUp"></span>
-            <div class="onboard-rate-score">6.0</div>
-            <span class="onboard-chip down" id="onboardChipDown"></span>
+          <div class="onboard-log">
+            <div><i></i><b>2:1</b></div>
+            <div><i></i><b>1:1</b></div>
+            <div><i></i><b>3:0</b></div>
           </div>
         </div>
         <div class="onboard-fig" data-fig="2">
-          <div class="onboard-share">
-            <div class="onboard-mini">
-              <div class="onboard-mini-top"><span>TEMPO</span><span>7.4</span></div>
-              <div class="onboard-mini-score">7.4<small>/10</small></div>
-            </div>
-            <span class="onboard-share-pill" id="onboardShareTag"></span>
+          <div class="onboard-bars" aria-hidden="true">
+            <i style="--p:.38"></i><i style="--p:.55"></i><i style="--p:.72"></i><i style="--p:.9"></i>
           </div>
+        </div>
+        <div class="onboard-fig" data-fig="3">
+          <div class="onboard-path"><span></span><span></span><span></span><span></span></div>
         </div>
       </div>
       <div class="onboard-kicker" id="onboardKicker">1</div>
       <h2 id="onboardTitle"></h2>
       <p id="onboardBody"></p>
-      <div class="onboard-dots" id="onboardDots"><span></span><span></span><span></span></div>
+      <div class="onboard-dots" id="onboardDots"><span></span><span></span><span></span><span></span></div>
       <button class="save-btn" id="onboardNext" type="button"></button>
       <button class="ghost-btn" id="onboardSkip" type="button"></button>
     </div>

@@ -6520,11 +6520,7 @@ document.getElementById('previewCancel').addEventListener('click', closeCardPrev
 
 let onboardStep = 0;
 function onboardPages(){
-  return [
-    {title: t('onboard1Title'), body: t('onboard1Body')},
-    {title: t('onboard2Title'), body: t('onboard2Body')},
-    {title: t('onboard3Title'), body: t('onboard3Body')}
-  ];
+  return [1, 2, 3, 4].map(n => ({title: t('onboard' + n + 'Title'), body: t('onboard' + n + 'Body')}));
 }
 let introBusy = false;
 function skipIntroNow(){
@@ -6600,7 +6596,7 @@ function playIntro(){
 }
 function finishOnboard(){
   settings.onboarded = true;
-  settings.onboardSkin = 'steps';
+  settings.onboardSkin = 'path';
   saveSettings();
   document.getElementById('onboard').hidden = true;
   try{
@@ -6619,22 +6615,12 @@ function renderOnboard(){
   document.getElementById('onboardBody').textContent = pages[step].body;
   const kicker = document.getElementById('onboardKicker');
   if(kicker) kicker.textContent = t('onboardProgress', {n: step + 1, total: pages.length});
-  const setText = (id, key) => {
-    const el = document.getElementById(id);
-    if(el) el.textContent = t(key);
-  };
-  setText('onboardStepPos', 'onboardStepPos');
-  setText('onboardStepAct', 'onboardStepAct');
-  setText('onboardStepRate', 'onboardStepRate');
-  setText('onboardChipUp', 'onboardChipUp');
-  setText('onboardChipDown', 'onboardChipDown');
-  setText('onboardShareTag', 'onboardShareTag');
   document.getElementById('onboardNext').textContent = step === pages.length - 1 ? t('onboardDone') : t('onboardNext');
   document.getElementById('onboardSkip').textContent = t('onboardSkip');
   document.querySelectorAll('#onboardDots span').forEach((el, i) => el.classList.toggle('on', i === step));
 }
 function maybeOnboard(){
-  if(settings.onboardSkin === 'steps') return;
+  if(settings.onboardSkin === 'path') return;
   onboardStep = 0;
   document.getElementById('onboard').hidden = false;
   renderOnboard();
@@ -6660,7 +6646,7 @@ function maybeTransfer(){
   return true;
 }
 document.getElementById('onboardNext').addEventListener('click', () => {
-  if(onboardStep >= 2){ finishOnboard(); return; }
+  if(onboardStep >= onboardPages().length - 1){ finishOnboard(); return; }
   onboardStep += 1;
   renderOnboard();
 });
