@@ -6989,15 +6989,15 @@ ru:{
 
 (function mergeBirthPickI18n(){
   const extra = {
-    en:{birthYear:'Year'},
-    uk:{birthYear:'Рік'},
-    pl:{birthYear:'Rok'},
-    ru:{birthYear:'Год'},
-    es:{birthYear:'Año'},
-    de:{birthYear:'Jahr'},
-    it:{birthYear:'Anno'},
-    fr:{birthYear:'Année'},
-    pt:{birthYear:'Ano'}
+    en:{birthYear:'Year', unsavedLeave:'Changes aren’t saved. Leave without saving?'},
+    uk:{birthYear:'Рік', unsavedLeave:'Зміни не збережено. Вийти без збереження?'},
+    pl:{birthYear:'Rok', unsavedLeave:'Zmiany nie zostały zapisane. Wyjść bez zapisywania?'},
+    ru:{birthYear:'Год', unsavedLeave:'Изменения не сохранены. Выйти без сохранения?'},
+    es:{birthYear:'Año', unsavedLeave:'Los cambios no están guardados. ¿Salir sin guardar?'},
+    de:{birthYear:'Jahr', unsavedLeave:'Änderungen sind nicht gespeichert. Ohne Speichern verlassen?'},
+    it:{birthYear:'Anno', unsavedLeave:'Le modifiche non sono salvate. Uscire senza salvare?'},
+    fr:{birthYear:'Année', unsavedLeave:'Les modifications ne sont pas enregistrées. Quitter sans enregistrer ?'},
+    pt:{birthYear:'Ano', unsavedLeave:'As alterações não foram guardadas. Sair sem guardar?'}
   };
   LANGS.forEach(lang => {
     Object.assign(I18N[lang], extra.en, extra[lang] || {});

@@ -3298,6 +3298,7 @@ function renderExtraChips(){
 }
 function openPlayerEdit(){
   fillPlayerForm();
+  playerEditSnap = playerEditSignature();
   const el = document.getElementById('playerEdit');
   if(el) el.hidden = false;
   openSheet(document.getElementById('playerEditCard'));
@@ -3306,11 +3307,35 @@ function openPlayerEdit(){
     try{ syncPlayerLeaveUi(); }catch(e){}
   }
 }
+let playerEditSnap = '';
+function playerEditSignature(){
+  const p = collectPlayer();
+  return JSON.stringify({
+    firstName: p.firstName || '',
+    lastName: p.lastName || '',
+    birthDate: p.birthDate || '',
+    number: String(p.number || ''),
+    team: p.team || '',
+    club: p.club || '',
+    primary: p.primary || '',
+    extra: [...(p.extra || [])].slice().sort(),
+    season: p.season || '',
+    photo: currentPhoto() || '',
+    cover: currentCover() || ''
+  });
+}
+function playerEditDirty(){
+  return !!playerEditSnap && playerEditSignature() !== playerEditSnap;
+}
 function closePlayerEdit(revert){
   const el = document.getElementById('playerEdit');
-  if(el) el.hidden = true;
+  if(!el || el.hidden) return true;
+  if(revert !== false && playerEditDirty() && !confirm(t('unsavedLeave'))) return false;
+  el.hidden = true;
   resetSheet(document.getElementById('playerEditCard'));
+  playerEditSnap = '';
   if(revert !== false) fillPlayerForm();
+  return true;
 }
 function fillPlayerForm(){
   fillPrimarySelect();
@@ -4678,7 +4703,7 @@ function showView(name){
   if(name === 'player' && isCoachPlan() && !isCoachChildView()) name = 'coach';
   // Leaving the dedicated child screen clears child context (except explicit stay on coach-child)
   if(name !== 'coach-child' && isCoachChildView()) clearCoachChildView();
-  if(name !== 'player') closePlayerEdit();
+  if(name !== 'player' && isElShown('playerEdit') && closePlayerEdit() === false) return;
   const childOn = name === 'coach-child' && isCoachChildView();
   document.getElementById('app').classList.toggle('player-on', name === 'player');
   document.getElementById('app').classList.toggle('coach-profile-on', isCoachPlan() && name === 'coach');
@@ -6395,7 +6420,13 @@ function bindDesktopChrome(){
   bindOverlayBackdropClose('photoSheet', () => { if(typeof closePhotoSheet === 'function') closePhotoSheet(); });
 }
 function bindSheets(){
-  bindSheetDrag('playerEditCard', 'playerEditGrab', () => closePlayerEdit(true));
+  bindSheetDrag('playerEditCard', 'playerEditGrab', () => {
+    if(closePlayerEdit(true) === false){
+      const card = document.getElementById('playerEditCard');
+      resetSheet(card);
+      openSheet(card);
+    }
+  });
   bindSheetDrag('previewCard', 'previewGrab', () => closeCardPreview());
   bindSheetDrag('coachSettingsCard', 'coachSettingsGrab', () => {
     if(typeof window.closeCoachSettings === 'function') window.closeCoachSettings(true);
