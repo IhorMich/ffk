@@ -4544,6 +4544,15 @@ function absorbDeletedMatches(bag){
     saveMatches();
   }
 }
+function forgetPublishedMatch(m){
+  if(!m || !window.ParentStatsStore || typeof window.ParentStatsStore.forgetMatch !== 'function') return;
+  try{ window.ParentStatsStore.forgetMatch(m.id); }catch(e){}
+}
+function scheduleParentSync(){
+  if(window.ParentCloud && typeof window.ParentCloud.scheduleSync === 'function'){
+    try{ window.ParentCloud.scheduleSync(); }catch(e){}
+  }
+}
 function releaseCompIfEmpty(m){
   if(!m || (m.kind !== 'tournament' && m.kind !== 'cup')) return;
   const name = String(m.tournament || '').trim();
@@ -4568,9 +4577,11 @@ window.deleteMatch = function(id){
   if(!confirm(t('confirmDel'))) return;
   const gone = matches.find(m => m.id === id);
   tombstoneMatch(gone);
+  forgetPublishedMatch(gone);
   matches = matches.filter(m => m.id !== id);
   releaseCompIfEmpty(gone);
   saveMatches();
+  scheduleParentSync();
   if(editingId === id) resetForm();
   fillSeasonSelects();
   renderHistory(); renderStats(); renderOppList();
@@ -4583,11 +4594,15 @@ window.deleteCompetition = function(kindEnc, nameEnc){
   const ask = t(kind === 'cup' ? 'confirmDelCompCup' : 'confirmDelComp', {name: name || kindLabel(kind)});
   if(!confirm(ask)) return;
   const gone = matches.filter(m => m.kind === kind && String(m.tournament || '').trim() === name);
-  gone.forEach(tombstoneMatch);
+  gone.forEach(m => {
+    tombstoneMatch(m);
+    forgetPublishedMatch(m);
+  });
   const ids = new Set(gone.map(m => m.id));
   matches = matches.filter(m => !ids.has(m.id));
   releaseCompIfEmpty({kind, tournament: name});
   saveMatches();
+  scheduleParentSync();
   if(editingId && ids.has(editingId)) resetForm();
   fillSeasonSelects();
   renderHistory(); renderStats(); renderOppList();
@@ -5417,15 +5432,23 @@ function seasonKindGroups(list){
   const map = new Map();
   (list || []).forEach(m => {
     const kind = matchKindKey(m);
-    if(!map.has(kind)) map.set(kind, []);
-    map.get(kind).push(m);
+    const named = kind === 'cup' || kind === 'tournament';
+    const name = named ? String(m.tournament || '').trim() : '';
+    const key = kind + '\n' + name.toLowerCase();
+    if(!map.has(key)) map.set(key, {kind, name, list: []});
+    map.get(key).list.push(m);
   });
-  return KIND_ORDER.filter(k => map.has(k)).map(k => {
-    const rows = map.get(k);
-    const names = [...new Set(rows.map(m => String(m.tournament || '').trim()).filter(Boolean))];
-    const title = names.length === 1 ? `${kindLabel(k)} · ${names[0]}` : kindLabel(k);
-    return {kind: k, title, list: rows};
-  });
+  return [...map.values()].sort((a, b) => {
+    const order = KIND_ORDER.indexOf(a.kind) - KIND_ORDER.indexOf(b.kind);
+    if(order) return order;
+    const ad = a.list[a.list.length - 1] && a.list[a.list.length - 1].date || '';
+    const bd = b.list[b.list.length - 1] && b.list[b.list.length - 1].date || '';
+    return String(bd).localeCompare(String(ad)) || a.name.localeCompare(b.name);
+  }).map(g => ({
+    kind: g.kind,
+    title: g.name ? `${kindLabel(g.kind)} · ${g.name}` : kindLabel(g.kind),
+    list: g.list
+  }));
 }
 function recordCounts(list){
   const rec = {win: 0, draw: 0, loss: 0};

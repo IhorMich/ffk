@@ -869,6 +869,24 @@
       });
       if(error) throw error;
     }
+    const existing = await sb.from('parent_matches')
+      .select('local_match_id')
+      .eq('parent_user_id', session.user.id)
+      .eq('personal_player_id', profile.id)
+      .eq('team_player_id', link.player.id);
+    if(existing.error) throw existing.error;
+    const keep = new Set(rows.map(row => row.local_match_id));
+    const stale = (existing.data || [])
+      .map(row => String(row.local_match_id || ''))
+      .filter(id => id && !keep.has(id));
+    if(stale.length){
+      const removed = await sb.from('parent_matches').delete()
+        .eq('parent_user_id', session.user.id)
+        .eq('personal_player_id', profile.id)
+        .eq('team_player_id', link.player.id)
+        .in('local_match_id', stale);
+      if(removed.error) throw removed.error;
+    }
   }
   const recentPushClaims = new Map(); // messageOrBroadcastId → ts
   function claimLocalPush(key, ttlMs){
@@ -1887,9 +1905,16 @@
       .select('team_player_id,match_data')
       .in('team_player_id', playerIds);
     if(matchesRes.error) throw matchesRes.error;
-    if(global.ParentStatsStore && typeof global.ParentStatsStore.publishMatch === 'function'){
+    if(global.ParentStatsStore && typeof global.ParentStatsStore.replacePlayer === 'function'){
+      const grouped = {};
+      playerIds.forEach(id => { grouped[id] = []; });
       (matchesRes.data || []).forEach(row => {
-        try{ global.ParentStatsStore.publishMatch(row.team_player_id, row.match_data); }catch(e){}
+        if(!row || !row.team_player_id) return;
+        if(!grouped[row.team_player_id]) grouped[row.team_player_id] = [];
+        grouped[row.team_player_id].push(row.match_data);
+      });
+      Object.keys(grouped).forEach(id => {
+        try{ global.ParentStatsStore.replacePlayer(id, grouped[id]); }catch(e){}
       });
     }
     const linksRes = await sb.from('parent_player_links')

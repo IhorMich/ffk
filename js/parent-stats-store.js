@@ -84,6 +84,34 @@
       writeDb(db);
       return row;
     },
+    /** Replace one child's sideline list. Dropped matches leave statistics. */
+    replacePlayer(teamPlayerId, matches){
+      const id = String(teamPlayerId || '');
+      if(!id) return 0;
+      const db = readDb();
+      const rows = (Array.isArray(matches) ? matches : []).map(compactMatch).filter(row => row && row.date);
+      db.byPlayer[id] = rows.slice(0, 80);
+      writeDb(db);
+      return db.byPlayer[id].length;
+    },
+    /** A deleted personal match must disappear from every statistics copy. */
+    forgetMatch(matchId){
+      const id = String(matchId || '');
+      if(!id) return 0;
+      const db = readDb();
+      let n = 0;
+      Object.keys(db.byPlayer).forEach(pid => {
+        const cur = db.byPlayer[pid];
+        if(!Array.isArray(cur)) return;
+        const next = cur.filter(m => String(m && m.id || '') !== id);
+        if(next.length !== cur.length){
+          n += cur.length - next.length;
+          db.byPlayer[pid] = next;
+        }
+      });
+      if(n) writeDb(db);
+      return n;
+    },
     /** After parent saves a personal match — attach to linked academy children. */
     publishFromPersonal(match, personalPlayerId){
       if(!match || !global.ParentStore || typeof global.ParentStore.listLinks !== 'function') return 0;
@@ -136,9 +164,7 @@
         if(!link.personal_player_id && typeof global.ParentStore.bindPersonalPlayer === 'function'){
           try{ global.ParentStore.bindPersonalPlayer(link.id, profile.id); }catch(e){}
         }
-        (profile.matches || []).forEach(match => {
-          if(this.publishMatch(link.player.id, match)) n += 1;
-        });
+        n += this.replacePlayer(link.player.id, profile.matches || []);
       });
       return n;
     },
