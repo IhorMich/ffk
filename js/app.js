@@ -6600,7 +6600,7 @@ function playIntro(){
 }
 function finishOnboard(){
   settings.onboarded = true;
-  settings.onboardSkin = 'cards';
+  settings.onboardSkin = 'steps';
   saveSettings();
   document.getElementById('onboard').hidden = true;
   try{
@@ -6617,14 +6617,24 @@ function renderOnboard(){
   if(card) card.dataset.step = String(step);
   document.getElementById('onboardTitle').textContent = pages[step].title;
   document.getElementById('onboardBody').textContent = pages[step].body;
+  const kicker = document.getElementById('onboardKicker');
+  if(kicker) kicker.textContent = t('onboardProgress', {n: step + 1, total: pages.length});
+  const setText = (id, key) => {
+    const el = document.getElementById(id);
+    if(el) el.textContent = t(key);
+  };
+  setText('onboardStepPos', 'onboardStepPos');
+  setText('onboardStepAct', 'onboardStepAct');
+  setText('onboardStepRate', 'onboardStepRate');
+  setText('onboardChipUp', 'onboardChipUp');
+  setText('onboardChipDown', 'onboardChipDown');
+  setText('onboardShareTag', 'onboardShareTag');
   document.getElementById('onboardNext').textContent = step === pages.length - 1 ? t('onboardDone') : t('onboardNext');
   document.getElementById('onboardSkip').textContent = t('onboardSkip');
-  const copyTag = document.getElementById('onboardCopyTag');
-  if(copyTag) copyTag.textContent = t('onboardCopyTag');
   document.querySelectorAll('#onboardDots span').forEach((el, i) => el.classList.toggle('on', i === step));
 }
 function maybeOnboard(){
-  if(settings.onboardSkin === 'cards') return;
+  if(settings.onboardSkin === 'steps') return;
   onboardStep = 0;
   document.getElementById('onboard').hidden = false;
   renderOnboard();

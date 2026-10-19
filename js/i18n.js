@@ -6536,85 +6536,112 @@ ru:{
 (function mergeOnboardVisualI18n(){
   const extra = {
     uk:{
-      onboard1Title:'Оцінка матчу дитини',
-      onboard1Body:'Один гравець. Дії, оцінка, картка. Без акаунта.',
-      onboard2Title:'Старт з 6.0',
-      onboard2Body:'Корисні дії піднімають. Помилки опускають. Старання — слабше.',
-      onboard3Title:'Сезон на цьому телефоні',
-      onboard3Body:'Копія — в налаштуваннях. На телефон або в хмару.',
-      onboardCopyTag:'копія'
+      onboardProgress:'{n} з {total}',
+      onboardStepPos:'Позиція', onboardStepAct:'Дія', onboardStepRate:'Оцінка',
+      onboardChipUp:'гол', onboardChipDown:'помилка', onboardShareTag:'у чат',
+      onboard1Title:'Запиши матч біля бровки',
+      onboard1Body:'Спочатку позиція, потім дії. Оцінка з’явиться сама.',
+      onboard2Title:'Старт завжди 6.0',
+      onboard2Body:'Корисна дія піднімає. Помилка опускає.',
+      onboard3Title:'Картка після матчу',
+      onboard3Body:'Її можна одразу надіслати в сімейний чат.',
+      onboardDone:'Записати матч'
     },
     pl:{
-      onboard1Title:'Ocena meczu dziecka',
-      onboard1Body:'Jeden zawodnik. Akcje, ocena i karta. Bez konta.',
-      onboard2Title:'Start od 6.0',
-      onboard2Body:'Udane akcje podnoszą. Błędy obniżają. Wysiłek liczy się słabiej.',
-      onboard3Title:'Sezon na tym telefonie',
-      onboard3Body:'Kopia jest w ustawieniach. Na telefon albo do chmury.',
-      onboardCopyTag:'kopia'
+      onboardProgress:'{n} z {total}',
+      onboardStepPos:'Pozycja', onboardStepAct:'Akcja', onboardStepRate:'Ocena',
+      onboardChipUp:'gol', onboardChipDown:'błąd', onboardShareTag:'na czat',
+      onboard1Title:'Zapisz mecz przy linii',
+      onboard1Body:'Najpierw pozycja, potem akcje. Ocena pojawi się sama.',
+      onboard2Title:'Zawsze od 6.0',
+      onboard2Body:'Dobra akcja podnosi. Błąd obniża.',
+      onboard3Title:'Karta po meczu',
+      onboard3Body:'Możesz od razu wysłać ją na czat rodzinny.',
+      onboardDone:'Zapisz mecz'
     },
     en:{
-      onboard1Title:'Rate a child’s match',
-      onboard1Body:'One player. Actions, a rating, and a card. No account.',
-      onboard2Title:'Starts at 6.0',
-      onboard2Body:'Good actions lift it. Mistakes drop it. Effort counts less.',
-      onboard3Title:'The season stays here',
-      onboard3Body:'A copy lives in Settings. On this phone or in the cloud.',
-      onboardCopyTag:'copy'
+      onboardProgress:'{n} of {total}',
+      onboardStepPos:'Position', onboardStepAct:'Action', onboardStepRate:'Rating',
+      onboardChipUp:'goal', onboardChipDown:'mistake', onboardShareTag:'to chat',
+      onboard1Title:'Log the match from the sideline',
+      onboard1Body:'Pick a position, then the actions. The rating appears on its own.',
+      onboard2Title:'Always starts at 6.0',
+      onboard2Body:'A useful action lifts it. A mistake drops it.',
+      onboard3Title:'A card after the match',
+      onboard3Body:'Send it straight to the family chat.',
+      onboardDone:'Log a match'
     },
     ru:{
-      onboard1Title:'Оценка матча ребёнка',
-      onboard1Body:'Один игрок. Действия, оценка, карточка. Без аккаунта.',
-      onboard2Title:'Старт с 6.0',
-      onboard2Body:'Полезные действия поднимают. Ошибки опускают. Старание слабее.',
-      onboard3Title:'Сезон на этом телефоне',
-      onboard3Body:'Копия — в настройках. На телефон или в облако.',
-      onboardCopyTag:'копия'
+      onboardProgress:'{n} из {total}',
+      onboardStepPos:'Позиция', onboardStepAct:'Действие', onboardStepRate:'Оценка',
+      onboardChipUp:'гол', onboardChipDown:'ошибка', onboardShareTag:'в чат',
+      onboard1Title:'Запиши матч у бровки',
+      onboard1Body:'Сначала позиция, потом действия. Оценка появится сама.',
+      onboard2Title:'Старт всегда 6.0',
+      onboard2Body:'Полезное действие поднимает. Ошибка опускает.',
+      onboard3Title:'Карточка после матча',
+      onboard3Body:'Её можно сразу отправить в семейный чат.',
+      onboardDone:'Записать матч'
     },
     es:{
-      onboard1Title:'Nota del partido de un niño',
-      onboard1Body:'Un jugador. Acciones, nota y carta. Sin cuenta.',
-      onboard2Title:'Empieza en 6.0',
-      onboard2Body:'Las acciones útiles suben. Los errores bajan. El esfuerzo cuenta menos.',
-      onboard3Title:'La temporada se queda aquí',
-      onboard3Body:'La copia está en Ajustes. En el teléfono o en la nube.',
-      onboardCopyTag:'copia'
+      onboardProgress:'{n} de {total}',
+      onboardStepPos:'Posición', onboardStepAct:'Acción', onboardStepRate:'Nota',
+      onboardChipUp:'gol', onboardChipDown:'error', onboardShareTag:'al chat',
+      onboard1Title:'Apunta el partido desde la banda',
+      onboard1Body:'Primero la posición, luego las acciones. La nota aparece sola.',
+      onboard2Title:'Siempre empieza en 6.0',
+      onboard2Body:'Una acción útil sube. Un error baja.',
+      onboard3Title:'Una carta después del partido',
+      onboard3Body:'Puedes enviarla al chat familiar.',
+      onboardDone:'Apuntar el partido'
     },
     de:{
-      onboard1Title:'Note für ein Kinderspiel',
-      onboard1Body:'Ein Spieler. Aktionen, Note und Karte. Kein Konto.',
-      onboard2Title:'Start bei 6.0',
-      onboard2Body:'Gute Aktionen heben. Fehler senken. Einsatz zählt weniger.',
-      onboard3Title:'Die Saison bleibt hier',
-      onboard3Body:'Die Kopie liegt unter Einstellungen. Aufs Telefon oder in die Cloud.',
-      onboardCopyTag:'Kopie'
+      onboardProgress:'{n} von {total}',
+      onboardStepPos:'Position', onboardStepAct:'Aktion', onboardStepRate:'Note',
+      onboardChipUp:'Tor', onboardChipDown:'Fehler', onboardShareTag:'in den Chat',
+      onboard1Title:'Spiel von der Seitenlinie eintragen',
+      onboard1Body:'Zuerst die Position, dann die Aktionen. Die Note kommt von selbst.',
+      onboard2Title:'Start immer bei 6.0',
+      onboard2Body:'Eine gute Aktion hebt. Ein Fehler senkt.',
+      onboard3Title:'Eine Karte nach dem Spiel',
+      onboard3Body:'Du kannst sie direkt in den Familienchat schicken.',
+      onboardDone:'Spiel eintragen'
     },
     it:{
-      onboard1Title:'Voto della partita di un bambino',
-      onboard1Body:'Un giocatore. Azioni, voto e carta. Senza account.',
-      onboard2Title:'Si parte da 6.0',
-      onboard2Body:'Le azioni utili alzano. Gli errori abbassano. L’impegno conta meno.',
-      onboard3Title:'La stagione resta qui',
-      onboard3Body:'La copia è nelle Impostazioni. Sul telefono o nel cloud.',
-      onboardCopyTag:'copia'
+      onboardProgress:'{n} di {total}',
+      onboardStepPos:'Ruolo', onboardStepAct:'Azione', onboardStepRate:'Voto',
+      onboardChipUp:'gol', onboardChipDown:'errore', onboardShareTag:'in chat',
+      onboard1Title:'Segna la partita dalla linea',
+      onboard1Body:'Prima il ruolo, poi le azioni. Il voto compare da solo.',
+      onboard2Title:'Si parte sempre da 6.0',
+      onboard2Body:'Un’azione utile alza. Un errore abbassa.',
+      onboard3Title:'La carta dopo la partita',
+      onboard3Body:'Puoi inviarla subito nella chat di famiglia.',
+      onboardDone:'Segna la partita'
     },
     fr:{
-      onboard1Title:'Note du match d’un enfant',
-      onboard1Body:'Un joueur. Actions, note et carte. Sans compte.',
-      onboard2Title:'Départ à 6.0',
-      onboard2Body:'Les actions utiles montent. Les erreurs baissent. L’effort compte moins.',
-      onboard3Title:'La saison reste ici',
-      onboard3Body:'La copie est dans Réglages. Sur le téléphone ou dans le cloud.',
-      onboardCopyTag:'copie'
+      onboardProgress:'{n} sur {total}',
+      onboardStepPos:'Poste', onboardStepAct:'Action', onboardStepRate:'Note',
+      onboardChipUp:'but', onboardChipDown:'erreur', onboardShareTag:'au chat',
+      onboard1Title:'Note le match au bord du terrain',
+      onboard1Body:'D’abord le poste, puis les actions. La note apparaît toute seule.',
+      onboard2Title:'Toujours à partir de 6.0',
+      onboard2Body:'Une action utile monte. Une erreur baisse.',
+      onboard3Title:'La carte après le match',
+      onboard3Body:'Tu peux l’envoyer tout de suite dans le chat familial.',
+      onboardDone:'Noter le match'
     },
     pt:{
-      onboard1Title:'Nota do jogo de uma criança',
-      onboard1Body:'Um jogador. Ações, nota e carta. Sem conta.',
-      onboard2Title:'Começa em 6.0',
-      onboard2Body:'Ações úteis sobem. Erros descem. O esforço conta menos.',
-      onboard3Title:'A época fica neste telemóvel',
-      onboard3Body:'A cópia está nas Definições. No telemóvel ou na nuvem.',
-      onboardCopyTag:'cópia'
+      onboardProgress:'{n} de {total}',
+      onboardStepPos:'Posição', onboardStepAct:'Ação', onboardStepRate:'Nota',
+      onboardChipUp:'golo', onboardChipDown:'erro', onboardShareTag:'no chat',
+      onboard1Title:'Regista o jogo à beira do campo',
+      onboard1Body:'Primeiro a posição, depois as ações. A nota aparece sozinha.',
+      onboard2Title:'Começa sempre em 6.0',
+      onboard2Body:'Uma ação útil sobe. Um erro desce.',
+      onboard3Title:'O cartão depois do jogo',
+      onboard3Body:'Podes enviá-lo já para o chat da família.',
+      onboardDone:'Registar o jogo'
     }
   };
   LANGS.forEach(lang => {
@@ -6640,9 +6667,9 @@ ru:{
       milestoneShareAsk:'You have {n} matches this season. Share the season card?',
       previewPreparing:'Preparing card…',
       previewSharing:'Sharing…',
-      onboard3Title:'Share the card after the match',
-      onboard3Body:'Save the match, open the card, send it to the family chat. Friends can try TEMPO from the link.',
-      onboardDone:'Record first match'
+      onboard3Title:'A card after the match',
+      onboard3Body:'Send it straight to the family chat.',
+      onboardDone:'Log a match'
     },
     uk:{
       reportShareCta:'Поділитися карткою',
@@ -6651,9 +6678,9 @@ ru:{
       milestoneShareAsk:'У сезоні вже {n} матчів. Поділитися карткою сезону?',
       previewPreparing:'Готуємо картку…',
       previewSharing:'Надсилаю…',
-      onboard3Title:'Поділіться карткою після матчу',
-      onboard3Body:'Збережіть матч, відкрийте картку й надішліть у сімейний чат. Друзі зможуть спробувати TEMPO за посиланням.',
-      onboardDone:'Записати перший матч'
+      onboard3Title:'Картка після матчу',
+      onboard3Body:'Її можна одразу надіслати в сімейний чат.',
+      onboardDone:'Записати матч'
     },
     pl:{
       reportShareCta:'Udostępnij kartę',
@@ -6662,9 +6689,9 @@ ru:{
       milestoneShareAsk:'Masz już {n} meczów w sezonie. Udostępnić kartę sezonu?',
       previewPreparing:'Przygotowuję kartę…',
       previewSharing:'Udostępniam…',
-      onboard3Title:'Udostępnij kartę po meczu',
-      onboard3Body:'Zapisz mecz, otwórz kartę i wyślij na czat rodzinny. Znajomi mogą wypróbować TEMPO z linku.',
-      onboardDone:'Zapisz pierwszy mecz'
+      onboard3Title:'Karta po meczu',
+      onboard3Body:'Możesz od razu wysłać ją na czat rodzinny.',
+      onboardDone:'Zapisz mecz'
     },
     ru:{
       reportShareCta:'Поделиться карточкой',
@@ -6673,9 +6700,9 @@ ru:{
       milestoneShareAsk:'В сезоне уже {n} матчей. Поделиться карточкой сезона?',
       previewPreparing:'Готовим карточку…',
       previewSharing:'Отправляю…',
-      onboard3Title:'Поделись карточкой после матча',
-      onboard3Body:'Сохрани матч, открой карточку и отправь в семейный чат. Друзья смогут попробовать TEMPO по ссылке.',
-      onboardDone:'Записать первый матч'
+      onboard3Title:'Карточка после матча',
+      onboard3Body:'Её можно сразу отправить в семейный чат.',
+      onboardDone:'Записать матч'
     },
     es:{
       reportShareCta:'Compartir carta',
@@ -6684,9 +6711,9 @@ ru:{
       milestoneShareAsk:'Ya tienes {n} partidos esta temporada. ¿Compartir la carta de temporada?',
       previewPreparing:'Preparando la carta…',
       previewSharing:'Compartiendo…',
-      onboard3Title:'Comparte la carta tras el partido',
-      onboard3Body:'Guarda el partido, abre la carta y envíala al chat familiar. Tus amigos pueden probar TEMPO con el enlace.',
-      onboardDone:'Registrar el primer partido'
+      onboard3Title:'Una carta después del partido',
+      onboard3Body:'Puedes enviarla al chat familiar.',
+      onboardDone:'Apuntar el partido'
     },
     de:{
       reportShareCta:'Karte teilen',
@@ -6695,9 +6722,9 @@ ru:{
       milestoneShareAsk:'Du hast schon {n} Spiele in der Saison. Saisonkarte teilen?',
       previewPreparing:'Karte wird vorbereitet…',
       previewSharing:'Teilen…',
-      onboard3Title:'Karte nach dem Spiel teilen',
-      onboard3Body:'Spiel speichern, Karte öffnen und in den Familienchat senden. Freunde können TEMPO über den Link testen.',
-      onboardDone:'Erstes Spiel eintragen'
+      onboard3Title:'Eine Karte nach dem Spiel',
+      onboard3Body:'Du kannst sie direkt in den Familienchat schicken.',
+      onboardDone:'Spiel eintragen'
     },
     it:{
       reportShareCta:'Condividi la carta',
@@ -6706,9 +6733,9 @@ ru:{
       milestoneShareAsk:'Hai già {n} partite in stagione. Condividere la carta stagione?',
       previewPreparing:'Preparazione carta…',
       previewSharing:'Condivisione…',
-      onboard3Title:'Condividi la carta dopo la partita',
-      onboard3Body:'Salva la partita, apri la carta e inviala in chat. Gli amici possono provare TEMPO dal link.',
-      onboardDone:'Registra la prima partita'
+      onboard3Title:'La carta dopo la partita',
+      onboard3Body:'Puoi inviarla subito nella chat di famiglia.',
+      onboardDone:'Segna la partita'
     },
     fr:{
       reportShareCta:'Partager la carte',
@@ -6717,9 +6744,9 @@ ru:{
       milestoneShareAsk:'Tu as déjà {n} matchs cette saison. Partager la carte de saison ?',
       previewPreparing:'Préparation de la carte…',
       previewSharing:'Partage…',
-      onboard3Title:'Partage la carte après le match',
-      onboard3Body:'Enregistre le match, ouvre la carte et envoie-la au chat familial. Les amis peuvent essayer TEMPO via le lien.',
-      onboardDone:'Enregistrer le premier match'
+      onboard3Title:'La carte après le match',
+      onboard3Body:'Tu peux l’envoyer tout de suite dans le chat familial.',
+      onboardDone:'Noter le match'
     },
     pt:{
       reportShareCta:'Partilhar cartão',
@@ -6728,9 +6755,9 @@ ru:{
       milestoneShareAsk:'Já tens {n} jogos esta época. Partilhar o cartão da época?',
       previewPreparing:'A preparar o cartão…',
       previewSharing:'A partilhar…',
-      onboard3Title:'Partilha o cartão depois do jogo',
-      onboard3Body:'Guarda o jogo, abre o cartão e envia para o chat da família. Os amigos podem experimentar o TEMPO pelo link.',
-      onboardDone:'Registar o primeiro jogo'
+      onboard3Title:'O cartão depois do jogo',
+      onboard3Body:'Podes enviá-lo já para o chat da família.',
+      onboardDone:'Registar o jogo'
     }
   };
   LANGS.forEach(lang => {
