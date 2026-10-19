@@ -466,7 +466,12 @@ function syncSettingsAccountFooterFromSnap(snap){
       : t('settingsAccountSignedOut');
     status.style.whiteSpace = lines.length > 1 ? 'pre-line' : '';
   }
-  if(signOutBtn) signOutBtn.hidden = !snap.canSignOut;
+  if(signOutBtn){
+    signOutBtn.hidden = !snap.canSignOut;
+    if(signOutBtn.parentElement) signOutBtn.parentElement.hidden = !snap.canSignOut;
+  }
+  const clearBtn = document.getElementById('settingsDeleteAccountBtn');
+  if(clearBtn) clearBtn.hidden = !!snap.canSignOut;
   if(coachEmailEl) coachEmailEl.hidden = true;
 }
 function syncSettingsAccountFooter(personalEmail){
@@ -6704,7 +6709,7 @@ document.getElementById('s-lang').addEventListener('change', () => {
   saveSettings();
   applyI18n();
 });
-document.getElementById('saveSettingsBtn').addEventListener('click', () => {
+document.getElementById('saveSettingsBtn')?.addEventListener('click', () => {
   settings.lang = document.getElementById('s-lang').value;
   settings.langManual = true;
   saveSettings();

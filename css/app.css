@@ -1371,14 +1371,24 @@
   .settings-actions .ghost-btn{margin:0;}
   .settings-links{display:grid;gap:0;margin:0;}
   .settings-link{
-    display:block;width:100%;box-sizing:border-box;text-align:left;
-    background:transparent;border:0;border-radius:10px;
-    padding:11px 2px;margin:0;
+    display:flex;align-items:center;justify-content:space-between;gap:12px;
+    width:100%;box-sizing:border-box;text-align:left;
+    background:transparent;border:0;border-radius:0;
+    padding:13px 2px;margin:0;
+    border-bottom:1px solid var(--line, rgba(255,255,255,.08));
     font:inherit;font-weight:700;font-size:.95rem;
-    color:var(--accent, var(--gold, #E8C56A));
+    color:var(--text, inherit);
     text-decoration:none;cursor:pointer;
   }
+  .settings-link::after{
+    content:"";width:7px;height:7px;flex:none;
+    border-right:2px solid currentColor;border-top:2px solid currentColor;
+    transform:rotate(45deg);opacity:.4;
+  }
+  .settings-link:last-child{border-bottom:0;}
+  .settings-link-legal{margin-top:10px;border-top:1px solid var(--line, rgba(255,255,255,.08));}
   .settings-link:hover,.settings-link:focus-visible{opacity:.88;}
+  .settings-clear{margin-top:4px;justify-self:start;}
   .settings-block-about .save-btn{margin-top:2px;}
   .settings-block-danger{
     border-top:1px solid rgba(220,80,80,.28);
