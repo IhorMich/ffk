@@ -343,23 +343,26 @@
     padding:12px 14px calc(14px + env(safe-area-inset-bottom, 0px));
     display:flex;flex-direction:column;gap:12px;
   }
-  .birth-pick-head{display:flex;align-items:center;gap:8px;}
-  .birth-pick-title{flex:1;font-size:1.05rem;font-weight:800;}
+  .birth-pick-head{display:flex;align-items:center;gap:4px;}
+  .birth-pick-title{flex:1;text-align:center;font-size:1.05rem;font-weight:800;text-transform:capitalize;}
   .birth-pick-head button{
-    border:0;background:none;color:var(--card-muted);
-    font:inherit;font-weight:700;min-height:40px;padding:0 8px;cursor:pointer;
+    width:44px;min-height:44px;border:0;border-radius:12px;background:none;color:var(--card-ink);
+    font:inherit;font-weight:800;font-size:1.35rem;cursor:pointer;
   }
-  #birthPickBack{font-size:1.3rem;color:var(--card-ink);padding:0 10px;}
-  .birth-pick-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;overflow:auto;}
-  .birth-pick-grid.is-month{grid-template-columns:repeat(3,1fr);}
-  .birth-pick-grid.is-day{grid-template-columns:repeat(7,1fr);}
+  #birthYearPrev,#birthYearNext{color:var(--card-accent);}
+  .birth-pick-week{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center;}
+  .birth-pick-week span{font-size:.72rem;font-weight:800;color:var(--card-muted);text-transform:lowercase;}
+  .birth-pick-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;}
   .birth-pick-grid button{
-    min-height:46px;border-radius:12px;
-    border:1px solid var(--card-line);
+    min-height:42px;border-radius:12px;border:0;
     background:transparent;color:var(--card-ink);
     font:inherit;font-weight:800;cursor:pointer;
   }
-  .birth-pick-grid button.on{background:var(--card-accent);color:#08121C;border-color:transparent;}
+  .birth-pick-grid button.on{background:var(--card-accent);color:#08121C;}
+  .birth-pick-cancel{
+    border:0;background:none;color:var(--card-muted);
+    font:inherit;font-weight:700;min-height:40px;cursor:pointer;
+  }
   .player-edit-card{
     width:min(520px,100%);max-height:min(92dvh,920px);overflow:auto;
     background:var(--card-paper);color:var(--card-ink);

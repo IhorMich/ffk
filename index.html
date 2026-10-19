@@ -1551,11 +1551,15 @@ window.ffkIsNative = function () {
   <div class="birth-pick" id="birthPick" hidden>
     <div class="birth-pick-card">
       <div class="birth-pick-head">
-        <button type="button" id="birthPickBack" hidden aria-label="←">←</button>
+        <button type="button" id="birthYearPrev" aria-label="−1">«</button>
+        <button type="button" id="birthMonthPrev" aria-label="−">‹</button>
         <div class="birth-pick-title" id="birthPickTitle"></div>
-        <button type="button" id="birthPickClose" data-i18n="pSheetCancel">Отмена</button>
+        <button type="button" id="birthMonthNext" aria-label="+">›</button>
+        <button type="button" id="birthYearNext" aria-label="+1">»</button>
       </div>
+      <div class="birth-pick-week" id="birthPickWeek"></div>
       <div class="birth-pick-grid" id="birthPickGrid"></div>
+      <button type="button" class="birth-pick-cancel" id="birthPickClose" data-i18n="pSheetCancel">Отмена</button>
     </div>
   </div>
 

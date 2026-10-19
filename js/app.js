@@ -6785,21 +6785,24 @@ document.getElementById('photoSheetClear').addEventListener('click', () => {
 document.getElementById('photoSheetCancel').addEventListener('click', closePhotoSheet);
 document.getElementById('photoSheetBack').addEventListener('click', closePhotoSheet);
 document.getElementById('p-birth').addEventListener('change', syncDateShown);
-let birthPickStep = 'year';
-let birthPickYear = 0;
-let birthPickMonth = 0;
-function birthPickYears(){
-  const now = new Date().getFullYear();
-  const years = [];
-  for(let y = now; y >= now - 30; y--) years.push(y);
-  return years;
+let birthView = new Date();
+let birthSelected = '';
+function birthViewLimit(deltaMonths){
+  const now = new Date();
+  const min = new Date(now.getFullYear() - 30, 0, 1);
+  const max = new Date(now.getFullYear(), now.getMonth(), 1);
+  const next = new Date(birthView.getFullYear(), birthView.getMonth() + deltaMonths, 1);
+  if(next < min || next > max) return;
+  birthView = next;
+  renderBirthPick();
 }
 function openBirthPick(){
   const raw = document.getElementById('p-birth').value || '';
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(raw);
-  birthPickYear = match ? Number(match[1]) : 0;
-  birthPickMonth = match ? Number(match[2]) : 0;
-  birthPickStep = 'year';
+  birthSelected = match ? raw : '';
+  birthView = match
+    ? new Date(Number(match[1]), Number(match[2]) - 1, 1)
+    : new Date(new Date().getFullYear(), new Date().getMonth(), 1);
   document.getElementById('birthPick').hidden = false;
   renderBirthPick();
 }
@@ -6810,62 +6813,40 @@ function closeBirthPick(){
 function renderBirthPick(){
   const grid = document.getElementById('birthPickGrid');
   const title = document.getElementById('birthPickTitle');
-  const back = document.getElementById('birthPickBack');
-  if(!grid || !title || !back) return;
-  back.hidden = birthPickStep === 'year';
-  grid.className = 'birth-pick-grid is-' + birthPickStep;
+  const week = document.getElementById('birthPickWeek');
+  if(!grid || !title || !week) return;
   const loc = (typeof LANG_LOCALE !== 'undefined' && LANG_LOCALE[settings.lang]) || 'ru';
-  if(birthPickStep === 'year'){
-    title.textContent = t('birthYear');
-    grid.innerHTML = birthPickYears().map(y =>
-      '<button type="button" data-year="' + y + '"' + (y === birthPickYear ? ' class="on"' : '') + '>' + y + '</button>'
-    ).join('');
-    const on = grid.querySelector('.on');
-    if(on) on.scrollIntoView({block:'nearest'});
-    return;
+  const year = birthView.getFullYear();
+  const month = birthView.getMonth();
+  title.textContent = new Date(year, month, 1).toLocaleString(loc, {month: 'long', year: 'numeric'});
+  week.innerHTML = Array.from({length: 7}, (_, i) => {
+    const name = new Date(2024, 0, 1 + i).toLocaleString(loc, {weekday: 'short'}).replace('.', '');
+    return '<span>' + name + '</span>';
+  }).join('');
+  const offset = (new Date(year, month, 1).getDay() + 6) % 7;
+  const days = new Date(year, month + 1, 0).getDate();
+  let html = '';
+  for(let i = 0; i < offset; i++) html += '<span></span>';
+  for(let day = 1; day <= days; day++){
+    const iso = year + '-' + String(month + 1).padStart(2, '0') + '-' + String(day).padStart(2, '0');
+    html += '<button type="button" data-day="' + day + '"' + (iso === birthSelected ? ' class="on"' : '') + '>' + day + '</button>';
   }
-  if(birthPickStep === 'month'){
-    title.textContent = String(birthPickYear);
-    grid.innerHTML = Array.from({length: 12}, (_, i) => {
-      const name = new Date(2020, i, 1).toLocaleString(loc, {month: 'short'}).replace('.', '');
-      return '<button type="button" data-month="' + (i + 1) + '"' + ((i + 1) === birthPickMonth ? ' class="on"' : '') + '>' + name + '</button>';
-    }).join('');
-    return;
-  }
-  const monthName = new Date(birthPickYear, birthPickMonth - 1, 1).toLocaleString(loc, {month: 'long'});
-  title.textContent = monthName + ' ' + birthPickYear;
-  const days = new Date(birthPickYear, birthPickMonth, 0).getDate();
-  grid.innerHTML = Array.from({length: days}, (_, i) =>
-    '<button type="button" data-day="' + (i + 1) + '">' + (i + 1) + '</button>'
-  ).join('');
+  grid.innerHTML = html;
 }
 function applyBirthDay(day){
-  const iso = birthPickYear + '-' + String(birthPickMonth).padStart(2, '0') + '-' + String(day).padStart(2, '0');
+  const iso = birthView.getFullYear() + '-' + String(birthView.getMonth() + 1).padStart(2, '0') + '-' + String(day).padStart(2, '0');
   const input = document.getElementById('p-birth');
   input.value = iso;
   input.dispatchEvent(new Event('change', {bubbles: true}));
   closeBirthPick();
 }
+document.getElementById('birthYearPrev').addEventListener('click', () => birthViewLimit(-12));
+document.getElementById('birthYearNext').addEventListener('click', () => birthViewLimit(12));
+document.getElementById('birthMonthPrev').addEventListener('click', () => birthViewLimit(-1));
+document.getElementById('birthMonthNext').addEventListener('click', () => birthViewLimit(1));
 document.getElementById('birthPickGrid').addEventListener('click', e => {
   const btn = e.target.closest('button');
-  if(!btn) return;
-  if(btn.dataset.year){
-    birthPickYear = Number(btn.dataset.year);
-    birthPickStep = 'month';
-    renderBirthPick();
-    return;
-  }
-  if(btn.dataset.month){
-    birthPickMonth = Number(btn.dataset.month);
-    birthPickStep = 'day';
-    renderBirthPick();
-    return;
-  }
-  if(btn.dataset.day) applyBirthDay(Number(btn.dataset.day));
-});
-document.getElementById('birthPickBack').addEventListener('click', () => {
-  birthPickStep = birthPickStep === 'day' ? 'month' : 'year';
-  renderBirthPick();
+  if(btn && btn.dataset.day) applyBirthDay(Number(btn.dataset.day));
 });
 document.getElementById('birthPickClose').addEventListener('click', closeBirthPick);
 document.getElementById('birthPick').addEventListener('click', e => {
