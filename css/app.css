@@ -1064,18 +1064,20 @@
     overflow:hidden;
     height:46px;
     border-radius:14px;
+    cursor:pointer;
   }
   .date-shown{
     display:flex;align-items:center;
     width:100%;height:46px;padding:0 13px;border:1px solid var(--card-line);border-radius:14px;
     background:var(--card-paper);font-size:.95rem;line-height:1.2;color:var(--card-ink);font-weight:600;
-    box-sizing:border-box;pointer-events:none;
+    box-sizing:border-box;pointer-events:auto;cursor:pointer;
   }
   .date-shown.empty{color:var(--text-soft);}
   .date-wrap input[type=date]{
     position:absolute;left:0;top:0;width:100%;height:46px;max-height:46px;min-height:0;
-    margin:0;padding:0;border:0;opacity:0;font-size:16px;cursor:pointer;
+    margin:0;padding:0;border:0;opacity:0;font-size:16px;
     box-sizing:border-box;-webkit-appearance:none;appearance:none;
+    pointer-events:none;
   }
   .file-pick{width:auto;margin:0;padding:10px 14px;font-size:.82rem;border-radius:12px;}
   .file-meta{display:block;font-size:.78rem;color:var(--text-soft);font-weight:600;margin-top:8px;}

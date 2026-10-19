@@ -6798,6 +6798,29 @@ document.getElementById('photoSheetClear').addEventListener('click', () => {
 document.getElementById('photoSheetCancel').addEventListener('click', closePhotoSheet);
 document.getElementById('photoSheetBack').addEventListener('click', closePhotoSheet);
 document.getElementById('p-birth').addEventListener('change', syncDateShown);
+document.querySelectorAll('.date-wrap').forEach(wrap => {
+  const input = wrap.querySelector('input[type=date]');
+  if(!input) return;
+  const open = () => {
+    if(wrap.dataset.dateOpening) return;
+    wrap.dataset.dateOpening = '1';
+    try{
+      try{ input.focus({preventScroll: true}); }catch(e){ try{ input.focus(); }catch(err){} }
+      if(typeof input.showPicker === 'function'){
+        try{ input.showPicker(); return; }catch(e){}
+      }
+      input.click();
+    }finally{
+      delete wrap.dataset.dateOpening;
+    }
+  };
+  wrap.addEventListener('click', open);
+  wrap.addEventListener('keydown', e => {
+    if(e.key !== 'Enter' && e.key !== ' ') return;
+    e.preventDefault();
+    open();
+  });
+});
 document.getElementById('p-photo').addEventListener('change', e => {
   const file = e.target.files[0];
   e.target.value = '';
