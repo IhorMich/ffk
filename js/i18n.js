@@ -6986,3 +6986,20 @@ ru:{
     Object.assign(I18N[lang], pack.en, pack[lang] || {});
   });
 })();
+
+(function mergeBirthPickI18n(){
+  const extra = {
+    en:{birthYear:'Year'},
+    uk:{birthYear:'Рік'},
+    pl:{birthYear:'Rok'},
+    ru:{birthYear:'Год'},
+    es:{birthYear:'Año'},
+    de:{birthYear:'Jahr'},
+    it:{birthYear:'Anno'},
+    fr:{birthYear:'Année'},
+    pt:{birthYear:'Ano'}
+  };
+  LANGS.forEach(lang => {
+    Object.assign(I18N[lang], extra.en, extra[lang] || {});
+  });
+})();

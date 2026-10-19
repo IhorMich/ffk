@@ -330,6 +330,36 @@
     padding:0;
   }
   .player-edit[hidden]{display:none !important;}
+  .birth-pick{
+    position:fixed;inset:0;z-index:120;
+    background:rgba(8,14,24,.72);
+    display:flex;align-items:flex-end;justify-content:center;
+  }
+  .birth-pick[hidden]{display:none !important;}
+  .birth-pick-card{
+    width:min(520px,100%);max-height:min(78dvh,640px);
+    background:var(--card-paper);color:var(--card-ink);
+    border-radius:22px 22px 0 0;
+    padding:12px 14px calc(14px + env(safe-area-inset-bottom, 0px));
+    display:flex;flex-direction:column;gap:12px;
+  }
+  .birth-pick-head{display:flex;align-items:center;gap:8px;}
+  .birth-pick-title{flex:1;font-size:1.05rem;font-weight:800;}
+  .birth-pick-head button{
+    border:0;background:none;color:var(--card-muted);
+    font:inherit;font-weight:700;min-height:40px;padding:0 8px;cursor:pointer;
+  }
+  #birthPickBack{font-size:1.3rem;color:var(--card-ink);padding:0 10px;}
+  .birth-pick-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;overflow:auto;}
+  .birth-pick-grid.is-month{grid-template-columns:repeat(3,1fr);}
+  .birth-pick-grid.is-day{grid-template-columns:repeat(7,1fr);}
+  .birth-pick-grid button{
+    min-height:46px;border-radius:12px;
+    border:1px solid var(--card-line);
+    background:transparent;color:var(--card-ink);
+    font:inherit;font-weight:800;cursor:pointer;
+  }
+  .birth-pick-grid button.on{background:var(--card-accent);color:#08121C;border-color:transparent;}
   .player-edit-card{
     width:min(520px,100%);max-height:min(92dvh,920px);overflow:auto;
     background:var(--card-paper);color:var(--card-ink);

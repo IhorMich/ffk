@@ -148,10 +148,10 @@ window.ffkIsNative = function () {
       </div>
       <div class="row2">
         <div class="field">
-          <label for="p-birth" data-i18n="pBirth">Дата рождения</label>
-          <div class="date-wrap">
+          <label data-i18n="pBirth">Дата рождения</label>
+          <div class="date-wrap" id="p-birth-wrap">
             <span class="date-shown empty" id="p-birth-shown" role="button" tabindex="0"></span>
-            <input type="date" id="p-birth">
+            <input type="date" id="p-birth" tabindex="-1">
           </div>
         </div>
         <div class="field">
@@ -1545,6 +1545,17 @@ window.ffkIsNative = function () {
     <div class="chat-compose">
       <textarea id="chatText" rows="1" maxlength="500" data-i18n-placeholder="chatMessagePh" placeholder="Сообщение"></textarea>
       <button class="save-btn" id="chatSendBtn" type="button" data-i18n="chatSendBtn">Отправить</button>
+    </div>
+  </div>
+
+  <div class="birth-pick" id="birthPick" hidden>
+    <div class="birth-pick-card">
+      <div class="birth-pick-head">
+        <button type="button" id="birthPickBack" hidden aria-label="←">←</button>
+        <div class="birth-pick-title" id="birthPickTitle"></div>
+        <button type="button" id="birthPickClose" data-i18n="pSheetCancel">Отмена</button>
+      </div>
+      <div class="birth-pick-grid" id="birthPickGrid"></div>
     </div>
   </div>
 

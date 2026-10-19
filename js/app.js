@@ -6082,6 +6082,7 @@ function handleAppBack(){
     finishTransfer();
     return true;
   }
+  if(isElShown('birthPick')){ closeBirthPick(); return true; }
   if(isElShown('onboard')){
     if(onboardStep > 0){
       onboardStep -= 1;
@@ -6784,9 +6785,95 @@ document.getElementById('photoSheetClear').addEventListener('click', () => {
 document.getElementById('photoSheetCancel').addEventListener('click', closePhotoSheet);
 document.getElementById('photoSheetBack').addEventListener('click', closePhotoSheet);
 document.getElementById('p-birth').addEventListener('change', syncDateShown);
+let birthPickStep = 'year';
+let birthPickYear = 0;
+let birthPickMonth = 0;
+function birthPickYears(){
+  const now = new Date().getFullYear();
+  const years = [];
+  for(let y = now; y >= now - 30; y--) years.push(y);
+  return years;
+}
+function openBirthPick(){
+  const raw = document.getElementById('p-birth').value || '';
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(raw);
+  birthPickYear = match ? Number(match[1]) : 0;
+  birthPickMonth = match ? Number(match[2]) : 0;
+  birthPickStep = 'year';
+  document.getElementById('birthPick').hidden = false;
+  renderBirthPick();
+}
+function closeBirthPick(){
+  const el = document.getElementById('birthPick');
+  if(el) el.hidden = true;
+}
+function renderBirthPick(){
+  const grid = document.getElementById('birthPickGrid');
+  const title = document.getElementById('birthPickTitle');
+  const back = document.getElementById('birthPickBack');
+  if(!grid || !title || !back) return;
+  back.hidden = birthPickStep === 'year';
+  grid.className = 'birth-pick-grid is-' + birthPickStep;
+  const loc = (typeof LANG_LOCALE !== 'undefined' && LANG_LOCALE[settings.lang]) || 'ru';
+  if(birthPickStep === 'year'){
+    title.textContent = t('birthYear');
+    grid.innerHTML = birthPickYears().map(y =>
+      '<button type="button" data-year="' + y + '"' + (y === birthPickYear ? ' class="on"' : '') + '>' + y + '</button>'
+    ).join('');
+    const on = grid.querySelector('.on');
+    if(on) on.scrollIntoView({block:'nearest'});
+    return;
+  }
+  if(birthPickStep === 'month'){
+    title.textContent = String(birthPickYear);
+    grid.innerHTML = Array.from({length: 12}, (_, i) => {
+      const name = new Date(2020, i, 1).toLocaleString(loc, {month: 'short'}).replace('.', '');
+      return '<button type="button" data-month="' + (i + 1) + '"' + ((i + 1) === birthPickMonth ? ' class="on"' : '') + '>' + name + '</button>';
+    }).join('');
+    return;
+  }
+  const monthName = new Date(birthPickYear, birthPickMonth - 1, 1).toLocaleString(loc, {month: 'long'});
+  title.textContent = monthName + ' ' + birthPickYear;
+  const days = new Date(birthPickYear, birthPickMonth, 0).getDate();
+  grid.innerHTML = Array.from({length: days}, (_, i) =>
+    '<button type="button" data-day="' + (i + 1) + '">' + (i + 1) + '</button>'
+  ).join('');
+}
+function applyBirthDay(day){
+  const iso = birthPickYear + '-' + String(birthPickMonth).padStart(2, '0') + '-' + String(day).padStart(2, '0');
+  const input = document.getElementById('p-birth');
+  input.value = iso;
+  input.dispatchEvent(new Event('change', {bubbles: true}));
+  closeBirthPick();
+}
+document.getElementById('birthPickGrid').addEventListener('click', e => {
+  const btn = e.target.closest('button');
+  if(!btn) return;
+  if(btn.dataset.year){
+    birthPickYear = Number(btn.dataset.year);
+    birthPickStep = 'month';
+    renderBirthPick();
+    return;
+  }
+  if(btn.dataset.month){
+    birthPickMonth = Number(btn.dataset.month);
+    birthPickStep = 'day';
+    renderBirthPick();
+    return;
+  }
+  if(btn.dataset.day) applyBirthDay(Number(btn.dataset.day));
+});
+document.getElementById('birthPickBack').addEventListener('click', () => {
+  birthPickStep = birthPickStep === 'day' ? 'month' : 'year';
+  renderBirthPick();
+});
+document.getElementById('birthPickClose').addEventListener('click', closeBirthPick);
+document.getElementById('birthPick').addEventListener('click', e => {
+  if(e.target.id === 'birthPick') closeBirthPick();
+});
 document.querySelectorAll('.date-wrap').forEach(wrap => {
   const input = wrap.querySelector('input[type=date]');
-  if(!input) return;
+  if(!input || input.id === 'p-birth') return;
   const open = () => {
     if(wrap.dataset.dateOpening) return;
     wrap.dataset.dateOpening = '1';
@@ -6807,6 +6894,16 @@ document.querySelectorAll('.date-wrap').forEach(wrap => {
     open();
   });
 });
+const birthWrap = document.getElementById('p-birth-wrap');
+if(birthWrap){
+  const openBirth = () => openBirthPick();
+  birthWrap.addEventListener('click', openBirth);
+  birthWrap.addEventListener('keydown', e => {
+    if(e.key !== 'Enter' && e.key !== ' ') return;
+    e.preventDefault();
+    openBirth();
+  });
+}
 document.getElementById('p-photo').addEventListener('change', e => {
   const file = e.target.files[0];
   e.target.value = '';
