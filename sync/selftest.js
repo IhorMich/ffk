@@ -54,6 +54,16 @@ const merged = S.mergeMatchLists(
 );
 assert(merged.added === 1 && merged.skipped === 1 && merged.matches.length === 2, 'merge matches');
 
+const tombstoned = S.mergeMatchLists(
+  [{ id: 1, date: '2026-01-01', opponent: 'A', score: '1-0', minutes: 60, position: 'fwd' }],
+  [
+    { id: 1, date: '2026-01-01', opponent: 'A', score: '1-0', minutes: 60, position: 'fwd' },
+    { id: 2, date: '2026-01-02', opponent: 'B', score: '2-0', minutes: 60, position: 'fwd' }
+  ],
+  { ids: ['2'], fingers: [] }
+);
+assert(tombstoned.added === 0 && tombstoned.matches.length === 1, 'tombstone blocks restore');
+
 const bad = S.validateBackupPayload({});
 assert(!bad.ok && bad.reason === 'no_data', 'validate empty');
 const okBundle = S.validateBackupPayload({ version: 4, matches: [{ id: 1 }], player: { firstName: 'X' } });

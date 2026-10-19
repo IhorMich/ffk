@@ -22,10 +22,21 @@
 
   /**
    * Merge remote matches into local without duplicates (by id or fingerprint).
-   * Does not mutate inputs. Returns { matches, added, skipped }.
+   * Does not mutate inputs. Returns { matches, added, skipped, removed }.
+   * skip: { ids: string[], fingers: string[] } drops deleted matches from both sides.
    */
-  S.mergeMatchLists = function (localList, remoteList) {
-    var local = Array.isArray(localList) ? localList.slice() : [];
+  S.mergeMatchLists = function (localList, remoteList, skip) {
+    var skipIds = {};
+    var skipFingers = {};
+    ((skip && skip.ids) || []).forEach(function (id) { if (id) skipIds[String(id)] = true; });
+    ((skip && skip.fingers) || []).forEach(function (f) { if (f) skipFingers[String(f)] = true; });
+    var removed = 0;
+    var local = (Array.isArray(localList) ? localList : []).filter(function (m) {
+      var id = S.stableMatchId(m);
+      var f = S.matchFingerprint(m);
+      if ((id && skipIds[id]) || (f && skipFingers[f])) { removed++; return false; }
+      return true;
+    });
     var remote = Array.isArray(remoteList) ? remoteList : [];
     var ids = {};
     var fingers = {};
@@ -42,6 +53,7 @@
       if (!raw || typeof raw !== 'object') return;
       var id = S.stableMatchId(raw);
       var finger = S.matchFingerprint(raw);
+      if ((id && skipIds[id]) || (finger && skipFingers[finger])) { skipped++; return; }
       if (id && ids[id]) { skipped++; return; }
       if (finger && fingers[finger]) { skipped++; return; }
       var row = Object.assign({}, raw);
@@ -55,7 +67,7 @@
       if (finger) fingers[finger] = true;
       added++;
     });
-    return { matches: local, added: added, skipped: skipped };
+    return { matches: local, added: added, skipped: skipped, removed: removed };
   };
 
   /** Count matches in a personal backup (root + nested players). */

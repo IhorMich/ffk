@@ -4387,6 +4387,7 @@ function historyCompCard(block, showSeason, index){
           <span class="match-date">${escapeHtml(dates)}${showSeason ? ' · ' + escapeHtml(matchSeason(first)) : ''} · ${open ? '▴' : '▾'}</span>
           <span class="match-opp">${escapeHtml(sameName ? kindName : block.name)}</span>
           <span class="match-score">${escapeHtml(recordLine(block.matches))}${status ? ' · ' + escapeHtml(status) : ''}</span>
+          <button type="button" class="del-btn comp-del" onclick="event.stopPropagation(); deleteCompetition('${encodeURIComponent(block.kind)}','${encodeURIComponent(block.name)}')">${escapeHtml(block.kind === 'cup' ? t('delCompCup') : t('delComp'))}</button>
         </div>
         <div class="match-rating ${avg == null ? '' : ratingClass(avg)}">${avg == null ? '—' : fmtNum(avg, 2)}<small>${escapeHtml(kindAvgLabel(block.kind))}</small></div>
       </div>
@@ -4480,14 +4481,117 @@ window.editMatch = function(id){
   fillForm(m);
   showView('new');
 };
+const DELETED_MATCHES_KEY = 'ffk_deleted_matches_v1';
+function readDeletedStore(){
+  try{
+    const raw = JSON.parse(localStorage.getItem(DELETED_MATCHES_KEY) || '{}');
+    return raw && typeof raw === 'object' ? raw : {};
+  }catch(e){ return {}; }
+}
+function writeDeletedStore(all){
+  try{ localStorage.setItem(DELETED_MATCHES_KEY, JSON.stringify(all)); }catch(e){}
+}
+function deletedBucket(){
+  const id = String((roster && roster.currentId) || 'x');
+  const all = readDeletedStore();
+  const row = all[id] && typeof all[id] === 'object' ? all[id] : {ids: {}, fingers: {}};
+  if(!row.ids || typeof row.ids !== 'object') row.ids = {};
+  if(!row.fingers || typeof row.fingers !== 'object') row.fingers = {};
+  return {id, all, row};
+}
+function tombstoneMatch(m){
+  if(!m) return;
+  const bag = deletedBucket();
+  const n = Number(m.id);
+  if(Number.isFinite(n) && n > 0) bag.row.ids[String(Math.floor(n))] = 1;
+  const finger = matchFingerprint(m);
+  if(finger) bag.row.fingers[finger] = 1;
+  const ids = Object.keys(bag.row.ids);
+  if(ids.length > 400) ids.slice(0, ids.length - 400).forEach(k => { delete bag.row.ids[k]; });
+  const fingers = Object.keys(bag.row.fingers);
+  if(fingers.length > 400) fingers.slice(0, fingers.length - 400).forEach(k => { delete bag.row.fingers[k]; });
+  bag.all[bag.id] = bag.row;
+  writeDeletedStore(bag.all);
+}
+function deletedMatchSkip(){
+  const row = deletedBucket().row;
+  return {ids: Object.keys(row.ids), fingers: Object.keys(row.fingers)};
+}
+function deletedMatchExport(){
+  return deletedMatchSkip();
+}
+function absorbDeletedMatches(bag){
+  if(!bag || typeof bag !== 'object') return;
+  const ids = Array.isArray(bag.ids) ? bag.ids : [];
+  const fingers = Array.isArray(bag.fingers) ? bag.fingers : [];
+  if(!ids.length && !fingers.length) return;
+  const store = deletedBucket();
+  ids.forEach(id => { if(id) store.row.ids[String(id)] = 1; });
+  fingers.forEach(f => { if(f) store.row.fingers[String(f)] = 1; });
+  store.all[store.id] = store.row;
+  writeDeletedStore(store.all);
+  const idSet = new Set(Object.keys(store.row.ids));
+  const fingerSet = new Set(Object.keys(store.row.fingers));
+  const next = matches.filter(m => {
+    const n = Number(m.id);
+    const sid = Number.isFinite(n) && n > 0 ? String(Math.floor(n)) : '';
+    if(sid && idSet.has(sid)) return false;
+    const finger = matchFingerprint(m);
+    return !(finger && fingerSet.has(finger));
+  });
+  if(next.length !== matches.length){
+    matches = next;
+    saveMatches();
+  }
+}
+function releaseCompIfEmpty(m){
+  if(!m || (m.kind !== 'tournament' && m.kind !== 'cup')) return;
+  const name = String(m.tournament || '').trim();
+  if(!name) return;
+  if(matches.some(row => row.kind === m.kind && String(row.tournament || '').trim() === name)) return;
+  if(player && player.openComp && player.openComp.kind === m.kind && player.openComp.name === name){
+    player.openComp = null;
+    savePlayer();
+    renderOpenCompBar();
+  }
+  const kindEl = document.getElementById('f-kind');
+  const nameEl = document.getElementById('f-tournament');
+  if(kindEl && nameEl && kindEl.value === m.kind && String(nameEl.value || '').trim() === name && !editingId){
+    kindEl.value = 'league';
+    nameEl.value = '';
+    syncCompetitionField();
+    updateHero();
+    persistDraft();
+  }
+}
 window.deleteMatch = function(id){
   if(!confirm(t('confirmDel'))) return;
+  const gone = matches.find(m => m.id === id);
+  tombstoneMatch(gone);
   matches = matches.filter(m => m.id !== id);
+  releaseCompIfEmpty(gone);
   saveMatches();
   if(editingId === id) resetForm();
   fillSeasonSelects();
   renderHistory(); renderStats(); renderOppList();
   showToast(t('toastDeleted'));
+};
+window.deleteCompetition = function(kindEnc, nameEnc){
+  const kind = decodeURIComponent(kindEnc || '');
+  const name = decodeURIComponent(nameEnc || '');
+  if(kind !== 'tournament' && kind !== 'cup') return;
+  const ask = t(kind === 'cup' ? 'confirmDelCompCup' : 'confirmDelComp', {name: name || kindLabel(kind)});
+  if(!confirm(ask)) return;
+  const gone = matches.filter(m => m.kind === kind && String(m.tournament || '').trim() === name);
+  gone.forEach(tombstoneMatch);
+  const ids = new Set(gone.map(m => m.id));
+  matches = matches.filter(m => !ids.has(m.id));
+  releaseCompIfEmpty({kind, tournament: name});
+  saveMatches();
+  if(editingId && ids.has(editingId)) resetForm();
+  fillSeasonSelects();
+  renderHistory(); renderStats(); renderOppList();
+  showToast(t(kind === 'cup' ? 'toastCompDeletedCup' : 'toastCompDeleted'));
 };
 window.shareMatch = function(id){
   const m = matches.find(x => x.id === id);
@@ -4610,6 +4714,8 @@ function exportPayload(){
     players,
     settings: {lang: settings.lang, format: settings.format, minutes: settings.minutes, position: settings.position, theme: settings.theme},
     matches
+    ,
+    deletedMatches: deletedMatchExport()
   };
 }
 async function exportPayloadForCloud(){
@@ -4625,9 +4731,10 @@ function isBlankPlayerCard(p, matchList){
   return !hasName && !hasPhoto && !(matchList && matchList.length);
 }
 function importMatchesIntoCurrent(incoming){
+  const skip = deletedMatchSkip();
   if(typeof mergeMatchLists === 'function'){
-    const merged = mergeMatchLists(matches, incoming || []);
-    if(merged.added){
+    const merged = mergeMatchLists(matches, incoming || [], skip);
+    if(merged.added || merged.removed){
       matches = merged.matches;
       saveMatches();
     }
@@ -4645,6 +4752,7 @@ function importMatchesIntoCurrent(incoming){
     const stableId = hasStableId ? String(Math.floor(rawNum)) : '';
     if(stableId && ids.has(stableId)) return;
     const finger = matchFingerprint(m);
+    if((stableId && skip.ids.includes(stableId)) || (finger && skip.fingers.includes(finger))) return;
     if(finger && fingerprints.has(finger)) return;
     if(!hasStableId || ids.has(String(m.id))){
       while(ids.has(String(stamp))) stamp += 1;
@@ -4754,6 +4862,7 @@ function applyImportBundle(imported){
   }
   const bundle = Array.isArray(source) ? {matches: source} : source;
   if(!bundle || typeof bundle !== 'object') throw new Error('bad');
+  absorbDeletedMatches(bundle.deletedMatches);
   let playerTouched = false;
   let added = 0;
   persistActivePlayer();

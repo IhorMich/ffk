@@ -2489,9 +2489,10 @@
   }
   .del-btn{
     min-height:44px;padding:10px 14px;border-radius:12px;font-size:.85rem;font-weight:800;cursor:pointer;
+    background:none;border:1.5px solid var(--danger);color:var(--danger);
   }
   .edit-btn,.share-btn{background:var(--card-wash);border:1px solid var(--card-line);color:var(--card-ink);}
-  .del-btn{background:none;border:1.5px solid var(--danger);color:var(--danger);}
+  .comp-del{display:block;width:100%;margin-top:8px;}
   .backup-row{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
   .backup-btn{
     flex:1 1 calc(50% - 8px);min-width:118px;padding:11px 8px;border-radius:14px;border:1px solid var(--card-line);

@@ -154,8 +154,17 @@
           }
           var pushMatches = S.backupMatchCount ? S.backupMatchCount(payload) : 0;
           var pushHasMedia = !!(S.backupHasMedia && S.backupHasMedia(payload));
+          var deletedBag = payload && payload.deletedMatches;
+          var hasDeletes = !!(deletedBag && (
+            (Array.isArray(deletedBag.ids) && deletedBag.ids.length) ||
+            (Array.isArray(deletedBag.fingers) && deletedBag.fingers.length)
+          ));
+          var pulledDeletes = hasDeletes && results.some(function (r) {
+            return r && r.ok && r.step && r.step.action === 'pull_merge';
+          });
           // Never clobber a richer cloud backup with an empty/sparser device.
-          if (!opts.force && hasRemote && remoteMatches > pushMatches) {
+          // A delete may push after the cloud copy was merged and the tombstones applied.
+          if (!opts.force && hasRemote && remoteMatches > pushMatches && !pulledDeletes) {
             results.push({ step: step, ok: true, skipped: true, reason: 'keep_richer_remote' });
             continue;
           }
