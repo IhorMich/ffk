@@ -433,8 +433,8 @@ function loadPlayer(){
           firstName: name.firstName || defaultPlayer().firstName,
           lastName: name.lastName,
           club: settings.club === 'FFK' ? 'FC FFK' : (settings.club || ''),
-          primary: GROUP_TO_POS[settings.position] || 'RW',
-          extra: settings.position === 'fwd' ? ['CM'] : [],
+          primary: '',
+          extra: [],
           season: currentSeason()
         });
       }

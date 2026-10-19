@@ -187,6 +187,14 @@ function defaultPitch(){
   if(isPitchCode(player.primary)) return player.primary;
   return isRoleCode(settings.position) ? settings.position : 'fwd';
 }
+function lastMatchPitch(){
+  const rows = [...(matches || [])].sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')) || (Number(b.id) || 0) - (Number(a.id) || 0));
+  for(const m of rows){
+    const code = m && (m.pitchPos || m.position);
+    if(isPitchCode(code)) return code;
+  }
+  return '';
+}
 function orderedPitchCodes(){
   const pref = [player.primary, ...(player.extra || [])].filter(c => isPosCode(c));
   return [...new Set(pref.concat(POS_CODES))];
@@ -197,20 +205,22 @@ function posSelectHtml(short){
   const details = orderedPitchCodes().map(code => `<option value="${code}">${lab(code)}</option>`).join('');
   return `<optgroup label="${escapeHtml(t('posBasic'))}">${roles}</optgroup><optgroup label="${escapeHtml(t('posExtended'))}">${details}</optgroup>`;
 }
-function fillPitchSelect(sel, preferred, short){
+function fillPitchSelect(sel, preferred, short, allowEmpty){
   if(!sel) return;
   // Rebuilding <option>s while the native picker is open makes it jump/close on mobile.
   if(document.activeElement === sel) return;
-  const want = isPitchCode(preferred) ? preferred : (isPitchCode(sel.value) ? sel.value : defaultPitch());
+  const want = isPitchCode(preferred) ? preferred : (allowEmpty ? '' : (isPitchCode(sel.value) ? sel.value : defaultPitch()));
   const already = sel.options && sel.options.length > 1;
-  const same = already && isPitchCode(want) && sel.value === want;
+  const blank = allowEmpty ? `<option value="">${escapeHtml(t('posUnset'))}</option>` : '';
+  const same = already && sel.value === want && (!allowEmpty || sel.querySelector('option[value=""]'));
   if(same) return;
-  sel.innerHTML = posSelectHtml(short !== false);
-  sel.value = isPitchCode(want) ? want : defaultPitch();
+  sel.innerHTML = blank + posSelectHtml(short !== false);
+  sel.value = isPitchCode(want) ? want : (allowEmpty ? '' : defaultPitch());
 }
 function fillMatchPitchSelects(preferred){
-  fillPitchSelect(document.getElementById('f-position'), preferred, true);
-  fillPitchSelect(document.getElementById('live-position'), document.getElementById('f-position').value, true);
+  const code = isPitchCode(preferred) ? preferred : '';
+  fillPitchSelect(document.getElementById('f-position'), code, true, true);
+  fillPitchSelect(document.getElementById('live-position'), document.getElementById('f-position').value, true, true);
 }
 function matchPosDisplay(m){
   if(isPitchCode(m.pitchPos)) return pitchPosLabel(m.pitchPos);
@@ -1042,9 +1052,12 @@ function emptyClock(){
 
 function currentPitch(){
   const v = document.getElementById('f-position').value;
-  return isPitchCode(v) ? v : defaultPitch();
+  return isPitchCode(v) ? v : '';
 }
-function currentPos(){ return ratingPosOf(document.getElementById('f-position').value || defaultPitch()); }
+function currentPos(){
+  const v = document.getElementById('f-position').value;
+  return isPitchCode(v) ? ratingPosOf(v) : '';
+}
 
 function freshPosState(){
   form.posCounts = {};
@@ -1130,7 +1143,7 @@ function pitchTrailLabel(){
   const trail = Array.isArray(form.pitchTrail) ? form.pitchTrail.filter(Boolean) : [];
   const uniq = [];
   trail.forEach(c => { if(!uniq.includes(c)) uniq.push(c); });
-  if(!uniq.length) return String(currentPitch() || 'ST').toUpperCase();
+  if(!uniq.length) return currentPitch() ? String(currentPitch()).toUpperCase() : '';
   return uniq.slice(-4).map(c => String(c).toUpperCase()).join(' · ');
 }
 function padMetricMap(pos){
@@ -2578,7 +2591,7 @@ function maybePromptSeasonClose(){
 function defaultPlayer(){
   return {
     firstName:'Данило', lastName:'Михайлюк', birthDate:'', photo:'', cover:'',
-    team:'', club:'', number:'', primary:'RW', extra:['CM'], season: currentSeason(), seasonOpen: true
+    team:'', club:'', number:'', primary:'', extra:[], season: currentSeason(), seasonOpen: true
   };
 }
 function displayName(){
@@ -3267,8 +3280,8 @@ function removePlayer(id){
 }
 function fillPrimarySelect(){
   const sel = document.getElementById('p-primary');
-  const cur = isPitchCode(sel.value) ? sel.value : (isPitchCode(player.primary) ? player.primary : 'fwd');
-  fillPitchSelect(sel, cur, false);
+  const cur = isPitchCode(sel.value) ? sel.value : (isPitchCode(player.primary) ? player.primary : '');
+  fillPitchSelect(sel, cur, false, !cur);
 }
 function posChipHtml(code){
   const on = extraSelected.includes(code) ? 'on' : '';
@@ -3442,6 +3455,11 @@ function metricTileHtml(m, pos){
 }
 function renderMetrics(){
   const pos = currentPos();
+  if(!pos){
+    document.getElementById('weightsHint').textContent = t('posUnset');
+    document.getElementById('metricsList').innerHTML = '';
+    return;
+  }
   const scaleNote = tourScaleHint();
   document.getElementById('weightsHint').textContent = t(({gk:'hintGk', fwd:'hintFwd', mid:'hintMid', def:'hintDef'})[pos] || 'hintOut') + (scaleNote ? ' ' + scaleNote : '');
   const byKey = padMetricMap(pos);
@@ -3576,6 +3594,11 @@ window.undoLastLive = function(){
   stepMetric(key, -1, pos || undefined);
 };
 window.stepMetric = function(key, dir, fromPos){
+  if(!currentPos()){
+    if(dir > 0) showToast(t('posNeed'));
+    document.getElementById('f-position')?.focus();
+    return;
+  }
   ensureBuckets();
   notePitch(currentPitch());
   const pos = dir < 0 ? (fromPos || decrementPos(key)) : metricPos(key);
@@ -3814,7 +3837,8 @@ function resetForm(keepDraft){
   editingId = null;
   form = emptyForm();
   freshPosState();
-  playedRole = ratingPosOf(defaultPitch());
+  const pitch = lastMatchPitch();
+  playedRole = pitch ? ratingPosOf(pitch) : '';
   liveStack = [];
   matchClock = emptyClock();
   stopClockTick();
@@ -3827,8 +3851,8 @@ function resetForm(keepDraft){
   document.getElementById('f-tournament').value = '';
   document.getElementById('f-venue').value = 'home';
   document.getElementById('f-role').value = 'start';
-  fillMatchPitchSelects(defaultPitch());
-  playedRole = currentPos();
+  fillMatchPitchSelects(pitch);
+  if(currentPos()) playedRole = currentPos();
   document.getElementById('f-format').value = settings.format || '2x30';
   document.getElementById('f-matchlen').value = settings.minutes;
   syncPlayedDefault(true);
@@ -4133,6 +4157,11 @@ function prepareNextCompMatch(){
 }
 function saveCurrentMatch(){
   if(isCoachRateMode()) return saveCoachRatingFromForm();
+  if(!currentPos()){
+    showToast(t('posNeed'));
+    document.getElementById('f-position')?.focus();
+    return false;
+  }
   const row = collectMatch();
   if(!row.opponent && !confirm(t('confirmNoOpp'))) return false;
   const dup = matches.some(m => m.id !== row.id && m.date === row.date && m.opponent === row.opponent && row.opponent);
@@ -5768,7 +5797,13 @@ function drawChart(list){
 }
 
 function renderLiveGrid(){
-  const pos = ratingPosOf(document.getElementById('live-position').value || currentPitch());
+  const chosen = document.getElementById('live-position').value || currentPitch();
+  if(!isPitchCode(chosen)){
+    document.getElementById('liveGrid').innerHTML = `<p class="hint">${escapeHtml(t('posUnset'))}</p>`;
+    syncLiveUndo();
+    return;
+  }
+  const pos = ratingPosOf(chosen);
   const byKey = padMetricMap(pos);
   document.getElementById('liveGrid').innerHTML = METRIC_GROUPS.map(g => {
     const rows = g.keys.map(k => byKey[k]).filter(Boolean);
@@ -6831,8 +6866,8 @@ document.getElementById('savePlayerBtn').addEventListener('click', () => {
   syncSettingsFromPlayer();
   saveSettings();
   applyHeader();
-  if(!editingId){
-    fillMatchPitchSelects(player.primary);
+  if(!editingId && !currentPos()){
+    fillMatchPitchSelects(lastMatchPitch());
     renderMetrics();
     renderLiveGrid();
   }
@@ -7605,11 +7640,11 @@ async function shareCard(m){
     fillPrimarySelect();
     applyHeader();
     document.getElementById('f-date').value = todayStr();
-    fillMatchPitchSelects(defaultPitch());
     document.getElementById('f-format').value = settings.format || '2x30';
     document.getElementById('f-matchlen').value = settings.minutes;
-    syncPlayedDefault(true);
     loadMatches();
+    fillMatchPitchSelects(lastMatchPitch());
+    syncPlayedDefault(true);
     syncFilterChips();
     applyHeader();
     restoreDraft();
