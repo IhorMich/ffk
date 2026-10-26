@@ -5,24 +5,14 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#05060c">
   <title>TEMPO</title>
-  <style>
-    :root{color-scheme:dark}
-    *{box-sizing:border-box}
-    body{margin:0;min-height:100vh;display:grid;place-items:center;padding:24px;background:#05060c;color:#f7f8ff;font-family:system-ui,-apple-system,sans-serif}
-    main{width:min(420px,100%);padding:28px;border:1px solid #292d40;border-radius:24px;background:#111421;text-align:center}
-    h1{margin:0 0 10px;font-size:1.7rem}
-    p{margin:0 0 20px;color:#b8bdd0;line-height:1.45}
-    a{display:block;padding:14px 18px;border-radius:14px;background:#d7ff3f;color:#111500;font-weight:800;text-decoration:none}
-    a.secondary{margin-top:12px;background:transparent;color:#f7f8ff;border:1px solid #3a4058}
-    small{display:block;margin-top:16px;color:#858ba3}
-  </style>
+  <link rel="stylesheet" href="css/app.css?v=1.2.382">
 </head>
-<body>
-  <main>
+<body class="gate-page">
+  <main class="gate">
     <h1>TEMPO</h1>
     <p id="message">Tap the button to open the invitation in the app.</p>
-    <a id="openApp" href="#">Open TEMPO</a>
-    <a id="openWeb" class="secondary" href="#" hidden>Open in browser</a>
+    <a class="save-btn" id="openApp" href="#">Open TEMPO</a>
+    <a class="ghost-btn" id="openWeb" href="#" hidden>Open in browser</a>
     <small id="hint">Android requires a tap before a website can open an app.</small>
   </main>
   <script>

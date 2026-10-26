@@ -697,7 +697,7 @@ function openLegalPage(url){
     openExternalPage(url);
     return;
   }
-  frame.src = url;
+  frame.src = url + (url.indexOf('?') >= 0 ? '&' : '?') + 'theme=' + (document.documentElement.dataset.theme === 'day' ? 'day' : 'dark');
   page.hidden = false;
 }
 function closeLegalPage(){
