@@ -7,7 +7,7 @@
     return `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
   }
   function emptyDb(){
-    return {version: 2, links: [], pendingPayload: null, trainingsByTeam: {}};
+    return {version: 2, links: [], pendingPayload: null, trainingsByTeam: {}, trainingRsvps: []};
   }
   function isBrokenLabel(s){
     if(s == null || s === '') return true;
@@ -109,7 +109,8 @@
         version: 2,
         links,
         pendingPayload: db.pendingPayload || null,
-        trainingsByTeam: db.trainingsByTeam && typeof db.trainingsByTeam === 'object' ? db.trainingsByTeam : {}
+        trainingsByTeam: db.trainingsByTeam && typeof db.trainingsByTeam === 'object' ? db.trainingsByTeam : {},
+        trainingRsvps: Array.isArray(db.trainingRsvps) ? db.trainingRsvps : []
       };
       if(changed){
         try{ localStorage.setItem(KEY, JSON.stringify(out)); }catch(e){}
@@ -514,14 +515,18 @@
         if(!teamId) return;
         this.listTrainingsForTeam(teamId).forEach(tr => {
           if(!tr || !tr.date || tr.date < today) return;
-          const key = `${tr.team_id}|${tr.date}|${tr.start_time}|${tr.id}`;
+          const playerId = link.player && link.player.id;
+          const key = `${tr.team_id}|${tr.date}|${tr.start_time}|${tr.id}|${playerId || ''}`;
           if(seen.has(key)) return;
           seen.add(key);
+          const saved = this.trainingRsvpFor(tr.id, playerId, tr.date);
           out.push({
             ...tr,
+            team_player_id: String(playerId || ''),
             team_name: textField(link.team && link.team.name),
             academy_name: textField(link.academy && link.academy.name),
-            player_name: [link.player && link.player.first_name, link.player && link.player.last_name].filter(Boolean).join(' ')
+            player_name: [link.player && link.player.first_name, link.player && link.player.last_name].filter(Boolean).join(' '),
+            rsvp: saved ? saved.rsvp : ''
           });
         });
       });
@@ -529,6 +534,44 @@
         String(a.date).localeCompare(String(b.date)) ||
         String(a.start_time).localeCompare(String(b.start_time))
       );
+    },
+    trainingRsvpFor(trainingId, playerId, date){
+      const id = `trsv_${trainingId}_${playerId}_${String(date || '').slice(0, 10)}`;
+      return (readDb().trainingRsvps || []).find(r => r.id === id) || null;
+    },
+    setTrainingRsvp(fields){
+      const rsvp = fields && fields.rsvp === 'declined' ? 'declined' : (fields && fields.rsvp === 'accepted' ? 'accepted' : '');
+      if(!rsvp) throw new Error('rsvp');
+      const training_id = String((fields && (fields.training_id || fields.trainingId)) || '');
+      const team_player_id = String((fields && (fields.team_player_id || fields.playerId)) || '');
+      const date = String((fields && fields.date) || '').slice(0, 10);
+      const team_id = String((fields && (fields.team_id || fields.teamId)) || '');
+      if(!training_id || !team_player_id || !date) throw new Error('forbidden');
+      const row = {
+        id: `trsv_${training_id}_${team_player_id}_${date}`,
+        team_id,
+        training_id,
+        team_player_id,
+        date,
+        rsvp,
+        rsvp_at: new Date().toISOString()
+      };
+      const db = readDb();
+      db.trainingRsvps = (db.trainingRsvps || []).filter(r => r.id !== row.id);
+      db.trainingRsvps.push(row);
+      db.trainingRsvps = db.trainingRsvps.slice(-400);
+      writeDb(db);
+      try{
+        if(global.CoachStore && typeof global.CoachStore.applyTrainingRsvp === 'function'){
+          global.CoachStore.applyTrainingRsvp(row);
+        }
+      }catch(e){}
+      try{
+        if(global.ParentCloud && typeof global.ParentCloud.pushTrainingRsvp === 'function'){
+          global.ParentCloud.pushTrainingRsvp(row).catch(() => {});
+        }
+      }catch(e){}
+      return row;
     },
     syncCoachRatings(playerId, data){
       const pid = String(playerId || '');

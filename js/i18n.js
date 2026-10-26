@@ -7021,3 +7021,83 @@ ru:{
     Object.assign(I18N[lang], extra.en, extra[lang] || {});
   });
 })();
+
+(function mergeTrainRsvpI18n(){
+  const extra = {
+    en:{
+      parentTrainYes:'We\'ll come',
+      parentTrainNo:'We can\'t',
+      parentTrainYesDone:'Marked: you\'ll be there.',
+      parentTrainNoDone:'Marked: you can\'t make it.',
+      coachTrainRsvp:'Coming {yes} · out {no}',
+      coachTrainRsvpNone:'No replies yet'
+    },
+    uk:{
+      parentTrainYes:'Будемо',
+      parentTrainNo:'Не будемо',
+      parentTrainYesDone:'Позначили: будете.',
+      parentTrainNoDone:'Позначили: не будете.',
+      coachTrainRsvp:'Будуть {yes} · не будуть {no}',
+      coachTrainRsvpNone:'Відповідей поки немає'
+    },
+    pl:{
+      parentTrainYes:'Będziemy',
+      parentTrainNo:'Nie będziemy',
+      parentTrainYesDone:'Zapisane: będziecie.',
+      parentTrainNoDone:'Zapisane: nie będziecie.',
+      coachTrainRsvp:'Będą {yes} · nie będą {no}',
+      coachTrainRsvpNone:'Jeszcze nikt nie odpowiedział'
+    },
+    ru:{
+      parentTrainYes:'Будем',
+      parentTrainNo:'Не будем',
+      parentTrainYesDone:'Отметили: будете.',
+      parentTrainNoDone:'Отметили: не будете.',
+      coachTrainRsvp:'Будут {yes} · не будут {no}',
+      coachTrainRsvpNone:'Ответов пока нет'
+    },
+    es:{
+      parentTrainYes:'Iremos',
+      parentTrainNo:'No iremos',
+      parentTrainYesDone:'Anotado: iréis.',
+      parentTrainNoDone:'Anotado: no podéis.',
+      coachTrainRsvp:'Van {yes} · no van {no}',
+      coachTrainRsvpNone:'Aún no hay respuestas'
+    },
+    de:{
+      parentTrainYes:'Wir kommen',
+      parentTrainNo:'Wir können nicht',
+      parentTrainYesDone:'Gemerkt: ihr kommt.',
+      parentTrainNoDone:'Gemerkt: ihr könnt nicht.',
+      coachTrainRsvp:'Kommen {yes} · nicht {no}',
+      coachTrainRsvpNone:'Noch keine Antworten'
+    },
+    it:{
+      parentTrainYes:'Ci saremo',
+      parentTrainNo:'Non ci saremo',
+      parentTrainYesDone:'Segnato: ci sarete.',
+      parentTrainNoDone:'Segnato: non ci sarete.',
+      coachTrainRsvp:'Ci sono {yes} · no {no}',
+      coachTrainRsvpNone:'Nessuna risposta ancora'
+    },
+    fr:{
+      parentTrainYes:'On vient',
+      parentTrainNo:'On ne vient pas',
+      parentTrainYesDone:'Noté : vous venez.',
+      parentTrainNoDone:'Noté : vous ne venez pas.',
+      coachTrainRsvp:'Viennent {yes} · absents {no}',
+      coachTrainRsvpNone:'Pas encore de réponses'
+    },
+    pt:{
+      parentTrainYes:'Vamos',
+      parentTrainNo:'Não vamos',
+      parentTrainYesDone:'Marcado: vão estar.',
+      parentTrainNoDone:'Marcado: não podem.',
+      coachTrainRsvp:'Vêm {yes} · não vêm {no}',
+      coachTrainRsvpNone:'Ainda sem respostas'
+    }
+  };
+  LANGS.forEach(lang => {
+    Object.assign(I18N[lang], extra.en, extra[lang] || {});
+  });
+})();

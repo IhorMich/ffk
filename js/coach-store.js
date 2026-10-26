@@ -24,6 +24,7 @@
       team_matches: [],
       training_rules: [],
       team_trainings: [],
+      training_rsvps: [],
       ratings: [],
       match_invites: [],
       parent_invites: [],
@@ -62,6 +63,7 @@
         team_matches: Array.isArray(db.team_matches) ? db.team_matches : [],
         training_rules: Array.isArray(db.training_rules) ? db.training_rules : [],
         team_trainings: Array.isArray(db.team_trainings) ? db.team_trainings : [],
+        training_rsvps: Array.isArray(db.training_rsvps) ? db.training_rsvps : [],
         ratings: Array.isArray(db.ratings) ? db.ratings : [],
         match_invites: Array.isArray(db.match_invites) ? db.match_invites : [],
         parent_invites: Array.isArray(db.parent_invites) ? db.parent_invites : [],
@@ -2185,6 +2187,40 @@
       return db.accounts[email];
     },
 
+    applyTrainingRsvp(fields){
+      const rsvp = fields && fields.rsvp === 'declined' ? 'declined' : (fields && fields.rsvp === 'accepted' ? 'accepted' : '');
+      if(!rsvp) return null;
+      const training_id = String((fields && fields.training_id) || '');
+      const team_player_id = String((fields && fields.team_player_id) || '');
+      const date = String((fields && fields.date) || '').slice(0, 10);
+      if(!training_id || !team_player_id || !date) return null;
+      const row = {
+        id: String((fields && fields.id) || `trsv_${training_id}_${team_player_id}_${date}`),
+        team_id: String((fields && fields.team_id) || ''),
+        training_id,
+        team_player_id,
+        date,
+        rsvp,
+        rsvp_at: (fields && fields.rsvp_at) || new Date().toISOString()
+      };
+      const db = readDb();
+      db.training_rsvps = (db.training_rsvps || []).filter(r => r.id !== row.id);
+      db.training_rsvps.push(row);
+      db.training_rsvps = db.training_rsvps.slice(-800);
+      writeDb(db, {sync: false});
+      return row;
+    },
+    trainingRsvpCounts(teamId, trainingId, date){
+      const rows = (readDb().training_rsvps || []).filter(r =>
+        String(r.team_id) === String(teamId || '') &&
+        String(r.training_id) === String(trainingId || '') &&
+        String(r.date) === String(date || '')
+      );
+      return {
+        yes: rows.filter(r => r.rsvp === 'accepted').length,
+        no: rows.filter(r => r.rsvp === 'declined').length
+      };
+    },
     listTrainingRules(session, teamId){
       if(!this.getTeam(session, teamId)) return [];
       return (readDb().training_rules || [])

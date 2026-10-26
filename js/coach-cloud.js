@@ -779,6 +779,31 @@
     }
   }
 
+  function mergeTrainingRsvps(localList, remoteList){
+    if(!Array.isArray(remoteList)) return Array.isArray(localList) ? localList : [];
+    const map = new Map();
+    (Array.isArray(localList) ? localList : []).forEach(row => {
+      if(row && row.id) map.set(String(row.id), row);
+    });
+    remoteList.forEach(row => {
+      if(!row || !row.id) return;
+      const prev = map.get(String(row.id));
+      const nextAt = String(row.rsvp_at || '');
+      const prevAt = prev ? String(prev.rsvp_at || '') : '';
+      if(!prev || nextAt >= prevAt){
+        map.set(String(row.id), {
+          id: String(row.id),
+          team_id: String(row.team_id || ''),
+          training_id: String(row.training_id || ''),
+          team_player_id: String(row.team_player_id || ''),
+          date: String(row.date || '').slice(0, 10),
+          rsvp: row.rsvp === 'declined' ? 'declined' : 'accepted',
+          rsvp_at: row.rsvp_at || ''
+        });
+      }
+    });
+    return Array.from(map.values()).slice(-800);
+  }
   async function pullRemoteIntoLocal(){
     const sb = getClient();
     if(!sb) return {ok: false, reason: 'no_cloud'};
@@ -800,6 +825,7 @@
     let matches = [];
     let trainingRules = [];
     let teamTrainings = [];
+    let remoteRsvps = null;
     let ratings = [];
     let parentInvites = [];
     if(teamIds.length){
@@ -813,6 +839,8 @@
       if(!trules.error) trainingRules = trules.data || [];
       const trows = await sb.from('team_trainings').select('*').in('team_id', teamIds);
       if(!trows.error) teamTrainings = trows.data || [];
+      const rsvpRows = await sb.from('training_rsvps').select('*').in('team_id', teamIds);
+      if(!rsvpRows.error && Array.isArray(rsvpRows.data)) remoteRsvps = rsvpRows.data;
       const matchIds = matches.map(x => x.id);
       if(matchIds.length){
         const r = await sb.from('ratings').select('*').in('match_id', matchIds);
@@ -889,6 +917,10 @@
         notify_minutes: Number(r.notify_minutes) || 60,
         status: r.status === 'cancelled' ? 'cancelled' : 'scheduled'
       })),
+      training_rsvps: mergeTrainingRsvps(
+        Array.isArray(live.training_rsvps) ? live.training_rsvps : (raw.training_rsvps || []),
+        remoteRsvps
+      ),
       ratings: (ratings || [])
         .filter(r => r && keepPlayerIds.has(String(r.team_player_id)))
         .map(r => ({
@@ -927,6 +959,19 @@
     localStorage.setItem('ffk_coach_session_v1', JSON.stringify({userId: uid, email, cloud: true}));
     try{ await refreshCoachPhotosUi(); }catch(e){}
     return {ok: true};
+  }
+
+  async function pullTrainingRsvps(teamId){
+    if(!ready() || !teamId) return {ok: false};
+    const sb = getClient();
+    if(!sb) return {ok: false};
+    const {data, error} = await sb.from('training_rsvps').select('*').eq('team_id', String(teamId));
+    if(error) return {ok: false, error};
+    let raw = {};
+    try{ raw = JSON.parse(localStorage.getItem('ffk_coach_v1') || '{}') || {}; }catch(e){ raw = {}; }
+    raw.training_rsvps = mergeTrainingRsvps(raw.training_rsvps, data || []);
+    try{ localStorage.setItem('ffk_coach_v1', JSON.stringify(raw)); }catch(e){}
+    return {ok: true, n: (data || []).length};
   }
 
   function scheduleSync(){
@@ -1062,6 +1107,7 @@
     syncNow,
     pushLocalSnapshot,
     pullRemoteIntoLocal,
+    pullTrainingRsvps,
     registerDeviceToken,
     hasPushBackend(){ return global.FFK_PUSH_FCM === true; },
     status(){

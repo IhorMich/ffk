@@ -1282,6 +1282,26 @@
     }
     return {ok: out.some(r => r.ok), results: out};
   }
+  async function pushTrainingRsvp(row){
+    const sb = parentClient();
+    if(!sb || !row || !row.id) return {ok: false, reason: 'bad'};
+    let session = null;
+    try{
+      const {data} = await sb.auth.getSession();
+      session = data && data.session;
+    }catch(e){}
+    if(!session) return {ok: false, reason: 'no_session'};
+    const {error} = await sb.from('training_rsvps').upsert({
+      id: String(row.id),
+      team_id: String(row.team_id || ''),
+      training_id: String(row.training_id || ''),
+      team_player_id: String(row.team_player_id || ''),
+      date: String(row.date || '').slice(0, 10),
+      rsvp: row.rsvp === 'declined' ? 'declined' : 'accepted',
+      rsvp_at: row.rsvp_at || new Date().toISOString()
+    }, {onConflict: 'id'});
+    return error ? {ok: false, error} : {ok: true};
+  }
   async function pullParentNotices(session){
     const sb = parentClient();
     if(!sb || !session || !global.InboxStore) return {ok: false, imported: 0};
@@ -2026,6 +2046,7 @@
     pushChatMessage,
     pushChatBroadcast,
     pushParentNotice,
+    pushTrainingRsvp,
     pullParentNotices,
     dismissParentNotices,
     markParentNoticesRead,

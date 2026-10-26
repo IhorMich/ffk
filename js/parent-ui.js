@@ -1395,15 +1395,22 @@
     board.innerHTML = list.map(tr => {
       const when = [tr.date, tr.start_time + (tr.end_time ? `–${tr.end_time}` : '')].filter(Boolean).join(' · ');
       const meta = [
+        labelOf(tr.player_name) || '',
         labelOf(tr.team_name) || labelOf(tr.academy_name) || '',
         labelOf(tr.address) || '',
         tr.recurring ? tt('coachTrainRecurringShort', 'Weekly') : '',
         tr.notify_minutes ? tt('parentTrainRemindHint', 'Reminder {n} min before').replace('{n}', String(tr.notify_minutes)) : ''
       ].filter(Boolean).join(' · ');
+      const yesOn = tr.rsvp === 'accepted' ? ' on-yes' : '';
+      const noOn = tr.rsvp === 'declined' ? ' on-no' : '';
       return `<div class="coach-player-row">
         <div class="coach-player-main">
           <b>${esc(when)}</b>
           <span>${esc(meta)}</span>
+          <div class="train-rsvp">
+            <button type="button" class="train-rsvp-btn${yesOn}" data-train-rsvp="accepted" data-train-id="${esc(tr.id)}" data-player-id="${esc(tr.team_player_id)}" data-team-id="${esc(tr.team_id)}" data-train-date="${esc(tr.date)}">${esc(tt('parentTrainYes', 'We\'ll come'))}</button>
+            <button type="button" class="train-rsvp-btn${noOn}" data-train-rsvp="declined" data-train-id="${esc(tr.id)}" data-player-id="${esc(tr.team_player_id)}" data-team-id="${esc(tr.team_id)}" data-train-date="${esc(tr.date)}">${esc(tt('parentTrainNo', 'We can\'t'))}</button>
+          </div>
         </div>
       </div>`;
     }).join('');
@@ -1690,11 +1697,33 @@
     syncLinkedCoachStatsFromDevice();
     renderParentInbox();
     renderParentLinks();
+    renderParentTrainings();
     renderParentCoachStats();
     syncInboxBellUi();
   }
 
   function bindParentUi(){
+    document.getElementById('parentTrainingsBoard')?.addEventListener('click', e => {
+      const btn = e.target.closest('[data-train-rsvp]');
+      if(!btn || !global.ParentStore) return;
+      e.preventDefault();
+      const response = btn.dataset.trainRsvp === 'declined' ? 'declined' : 'accepted';
+      try{
+        global.ParentStore.setTrainingRsvp({
+          rsvp: response,
+          training_id: btn.dataset.trainId,
+          team_player_id: btn.dataset.playerId,
+          team_id: btn.dataset.teamId,
+          date: btn.dataset.trainDate
+        });
+        toast(response === 'accepted'
+          ? tt('parentTrainYesDone', 'Marked: you\'ll be there.')
+          : tt('parentTrainNoDone', 'Marked: you can\'t make it.'));
+        renderParentTrainings();
+      }catch(err){
+        toast(tt('coachErrGeneric', 'Something went wrong.'));
+      }
+    });
     if(global.__ffkParentBound) return;
     global.__ffkParentBound = true;
     document.getElementById('parentAddLinkBtn')?.addEventListener('click', () => openParentClaimSheet(''));

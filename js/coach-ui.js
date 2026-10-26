@@ -5012,10 +5012,15 @@
     }else{
       list.innerHTML = items.map(tr => {
         const when = [tr.date, tr.start_time + (tr.end_time ? `–${tr.end_time}` : '')].filter(Boolean).join(' · ');
+        const rsvp = (store.trainingRsvpCounts && store.trainingRsvpCounts(team.id, tr.id, tr.date)) || {yes: 0, no: 0};
+        const rsvpLine = (rsvp.yes + rsvp.no) > 0
+          ? tt('coachTrainRsvp', 'Coming {yes} · out {no}').replace('{yes}', String(rsvp.yes)).replace('{no}', String(rsvp.no))
+          : tt('coachTrainRsvpNone', 'No replies yet');
         const meta = [
           tr.recurring ? tt('coachTrainRecurringShort', 'Weekly') : tt('coachTrainOnceShort', 'One-off'),
           tr.address || '',
-          tr.notify_minutes ? tt('coachTrainNotifyShort', 'Reminder {n} min').replace('{n}', String(tr.notify_minutes)) : ''
+          tr.notify_minutes ? tt('coachTrainNotifyShort', 'Reminder {n} min').replace('{n}', String(tr.notify_minutes)) : '',
+          rsvpLine
         ].filter(Boolean).join(' · ');
         return `<div class="coach-player-row coach-train-row">
           <div class="coach-player-main">
@@ -5059,6 +5064,17 @@
             </div>`;
           }).join('');
       }
+    }
+    const pullKey = String(team.id || '');
+    if(list.dataset.rsvpPull !== pullKey && global.CoachCloud && typeof global.CoachCloud.pullTrainingRsvps === 'function'){
+      list.dataset.rsvpPull = pullKey;
+      global.CoachCloud.pullTrainingRsvps(team.id).then(res => {
+        if(!res || !res.ok){
+          list.dataset.rsvpPull = '';
+          return;
+        }
+        if(document.getElementById('coachTrainList')) renderTrainList(session, team);
+      }).catch(() => { list.dataset.rsvpPull = ''; });
     }
   }
   function renderTrainingsPane(session, team){
