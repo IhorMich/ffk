@@ -123,15 +123,6 @@
       return !!(page && !page.hidden);
     }catch(e){ return false; }
   }
-  function nativeBgPollStart(intervalMs){
-    try{
-      if(global.FfkNotify && typeof global.FfkNotify.startBackgroundChatPoll === 'function'){
-        global.FfkNotify.startBackgroundChatPoll(Number(intervalMs) || 12000);
-        return true;
-      }
-    }catch(e){}
-    return false;
-  }
   function nativeBgPollStop(){
     try{
       if(global.FfkNotify && typeof global.FfkNotify.stopBackgroundChatPoll === 'function'){
@@ -143,8 +134,8 @@
     if(bgPollWired) return;
     bgPollWired = true;
     const onHidden = () => {
-      // Android freezes WebView timers when minimized — wake via AlarmManager/Handler.
-      nativeBgPollStart(12000);
+      // Closed app gets chat via FCM. Do not wake the phone to poll.
+      nativeBgPollStop();
     };
     const onVisible = () => {
       nativeBgPollStop();

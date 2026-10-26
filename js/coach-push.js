@@ -250,6 +250,7 @@
       }
 
       if(!quiet) toast(tt('coachPushOn', 'Push notifications enabled.'));
+      if(!quiet) maybeAskExactReminders(true);
       syncSettingsUi();
       return {ok: true, local: !canRegisterRemote()};
     }catch(e){
@@ -436,6 +437,7 @@
         `${tr.date} ${tr.start_time}${tr.end_time ? '–' + tr.end_time : ''}${tr.address ? ' · ' + tr.address : ''}`.trim(),
         when
       );
+      if(isEnabled()) maybeAskExactReminders();
     });
     writeFired(fired);
   }
@@ -450,6 +452,17 @@
     document.addEventListener('visibilitychange', () => {
       if(document.visibilityState === 'visible') tick();
     });
+  }
+
+  function maybeAskExactReminders(force){
+    try{
+      if(!isNative()) return;
+      if(!global.FfkNotify || typeof global.FfkNotify.requestExactReminders !== 'function') return;
+      if(typeof global.FfkNotify.canExactReminders === 'function' && global.FfkNotify.canExactReminders()) return;
+      if(!force && localStorage.getItem('ffk_exact_alarm_asked') === '1') return;
+      localStorage.setItem('ffk_exact_alarm_asked', '1');
+      global.FfkNotify.requestExactReminders();
+    }catch(e){}
   }
 
   async function bootstrap(){

@@ -1,7 +1,5 @@
 package app.tempo;
 
-import android.app.AlarmManager;
-import android.content.SharedPreferences;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -12,6 +10,7 @@ import android.media.AudioAttributes;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
+import android.provider.Settings;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -38,22 +37,6 @@ public class MainActivity extends BridgeActivity {
   private volatile boolean keepSplash = true;
   private String pendingChatPlayerId = null;
   private String pendingChatKind = null;
-  private static volatile MainActivity aliveInstance;
-  private final Handler chatPollHandler = new Handler(Looper.getMainLooper());
-  private volatile boolean chatPollHandlerActive = false;
-  private long chatPollHandlerIntervalMs = 12000L;
-  private final Runnable chatPollHandlerTick = new Runnable() {
-    @Override
-    public void run() {
-      if (!chatPollHandlerActive) return;
-      runBackgroundChatPoll();
-      chatPollHandler.postDelayed(this, chatPollHandlerIntervalMs);
-    }
-  };
-
-  static MainActivity getAlive() {
-    return aliveInstance;
-  }
 
   /** Clock and battery sit on top of scrolling text on Android 16. Keep them off the page. */
   private void hideSystemStatusBar() {
@@ -66,7 +49,6 @@ public class MainActivity extends BridgeActivity {
 
   @Override
   public void onCreate(Bundle savedInstanceState) {
-    aliveInstance = this;
     SplashScreen splash = SplashScreen.installSplashScreen(this);
     splash.setKeepOnScreenCondition(() -> keepSplash);
     splash.setOnExitAnimationListener(view -> view.remove());
@@ -74,6 +56,7 @@ public class MainActivity extends BridgeActivity {
     registerPlugin(GalleryPickerPlugin.class);
     super.onCreate(savedInstanceState);
     ensureAlertChannel();
+    ChatPollReceiver.stop(this);
     captureChatIntent(getIntent());
     Window window = getWindow();
     WindowCompat.setDecorFitsSystemWindows(window, false);
@@ -115,54 +98,10 @@ public class MainActivity extends BridgeActivity {
   @Override
   public void onResume() {
     super.onResume();
-    aliveInstance = this;
     hideSystemStatusBar();
-    // Foreground: JS interval owns polling; stop native wake loop.
-    stopBackgroundChatPollInternal();
+    ChatPollReceiver.stop(this);
     flushPendingChatIntent();
     runForegroundChatPoll();
-  }
-
-  @Override
-  public void onPause() {
-    // Don't wait for JS visibility events — WebView may freeze before they run.
-    startBackgroundChatPollInternal(10000L);
-    super.onPause();
-  }
-
-  @Override
-  public void onDestroy() {
-    if (aliveInstance == this) aliveInstance = null;
-    // Keep AlarmManager alive after destroy so minimized delivery can resume.
-    chatPollHandlerActive = false;
-    chatPollHandler.removeCallbacks(chatPollHandlerTick);
-    super.onDestroy();
-  }
-
-  /** Called from ChatPollReceiver / Handler while app is backgrounded. */
-  void runBackgroundChatPoll() {
-    Bridge bridge = getBridge();
-    WebView webView = bridge != null ? bridge.getWebView() : null;
-    if (webView == null) return;
-    try {
-      // Ensure JS can run even if Chromium paused timers while hidden.
-      webView.resumeTimers();
-    } catch (Exception e) {}
-    final String js =
-      "(function(){"
-        + "try{"
-        + "  if(window.ParentCloud&&typeof window.ParentCloud.pollInboxChats==='function'){"
-        + "    window.ParentCloud.pollInboxChats({push:false});"
-        + "    return '1';"
-        + "  }"
-        + "  return '0';"
-        + "}catch(e){return '0';}"
-        + "})()";
-    webView.post(() -> {
-      try {
-        webView.evaluateJavascript(js, null);
-      } catch (Exception e) {}
-    });
   }
 
   private void runForegroundChatPoll() {
@@ -185,19 +124,7 @@ public class MainActivity extends BridgeActivity {
     });
   }
 
-  void startBackgroundChatPollInternal(long intervalMs) {
-    long interval = intervalMs > 0 ? intervalMs : 10000L;
-    if (interval < 8000L) interval = 8000L;
-    chatPollHandlerIntervalMs = interval;
-    chatPollHandlerActive = true;
-    chatPollHandler.removeCallbacks(chatPollHandlerTick);
-    chatPollHandler.postDelayed(chatPollHandlerTick, 1500L);
-    ChatPollReceiver.start(this, interval);
-  }
-
   void stopBackgroundChatPollInternal() {
-    chatPollHandlerActive = false;
-    chatPollHandler.removeCallbacks(chatPollHandlerTick);
     ChatPollReceiver.stop(this);
   }
 
@@ -385,51 +312,43 @@ public class MainActivity extends BridgeActivity {
     @JavascriptInterface
     public void schedule(String id, String title, String body, double whenMs) {
       long at = (long) whenMs;
-      if (id == null || id.isEmpty() || at <= System.currentTimeMillis()) return;
-      Intent intent = new Intent(MainActivity.this, TrainingAlarmReceiver.class);
-      intent.setAction("app.tempo.TRAINING_REMINDER");
-      intent.putExtra("id", id);
-      intent.putExtra("title", title == null ? "TEMPO" : title);
-      intent.putExtra("body", body == null ? "" : body);
-      int req = Math.abs(id.hashCode());
-      int flags = PendingIntent.FLAG_UPDATE_CURRENT;
-      if (Build.VERSION.SDK_INT >= 23) flags |= PendingIntent.FLAG_IMMUTABLE;
-      PendingIntent pi = PendingIntent.getBroadcast(MainActivity.this, req, intent, flags);
-      AlarmManager am = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-      if (am == null) return;
-      try {
-        if (Build.VERSION.SDK_INT >= 23) {
-          am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, at, pi);
-        } else {
-          am.setExact(AlarmManager.RTC_WAKEUP, at, pi);
-        }
-      } catch (SecurityException e) {
-        am.set(AlarmManager.RTC_WAKEUP, at, pi);
-      }
-      SharedPreferences sp = getSharedPreferences("ffk_train_alarms", MODE_PRIVATE);
-      sp.edit().putLong(id, at).putString(id + "_title", title == null ? "" : title)
-        .putString(id + "_body", body == null ? "" : body).apply();
+      TrainingAlarmReceiver.schedule(
+        MainActivity.this,
+        id,
+        title == null ? "TEMPO" : title,
+        body == null ? "" : body,
+        at
+      );
     }
 
     @JavascriptInterface
     public void cancel(String id) {
-      if (id == null || id.isEmpty()) return;
-      Intent intent = new Intent(MainActivity.this, TrainingAlarmReceiver.class);
-      intent.setAction("app.tempo.TRAINING_REMINDER");
-      int req = Math.abs(id.hashCode());
-      int flags = PendingIntent.FLAG_UPDATE_CURRENT;
-      if (Build.VERSION.SDK_INT >= 23) flags |= PendingIntent.FLAG_IMMUTABLE;
-      PendingIntent pi = PendingIntent.getBroadcast(MainActivity.this, req, intent, flags);
-      AlarmManager am = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-      if (am != null) am.cancel(pi);
-      getSharedPreferences("ffk_train_alarms", MODE_PRIVATE).edit()
-        .remove(id).remove(id + "_title").remove(id + "_body").apply();
+      TrainingAlarmReceiver.cancel(MainActivity.this, id);
     }
 
-    /** Native wake loop while app is minimized — WebView setInterval is frozen. */
+    @JavascriptInterface
+    public boolean canExactReminders() {
+      return TrainingAlarmReceiver.canExact(MainActivity.this);
+    }
+
+    /** Opens the system screen where the user allows reminders at the set time. */
+    @JavascriptInterface
+    public void requestExactReminders() {
+      if (Build.VERSION.SDK_INT < 31) return;
+      runOnUiThread(() -> {
+        if (TrainingAlarmReceiver.canExact(MainActivity.this)) return;
+        try {
+          Intent intent = new Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM);
+          intent.setData(Uri.parse("package:" + getPackageName()));
+          startActivity(intent);
+        } catch (Exception ignored) {}
+      });
+    }
+
+    /** Kept so older pages can call it. Chat delivery is FCM, not a wake loop. */
     @JavascriptInterface
     public void startBackgroundChatPoll(double intervalMs) {
-      runOnUiThread(() -> startBackgroundChatPollInternal((long) intervalMs));
+      runOnUiThread(() -> ChatPollReceiver.stop(MainActivity.this));
     }
 
     @JavascriptInterface
