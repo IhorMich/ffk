@@ -39,13 +39,12 @@ public class MainActivity extends BridgeActivity {
   private String pendingChatKind = null;
   private PlayBilling playBilling;
 
-  /** Clock and battery sit on top of scrolling text on Android 16. Keep them off the page. */
-  private void hideSystemStatusBar() {
+  /** Keep clock/battery visible; WebView starts below the status bar (overlaysWebView=false). */
+  private void showSystemStatusBar() {
     Window window = getWindow();
     WindowInsetsControllerCompat controller = WindowCompat.getInsetsController(window, window.getDecorView());
     if (controller == null) return;
-    controller.setSystemBarsBehavior(WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
-    controller.hide(WindowInsetsCompat.Type.statusBars());
+    controller.show(WindowInsetsCompat.Type.statusBars());
   }
 
   @Override
@@ -62,9 +61,9 @@ public class MainActivity extends BridgeActivity {
     playBilling.start();
     captureChatIntent(getIntent());
     Window window = getWindow();
-    WindowCompat.setDecorFitsSystemWindows(window, false);
-    window.setStatusBarColor(Color.parseColor("#030308"));
-    hideSystemStatusBar();
+    WindowCompat.setDecorFitsSystemWindows(window, true);
+    window.setStatusBarColor(Color.parseColor("#05060c"));
+    showSystemStatusBar();
     window.setNavigationBarColor(Color.parseColor("#030308"));
     if (Build.VERSION.SDK_INT >= 29) {
       window.setNavigationBarContrastEnforced(false);
@@ -102,7 +101,7 @@ public class MainActivity extends BridgeActivity {
   @Override
   public void onResume() {
     super.onResume();
-    hideSystemStatusBar();
+    showSystemStatusBar();
     ChatPollReceiver.stop(this);
     flushPendingChatIntent();
     runForegroundChatPoll();

@@ -104,11 +104,11 @@ function applyNativeChrome(){
   const theme = themeName();
   const color = theme === 'day' ? '#FFF8D6' : '#05060c';
   const style = theme === 'dark' ? 'LIGHT' : 'DARK';
-  // Android 16 draws the page under the clock and battery. Hide that strip
-  // so scrolling text is never covered. A swipe from the top edge still shows it.
+  // Keep the system clock/battery strip visible and outside the WebView.
+  Promise.resolve(Bar.setOverlaysWebView({overlay: false})).catch(() => {});
   Promise.resolve(Bar.setBackgroundColor({color})).catch(() => {});
   Promise.resolve(Bar.setStyle({style})).catch(() => {});
-  Promise.resolve(Bar.hide()).catch(() => {});
+  Promise.resolve(Bar.show()).catch(() => {});
 }
 const THEME_ORDER = ['dark','day'];
 function themeName(){
@@ -127,7 +127,7 @@ function applyTheme(){
   const meta = document.querySelector('meta[name="theme-color"]');
   if(meta) meta.content = theme === 'day' ? '#FFF8D6' : '#05060c';
   const apple = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
-  if(apple) apple.content = theme === 'dark' ? 'black-translucent' : 'default';
+  if(apple) apple.content = theme === 'dark' ? 'black' : 'default';
   document.querySelectorAll('.theme-toggle').forEach(btn => {
     btn.setAttribute('aria-label', t('themeAria') + ' · ' + t('theme_' + theme));
   });

@@ -18,7 +18,9 @@
       "showSpinner": false
     },
     "StatusBar": {
-      "overlaysWebView": true
+      "overlaysWebView": false,
+      "style": "DARK",
+      "backgroundColor": "#05060c"
     },
     "Keyboard": {
       "resize": "body"
