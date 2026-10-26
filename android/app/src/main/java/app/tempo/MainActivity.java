@@ -41,30 +41,47 @@ public class MainActivity extends BridgeActivity {
   private String pendingChatPlayerId = null;
   private String pendingChatKind = null;
   private PlayBilling playBilling;
+  /** Opaque strip behind clock/battery (statusBarColor is ignored on Android 16). */
+  private int statusChromeColor = Color.parseColor("#05060c");
 
   /**
-   * Android 15+ draws edge-to-edge even when overlaysWebView=false. Pad the
-   * content root by system-bar insets so scrollable HTML never sits under the
-   * clock/battery icons; fill that strip with the current status-bar color.
+   * Maps-style chrome on Android 15+: system icons sit on an opaque strip;
+   * WebView content starts below that strip (never under the clock).
    */
   private void applySystemBars() {
     Window window = getWindow();
     WindowCompat.setDecorFitsSystemWindows(window, false);
+    // Still set for older APIs; no-op for color on API 35+ without opt-out.
+    window.setStatusBarColor(statusChromeColor);
+    window.setNavigationBarColor(Color.parseColor("#030308"));
+    if (Build.VERSION.SDK_INT >= 29) {
+      window.setNavigationBarContrastEnforced(false);
+    }
     WindowInsetsControllerCompat controller = WindowCompat.getInsetsController(window, window.getDecorView());
     if (controller != null) {
       controller.show(WindowInsetsCompat.Type.statusBars());
+      // false = light (white) icons for dark strip; true = dark icons for day strip.
+      boolean lightStrip = Color.luminance(statusChromeColor) > 0.5f;
+      controller.setAppearanceLightStatusBars(lightStrip);
     }
     View root = findViewById(android.R.id.content);
     if (root == null) return;
     ViewCompat.setOnApplyWindowInsetsListener(root, (v, insets) -> {
       Insets bars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
       v.setPadding(bars.left, bars.top, bars.right, bars.bottom);
-      int fill = window.getStatusBarColor();
-      if (fill == Color.TRANSPARENT) fill = Color.parseColor("#05060c");
-      v.setBackgroundColor(fill);
+      v.setBackgroundColor(statusChromeColor);
       return WindowInsetsCompat.CONSUMED;
     });
     ViewCompat.requestApplyInsets(root);
+  }
+
+  private void setStatusChromeColor(String hex) {
+    try {
+      statusChromeColor = Color.parseColor(hex);
+    } catch (IllegalArgumentException e) {
+      statusChromeColor = Color.parseColor("#05060c");
+    }
+    applySystemBars();
   }
 
   @Override
@@ -80,12 +97,6 @@ public class MainActivity extends BridgeActivity {
     playBilling = new PlayBilling(this);
     playBilling.start();
     captureChatIntent(getIntent());
-    Window window = getWindow();
-    window.setStatusBarColor(Color.parseColor("#05060c"));
-    window.setNavigationBarColor(Color.parseColor("#030308"));
-    if (Build.VERSION.SDK_INT >= 29) {
-      window.setNavigationBarContrastEnforced(false);
-    }
     applySystemBars();
     // Capacitor finishes laying out after onCreate — re-apply once the WebView exists.
     new Handler(Looper.getMainLooper()).post(this::applySystemBars);
@@ -298,6 +309,12 @@ public class MainActivity extends BridgeActivity {
     @JavascriptInterface
     public void ready() {
       keepSplash = false;
+    }
+
+    /** Paint the status-bar inset strip (Android 16 ignores window statusBarColor). */
+    @JavascriptInterface
+    public void setStatusChrome(String hex) {
+      runOnUiThread(() -> setStatusChromeColor(hex));
     }
   }
 

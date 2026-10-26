@@ -98,13 +98,20 @@ async function nativeSaveDocument(blob, filename){
   }
 }
 function applyNativeChrome(){
-  const Bar = capPlugin('StatusBar');
-  if(!isNativeApp() || !Bar) return;
+  if(!isNativeApp()) return;
   if(document.documentElement.classList.contains('intro-on')) return;
   const theme = themeName();
   const color = theme === 'day' ? '#FFF8D6' : '#05060c';
-  const style = theme === 'dark' ? 'LIGHT' : 'DARK';
-  // Keep the system clock/battery strip visible and outside the WebView.
+  // Capacitor: DARK = light icons (for dark strip), LIGHT = dark icons (for light strip).
+  const style = theme === 'dark' ? 'DARK' : 'LIGHT';
+  // Android 15+ ignores statusBarColor — paint the inset strip from native code.
+  try{
+    if(window.FfkSplash && typeof window.FfkSplash.setStatusChrome === 'function'){
+      window.FfkSplash.setStatusChrome(color);
+    }
+  }catch(e){}
+  const Bar = capPlugin('StatusBar');
+  if(!Bar) return;
   Promise.resolve(Bar.setOverlaysWebView({overlay: false})).catch(() => {});
   Promise.resolve(Bar.setBackgroundColor({color})).catch(() => {});
   Promise.resolve(Bar.setStyle({style})).catch(() => {});
