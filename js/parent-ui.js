@@ -1370,6 +1370,7 @@
 
   let parentCalMonth = '';
   let parentCalDay = '';
+  let parentCalOpen = false;
 
   function parentMonthKey(d){
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
@@ -1424,6 +1425,11 @@
       return;
     }
     root.hidden = false;
+    root.classList.toggle('is-open', parentCalOpen);
+    const body = document.getElementById('parentCalBody');
+    const toggle = document.getElementById('parentCalToggle');
+    if(body) body.hidden = !parentCalOpen;
+    if(toggle) toggle.setAttribute('aria-expanded', parentCalOpen ? 'true' : 'false');
     const now = new Date();
     if(!parentCalMonth) parentCalMonth = parentMonthKey(now);
     const todayStr = now.toISOString().slice(0, 10);
@@ -1788,6 +1794,12 @@
   }
   function bindParentUi(){
     document.getElementById('parentCal')?.addEventListener('click', e => {
+      if(e.target.closest('#parentCalToggle')){
+        e.preventDefault();
+        parentCalOpen = !parentCalOpen;
+        renderParentCalendar();
+        return;
+      }
       const nav = e.target.closest('[data-parent-cal-nav]');
       if(nav){
         e.preventDefault();

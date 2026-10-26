@@ -1719,6 +1719,14 @@
     background:color-mix(in srgb, #e25555 16%, var(--card-paper));
   }
   .parent-cal{margin-top:12px;}
+  .parent-cal-toggle{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;
+    margin:0;padding:10px 12px;border:1px solid var(--card-line);border-radius:14px;
+    background:transparent;color:inherit;font:inherit;font-weight:800;cursor:pointer;text-align:left;
+  }
+  .parent-cal-chevron{font-size:1.1rem;line-height:1;transition:transform .15s ease;}
+  .parent-cal.is-open .parent-cal-chevron{transform:rotate(180deg);}
+  #parentCalBody{margin-top:10px;}
   .parent-cal-day{display:flex;flex-direction:column;gap:8px;margin-top:10px;}
   .coach-train-cell.has-game{
     background:color-mix(in srgb, #3d8bfd 12%, var(--card-paper));

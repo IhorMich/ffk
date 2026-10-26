@@ -117,13 +117,19 @@ window.ffkIsNative = function () {
         <p class="hint" data-i18n="parentLinksLead">Игрок, подтверждённый тренером. Личная статистика у бровки — как раньше, отдельно.</p>
         <div id="parentLinksList"></div>
         <div id="parentCal" class="parent-cal" hidden>
-          <div class="coach-train-cal-nav">
-            <button type="button" class="ghost-btn coach-fold-btn" data-parent-cal-nav="-1" data-i18n-aria="parentCalPrev" aria-label="Previous month">‹</button>
-            <b id="parentCalLabel"></b>
-            <button type="button" class="ghost-btn coach-fold-btn" data-parent-cal-nav="1" data-i18n-aria="parentCalNext" aria-label="Next month">›</button>
+          <button type="button" class="parent-cal-toggle" id="parentCalToggle" aria-expanded="false" data-i18n-aria="parentCalToggle" aria-label="Open or close the schedule">
+            <span data-i18n="parentCalTitle">Расписание</span>
+            <span class="parent-cal-chevron" aria-hidden="true">▾</span>
+          </button>
+          <div id="parentCalBody" hidden>
+            <div class="coach-train-cal-nav">
+              <button type="button" class="ghost-btn coach-fold-btn" data-parent-cal-nav="-1" data-i18n-aria="parentCalPrev" aria-label="Previous month">‹</button>
+              <b id="parentCalLabel"></b>
+              <button type="button" class="ghost-btn coach-fold-btn" data-parent-cal-nav="1" data-i18n-aria="parentCalNext" aria-label="Next month">›</button>
+            </div>
+            <div id="parentCalGrid"></div>
+            <div id="parentCalDay" class="parent-cal-day"></div>
           </div>
-          <div id="parentCalGrid"></div>
-          <div id="parentCalDay" class="parent-cal-day"></div>
         </div>
         <button class="save-btn" id="parentOpenCoachStatsBtn" type="button" data-i18n="parentCoachStatsBtn" hidden>Статистика тренера</button>
         <button class="ghost-btn" id="parentChatCoachBtn" type="button" data-i18n="chatWriteCoach" hidden>Написать тренеру</button>

@@ -7110,7 +7110,8 @@ ru:{
       parentCalGame:'Game',
       parentCalTrain:'Training',
       parentCalPrev:'Previous month',
-      parentCalNext:'Next month'
+      parentCalNext:'Next month',
+      parentCalToggle:'Open or close the schedule'
     },
     uk:{
       parentCalTitle:'Розклад',
@@ -7118,7 +7119,8 @@ ru:{
       parentCalGame:'Гра',
       parentCalTrain:'Тренування',
       parentCalPrev:'Попередній місяць',
-      parentCalNext:'Наступний місяць'
+      parentCalNext:'Наступний місяць',
+      parentCalToggle:'Відкрити або згорнути розклад'
     },
     pl:{
       parentCalTitle:'Plan',
@@ -7126,7 +7128,8 @@ ru:{
       parentCalGame:'Mecz',
       parentCalTrain:'Trening',
       parentCalPrev:'Poprzedni miesiąc',
-      parentCalNext:'Następny miesiąc'
+      parentCalNext:'Następny miesiąc',
+      parentCalToggle:'Otwórz lub zwiń plan'
     },
     ru:{
       parentCalTitle:'Расписание',
@@ -7134,7 +7137,8 @@ ru:{
       parentCalGame:'Игра',
       parentCalTrain:'Тренировка',
       parentCalPrev:'Предыдущий месяц',
-      parentCalNext:'Следующий месяц'
+      parentCalNext:'Следующий месяц',
+      parentCalToggle:'Открыть или свернуть расписание'
     },
     es:{
       parentCalTitle:'Calendario',
@@ -7142,7 +7146,8 @@ ru:{
       parentCalGame:'Partido',
       parentCalTrain:'Entreno',
       parentCalPrev:'Mes anterior',
-      parentCalNext:'Mes siguiente'
+      parentCalNext:'Mes siguiente',
+      parentCalToggle:'Abrir o cerrar el calendario'
     },
     de:{
       parentCalTitle:'Plan',
@@ -7150,7 +7155,8 @@ ru:{
       parentCalGame:'Spiel',
       parentCalTrain:'Training',
       parentCalPrev:'Vorheriger Monat',
-      parentCalNext:'Nächster Monat'
+      parentCalNext:'Nächster Monat',
+      parentCalToggle:'Plan öffnen oder schließen'
     },
     it:{
       parentCalTitle:'Calendario',
@@ -7158,7 +7164,8 @@ ru:{
       parentCalGame:'Partita',
       parentCalTrain:'Allenamento',
       parentCalPrev:'Mese precedente',
-      parentCalNext:'Mese successivo'
+      parentCalNext:'Mese successivo',
+      parentCalToggle:'Apri o chiudi il calendario'
     },
     fr:{
       parentCalTitle:'Planning',
@@ -7166,7 +7173,8 @@ ru:{
       parentCalGame:'Match',
       parentCalTrain:'Entraînement',
       parentCalPrev:'Mois précédent',
-      parentCalNext:'Mois suivant'
+      parentCalNext:'Mois suivant',
+      parentCalToggle:'Ouvrir ou fermer le planning'
     },
     pt:{
       parentCalTitle:'Calendário',
@@ -7174,7 +7182,8 @@ ru:{
       parentCalGame:'Jogo',
       parentCalTrain:'Treino',
       parentCalPrev:'Mês anterior',
-      parentCalNext:'Mês seguinte'
+      parentCalNext:'Mês seguinte',
+      parentCalToggle:'Abrir ou fechar o calendário'
     }
   };
   LANGS.forEach(lang => {
