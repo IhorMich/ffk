@@ -1407,10 +1407,10 @@
         <div class="coach-player-main">
           <b>${esc(when)}</b>
           <span>${esc(meta)}</span>
-          <div class="train-rsvp">
-            <button type="button" class="train-rsvp-btn${yesOn}" data-train-rsvp="accepted" data-train-id="${esc(tr.id)}" data-player-id="${esc(tr.team_player_id)}" data-team-id="${esc(tr.team_id)}" data-train-date="${esc(tr.date)}">${esc(tt('parentTrainYes', 'We\'ll come'))}</button>
-            <button type="button" class="train-rsvp-btn${noOn}" data-train-rsvp="declined" data-train-id="${esc(tr.id)}" data-player-id="${esc(tr.team_player_id)}" data-team-id="${esc(tr.team_id)}" data-train-date="${esc(tr.date)}">${esc(tt('parentTrainNo', 'We can\'t'))}</button>
-          </div>
+        </div>
+        <div class="train-rsvp">
+          <button type="button" class="train-rsvp-btn${yesOn}" data-train-rsvp="accepted" data-train-id="${esc(tr.id)}" data-player-id="${esc(tr.team_player_id)}" data-team-id="${esc(tr.team_id)}" data-train-date="${esc(tr.date)}" aria-label="${esc(tt('parentTrainYes', 'We\'ll come'))}" aria-pressed="${tr.rsvp === 'accepted' ? 'true' : 'false'}">✓</button>
+          <button type="button" class="train-rsvp-btn${noOn}" data-train-rsvp="declined" data-train-id="${esc(tr.id)}" data-player-id="${esc(tr.team_player_id)}" data-team-id="${esc(tr.team_id)}" data-train-date="${esc(tr.date)}" aria-label="${esc(tt('parentTrainNo', 'We can\'t'))}" aria-pressed="${tr.rsvp === 'declined' ? 'true' : 'false'}">✕</button>
         </div>
       </div>`;
     }).join('');

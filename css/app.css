@@ -1701,13 +1701,22 @@
     background:color-mix(in srgb, #e25555 16%, var(--card-paper));
   }
   .parent-rsvp-status{margin:10px 0 0;font-weight:700;}
-  .train-rsvp{display:flex;gap:8px;margin-top:8px;}
+  .train-rsvp{display:flex;gap:8px;flex:none;}
   .train-rsvp-btn{
-    flex:1;min-height:40px;border-radius:12px;border:1px solid var(--card-line);
-    background:transparent;color:inherit;font:inherit;font-weight:800;font-size:.85rem;cursor:pointer;
+    width:40px;height:40px;padding:0;border-radius:12px;border:1px solid var(--card-line);
+    background:transparent;color:var(--card-muted);font:inherit;font-weight:800;font-size:1.25rem;
+    line-height:1;cursor:pointer;
   }
-  .train-rsvp-btn.on-yes{color:#1faa5a;border-color:#1faa5a;}
-  .train-rsvp-btn.on-no{color:#e25555;border-color:#e25555;}
+  .train-rsvp-btn.on-yes{
+    color:#1faa5a;border-color:#1faa5a;
+    background:color-mix(in srgb, #1faa5a 16%, var(--card-paper));
+  }
+  .train-rsvp-btn.on-no,
+  .train-rsvp-btn[data-train-rsvp="declined"]{color:#e25555;}
+  .train-rsvp-btn.on-no{
+    border-color:#e25555;
+    background:color-mix(in srgb, #e25555 16%, var(--card-paper));
+  }
   .parent-msg-row{
     display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;
     padding:12px 14px;margin:0 0 8px;border-radius:14px;border:1px solid var(--card-line);
