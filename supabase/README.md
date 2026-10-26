@@ -36,7 +36,7 @@ The cross-device migration adds:
 Cross-device email / QR links can use either the long token (`open.html?token=…`)
 or the short code (`open.html?code=…` / `MC-XXXXXX`).
 
-## Assistants (up to 5)
+## Assistants (up to 3)
 
 Owner invites by email in Coach settings. Invitee signs in and enters code `MC-XXXXXX`.
 
@@ -63,4 +63,4 @@ fully-killed delivery needs FCM.
 | Academies | 1 |
 | Teams / academy | 10 |
 | Players / team | 50 |
-| Assistants | 5 |
+| Assistants | 3 |

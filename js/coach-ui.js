@@ -5380,7 +5380,7 @@
         const map = {
           bad_email: tt('coachErrEmail', 'Enter a valid email.'),
           owner_only: tt('coachErrOwnerOnly', 'Only the academy owner can manage assistants.'),
-          assistant_limit: tt('coachErrAssistantLimit', 'Assistant limit is 2.'),
+          assistant_limit: tt('coachErrAssistantLimit', 'Assistant limit is 3.'),
           exists: tt('coachErrAssistantExists', 'This assistant is already invited.')
         };
         toast(map[e.message] || tt('coachErrGeneric', 'Something went wrong.'));
@@ -5397,7 +5397,7 @@
         const map = {
           bad_code: tt('coachErrAssistantCode', 'Invalid assistant code.'),
           email_mismatch: tt('coachErrAssistantEmail', 'Sign in with the invited email.'),
-          assistant_limit: tt('coachErrAssistantLimit', 'Assistant limit is 2.')
+          assistant_limit: tt('coachErrAssistantLimit', 'Assistant limit is 3.')
         };
         toast(map[e.message] || tt('coachErrGeneric', 'Something went wrong.'));
       }

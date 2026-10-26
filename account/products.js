@@ -15,7 +15,7 @@
     COACH_MAX_ACADEMIES: 1,
     COACH_MAX_TEAMS: 10,
     COACH_MAX_PLAYERS_PER_TEAM: 50,
-    COACH_MAX_ASSISTANTS: 5
+    COACH_MAX_ASSISTANTS: 3
   };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = A;

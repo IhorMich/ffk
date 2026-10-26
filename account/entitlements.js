@@ -24,7 +24,7 @@
       coachMaxAcademies: L.COACH_MAX_ACADEMIES || 1,
       coachMaxTeams: L.COACH_MAX_TEAMS || 10,
       coachMaxPlayersPerTeam: L.COACH_MAX_PLAYERS_PER_TEAM || 50,
-      coachMaxAssistants: L.COACH_MAX_ASSISTANTS || 5
+      coachMaxAssistants: L.COACH_MAX_ASSISTANTS || 3
     };
   };
 

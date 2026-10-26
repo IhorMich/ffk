@@ -16,12 +16,14 @@ function assert(cond, msg) {
 
 assert(Acc.LIMITS.FREE_MAX_PLAYERS === 1, 'free cap');
 assert(Acc.LIMITS.PRO_MAX_PLAYERS === 32, 'pro cap');
+assert(Acc.LIMITS.COACH_MAX_ASSISTANTS === 3, 'assistant cap');
 
 const freeE = Acc.deriveEntitlements({ isPro: false });
 assert(freeE.product === 'free' && freeE.maxPlayers === 1 && freeE.personalBackup, 'free entitlements');
 
 const proE = Acc.deriveEntitlements({ isPro: true, isCoachSub: true });
 assert(proE.product === 'pro' && proE.maxPlayers === 32 && proE.personalBackup && proE.coachSub, 'pro entitlements');
+assert(proE.coachMaxAssistants === 3, 'assistant entitlement');
 assert(Acc.canAddPlayer(freeE, 0) && !Acc.canAddPlayer(freeE, 1), 'free add gate');
 assert(Acc.canAddPlayer(proE, 31) && !Acc.canAddPlayer(proE, 32), 'pro add gate');
 

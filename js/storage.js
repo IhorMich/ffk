@@ -19,7 +19,7 @@ const COACH_MAX_TEAMS = (typeof MatchcardAccount !== 'undefined' && MatchcardAcc
 const COACH_MAX_PLAYERS_PER_TEAM = (typeof MatchcardAccount !== 'undefined' && MatchcardAccount.LIMITS)
   ? MatchcardAccount.LIMITS.COACH_MAX_PLAYERS_PER_TEAM : 50;
 const COACH_MAX_ASSISTANTS = (typeof MatchcardAccount !== 'undefined' && MatchcardAccount.LIMITS)
-  ? MatchcardAccount.LIMITS.COACH_MAX_ASSISTANTS : 5;
+  ? MatchcardAccount.LIMITS.COACH_MAX_ASSISTANTS : 3;
 
 function localRepo(){
   return (typeof MatchcardLocalRepo !== 'undefined' && MatchcardLocalRepo)
