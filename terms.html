@@ -1,16 +1,17 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>TEMPO — условия использования</title>
-  <link rel="stylesheet" href="css/app.css?v=1.2.382">
+  <title>TEMPO — Terms of use</title>
+  <link rel="stylesheet" href="css/app.css?v=1.2.398">
   <style>
     body{font-weight:600;line-height:1.55;}
     main{max-width:42rem;margin:0 auto;padding:28px 18px 64px;}
     h1{font-size:1.55rem;line-height:1.25;margin:0 0 10px;}
     h2{font-size:1.05rem;margin:28px 0 8px;}
     p,li{color:var(--text-soft);font-weight:500;}
+    strong{color:var(--text);font-weight:700;}
     a{color:var(--gold);}
     .back{margin:0 0 18px;}
     ul{padding-left:1.2em;}
@@ -18,53 +19,8 @@
   </style>
 </head>
 <body>
-  <main>
-    <h1>Условия использования TEMPO</h1>
-    <p class="meta">Обновлено: 26 октября 2026</p>
-
-    <p>TEMPO — приложение для записи и оценки футбольных матчей игрока, а также работы родителя и тренера.</p>
-
-    <h2>Использование</h2>
-    <ul>
-      <li>Вы отвечаете за данные, которые вводите: имена, фото, оценки, контакты родителей.</li>
-      <li>Не используйте приложение для незаконного контента или спама приглашений.</li>
-      <li>Бесплатный личный сезон живёт на устройстве. TEMPO Pro — тот же личный режим с облаком между телефонами. TEMPO Coach — отдельный командный аккаунт.</li>
-    </ul>
-
-    <h2>Подписки и покупки</h2>
-    <p>TEMPO Pro и TEMPO Coach — подписки в Google Play и App Store. Цена показывается до оплаты. Оплату принимает магазин. Отменить или сменить карту можно в подписках Google Play или Apple.</p>
-
-    <h2>Данные</h2>
-    <p>Подробности хранения — в
-      <a href="privacy.html">политике конфиденциальности</a>.
-      Копию сезона можно сохранить в Настройках кнопкой «На телефон». Облачный аккаунт удаляется кнопкой «Удалить аккаунт». Сезон только на телефоне при этом остаётся.</p>
-
-    <h2>Ограничение ответственности</h2>
-    <p>Оценки и аналитика — инструмент тренировочного дневника, не официальный рейтинг федерации. Приложение предоставляется «как есть».</p>
-
-    <h2>Контакты</h2>
-    <p>Вопросы:
-      <a href="https://github.com/IhorMich/ffk/issues">github.com/IhorMich/ffk/issues</a>
-      · <a href="mailto:ihormykhailiuk@gmail.com?subject=TEMPO%20support">написать на email</a>.</p>
-  </main>
-  <script>
-    (function(){
-      try{
-        if(new URLSearchParams(location.search).get('theme') === 'day'){
-          document.documentElement.dataset.theme = 'day';
-        }
-      }catch(e){}
-      if(window.parent !== window) return;
-      var back = document.createElement('p');
-      back.className = 'back';
-      back.innerHTML = '<a href="./">← TEMPO</a>';
-      var main = document.querySelector('main');
-      if(main) main.insertBefore(back, main.firstChild);
-      window.ffkBack = function(){
-        try{ location.href = './'; }catch(e){}
-        return true;
-      };
-    })();
-  </script>
+  <main id="legalMain"></main>
+  <script src="js/legal-i18n.js?v=1.2.398"></script>
+  <script>FFK_LEGAL.mount('terms');</script>
 </body>
 </html>

@@ -700,11 +700,17 @@ function openExternalPage(url){
 function openLegalPage(url){
   const page = document.getElementById('legalPage');
   const frame = document.getElementById('legalFrame');
+  const theme = document.documentElement.dataset.theme === 'day' ? 'day' : 'dark';
+  const lang = (typeof LANGS !== 'undefined' && LANGS.includes(settings.lang))
+    ? settings.lang
+    : (typeof detectLang === 'function' ? detectLang() : 'en');
+  const join = url.indexOf('?') >= 0 ? '&' : '?';
+  const withParams = url + join + 'theme=' + encodeURIComponent(theme) + '&lang=' + encodeURIComponent(lang);
   if(!page || !frame){
-    openExternalPage(url);
+    openExternalPage(withParams);
     return;
   }
-  frame.src = url + (url.indexOf('?') >= 0 ? '&' : '?') + 'theme=' + (document.documentElement.dataset.theme === 'day' ? 'day' : 'dark');
+  frame.src = withParams;
   page.hidden = false;
 }
 function closeLegalPage(){
