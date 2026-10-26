@@ -7007,15 +7007,15 @@ ru:{
 
 (function mergeBirthPickI18n(){
   const extra = {
-    en:{birthYear:'Year', unsavedLeave:'Changes aren’t saved. Leave without saving?', settingsClearLocal:'Clear data on this phone'},
-    uk:{birthYear:'Рік', unsavedLeave:'Зміни не збережено. Вийти без збереження?', settingsClearLocal:'Очистити дані на телефоні'},
-    pl:{birthYear:'Rok', unsavedLeave:'Zmiany nie zostały zapisane. Wyjść bez zapisywania?', settingsClearLocal:'Wyczyść dane w telefonie'},
-    ru:{birthYear:'Год', unsavedLeave:'Изменения не сохранены. Выйти без сохранения?', settingsClearLocal:'Очистить данные на телефоне'},
-    es:{birthYear:'Año', unsavedLeave:'Los cambios no están guardados. ¿Salir sin guardar?', settingsClearLocal:'Borrar datos de este teléfono'},
-    de:{birthYear:'Jahr', unsavedLeave:'Änderungen sind nicht gespeichert. Ohne Speichern verlassen?', settingsClearLocal:'Daten auf diesem Telefon löschen'},
-    it:{birthYear:'Anno', unsavedLeave:'Le modifiche non sono salvate. Uscire senza salvare?', settingsClearLocal:'Cancella i dati su questo telefono'},
-    fr:{birthYear:'Année', unsavedLeave:'Les modifications ne sont pas enregistrées. Quitter sans enregistrer ?', settingsClearLocal:'Effacer les données sur ce téléphone'},
-    pt:{birthYear:'Ano', unsavedLeave:'As alterações não foram guardadas. Sair sem guardar?', settingsClearLocal:'Limpar dados neste telemóvel'}
+    en:{birthYear:'Year', unsavedLeave:'Changes aren’t saved. Leave without saving?', matchLeaveUnsaved:'This match isn’t in history yet. Leave? The draft stays on this phone.', settingsClearLocal:'Clear data on this phone'},
+    uk:{birthYear:'Рік', unsavedLeave:'Зміни не збережено. Вийти без збереження?', matchLeaveUnsaved:'Матч ще не в історії. Вийти? Чернетка на телефоні залишиться.', settingsClearLocal:'Очистити дані на телефоні'},
+    pl:{birthYear:'Rok', unsavedLeave:'Zmiany nie zostały zapisane. Wyjść bez zapisywania?', matchLeaveUnsaved:'Mecz nie jest jeszcze w historii. Wyjść? Szkic zostanie w telefonie.', settingsClearLocal:'Wyczyść dane w telefonie'},
+    ru:{birthYear:'Год', unsavedLeave:'Изменения не сохранены. Выйти без сохранения?', matchLeaveUnsaved:'Матч ещё не в истории. Уйти? Черновик на телефоне останется.', settingsClearLocal:'Очистить данные на телефоне'},
+    es:{birthYear:'Año', unsavedLeave:'Los cambios no están guardados. ¿Salir sin guardar?', matchLeaveUnsaved:'Este partido aún no está en el historial. ¿Salir? El borrador se queda en el teléfono.', settingsClearLocal:'Borrar datos de este teléfono'},
+    de:{birthYear:'Jahr', unsavedLeave:'Änderungen sind nicht gespeichert. Ohne Speichern verlassen?', matchLeaveUnsaved:'Dieses Spiel ist noch nicht in der Historie. Verlassen? Der Entwurf bleibt auf dem Telefon.', settingsClearLocal:'Daten auf diesem Telefon löschen'},
+    it:{birthYear:'Anno', unsavedLeave:'Le modifiche non sono salvate. Uscire senza salvare?', matchLeaveUnsaved:'Questa partita non è ancora nella cronologia. Uscire? La bozza resta sul telefono.', settingsClearLocal:'Cancella i dati su questo telefono'},
+    fr:{birthYear:'Année', unsavedLeave:'Les modifications ne sont pas enregistrées. Quitter sans enregistrer ?', matchLeaveUnsaved:'Ce match n’est pas encore dans l’historique. Quitter ? Le brouillon reste sur le téléphone.', settingsClearLocal:'Effacer les données sur ce téléphone'},
+    pt:{birthYear:'Ano', unsavedLeave:'As alterações não foram guardadas. Sair sem guardar?', matchLeaveUnsaved:'Este jogo ainda não está no histórico. Sair? O rascunho fica no telemóvel.', settingsClearLocal:'Limpar dados neste telemóvel'}
   };
   LANGS.forEach(lang => {
     Object.assign(I18N[lang], extra.en, extra[lang] || {});

@@ -4830,6 +4830,27 @@ function bindHeroPin(){
   window.addEventListener('resize', syncHeroPin);
   syncHeroPin();
 }
+let allowMatchLeavePrompt = false;
+function unsavedNewMatch(){
+  if(editingId || isCoachRateMode()) return false;
+  const counts = form && form.counts ? form.counts : {};
+  if(Object.keys(counts).some(k => Number(counts[k]) > 0)) return true;
+  const behaviors = form && form.behaviors ? form.behaviors : {};
+  if(Object.keys(behaviors).some(k => Number(behaviors[k]) !== 3)) return true;
+  if((document.getElementById('f-opponent')?.value || '').trim()) return true;
+  if((document.getElementById('f-comment')?.value || '').trim()) return true;
+  try{
+    const phase = clockPhase();
+    if(phase && phase !== 'idle') return true;
+  }catch(e){}
+  return false;
+}
+function confirmLeaveUnsavedMatch(nextName){
+  if(!allowMatchLeavePrompt) return true;
+  if(nextName === 'new' || activeViewName() !== 'new') return true;
+  if(!unsavedNewMatch()) return true;
+  return confirm(t('matchLeaveUnsaved'));
+}
 function showView(name){
   const views = ['player','new','history','stats','settings','report','coach','coach-child'];
   if(!views.includes(name)) name = 'new';
@@ -4838,6 +4859,7 @@ function showView(name){
   // Leaving the dedicated child screen clears child context (except explicit stay on coach-child)
   if(name !== 'coach-child' && isCoachChildView()) clearCoachChildView();
   if(name !== 'player' && isElShown('playerEdit') && closePlayerEdit() === false) return;
+  if(!confirmLeaveUnsavedMatch(name)) return;
   const childOn = name === 'coach-child' && isCoachChildView();
   document.getElementById('app').classList.toggle('player-on', name === 'player');
   document.getElementById('app').classList.toggle('coach-profile-on', isCoachPlan() && name === 'coach');
@@ -4890,6 +4912,7 @@ function restoreView(){
   let name = isCoachPlan() ? 'coach' : 'player';
   if(name === 'coach' && !isCoachPlan()) name = 'player';
   showView(name);
+  allowMatchLeavePrompt = true;
 }
 
 function exportPlayerSnapshot(id){
