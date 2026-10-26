@@ -35,6 +35,8 @@ const account = Acc.buildAccount({
 assert(account.mode === 'coach', 'mode coach');
 assert(account.product === 'pro', 'product');
 assert(account.gates.canPersonalBackup && account.gates.canEnterCoach, 'gates');
+assert(account.canSignOut && account.signedIn, 'signed-in flag on the account');
+assert(!Acc.buildAccount({}).canSignOut, 'signed-out has no sign-out');
 assert(account.sameEmail && account.playerCap === 32, 'cap + same email');
 assert(account.gates.canAddPlayer(1), 'gate fn');
 

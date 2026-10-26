@@ -1389,6 +1389,7 @@
   .settings-link-legal{margin-top:10px;border-top:1px solid var(--line, rgba(255,255,255,.08));}
   .settings-link:hover,.settings-link:focus-visible{opacity:.88;}
   .settings-clear{margin-top:4px;justify-self:start;}
+  #settingsDeleteAccountBtn[hidden]{display:none !important;}
   .settings-block-about .save-btn{margin-top:2px;}
   .settings-block-danger{
     border-top:1px solid rgba(220,80,80,.28);

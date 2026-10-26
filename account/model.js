@@ -58,6 +58,7 @@
       isCoachSub: isCoachSub,
       playerCap: entitlements.maxPlayers,
       signedIn: !!(personal || coach),
+      canSignOut: !!(personal || coach),
       showPersonalLogin: !personal,
       sameEmail: !!(personal && coach && String(personal.email).toLowerCase() === String(coach.email).toLowerCase())
     };

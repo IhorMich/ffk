@@ -447,6 +447,12 @@ async function getAuthSnapshot(){
     canSignOut: !!(personal || coach)
   };
 }
+function accountSignedIn(snap){
+  if(!snap) return false;
+  if(snap.canSignOut || snap.signedIn) return true;
+  if(snap.gates && snap.gates.canSignOut) return true;
+  return !!((snap.personal && snap.personal.email) || (snap.coach && snap.coach.email));
+}
 function syncSettingsAccountFooterFromSnap(snap){
   const status = document.getElementById('settingsAccountStatus');
   const signOutBtn = document.getElementById('settingsSignOutBtn');
@@ -466,14 +472,15 @@ function syncSettingsAccountFooterFromSnap(snap){
       : t('settingsAccountSignedOut');
     status.style.whiteSpace = lines.length > 1 ? 'pre-line' : '';
   }
+  const signedIn = accountSignedIn(snap);
   if(signOutBtn){
-    signOutBtn.hidden = !snap.canSignOut;
-    if(signOutBtn.parentElement) signOutBtn.parentElement.hidden = !snap.canSignOut;
+    signOutBtn.hidden = !signedIn;
+    if(signOutBtn.parentElement) signOutBtn.parentElement.hidden = !signedIn;
   }
   const clearBtn = document.getElementById('settingsDeleteAccountBtn');
-  if(clearBtn) clearBtn.hidden = !!snap.canSignOut;
+  if(clearBtn) clearBtn.hidden = signedIn;
   const cloudDeleteBtn = document.getElementById('settingsDeleteCloudBtn');
-  if(cloudDeleteBtn) cloudDeleteBtn.hidden = !snap.canSignOut;
+  if(cloudDeleteBtn) cloudDeleteBtn.hidden = !signedIn;
   if(coachEmailEl) coachEmailEl.hidden = true;
 }
 function syncSettingsAccountFooter(personalEmail){
