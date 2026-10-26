@@ -18,6 +18,7 @@
 		9582B6832FE993A70072D4E8 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9582B6822FE993A50072D4E8 /* SceneDelegate.swift */; };
 		A11F01012FEA00010001FF01 /* FfkNotifyPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11F01002FEA00010001FF01 /* FfkNotifyPlugin.swift */; };
 		A11F01032FEA00010001FF02 /* FfkBillingPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11F01022FEA00010001FF02 /* FfkBillingPlugin.swift */; };
+		A11F01062FEA00010001FF04 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = A11F01052FEA00010001FF04 /* GoogleService-Info.plist */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -35,6 +36,7 @@
 		A11F01002FEA00010001FF01 /* FfkNotifyPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FfkNotifyPlugin.swift; sourceTree = "<group>"; };
 		A11F01022FEA00010001FF02 /* FfkBillingPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FfkBillingPlugin.swift; sourceTree = "<group>"; };
 		A11F01042FEA00010001FF03 /* App.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = App.entitlements; sourceTree = "<group>"; };
+		A11F01052FEA00010001FF04 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -75,6 +77,7 @@
 				A11F01002FEA00010001FF01 /* FfkNotifyPlugin.swift */,
 				A11F01022FEA00010001FF02 /* FfkBillingPlugin.swift */,
 				A11F01042FEA00010001FF03 /* App.entitlements */,
+				A11F01052FEA00010001FF04 /* GoogleService-Info.plist */,
 				504EC30B1FED79650016851F /* Main.storyboard */,
 				504EC30E1FED79650016851F /* Assets.xcassets */,
 				504EC3101FED79650016851F /* LaunchScreen.storyboard */,
@@ -156,6 +159,7 @@
 				50379B232058CBB4000EE86E /* capacitor.config.json in Resources */,
 				504EC30D1FED79650016851F /* Main.storyboard in Resources */,
 				2FAD9763203C412B000D30F8 /* config.xml in Resources */,
+				A11F01062FEA00010001FF04 /* GoogleService-Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
