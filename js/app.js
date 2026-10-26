@@ -1325,7 +1325,7 @@ async function runPersonalCloudSync(options){
   }
 }
 
-let settings = {club:'', player:'', position:'fwd', format:'2x30', minutes:'60', lang:'ru', seasonCloseDeclined:'', theme:'dark', iconSet:'clear', onboarded:false, onboardSkin:'', isPro:false, isCoach:false, coachSub:false, coachSubPlan:'', coachSource:'', proSource:'', pwaTransferSeen:false, introMark:'', accountPrompted:false, devBilling:false, shareMilestonesSeen:''};
+let settings = {club:'', player:'', position:'fwd', format:'2x30', minutes:'60', lang:'en', seasonCloseDeclined:'', theme:'dark', iconSet:'clear', onboarded:false, onboardSkin:'', isPro:false, isCoach:false, coachSub:false, coachSubPlan:'', coachSource:'', proSource:'', pwaTransferSeen:false, introMark:'', accountPrompted:false, devBilling:false, shareMilestonesSeen:''};
 window.settings = settings;
 let roster = {currentId:'', ids:[]};
 let player = defaultPlayer();
@@ -7100,6 +7100,7 @@ document.getElementById('transferSkip').addEventListener('click', finishTransfer
 document.getElementById('settingsBtn').addEventListener('click', () => {
   document.getElementById('s-lang').value = settings.lang;
   refreshBackupBanner();
+  applyI18n();
   showView('settings');
 });
 document.getElementById('s-lang').addEventListener('change', () => {

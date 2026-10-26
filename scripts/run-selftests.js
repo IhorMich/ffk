@@ -11,7 +11,8 @@ const tests = [
   'repo/local/selftest.js',
   'repo/cloud/selftest.js',
   'data/selftest.js',
-  'errors/selftest.js'
+  'errors/selftest.js',
+  'i18n/selftest.js'
 ];
 
 const root = path.join(__dirname, '..');
@@ -25,4 +26,4 @@ for (const file of tests) {
     process.exit(result.status || 1);
   }
 }
-process.stdout.write('\nAll 8 selftests passed.\n');
+process.stdout.write('\nAll ' + tests.length + ' selftests passed.\n');
