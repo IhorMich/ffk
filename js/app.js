@@ -104,9 +104,11 @@ function applyNativeChrome(){
   const theme = themeName();
   const color = theme === 'day' ? '#FFF8D6' : '#05060c';
   const style = theme === 'dark' ? 'LIGHT' : 'DARK';
-  Promise.resolve(Bar.setOverlaysWebView({overlay: true})).catch(() => {});
+  // Android 16 draws the page under the clock and battery. Hide that strip
+  // so scrolling text is never covered. A swipe from the top edge still shows it.
   Promise.resolve(Bar.setBackgroundColor({color})).catch(() => {});
   Promise.resolve(Bar.setStyle({style})).catch(() => {});
+  Promise.resolve(Bar.hide()).catch(() => {});
 }
 const THEME_ORDER = ['dark','day'];
 function themeName(){
@@ -6171,6 +6173,7 @@ document.getElementById('liveDoneBtn').addEventListener('click', () => {
 // timer was, rather than an older snapshot from the last button press.
 document.addEventListener('visibilitychange', () => {
   if(document.visibilityState === 'hidden') persistDraft();
+  else applyNativeChrome();
 });
 window.addEventListener('pagehide', () => persistDraft());
 function suggestMinutesFromClock(){

@@ -23,6 +23,8 @@ import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 import androidx.core.splashscreen.SplashScreen;
 import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsCompat;
+import androidx.core.view.WindowInsetsControllerCompat;
 import com.getcapacitor.Bridge;
 import com.getcapacitor.BridgeActivity;
 import org.json.JSONObject;
@@ -53,6 +55,15 @@ public class MainActivity extends BridgeActivity {
     return aliveInstance;
   }
 
+  /** Clock and battery sit on top of scrolling text on Android 16. Keep them off the page. */
+  private void hideSystemStatusBar() {
+    Window window = getWindow();
+    WindowInsetsControllerCompat controller = WindowCompat.getInsetsController(window, window.getDecorView());
+    if (controller == null) return;
+    controller.setSystemBarsBehavior(WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
+    controller.hide(WindowInsetsCompat.Type.statusBars());
+  }
+
   @Override
   public void onCreate(Bundle savedInstanceState) {
     aliveInstance = this;
@@ -67,6 +78,7 @@ public class MainActivity extends BridgeActivity {
     Window window = getWindow();
     WindowCompat.setDecorFitsSystemWindows(window, false);
     window.setStatusBarColor(Color.parseColor("#030308"));
+    hideSystemStatusBar();
     window.setNavigationBarColor(Color.parseColor("#030308"));
     if (Build.VERSION.SDK_INT >= 29) {
       window.setNavigationBarContrastEnforced(false);
@@ -104,6 +116,7 @@ public class MainActivity extends BridgeActivity {
   public void onResume() {
     super.onResume();
     aliveInstance = this;
+    hideSystemStatusBar();
     // Foreground: JS interval owns polling; stop native wake loop.
     stopBackgroundChatPollInternal();
     flushPendingChatIntent();
