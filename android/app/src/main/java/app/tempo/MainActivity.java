@@ -37,6 +37,7 @@ public class MainActivity extends BridgeActivity {
   private volatile boolean keepSplash = true;
   private String pendingChatPlayerId = null;
   private String pendingChatKind = null;
+  private PlayBilling playBilling;
 
   /** Clock and battery sit on top of scrolling text on Android 16. Keep them off the page. */
   private void hideSystemStatusBar() {
@@ -57,6 +58,8 @@ public class MainActivity extends BridgeActivity {
     super.onCreate(savedInstanceState);
     ensureAlertChannel();
     ChatPollReceiver.stop(this);
+    playBilling = new PlayBilling(this);
+    playBilling.start();
     captureChatIntent(getIntent());
     Window window = getWindow();
     WindowCompat.setDecorFitsSystemWindows(window, false);
@@ -71,6 +74,7 @@ public class MainActivity extends BridgeActivity {
       webView.setBackgroundColor(Color.parseColor("#030308"));
       webView.addJavascriptInterface(new SplashBridge(), "FfkSplash");
       webView.addJavascriptInterface(new NotifyBridge(), "FfkNotify");
+      webView.addJavascriptInterface(new BillingBridge(), "FfkBilling");
     }
     getOnBackPressedDispatcher()
       .addCallback(
@@ -354,6 +358,18 @@ public class MainActivity extends BridgeActivity {
     @JavascriptInterface
     public void stopBackgroundChatPoll() {
       runOnUiThread(() -> stopBackgroundChatPollInternal());
+    }
+  }
+
+  private class BillingBridge {
+    @JavascriptInterface
+    public void refresh() {
+      if (playBilling != null) playBilling.refresh();
+    }
+
+    @JavascriptInterface
+    public void purchase() {
+      if (playBilling != null) playBilling.purchase();
     }
   }
 

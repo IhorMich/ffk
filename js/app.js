@@ -874,6 +874,7 @@ async function setPro(on){
     if(!session) return;
   }
   settings.isPro = !!on;
+  if(!on) settings.proSource = '';
   saveSettings();
   syncProUi();
   applyI18n();
@@ -906,6 +907,68 @@ function setCoachSub(on){
   syncCoachBillingUi();
   showToast(on ? t('coachSubOn') : t('coachSubOff'));
 }
+function playBillingAvailable(){
+  return !!(window.FfkBilling && typeof window.FfkBilling.purchase === 'function');
+}
+function subscribeLabel(){
+  const price = window.ffkPlayPrice || '';
+  return price ? t('proSubscribePrice', {price: price}) : t('proSubscribe');
+}
+function openPlaySubscriptions(){
+  const url = 'https://play.google.com/store/account/subscriptions?sku=tempo_pro&package=app.tempo';
+  try{
+    const Browser = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Browser;
+    if(Browser && typeof Browser.open === 'function'){
+      Browser.open({url: url});
+      return;
+    }
+  }catch(e){}
+  try{ window.open(url, '_blank'); }catch(e){}
+}
+async function purchasePro(){
+  if(playBillingAvailable() && !devBillingOn()){
+    const session = await requirePersonalAccount('accountNeedForPro');
+    if(!session) return;
+    try{ window.FfkBilling.purchase(); }
+    catch(e){ showToast(t('proPurchaseFail')); }
+    return;
+  }
+  if(devBillingOn()){
+    await setPro(true);
+    return;
+  }
+  showToast(t('proPlayOnly'));
+}
+window.ffkApplyPlayBilling = function(state){
+  if(!state || typeof state !== 'object') return;
+  if(state.price) window.ffkPlayPrice = String(state.price);
+  if(state.active){
+    const was = isPro();
+    settings.isPro = true;
+    settings.proSource = 'play';
+    saveSettings();
+    syncProUi();
+    if(!was){
+      if(state.userAction) showToast(t('proOn'));
+      runPersonalCloudSync({pull: true, push: true});
+    }
+    return;
+  }
+  if(state.checked && state.status === 'none' && settings.proSource === 'play'){
+    settings.isPro = false;
+    settings.proSource = '';
+    saveSettings();
+    syncProUi();
+    if(state.userAction) showToast(t('proOff'));
+    return;
+  }
+  syncProUi();
+  if(!state.userAction) return;
+  if(state.status === 'pending') showToast(t('proPurchasePending'));
+  else if(state.status === 'cancelled') showToast(t('proPurchaseCancelled'));
+  else if(state.status === 'unavailable') showToast(t('proPlayMissing'));
+  else if(state.status === 'error') showToast(t('proPurchaseFail'));
+};
 function devBillingOn(){
   return !!(settings && settings.devBilling === true);
 }
@@ -950,8 +1013,9 @@ function syncPushSettingsUi(){
 }
 window.syncPushSettingsUi = syncPushSettingsUi;
 function proTeaserHtml(titleKey){
-  const unlock = devBillingOn()
-    ? `<button class="save-btn pro-lock-btn" type="button">${escapeHtml(t('proUnlock'))}</button>`
+  const show = devBillingOn() || (playBillingAvailable() && !devBillingOn());
+  const unlock = show
+    ? `<button class="save-btn pro-lock-btn" type="button">${escapeHtml(playBillingAvailable() && !devBillingOn() ? subscribeLabel() : t('proUnlock'))}</button>`
     : '';
   return `<div class="pro-lock">
     <div class="pro-lock-kicker">TEMPO Pro</div>
@@ -966,13 +1030,23 @@ function syncProUi(){
   if(body) body.textContent = isPro() ? t('proBodyOn') : t('proBodyOff');
   const unlock = document.getElementById('proUnlockBtn');
   const lock = document.getElementById('proLockBtn');
+  const showPlay = playBillingAvailable() && !devBillingOn();
   const showTest = devBillingOn();
   if(unlock){
-    unlock.hidden = !showTest || isPro();
+    unlock.hidden = !(showPlay || showTest) || isPro();
     unlock.disabled = false;
+    unlock.textContent = showPlay ? subscribeLabel() : t('proUnlock');
   }
   if(lock){
-    lock.hidden = !showTest || !isPro();
+    if(showTest){
+      lock.hidden = !isPro();
+      lock.textContent = t('proLock');
+    }else if(isPro() && settings.proSource === 'play'){
+      lock.hidden = false;
+      lock.textContent = t('proManage');
+    }else{
+      lock.hidden = true;
+    }
     lock.disabled = false;
   }
   const proActions = unlock && unlock.parentElement;
@@ -1111,7 +1185,7 @@ async function runPersonalCloudSync(options){
   }
 }
 
-let settings = {club:'', player:'', position:'fwd', format:'2x30', minutes:'60', lang:'ru', seasonCloseDeclined:'', theme:'dark', iconSet:'clear', onboarded:false, onboardSkin:'', isPro:false, isCoach:false, coachSub:false, coachSubPlan:'', pwaTransferSeen:false, introMark:'', accountPrompted:false, devBilling:false, shareMilestonesSeen:''};
+let settings = {club:'', player:'', position:'fwd', format:'2x30', minutes:'60', lang:'ru', seasonCloseDeclined:'', theme:'dark', iconSet:'clear', onboarded:false, onboardSkin:'', isPro:false, isCoach:false, coachSub:false, coachSubPlan:'', proSource:'', pwaTransferSeen:false, introMark:'', accountPrompted:false, devBilling:false, shareMilestonesSeen:''};
 window.settings = settings;
 let roster = {currentId:'', ids:[]};
 let player = defaultPlayer();
@@ -5306,8 +5380,14 @@ document.getElementById('copyBtn').addEventListener('click', async () => {
     showToast(t('toastCopied'));
   }catch(e){ showToast(t('toastCopyFail')); }
 });
-document.getElementById('proUnlockBtn')?.addEventListener('click', () => setPro(true));
-document.getElementById('proLockBtn')?.addEventListener('click', () => setPro(false));
+document.getElementById('proUnlockBtn')?.addEventListener('click', () => purchasePro());
+document.getElementById('proLockBtn')?.addEventListener('click', () => {
+  if(settings.proSource === 'play' && !devBillingOn()){
+    openPlaySubscriptions();
+    return;
+  }
+  setPro(false);
+});
 document.getElementById('personalSignUpBtn')?.addEventListener('click', () => onPersonalSignUp());
 document.getElementById('personalSignInBtn')?.addEventListener('click', () => onPersonalSignIn());
 document.getElementById('personalSignOutBtn')?.addEventListener('click', () => onPersonalSignOut());
@@ -5355,9 +5435,9 @@ if(typeof bindCoachUi === 'function') bindCoachUi();
 if(typeof bindParentUi === 'function') bindParentUi();
 document.addEventListener('click', e => {
   const btn = e.target.closest('.pro-lock-btn');
-  if(!btn || !devBillingOn()) return;
+  if(!btn || !(devBillingOn() || playBillingAvailable())) return;
   e.preventDefault();
-  setPro(true);
+  purchasePro();
 });
 let versionTapCount = 0;
 let versionTapTimer = null;
@@ -7994,6 +8074,11 @@ async function shareCard(m){
     try{
       if(window.CoachPush && typeof window.CoachPush.bootstrap === 'function'){
         setTimeout(() => { window.CoachPush.bootstrap().catch(() => {}); }, 2500);
+      }
+    }catch(e){}
+    try{
+      if(window.FfkBilling && typeof window.FfkBilling.refresh === 'function'){
+        setTimeout(() => window.FfkBilling.refresh(), 800);
       }
     }catch(e){}
     hydrateAllMedia().then(() => {

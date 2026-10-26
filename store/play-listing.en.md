@@ -1,6 +1,6 @@
 # TEMPO — Google Play (English)
 
-Copy for the app as of 26 October 2026. Sign-in exists. A free season stays on the phone. Cloud is Pro and coach. Cup and tournament are in the app. There is no Play purchase.
+Copy for the app as of 26 October 2026. Sign-in exists. A free season stays on the phone. Cloud is Pro and coach. Cup and tournament are in the app. TEMPO Pro is a Google Play subscription.
 
 ## App name (≤ 30)
 
@@ -20,7 +20,7 @@ Free keeps one player, and that season stays on this phone. Before you change ph
 
 Email or Google sign-in is for a coach and for a parent invited to a child’s card. Without Pro, the personal season is not uploaded.
 
-TEMPO Pro is described in the app: up to 32 players, charts and sync between phones. It is not for sale in Google Play yet.
+TEMPO Pro is a Google Play subscription: up to 32 players, charts and sync between phones. The price is shown before you pay. Cancel it in Google Play subscriptions.
 
 ## What’s new
 
@@ -31,7 +31,7 @@ A live match card, big pitch buttons right after Start, a short onboarding, and 
 - Category: Sports
 - Age: PEGI 3 / Everyone
 - Ads: no
-- In-app purchases: no
+- In-app purchases: yes, TEMPO Pro subscription
 
 ## Privacy
 
