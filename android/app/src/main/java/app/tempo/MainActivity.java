@@ -14,13 +14,16 @@ import android.provider.Settings;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.view.View;
 import android.view.Window;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebView;
 import androidx.activity.OnBackPressedCallback;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
+import androidx.core.graphics.Insets;
 import androidx.core.splashscreen.SplashScreen;
+import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
@@ -39,12 +42,29 @@ public class MainActivity extends BridgeActivity {
   private String pendingChatKind = null;
   private PlayBilling playBilling;
 
-  /** Keep clock/battery visible; WebView starts below the status bar (overlaysWebView=false). */
-  private void showSystemStatusBar() {
+  /**
+   * Android 15+ draws edge-to-edge even when overlaysWebView=false. Pad the
+   * content root by system-bar insets so scrollable HTML never sits under the
+   * clock/battery icons; fill that strip with the current status-bar color.
+   */
+  private void applySystemBars() {
     Window window = getWindow();
+    WindowCompat.setDecorFitsSystemWindows(window, false);
     WindowInsetsControllerCompat controller = WindowCompat.getInsetsController(window, window.getDecorView());
-    if (controller == null) return;
-    controller.show(WindowInsetsCompat.Type.statusBars());
+    if (controller != null) {
+      controller.show(WindowInsetsCompat.Type.statusBars());
+    }
+    View root = findViewById(android.R.id.content);
+    if (root == null) return;
+    ViewCompat.setOnApplyWindowInsetsListener(root, (v, insets) -> {
+      Insets bars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+      v.setPadding(bars.left, bars.top, bars.right, bars.bottom);
+      int fill = window.getStatusBarColor();
+      if (fill == Color.TRANSPARENT) fill = Color.parseColor("#05060c");
+      v.setBackgroundColor(fill);
+      return WindowInsetsCompat.CONSUMED;
+    });
+    ViewCompat.requestApplyInsets(root);
   }
 
   @Override
@@ -61,13 +81,15 @@ public class MainActivity extends BridgeActivity {
     playBilling.start();
     captureChatIntent(getIntent());
     Window window = getWindow();
-    WindowCompat.setDecorFitsSystemWindows(window, true);
     window.setStatusBarColor(Color.parseColor("#05060c"));
-    showSystemStatusBar();
     window.setNavigationBarColor(Color.parseColor("#030308"));
     if (Build.VERSION.SDK_INT >= 29) {
       window.setNavigationBarContrastEnforced(false);
     }
+    applySystemBars();
+    // Capacitor finishes laying out after onCreate — re-apply once the WebView exists.
+    new Handler(Looper.getMainLooper()).post(this::applySystemBars);
+    new Handler(Looper.getMainLooper()).postDelayed(this::applySystemBars, 300);
     WebView webView = getBridge() != null ? getBridge().getWebView() : null;
     if (webView != null) {
       webView.setBackgroundColor(Color.parseColor("#030308"));
@@ -101,7 +123,7 @@ public class MainActivity extends BridgeActivity {
   @Override
   public void onResume() {
     super.onResume();
-    showSystemStatusBar();
+    applySystemBars();
     ChatPollReceiver.stop(this);
     flushPendingChatIntent();
     runForegroundChatPoll();
