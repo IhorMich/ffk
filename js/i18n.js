@@ -7111,7 +7111,8 @@ ru:{
       parentCalTrain:'Training',
       parentCalPrev:'Previous month',
       parentCalNext:'Next month',
-      parentCalToggle:'Open or close the schedule'
+      parentCalToggle:'Open or close the schedule',
+      parentCalRepeat:'Repeat'
     },
     uk:{
       parentCalTitle:'Розклад',
@@ -7120,7 +7121,8 @@ ru:{
       parentCalTrain:'Тренування',
       parentCalPrev:'Попередній місяць',
       parentCalNext:'Наступний місяць',
-      parentCalToggle:'Відкрити або згорнути розклад'
+      parentCalToggle:'Відкрити або згорнути розклад',
+      parentCalRepeat:'Повтор'
     },
     pl:{
       parentCalTitle:'Plan',
@@ -7129,7 +7131,8 @@ ru:{
       parentCalTrain:'Trening',
       parentCalPrev:'Poprzedni miesiąc',
       parentCalNext:'Następny miesiąc',
-      parentCalToggle:'Otwórz lub zwiń plan'
+      parentCalToggle:'Otwórz lub zwiń plan',
+      parentCalRepeat:'Powtórzenie'
     },
     ru:{
       parentCalTitle:'Расписание',
@@ -7138,7 +7141,8 @@ ru:{
       parentCalTrain:'Тренировка',
       parentCalPrev:'Предыдущий месяц',
       parentCalNext:'Следующий месяц',
-      parentCalToggle:'Открыть или свернуть расписание'
+      parentCalToggle:'Открыть или свернуть расписание',
+      parentCalRepeat:'Повтор'
     },
     es:{
       parentCalTitle:'Calendario',
@@ -7147,7 +7151,8 @@ ru:{
       parentCalTrain:'Entreno',
       parentCalPrev:'Mes anterior',
       parentCalNext:'Mes siguiente',
-      parentCalToggle:'Abrir o cerrar el calendario'
+      parentCalToggle:'Abrir o cerrar el calendario',
+      parentCalRepeat:'Repetición'
     },
     de:{
       parentCalTitle:'Plan',
@@ -7156,7 +7161,8 @@ ru:{
       parentCalTrain:'Training',
       parentCalPrev:'Vorheriger Monat',
       parentCalNext:'Nächster Monat',
-      parentCalToggle:'Plan öffnen oder schließen'
+      parentCalToggle:'Plan öffnen oder schließen',
+      parentCalRepeat:'Wiederholung'
     },
     it:{
       parentCalTitle:'Calendario',
@@ -7165,7 +7171,8 @@ ru:{
       parentCalTrain:'Allenamento',
       parentCalPrev:'Mese precedente',
       parentCalNext:'Mese successivo',
-      parentCalToggle:'Apri o chiudi il calendario'
+      parentCalToggle:'Apri o chiudi il calendario',
+      parentCalRepeat:'Ripetizione'
     },
     fr:{
       parentCalTitle:'Planning',
@@ -7174,7 +7181,8 @@ ru:{
       parentCalTrain:'Entraînement',
       parentCalPrev:'Mois précédent',
       parentCalNext:'Mois suivant',
-      parentCalToggle:'Ouvrir ou fermer le planning'
+      parentCalToggle:'Ouvrir ou fermer le planning',
+      parentCalRepeat:'Répétition'
     },
     pt:{
       parentCalTitle:'Calendário',
@@ -7183,7 +7191,8 @@ ru:{
       parentCalTrain:'Treino',
       parentCalPrev:'Mês anterior',
       parentCalNext:'Mês seguinte',
-      parentCalToggle:'Abrir ou fechar o calendário'
+      parentCalToggle:'Abrir ou fechar o calendário',
+      parentCalRepeat:'Repetição'
     }
   };
   LANGS.forEach(lang => {

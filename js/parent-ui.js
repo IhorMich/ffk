@@ -1397,6 +1397,38 @@
       : [];
     return {trains, games: parentCalledUpGames(links)};
   }
+  function parentDetailRow(label, value){
+    const text = labelOf(value);
+    if(!text) return '';
+    return `<p class="parent-msg-detail"><b>${esc(label)}</b><span>${esc(text)}</span></p>`;
+  }
+  function parentClock(value){
+    const match = String(value || '').trim().match(/^(\d{1,2}:\d{2})/);
+    return match ? match[1] : '';
+  }
+  function parentDateLabel(ymd){
+    const match = String(ymd || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if(!match) return '';
+    try{
+      return new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]))
+        .toLocaleDateString(undefined, {weekday: 'long', day: 'numeric', month: 'long'});
+    }catch(e){
+      return ymd;
+    }
+  }
+  function parentGameKind(kind){
+    return ({
+      league: tt('kindLeague', 'League'),
+      friendly: tt('kindFriendly', 'Friendly'),
+      cup: tt('kindCup', 'Cup'),
+      tournament: tt('kindTournament', 'Tournament')
+    })[kind] || '';
+  }
+  function parentFeeLabel(game){
+    if(!game || (game.fee_type !== 'paid' && game.fee_type !== 'free')) return '';
+    if(game.fee_type === 'paid') return labelOf(game.fee) || tt('coachMatchFeePaid', 'Paid entry');
+    return tt('coachMatchFeeFree', 'Free');
+  }
   function parentRsvpButtons(kind, onYes, onNo, attrs){
     const yesLabel = kind === 'game' ? tt('parentRsvpYes', 'Will play') : tt('parentTrainYes', 'We\'ll come');
     const noLabel = kind === 'game' ? tt('parentRsvpNo', 'Cannot play') : tt('parentTrainNo', 'We can\'t');
@@ -1477,22 +1509,66 @@
       return;
     }
     const trainHtml = dayTrains.map(tr => {
-      const when = [tt('parentCalTrain', 'Training'), tr.start_time + (tr.end_time ? `–${tr.end_time}` : '')].filter(Boolean).join(' · ');
-      const meta = [labelOf(tr.address) || '', labelOf(tr.team_name) || ''].filter(Boolean).join(' · ');
+      const title = labelOf(tr.title)
+        || [parentClock(tr.start_time), parentClock(tr.end_time)].filter(Boolean).join('–')
+        || tt('parentCalTrain', 'Training');
+      const remind = Number(tr.notify_minutes) > 0
+        ? tt('parentTrainRemindHint', 'Reminder {n} min before').replace('{n}', String(tr.notify_minutes))
+        : '';
       const attrs = `data-train-id="${esc(tr.id)}" data-player-id="${esc(tr.team_player_id)}" data-team-id="${esc(tr.team_id)}" data-train-date="${esc(tr.date)}"`;
-      return `<div class="coach-player-row">
-        <div class="coach-player-main"><b>${esc(when)}</b>${meta ? `<span>${esc(meta)}</span>` : ''}</div>
-        ${parentRsvpButtons('train', tr.rsvp === 'accepted', tr.rsvp === 'declined', attrs)}
-      </div>`;
+      return `<article class="parent-cal-event">
+        <div class="parent-cal-event-head">
+          <div>
+            <span class="parent-cal-kicker">${esc(tt('parentCalTrain', 'Training'))}</span>
+            <b>${esc(title)}</b>
+          </div>
+          ${parentRsvpButtons('train', tr.rsvp === 'accepted', tr.rsvp === 'declined', attrs)}
+        </div>
+        <div class="parent-msg-details">
+          ${parentDetailRow(tt('labelDate', 'Date'), parentDateLabel(tr.date))}
+          ${parentDetailRow(tt('coachTrainStart', 'Start'), parentClock(tr.start_time))}
+          ${parentDetailRow(tt('coachTrainEnd', 'End'), parentClock(tr.end_time))}
+          ${parentDetailRow(tt('coachTrainAddress', 'Pitch / address'), tr.address)}
+          ${tr.recurring ? parentDetailRow(tt('parentCalRepeat', 'Repeat'), tt('coachTrainRecurringShort', 'Weekly')) : ''}
+          ${parentDetailRow(tt('coachTrainNotify', 'Reminder'), remind)}
+          ${parentDetailRow(tt('parentInboxChild', 'Child'), tr.player_name)}
+          ${parentDetailRow(tt('parentInboxTeam', 'Team'), tr.team_name)}
+          ${parentDetailRow(tt('pClub', 'Club / academia'), tr.academy_name)}
+        </div>
+      </article>`;
     }).join('');
     const gameHtml = dayGames.map(g => {
-      const when = [tt('parentCalGame', 'Game'), g.kickoff || g.meetup || ''].filter(Boolean).join(' · ');
-      const meta = [g.opponent || '', g.address || '', g.team_name || ''].filter(Boolean).join(' · ');
+      const title = labelOf(g.opponent)
+        || parentClock(g.kickoff)
+        || tt('parentCalGame', 'Game');
+      const venue = g.venue === 'away'
+        ? tt('venueAway', 'Away')
+        : (g.venue === 'home' ? tt('venueHome', 'Home') : '');
       const attrs = `data-msg-id="${esc(g.id)}"`;
-      return `<div class="coach-player-row">
-        <div class="coach-player-main"><b>${esc(when)}</b>${meta ? `<span>${esc(meta)}</span>` : ''}</div>
-        ${parentRsvpButtons('game', g.rsvp === 'accepted', g.rsvp === 'declined', attrs)}
-      </div>`;
+      return `<article class="parent-cal-event">
+        <div class="parent-cal-event-head">
+          <div>
+            <span class="parent-cal-kicker">${esc(tt('parentCalGame', 'Game'))}</span>
+            <b>${esc(title)}</b>
+          </div>
+          ${parentRsvpButtons('game', g.rsvp === 'accepted', g.rsvp === 'declined', attrs)}
+        </div>
+        <div class="parent-msg-details">
+          ${parentDetailRow(tt('labelDate', 'Date'), parentDateLabel(g.date))}
+          ${parentDetailRow(tt('coachMatchMeetup', 'Meetup time'), parentClock(g.meetup))}
+          ${parentDetailRow(tt('coachMatchKickoff', 'Kick-off'), parentClock(g.kickoff))}
+          ${parentDetailRow(tt('coachMatchEnd', 'Ends'), parentClock(g.end_time))}
+          ${parentDetailRow(tt('coachMatchFee', 'Entry fee'), parentFeeLabel(g))}
+          ${parentDetailRow(tt('labelVenue', 'Venue'), venue)}
+          ${parentDetailRow(tt('coachMatchKind', 'Match type'), parentGameKind(g.kind))}
+          ${parentDetailRow(tt('labelCompTournament', 'Tournament'), g.tournament)}
+          ${parentDetailRow(tt('coachMatchAddress', 'Match address'), g.address)}
+          ${parentDetailRow(tt('parentInboxChild', 'Child'), g.player_name)}
+          ${parentDetailRow(tt('parentCoachLabel', 'Coach'), g.coach_name)}
+          ${parentDetailRow(tt('parentInboxTeam', 'Team'), g.team_name)}
+          ${parentDetailRow(tt('pClub', 'Club / academia'), g.academy_name)}
+        </div>
+      </article>`;
     }).join('');
     dayBox.innerHTML = trainHtml + gameHtml;
   }

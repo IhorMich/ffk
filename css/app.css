@@ -1728,6 +1728,17 @@
   .parent-cal.is-open .parent-cal-chevron{transform:rotate(180deg);}
   #parentCalBody{margin-top:10px;}
   .parent-cal-day{display:flex;flex-direction:column;gap:8px;margin-top:10px;}
+  .parent-cal-event{
+    padding:10px 12px;border-radius:14px;border:1px solid var(--card-line);
+    background:color-mix(in srgb, var(--card-paper) 92%, var(--card-accent));
+  }
+  .parent-cal-event-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;}
+  .parent-cal-event-head b{display:block;font-size:1rem;}
+  .parent-cal-kicker{
+    display:block;margin:0 0 2px;font-size:.68rem;font-weight:800;
+    letter-spacing:.04em;text-transform:uppercase;color:var(--card-muted);
+  }
+  .parent-cal-event .parent-msg-details{margin:10px 0 0;}
   .coach-train-cell.has-game{
     background:color-mix(in srgb, #3d8bfd 12%, var(--card-paper));
     border-color:color-mix(in srgb, #3d8bfd 40%, var(--card-line));
