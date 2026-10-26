@@ -3,6 +3,8 @@
   "private": true,
   "description": "TEMPO — GitHub Pages PWA and Capacitor Android/iOS shells",
   "scripts": {
+    "test": "node scripts/run-selftests.js",
+    "prepare": "node scripts/install-git-hooks.js",
     "www": "node scripts/sync-www.js",
     "cap:sync": "npm run www && npx cap sync",
     "android": "npm run cap:sync && npx cap open android",
