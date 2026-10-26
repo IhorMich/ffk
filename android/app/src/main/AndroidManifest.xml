@@ -26,8 +26,8 @@
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="ffk" android:host="parent" />
-                <data android:scheme="ffk" android:host="auth-callback" />
+                <data android:scheme="tempo" android:host="parent" />
+                <data android:scheme="tempo" android:host="auth-callback" />
             </intent-filter>
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />
@@ -62,14 +62,14 @@
             android:name=".TrainingAlarmReceiver"
             android:exported="false">
             <intent-filter>
-                <action android:name="app.ffk.rating.TRAINING_REMINDER" />
+                <action android:name="app.tempo.TRAINING_REMINDER" />
             </intent-filter>
         </receiver>
         <receiver
             android:name=".ChatPollReceiver"
             android:exported="false">
             <intent-filter>
-                <action android:name="app.ffk.rating.CHAT_POLL" />
+                <action android:name="app.tempo.CHAT_POLL" />
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
         </receiver>

@@ -358,7 +358,7 @@ window.FFK_COACH_I18N.fr = {
   parentClaimKicker: "Ajouter un joueur",
   parentClaimLead: "Collez le lien d’invitation du QR ou le code MC-XXXXXX fourni par l’entraîneur.",
   parentClaimInputLabel: "Lien ou code",
-  parentClaimInputPh: "ffk://parent?d=… ou MC-AB12CD",
+  parentClaimInputPh: "tempo://parent?d=… ou MC-AB12CD",
   parentClaimPreviewBtn: "Vérifier",
   parentClaimConfirmBtn: "Confirmer et ajouter",
   parentClaimHint: "Vos statistiques TEMPO personnelles restent les vôtres. Les notes de l’entraîneur sont affichées séparément.",

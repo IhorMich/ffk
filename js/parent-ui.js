@@ -1829,7 +1829,7 @@
       const q = location.search || '';
       const h = location.hash || '';
       const blob = q + h;
-      if(/ffk_parent=|[#&?](?:d|token|code)=/.test(blob) || /ffk:\/\/parent/.test(location.href)){
+      if(/ffk_parent=|[#&?](?:d|token|code)=/.test(blob) || /(?:tempo|ffk):\/\/parent/.test(location.href)){
         ingestDeepLink(location.href);
       }
     }catch(e){}

@@ -1,4 +1,4 @@
-package app.ffk.rating;
+package app.tempo;
 
 import android.app.AlarmManager;
 import android.app.PendingIntent;
@@ -10,12 +10,12 @@ import android.os.Build;
 import android.os.SystemClock;
 
 /**
- * Wakes the process while Matchcard is backgrounded and asks MainActivity
+ * Wakes the process while Tempo is backgrounded and asks MainActivity
  * to run a JS chat poll. WebView setInterval is throttled/frozen in background;
  * AlarmManager is not.
  */
 public class ChatPollReceiver extends BroadcastReceiver {
-  public static final String ACTION = "app.ffk.rating.CHAT_POLL";
+  public static final String ACTION = "app.tempo.CHAT_POLL";
   public static final String PREFS = "ffk_chat_poll";
   public static final String KEY_ENABLED = "enabled";
   public static final String KEY_INTERVAL = "interval_ms";

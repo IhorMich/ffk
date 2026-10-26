@@ -93,7 +93,7 @@
 
 ### Android / iOS (Capacitor)
 
-Тот же веб внутри нативной оболочки (`app.ffk.rating`). GitHub Pages не трогаем — в native уходит копия через `www/`.
+Тот же веб внутри нативной оболочки (`app.tempo`). GitHub Pages не трогаем — в native уходит копия через `www/`.
 
 ```bash
 npm install

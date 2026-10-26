@@ -1,4 +1,4 @@
-package app.ffk.rating;
+package app.tempo;
 
 import android.app.Activity;
 import android.content.ActivityNotFoundException;

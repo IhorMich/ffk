@@ -1,4 +1,4 @@
-package app.ffk.rating;
+package app.tempo;
 
 import android.app.AlarmManager;
 import android.content.SharedPreferences;
@@ -33,7 +33,7 @@ public class MainActivity extends BridgeActivity {
 
   // v2: recreate channel so Android picks up the phone's default notification sound.
   private static final String ALERT_CHANNEL = "matchcard_alerts_v2";
-  private static final String ACTION_OPEN_CHAT = "app.ffk.rating.OPEN_CHAT";
+  private static final String ACTION_OPEN_CHAT = "app.tempo.OPEN_CHAT";
   private static int notifySeq = 1000;
   private volatile boolean keepSplash = true;
   private String pendingChatPlayerId = null;
@@ -387,7 +387,7 @@ public class MainActivity extends BridgeActivity {
       long at = (long) whenMs;
       if (id == null || id.isEmpty() || at <= System.currentTimeMillis()) return;
       Intent intent = new Intent(MainActivity.this, TrainingAlarmReceiver.class);
-      intent.setAction("app.ffk.rating.TRAINING_REMINDER");
+      intent.setAction("app.tempo.TRAINING_REMINDER");
       intent.putExtra("id", id);
       intent.putExtra("title", title == null ? "TEMPO" : title);
       intent.putExtra("body", body == null ? "" : body);
@@ -415,7 +415,7 @@ public class MainActivity extends BridgeActivity {
     public void cancel(String id) {
       if (id == null || id.isEmpty()) return;
       Intent intent = new Intent(MainActivity.this, TrainingAlarmReceiver.class);
-      intent.setAction("app.ffk.rating.TRAINING_REMINDER");
+      intent.setAction("app.tempo.TRAINING_REMINDER");
       int req = Math.abs(id.hashCode());
       int flags = PendingIntent.FLAG_UPDATE_CURRENT;
       if (Build.VERSION.SDK_INT >= 23) flags |= PendingIntent.FLAG_IMMUTABLE;

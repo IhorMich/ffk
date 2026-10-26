@@ -707,7 +707,7 @@ function closeLegalPage(){
   if(frame) frame.removeAttribute('src');
 }
 function openSettingsRate(){
-  const play = 'https://play.google.com/store/apps/details?id=app.ffk.rating';
+  const play = 'https://play.google.com/store/apps/details?id=app.tempo';
   const web = 'https://ihormich.github.io/ffk/';
   let url = web;
   try{

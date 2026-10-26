@@ -52,9 +52,9 @@
       : 'code=' + encodeURIComponent(code.toUpperCase());
     const web = new URL('./', location.href);
     web.search = query;
-    const deep = 'ffk://parent?' + query;
+    const deep = 'tempo://parent?' + query;
     const androidIntent = 'intent://parent?' + query
-      + '#Intent;scheme=ffk;package=app.ffk.rating;S.browser_fallback_url='
+      + '#Intent;scheme=tempo;package=app.tempo;S.browser_fallback_url='
       + encodeURIComponent(web.href)
       + ';end';
     const target = /Android/i.test(navigator.userAgent) ? androidIntent : deep;

@@ -356,11 +356,11 @@
     },
     buildLink(payload){
       const data = this.encodePayload(payload);
-      return `ffk://parent?d=${data}`;
+      return `tempo://parent?d=${data}`;
     },
     buildCodeLink(code){
       const value = String(code || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8);
-      return value ? `ffk://parent?code=${value}` : '';
+      return value ? `tempo://parent?code=${value}` : '';
     },
     buildCodeWebLink(code){
       const value = String(code || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8);

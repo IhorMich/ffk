@@ -68,7 +68,7 @@
     }
 
     // Custom scheme only — do NOT use intent://…#Intent (it eats OAuth hash / & params).
-    const target = 'ffk://auth-callback' + (qs ? ('?' + qs) : '');
+    const target = 'tempo://auth-callback' + (qs ? ('?' + qs) : '');
 
     message.textContent = text.msg;
     button.textContent = text.btn;

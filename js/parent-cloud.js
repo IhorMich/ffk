@@ -457,7 +457,7 @@
   }
   function authRedirectTo(){
     // Same return path the working Google icon used: the app itself, not a bridge page.
-    if(isNativeShell()) return 'ffk://auth-callback';
+    if(isNativeShell()) return 'tempo://auth-callback';
     try{
       if(global.location && /^https:/i.test(global.location.href)){
         const path = String(global.location.pathname || '/');
@@ -498,7 +498,7 @@
     const text = String(rawUrl || '');
     if(!text) return {code: '', access_token: '', refresh_token: '', error: '', error_description: ''};
     let normalized = text;
-    if(/^ffk:/i.test(normalized)) normalized = normalized.replace(/^ffk:/i, 'https://ffk.local');
+    if(/^(?:tempo|ffk):/i.test(normalized)) normalized = normalized.replace(/^(?:tempo|ffk):/i, 'https://tempo.local');
     try{
       const u = new URL(normalized);
       const hash = String(u.hash || '').replace(/^#/, '');

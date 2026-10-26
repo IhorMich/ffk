@@ -1,4 +1,4 @@
-package app.ffk.rating;
+package app.tempo;
 
 import android.app.NotificationChannel;
 import android.app.NotificationManager;

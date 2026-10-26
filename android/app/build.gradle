@@ -1,14 +1,14 @@
 apply plugin: 'com.android.application'
 
 android {
-    namespace = "app.ffk.rating"
+    namespace = "app.tempo"
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "app.ffk.rating"
+        applicationId "app.tempo"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 451
-        versionName "1.2.380"
+        versionCode 452
+        versionName "1.2.381"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.

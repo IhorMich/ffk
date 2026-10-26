@@ -365,7 +365,7 @@ window.FFK_COACH_I18N.pl = {
   parentClaimKicker:'Dodaj zawodnika',
   parentClaimLead:'Wklej link z QR lub kod MC-XXXXXX otrzymany od trenera.',
   parentClaimInputLabel:'Link lub kod',
-  parentClaimInputPh:'ffk://parent?d=… lub MC-AB12CD',
+  parentClaimInputPh:'tempo://parent?d=… lub MC-AB12CD',
   parentClaimPreviewBtn:'Sprawdź',
   parentClaimConfirmBtn:'Potwierdź i dodaj',
   parentClaimHint:'Twoje osobiste statystyki TEMPO pozostają Twoje. Oceny trenera są wyświetlane oddzielnie.',
