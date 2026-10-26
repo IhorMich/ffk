@@ -679,11 +679,11 @@
                 : tt('parentInboxMatchUpdated', 'Match updated'))
               : (head || tt('parentInboxMatch', 'Match invite')));
       const rsvpMark = !isResult && !notice && m.rsvp === 'accepted'
-        ? ' ✓'
+        ? ' <span class="rsvp-yes-mark">✓</span>'
         : (!isResult && !notice && m.rsvp === 'declined' ? ' ✕' : '');
       return `<button type="button" class="parent-msg-row${unreadCls}${isResult ? ' result' : ''}${notice ? ` notice-${notice}` : ''}${m.rsvp === 'accepted' ? ' rsvp-yes' : ''}${m.rsvp === 'declined' ? ' rsvp-no' : ''}" data-parent-msg="${esc(m.id)}">
         <span class="parent-link-main">
-          <b>${esc(title)}${esc(rsvpMark)}</b>
+          <b>${esc(title)}${rsvpMark}</b>
           <span>${esc(meta || '—')}</span>
         </span>
         <span class="parent-msg-check" aria-hidden="true">✓</span>

@@ -1692,6 +1692,7 @@
     min-height:64px;font-size:1.8rem;font-weight:900;cursor:pointer;
     background:var(--card-paper);color:var(--card-muted);
   }
+  .parent-rsvp-btn.yes{color:#1faa5a;}
   .parent-rsvp-btn.yes.on{
     color:#1faa5a;border-color:#1faa5a;
     background:color-mix(in srgb, #1faa5a 16%, var(--card-paper));
@@ -1707,10 +1708,13 @@
     background:transparent;color:var(--card-muted);font:inherit;font-weight:800;font-size:1.25rem;
     line-height:1;cursor:pointer;
   }
+  .train-rsvp-btn[data-train-rsvp="accepted"],
+  .train-rsvp-btn[data-game-rsvp="accepted"]{color:#1faa5a;}
   .train-rsvp-btn.on-yes{
     color:#1faa5a;border-color:#1faa5a;
     background:color-mix(in srgb, #1faa5a 16%, var(--card-paper));
   }
+  .rsvp-yes-mark{color:#1faa5a;}
   .train-rsvp-btn.on-no,
   .train-rsvp-btn[data-train-rsvp="declined"],
   .train-rsvp-btn[data-game-rsvp="declined"]{color:#e25555;}

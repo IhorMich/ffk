@@ -1807,7 +1807,7 @@
         </button>`;
       }).join('');
       const sum = [
-        accepted ? `${accepted} ✓` : '',
+        accepted ? `<span class="rsvp-yes-mark">${accepted} ✓</span>` : '',
         declined ? `${declined} ✕` : '',
         pending ? `${pending} ☐` : ''
       ].filter(Boolean).join(' · ');
@@ -1816,7 +1816,7 @@
         <b>${esc(tt('coachSquadLabel', 'Who plays'))}</b>
         ${match.address ? `<p class="hint">${esc(match.address)}</p>` : ''}
         <p class="hint">${esc(tt('coachMatchParentsNotified', 'Parents of selected players get a match notice in the app.'))}</p>
-        ${sum ? `<p class="hint coach-rsvp-sum">${esc(tt('coachRsvpSummary', 'Replies'))}: ${esc(sum)}</p>` : ''}
+        ${sum ? `<p class="hint coach-rsvp-sum">${esc(tt('coachRsvpSummary', 'Replies'))}: ${sum}</p>` : ''}
         <div class="coach-invite-rows">${rows}</div>
       </div>`;
     });
