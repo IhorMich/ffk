@@ -3368,7 +3368,7 @@ ru:{
 (function mergeSprint5I18n(){
   const extra = {
     uk:{
-      sTheme:'Тема', theme_dark:'Ніч', theme_light:'Кімната', theme_day:'Вулиця',
+      sTheme:'Тема', theme_dark:'Ніч', theme_light:'Кімната', theme_day:'Світла',
       sTzHint:'Час матчу з цього телефону ({tz}). Для польської мови типово Варшава.',
       onboardSkip:'Пропустити', onboardNext:'Далі', onboardDone:'Почати',
       onboard1Title:'Оцінка матчу дитини',
@@ -3390,7 +3390,7 @@ ru:{
       liveOnPitch:'Вести матч', pAddCover:'Додати фото'
     },
     pl:{
-      sTheme:'Motyw', theme_dark:'Noc', theme_light:'Pokój', theme_day:'Boisko',
+      sTheme:'Motyw', theme_dark:'Noc', theme_light:'Pokój', theme_day:'Jasny',
       sTzHint:'Czas meczu z tego telefonu ({tz}). Dla języka polskiego domyślnie Warszawa.',
       onboardSkip:'Pomiń', onboardNext:'Dalej', onboardDone:'Zaczynamy',
       onboard1Title:'Ocena meczu dziecka',
@@ -3411,7 +3411,7 @@ ru:{
       liveOnPitch:'Prowadź mecz', pAddCover:'Dodaj zdjęcie'
     },
     en:{
-      sTheme:'Theme', theme_dark:'Night', theme_light:'Indoor', theme_day:'Pitch',
+      sTheme:'Theme', theme_dark:'Night', theme_light:'Indoor', theme_day:'Light',
       sTzHint:'Match time comes from this phone ({tz}). Polish language defaults to Warsaw.',
       onboardSkip:'Skip', onboardNext:'Next', onboardDone:'Start',
       onboard1Title:'Rate a child’s match',
@@ -3433,7 +3433,7 @@ ru:{
       liveOnPitch:'Track the match', pAddCover:'Add photo'
     },
     ru:{
-      sTheme:'Тема', theme_dark:'Ночь', theme_light:'Комната', theme_day:'Улица',
+      sTheme:'Тема', theme_dark:'Ночь', theme_light:'Комната', theme_day:'Светлая',
       sTzHint:'Время матча с этого телефона ({tz}). Для польского языка по умолчанию Варшава.',
       onboardSkip:'Пропустить', onboardNext:'Дальше', onboardDone:'Начать',
       onboard1Title:'Оценка матча ребёнка',
@@ -3455,7 +3455,7 @@ ru:{
       liveOnPitch:'Вести матч', pAddCover:'Добавить фото'
     },
     es:{
-      sTheme:'Tema', theme_dark:'Noche', theme_light:'Sala', theme_day:'Campo',
+      sTheme:'Tema', theme_dark:'Noche', theme_light:'Sala', theme_day:'Clara',
       sTzHint:'La hora del partido sale de este teléfono ({tz}). En polaco el valor por defecto es Varsovia.',
       onboardSkip:'Saltar', onboardNext:'Siguiente', onboardDone:'Empezar',
       onboard1Title:'Nota del partido de un niño',
@@ -3476,7 +3476,7 @@ ru:{
       liveOnPitch:'Seguir el partido', pAddCover:'Añadir foto'
     },
     de:{
-      sTheme:'Design', theme_dark:'Nacht', theme_light:'Halle', theme_day:'Platz',
+      sTheme:'Design', theme_dark:'Nacht', theme_light:'Halle', theme_day:'Hell',
       sTzHint:'Die Spielzeit kommt von diesem Telefon ({tz}). Bei Polnisch ist Warschau der Standard.',
       onboardSkip:'Überspringen', onboardNext:'Weiter', onboardDone:'Start',
       onboard1Title:'Note für ein Kinderspiel',
@@ -3497,7 +3497,7 @@ ru:{
       liveOnPitch:'Spiel mitschreiben', pAddCover:'Foto hinzufügen'
     },
     it:{
-      sTheme:'Tema', theme_dark:'Notte', theme_light:'Sala', theme_day:'Campo',
+      sTheme:'Tema', theme_dark:'Notte', theme_light:'Sala', theme_day:'Chiara',
       sTzHint:'L’orario della partita arriva da questo telefono ({tz}). In polacco il predefinito è Varsavia.',
       onboardSkip:'Salta', onboardNext:'Avanti', onboardDone:'Inizia',
       onboard1Title:'Voto della partita di un bambino',
@@ -3518,7 +3518,7 @@ ru:{
       liveOnPitch:'Segui la partita', pAddCover:'Aggiungi foto'
     },
     fr:{
-      sTheme:'Thème', theme_dark:'Nuit', theme_light:'Salle', theme_day:'Terrain',
+      sTheme:'Thème', theme_dark:'Nuit', theme_light:'Salle', theme_day:'Clair',
       sTzHint:'L’heure du match vient de ce téléphone ({tz}). En polonais, Varsovie est la valeur par défaut.',
       onboardSkip:'Passer', onboardNext:'Suivant', onboardDone:'Commencer',
       onboard1Title:'Note du match d’un enfant',
@@ -3539,7 +3539,7 @@ ru:{
       liveOnPitch:'Suivre le match', pAddCover:'Ajouter une photo'
     },
     pt:{
-      sTheme:'Tema', theme_dark:'Noite', theme_light:'Sala', theme_day:'Campo',
+      sTheme:'Tema', theme_dark:'Noite', theme_light:'Sala', theme_day:'Clara',
       sTzHint:'A hora do jogo vem deste telefone ({tz}). Em polaco o padrão é Varsóvia.',
       onboardSkip:'Saltar', onboardNext:'Seguinte', onboardDone:'Começar',
       onboard1Title:'Nota do jogo de uma criança',

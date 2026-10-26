@@ -416,7 +416,7 @@
   .match-context .field select,
   .match-context .field textarea,
   .match-context .date-shown{
-    background:var(--card-wash);border-color:var(--card-line);color:var(--card-ink);
+    background-color:var(--card-wash);border-color:var(--card-line);color:var(--card-ink);
   }
   .match-context .score-colon{color:var(--card-muted);}
   .roster-row{display:flex;gap:6px;align-items:stretch;margin-bottom:8px;}
@@ -1132,13 +1132,14 @@
   .field select{
     -webkit-appearance:none;appearance:none;padding-right:36px;
     background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%238D9AB5'%3E%3Cpath d='M5 7l5 6 5-6z'/%3E%3C/svg%3E");
-    background-repeat:no-repeat;background-position:right 12px center;
+    background-repeat:no-repeat;background-position:right 12px center;background-size:12px 12px;
   }
   .field input[type=date],.field input[type=number]{color-scheme:dark;}
   html[data-theme="day"] .field input[type=date],
   html[data-theme="day"] .field input[type=number]{color-scheme:light;}
   html[data-theme="day"] .field select{
     background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%235A6478'%3E%3Cpath d='M5 7l5 6 5-6z'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;background-position:right 12px center;background-size:12px 12px;
   }
   .date-wrap{
     position:relative;
