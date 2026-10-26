@@ -1306,7 +1306,6 @@
       toast(tt('parentLinksEmpty', 'No academy link yet. Ask the coach for a QR or invite link.'));
       return;
     }
-    renderParentTrainings();
     renderParentCoachStats();
     if(typeof showView === 'function') showView('stats');
     requestAnimationFrame(() => {
@@ -1369,51 +1368,127 @@
   }
 
 
-  function renderParentTrainings(){
+  let parentCalMonth = '';
+  let parentCalDay = '';
+
+  function parentMonthKey(d){
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  }
+  function parentDowShort(day){
+    const keys = ['dowSunShort','dowMonShort','dowTueShort','dowWedShort','dowThuShort','dowFriShort','dowSatShort'];
+    const fallback = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    return tt(keys[day] || 'dowMonShort', fallback[day] || 'Mon');
+  }
+  function parentCalledUpGames(links){
+    const today = new Date().toISOString().slice(0, 10);
+    const ids = new Set((links || []).map(l => l && l.player && l.player.id).filter(Boolean));
+    return inboxMessages().filter(m => {
+      if(!m || m.type !== 'match_invite') return false;
+      if(!m.date || m.date < today) return false;
+      if(m.invite_notice === 'recalled' || m.invite_notice === 'cancelled') return false;
+      return ids.has(m.team_player_id);
+    });
+  }
+  function parentCalItems(links){
     const store = global.ParentStore;
-    const panel = document.getElementById('parentTrainingsPanel');
-    const board = document.getElementById('parentTrainingsBoard');
-    if(!panel || !board || !store) return;
+    const trains = store && typeof store.listUpcomingTrainingsForLinks === 'function'
+      ? store.listUpcomingTrainingsForLinks(links)
+      : [];
+    return {trains, games: parentCalledUpGames(links)};
+  }
+  function parentRsvpButtons(kind, onYes, onNo, attrs){
+    const yesLabel = kind === 'game' ? tt('parentRsvpYes', 'Will play') : tt('parentTrainYes', 'We\'ll come');
+    const noLabel = kind === 'game' ? tt('parentRsvpNo', 'Cannot play') : tt('parentTrainNo', 'We can\'t');
+    const yesAttr = kind === 'game' ? 'data-game-rsvp="accepted"' : 'data-train-rsvp="accepted"';
+    const noAttr = kind === 'game' ? 'data-game-rsvp="declined"' : 'data-train-rsvp="declined"';
+    return `<div class="train-rsvp">
+      <button type="button" class="train-rsvp-btn${onYes ? ' on-yes' : ''}" ${yesAttr} ${attrs} aria-label="${esc(yesLabel)}" aria-pressed="${onYes ? 'true' : 'false'}">✓</button>
+      <button type="button" class="train-rsvp-btn${onNo ? ' on-no' : ''}" ${noAttr} ${attrs} aria-label="${esc(noLabel)}" aria-pressed="${onNo ? 'true' : 'false'}">✕</button>
+    </div>`;
+  }
+  function renderParentCalendar(){
+    const root = document.getElementById('parentCal');
+    const grid = document.getElementById('parentCalGrid');
+    const label = document.getElementById('parentCalLabel');
+    const dayBox = document.getElementById('parentCalDay');
+    if(!root || !grid || !dayBox) return;
     if(typeof isCoachPlan === 'function' && isCoachPlan()){
-      panel.hidden = true;
+      root.hidden = true;
       return;
     }
     const links = linksForCurrentPlayer();
     if(!links.length){
-      panel.hidden = true;
-      board.innerHTML = '';
+      root.hidden = true;
+      grid.innerHTML = '';
+      dayBox.innerHTML = '';
       return;
     }
-    const list = typeof store.listUpcomingTrainingsForLinks === 'function'
-      ? store.listUpcomingTrainingsForLinks(links).slice(0, 10)
-      : [];
-    panel.hidden = false;
-    if(!list.length){
-      board.innerHTML = `<p class="hint">${esc(tt('parentTrainEmpty', 'No upcoming trainings from the coach yet.'))}</p>`;
+    root.hidden = false;
+    const now = new Date();
+    if(!parentCalMonth) parentCalMonth = parentMonthKey(now);
+    const todayStr = now.toISOString().slice(0, 10);
+    if(!parentCalDay) parentCalDay = todayStr;
+    const [y, m] = parentCalMonth.split('-').map(Number);
+    if(label){
+      try{
+        label.textContent = new Date(y, m - 1, 1).toLocaleDateString(undefined, {month: 'long', year: 'numeric'});
+      }catch(e){
+        label.textContent = parentCalMonth;
+      }
+    }
+    const {trains, games} = parentCalItems(links);
+    const prefix = parentCalMonth;
+    const trainDays = new Set(trains.filter(t => String(t.date || '').startsWith(prefix)).map(t => t.date));
+    const gameDays = new Set(games.filter(g => String(g.date || '').startsWith(prefix)).map(g => g.date));
+    const firstDow = new Date(y, m - 1, 1).getDay();
+    const offset = (firstDow + 6) % 7;
+    const daysInMonth = new Date(y, m, 0).getDate();
+    const heads = [1,2,3,4,5,6,0].map(d => `<span class="coach-train-dow">${esc(parentDowShort(d))}</span>`).join('');
+    let cells = '';
+    for(let i = 0; i < offset; i++) cells += `<span class="coach-train-cell is-empty" aria-hidden="true"></span>`;
+    for(let day = 1; day <= daysInMonth; day++){
+      const ymd = `${y}-${String(m).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      const hasTrain = trainDays.has(ymd);
+      const hasGame = gameDays.has(ymd);
+      const marks = [
+        hasTrain ? '<i class="is-train"></i>' : '',
+        hasGame ? '<i class="is-game"></i>' : ''
+      ].join('');
+      const cls = [
+        'coach-train-cell',
+        hasTrain ? 'has-train' : '',
+        hasGame ? 'has-game' : '',
+        ymd === todayStr ? 'is-today' : '',
+        ymd === parentCalDay ? 'is-selected' : ''
+      ].filter(Boolean).join(' ');
+      cells += `<button type="button" class="${cls}" data-parent-cal-day="${ymd}" aria-label="${ymd}"><span>${day}</span><span class="coach-train-dots">${marks}</span></button>`;
+    }
+    grid.innerHTML = `<div class="coach-train-dow-row">${heads}</div><div class="coach-train-grid">${cells}</div>`;
+    const dayTrains = trains.filter(t => t.date === parentCalDay);
+    const dayGames = games.filter(g => g.date === parentCalDay);
+    if(!dayTrains.length && !dayGames.length){
+      dayBox.innerHTML = `<p class="hint">${esc(tt('parentCalEmpty', 'Nothing that day'))}</p>`;
       return;
     }
-    board.innerHTML = list.map(tr => {
-      const when = [tr.date, tr.start_time + (tr.end_time ? `–${tr.end_time}` : '')].filter(Boolean).join(' · ');
-      const meta = [
-        labelOf(tr.player_name) || '',
-        labelOf(tr.team_name) || labelOf(tr.academy_name) || '',
-        labelOf(tr.address) || '',
-        tr.recurring ? tt('coachTrainRecurringShort', 'Weekly') : '',
-        tr.notify_minutes ? tt('parentTrainRemindHint', 'Reminder {n} min before').replace('{n}', String(tr.notify_minutes)) : ''
-      ].filter(Boolean).join(' · ');
-      const yesOn = tr.rsvp === 'accepted' ? ' on-yes' : '';
-      const noOn = tr.rsvp === 'declined' ? ' on-no' : '';
+    const trainHtml = dayTrains.map(tr => {
+      const when = [tt('parentCalTrain', 'Training'), tr.start_time + (tr.end_time ? `–${tr.end_time}` : '')].filter(Boolean).join(' · ');
+      const meta = [labelOf(tr.address) || '', labelOf(tr.team_name) || ''].filter(Boolean).join(' · ');
+      const attrs = `data-train-id="${esc(tr.id)}" data-player-id="${esc(tr.team_player_id)}" data-team-id="${esc(tr.team_id)}" data-train-date="${esc(tr.date)}"`;
       return `<div class="coach-player-row">
-        <div class="coach-player-main">
-          <b>${esc(when)}</b>
-          <span>${esc(meta)}</span>
-        </div>
-        <div class="train-rsvp">
-          <button type="button" class="train-rsvp-btn${yesOn}" data-train-rsvp="accepted" data-train-id="${esc(tr.id)}" data-player-id="${esc(tr.team_player_id)}" data-team-id="${esc(tr.team_id)}" data-train-date="${esc(tr.date)}" aria-label="${esc(tt('parentTrainYes', 'We\'ll come'))}" aria-pressed="${tr.rsvp === 'accepted' ? 'true' : 'false'}">✓</button>
-          <button type="button" class="train-rsvp-btn${noOn}" data-train-rsvp="declined" data-train-id="${esc(tr.id)}" data-player-id="${esc(tr.team_player_id)}" data-team-id="${esc(tr.team_id)}" data-train-date="${esc(tr.date)}" aria-label="${esc(tt('parentTrainNo', 'We can\'t'))}" aria-pressed="${tr.rsvp === 'declined' ? 'true' : 'false'}">✕</button>
-        </div>
+        <div class="coach-player-main"><b>${esc(when)}</b>${meta ? `<span>${esc(meta)}</span>` : ''}</div>
+        ${parentRsvpButtons('train', tr.rsvp === 'accepted', tr.rsvp === 'declined', attrs)}
       </div>`;
     }).join('');
+    const gameHtml = dayGames.map(g => {
+      const when = [tt('parentCalGame', 'Game'), g.kickoff || g.meetup || ''].filter(Boolean).join(' · ');
+      const meta = [g.opponent || '', g.address || '', g.team_name || ''].filter(Boolean).join(' · ');
+      const attrs = `data-msg-id="${esc(g.id)}"`;
+      return `<div class="coach-player-row">
+        <div class="coach-player-main"><b>${esc(when)}</b>${meta ? `<span>${esc(meta)}</span>` : ''}</div>
+        ${parentRsvpButtons('game', g.rsvp === 'accepted', g.rsvp === 'declined', attrs)}
+      </div>`;
+    }).join('');
+    dayBox.innerHTML = trainHtml + gameHtml;
   }
 
   function renderParentCoachStats(){
@@ -1697,31 +1772,72 @@
     syncLinkedCoachStatsFromDevice();
     renderParentInbox();
     renderParentLinks();
-    renderParentTrainings();
+    renderParentCalendar();
     renderParentCoachStats();
+    const oldTrains = document.getElementById('parentTrainingsPanel');
+    if(oldTrains) oldTrains.hidden = true;
     syncInboxBellUi();
   }
 
+  function shiftParentCalMonth(delta){
+    const [y, m] = (parentCalMonth || parentMonthKey(new Date())).split('-').map(Number);
+    const d = new Date(y, m - 1 + Number(delta || 0), 1);
+    parentCalMonth = parentMonthKey(d);
+    const todayStr = new Date().toISOString().slice(0, 10);
+    parentCalDay = todayStr.startsWith(parentCalMonth) ? todayStr : `${parentCalMonth}-01`;
+  }
   function bindParentUi(){
-    document.getElementById('parentTrainingsBoard')?.addEventListener('click', e => {
-      const btn = e.target.closest('[data-train-rsvp]');
-      if(!btn || !global.ParentStore) return;
-      e.preventDefault();
-      const response = btn.dataset.trainRsvp === 'declined' ? 'declined' : 'accepted';
-      try{
-        global.ParentStore.setTrainingRsvp({
-          rsvp: response,
-          training_id: btn.dataset.trainId,
-          team_player_id: btn.dataset.playerId,
-          team_id: btn.dataset.teamId,
-          date: btn.dataset.trainDate
-        });
-        toast(response === 'accepted'
-          ? tt('parentTrainYesDone', 'Marked: you\'ll be there.')
-          : tt('parentTrainNoDone', 'Marked: you can\'t make it.'));
-        renderParentTrainings();
-      }catch(err){
-        toast(tt('coachErrGeneric', 'Something went wrong.'));
+    document.getElementById('parentCal')?.addEventListener('click', e => {
+      const nav = e.target.closest('[data-parent-cal-nav]');
+      if(nav){
+        e.preventDefault();
+        shiftParentCalMonth(nav.dataset.parentCalNav);
+        renderParentCalendar();
+        return;
+      }
+      const day = e.target.closest('[data-parent-cal-day]');
+      if(day){
+        e.preventDefault();
+        parentCalDay = day.dataset.parentCalDay || '';
+        renderParentCalendar();
+        return;
+      }
+      const train = e.target.closest('[data-train-rsvp]');
+      if(train && global.ParentStore){
+        e.preventDefault();
+        const response = train.dataset.trainRsvp === 'declined' ? 'declined' : 'accepted';
+        try{
+          global.ParentStore.setTrainingRsvp({
+            rsvp: response,
+            training_id: train.dataset.trainId,
+            team_player_id: train.dataset.playerId,
+            team_id: train.dataset.teamId,
+            date: train.dataset.trainDate
+          });
+          toast(response === 'accepted'
+            ? tt('parentTrainYesDone', 'Marked: you\'ll be there.')
+            : tt('parentTrainNoDone', 'Marked: you can\'t make it.'));
+          renderParentCalendar();
+        }catch(err){
+          toast(tt('coachErrGeneric', 'Something went wrong.'));
+        }
+        return;
+      }
+      const game = e.target.closest('[data-game-rsvp]');
+      if(game && global.InboxStore){
+        e.preventDefault();
+        const response = game.dataset.gameRsvp === 'declined' ? 'declined' : 'accepted';
+        try{
+          global.InboxStore.setMatchInviteRsvp(game.dataset.msgId, response);
+          toast(response === 'accepted'
+            ? tt('parentRsvpYesDone', 'Confirmed — will play.')
+            : tt('parentRsvpNoDone', 'Declined — cannot play.'));
+          renderParentCalendar();
+          renderParentInbox();
+          syncInboxBellUi();
+        }catch(err){
+          toast(tt('coachErrGeneric', 'Something went wrong.'));
+        }
       }
     });
     if(global.__ffkParentBound) return;

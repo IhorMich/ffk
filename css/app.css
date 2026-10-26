@@ -1712,11 +1712,19 @@
     background:color-mix(in srgb, #1faa5a 16%, var(--card-paper));
   }
   .train-rsvp-btn.on-no,
-  .train-rsvp-btn[data-train-rsvp="declined"]{color:#e25555;}
+  .train-rsvp-btn[data-train-rsvp="declined"],
+  .train-rsvp-btn[data-game-rsvp="declined"]{color:#e25555;}
   .train-rsvp-btn.on-no{
     border-color:#e25555;
     background:color-mix(in srgb, #e25555 16%, var(--card-paper));
   }
+  .parent-cal{margin-top:12px;}
+  .parent-cal-day{display:flex;flex-direction:column;gap:8px;margin-top:10px;}
+  .coach-train-cell.has-game{
+    background:color-mix(in srgb, #3d8bfd 12%, var(--card-paper));
+    border-color:color-mix(in srgb, #3d8bfd 40%, var(--card-line));
+  }
+  .coach-train-dots i.is-game{background:#3d8bfd;}
   .parent-msg-row{
     display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;
     padding:12px 14px;margin:0 0 8px;border-radius:14px;border:1px solid var(--card-line);

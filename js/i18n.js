@@ -7101,3 +7101,83 @@ ru:{
     Object.assign(I18N[lang], extra.en, extra[lang] || {});
   });
 })();
+
+(function mergeParentCalI18n(){
+  const extra = {
+    en:{
+      parentCalTitle:'Schedule',
+      parentCalEmpty:'Nothing that day',
+      parentCalGame:'Game',
+      parentCalTrain:'Training',
+      parentCalPrev:'Previous month',
+      parentCalNext:'Next month'
+    },
+    uk:{
+      parentCalTitle:'Розклад',
+      parentCalEmpty:'Цього дня нічого немає',
+      parentCalGame:'Гра',
+      parentCalTrain:'Тренування',
+      parentCalPrev:'Попередній місяць',
+      parentCalNext:'Наступний місяць'
+    },
+    pl:{
+      parentCalTitle:'Plan',
+      parentCalEmpty:'Tego dnia nic nie ma',
+      parentCalGame:'Mecz',
+      parentCalTrain:'Trening',
+      parentCalPrev:'Poprzedni miesiąc',
+      parentCalNext:'Następny miesiąc'
+    },
+    ru:{
+      parentCalTitle:'Расписание',
+      parentCalEmpty:'В этот день ничего нет',
+      parentCalGame:'Игра',
+      parentCalTrain:'Тренировка',
+      parentCalPrev:'Предыдущий месяц',
+      parentCalNext:'Следующий месяц'
+    },
+    es:{
+      parentCalTitle:'Calendario',
+      parentCalEmpty:'Este día no hay nada',
+      parentCalGame:'Partido',
+      parentCalTrain:'Entreno',
+      parentCalPrev:'Mes anterior',
+      parentCalNext:'Mes siguiente'
+    },
+    de:{
+      parentCalTitle:'Plan',
+      parentCalEmpty:'An diesem Tag nichts',
+      parentCalGame:'Spiel',
+      parentCalTrain:'Training',
+      parentCalPrev:'Vorheriger Monat',
+      parentCalNext:'Nächster Monat'
+    },
+    it:{
+      parentCalTitle:'Calendario',
+      parentCalEmpty:'Niente in questo giorno',
+      parentCalGame:'Partita',
+      parentCalTrain:'Allenamento',
+      parentCalPrev:'Mese precedente',
+      parentCalNext:'Mese successivo'
+    },
+    fr:{
+      parentCalTitle:'Planning',
+      parentCalEmpty:'Rien ce jour-là',
+      parentCalGame:'Match',
+      parentCalTrain:'Entraînement',
+      parentCalPrev:'Mois précédent',
+      parentCalNext:'Mois suivant'
+    },
+    pt:{
+      parentCalTitle:'Calendário',
+      parentCalEmpty:'Nada neste dia',
+      parentCalGame:'Jogo',
+      parentCalTrain:'Treino',
+      parentCalPrev:'Mês anterior',
+      parentCalNext:'Mês seguinte'
+    }
+  };
+  LANGS.forEach(lang => {
+    Object.assign(I18N[lang], extra.en, extra[lang] || {});
+  });
+})();
