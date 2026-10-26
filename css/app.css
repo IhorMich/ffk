@@ -1391,6 +1391,8 @@
   .settings-clear{margin-top:4px;justify-self:start;}
   #settingsDeleteAccountBtn[hidden]{display:none !important;}
   .settings-block-about .save-btn{margin-top:2px;}
+  .settings-session-foot[hidden]{display:none !important;}
+  .settings-session-foot .ghost-btn{margin-top:0;}
   .settings-block-danger{
     border-top:1px solid rgba(220,80,80,.28);
     padding-top:16px;

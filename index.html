@@ -986,11 +986,6 @@ window.ffkIsNative = function () {
               </button>
             </div>
           </div>
-          <div class="settings-actions">
-            <button class="ghost-btn" id="settingsSignOutBtn" type="button" hidden data-i18n="accountSignOut">Выйти</button>
-            <button class="ghost-btn" id="personalSignOutBtn" type="button" hidden data-i18n="accountSignOut">Выйти</button>
-            <button class="ghost-btn danger-btn" id="settingsDeleteCloudBtn" type="button" hidden data-i18n="settingsDeleteCloud">Удалить аккаунт</button>
-          </div>
         </section>
 
         <section class="settings-block">
@@ -1102,6 +1097,12 @@ window.ffkIsNative = function () {
         <section class="settings-block settings-block-about">
           <h3 class="period-head" data-i18n="settingsSecAbout">О приложении</h3>
           <p class="settings-status" id="appVersionHint"></p>
+        </section>
+
+        <section class="settings-block settings-session-foot" id="settingsSessionFoot" hidden>
+          <button class="ghost-btn" id="settingsSignOutBtn" type="button" data-i18n="accountSignOut">Выйти</button>
+          <button class="ghost-btn" id="personalSignOutBtn" type="button" hidden data-i18n="accountSignOut">Выйти</button>
+          <button class="ghost-btn danger-btn" id="settingsDeleteCloudBtn" type="button" data-i18n="settingsDeleteCloud">Удалить аккаунт</button>
         </section>
 
       </div>

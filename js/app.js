@@ -473,10 +473,9 @@ function syncSettingsAccountFooterFromSnap(snap){
     status.style.whiteSpace = lines.length > 1 ? 'pre-line' : '';
   }
   const signedIn = accountSignedIn(snap);
-  if(signOutBtn){
-    signOutBtn.hidden = !signedIn;
-    if(signOutBtn.parentElement) signOutBtn.parentElement.hidden = !signedIn;
-  }
+  const sessionFoot = document.getElementById('settingsSessionFoot');
+  if(sessionFoot) sessionFoot.hidden = !signedIn;
+  if(signOutBtn) signOutBtn.hidden = !signedIn;
   const clearBtn = document.getElementById('settingsDeleteAccountBtn');
   if(clearBtn) clearBtn.hidden = signedIn;
   const cloudDeleteBtn = document.getElementById('settingsDeleteCloudBtn');
