@@ -5174,6 +5174,10 @@
     global.__ffkCoachBound = true;
     document.getElementById('coachStartBtn')?.addEventListener('click', () => {
       if(typeof isCoachSub === 'function' && !isCoachSub()){
+        if(typeof global.purchaseCoach === 'function' && global.FfkBilling && !(global.settings && global.settings.devBilling)){
+          global.purchaseCoach('month');
+          return;
+        }
         toast(tt('coachPickPlan', 'Choose a plan to continue.'));
         syncCoachPriceUi();
         return;
@@ -5185,8 +5189,20 @@
         if(typeof showView === 'function') showView('coach');
       }else openAuth();
     });
-    document.getElementById('coachBuyMonthBtn')?.addEventListener('click', () => { purchaseCoachPlan('month'); });
-    document.getElementById('coachBuyYearBtn')?.addEventListener('click', () => { purchaseCoachPlan('year'); });
+    document.getElementById('coachBuyMonthBtn')?.addEventListener('click', () => {
+      if(typeof global.purchaseCoach === 'function' && global.FfkBilling && !(global.settings && global.settings.devBilling)){
+        global.purchaseCoach('month');
+        return;
+      }
+      purchaseCoachPlan('month');
+    });
+    document.getElementById('coachBuyYearBtn')?.addEventListener('click', () => {
+      if(typeof global.purchaseCoach === 'function' && global.FfkBilling && !(global.settings && global.settings.devBilling)){
+        global.purchaseCoach('year');
+        return;
+      }
+      purchaseCoachPlan('year');
+    });
     document.getElementById('coachSignUpBtn')?.addEventListener('click', () => { onSignUp(); });
     document.getElementById('coachSignInBtn')?.addEventListener('click', () => { onSignIn(); });
     document.getElementById('coachGoogleBtn')?.addEventListener('click', () => { onGoogleSignIn(); });

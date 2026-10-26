@@ -13,20 +13,25 @@ import com.android.billingclient.api.PurchasesUpdatedListener;
 import com.android.billingclient.api.QueryProductDetailsParams;
 import com.android.billingclient.api.QueryPurchasesParams;
 import com.getcapacitor.Bridge;
-import java.util.Collections;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import org.json.JSONObject;
 
-/** Google Play subscription for TEMPO Pro. Product id must match the Play Console subscription. */
+/** Google Play subscriptions. Product ids must match the Play Console subscriptions. */
 public final class PlayBilling implements PurchasesUpdatedListener {
-  static final String PRODUCT_ID = "tempo_pro";
+  static final String PRO = "tempo_pro";
+  static final String COACH = "tempo_coach";
+  private static final List<String> PRODUCTS = Arrays.asList(PRO, COACH);
 
   private final MainActivity activity;
   private BillingClient client;
-  private ProductDetails product;
-  private String price = "";
+  private final Map<String, ProductDetails> products = new HashMap<>();
   private boolean ready;
   private boolean connecting;
+  private String pendingProduct = "";
 
   PlayBilling(MainActivity activity) {
     this.activity = activity;
@@ -52,35 +57,40 @@ public final class PlayBilling implements PurchasesUpdatedListener {
       connect();
       return;
     }
-    queryProduct(false);
+    queryProducts(false);
     queryPurchases(false);
   }
 
-  void purchase() {
+  void purchase(String productId, String period) {
+    final String id = productId == null || productId.isEmpty() ? PRO : productId;
+    final String plan = period == null ? "" : period;
     activity.runOnUiThread(() -> {
-      if (client == null || !ready || product == null) {
+      ProductDetails details = products.get(id);
+      if (client == null || !ready || details == null) {
+        pendingProduct = id;
         refresh();
-        emit(false, "unavailable", true, true);
+        emit(id, false, "unavailable", true, true);
         return;
       }
-      String token = offerToken(product);
-      if (token.isEmpty()) {
-        emit(false, "unavailable", true, true);
+      ProductDetails.SubscriptionOfferDetails offer = offerFor(details, plan);
+      if (offer == null || offer.getOfferToken() == null || offer.getOfferToken().isEmpty()) {
+        emit(id, false, "unavailable", true, true);
         return;
       }
+      pendingProduct = id;
       BillingFlowParams.ProductDetailsParams params = BillingFlowParams.ProductDetailsParams.newBuilder()
-        .setProductDetails(product)
-        .setOfferToken(token)
+        .setProductDetails(details)
+        .setOfferToken(offer.getOfferToken())
         .build();
       BillingFlowParams flow = BillingFlowParams.newBuilder()
-        .setProductDetailsParamsList(Collections.singletonList(params))
+        .setProductDetailsParamsList(Arrays.asList(params))
         .build();
       BillingResult result = client.launchBillingFlow(activity, flow);
       int code = result.getResponseCode();
       if (code == BillingClient.BillingResponseCode.ITEM_ALREADY_OWNED) {
         queryPurchases(true);
       } else if (code != BillingClient.BillingResponseCode.OK) {
-        emit(false, code == BillingClient.BillingResponseCode.USER_CANCELED ? "cancelled" : "error", true, true);
+        emit(id, false, code == BillingClient.BillingResponseCode.USER_CANCELED ? "cancelled" : "error", true, true);
       }
     });
   }
@@ -92,15 +102,16 @@ public final class PlayBilling implements PurchasesUpdatedListener {
       applyPurchases(purchases, true);
       return;
     }
+    String id = pendingProduct.isEmpty() ? PRO : pendingProduct;
     if (code == BillingClient.BillingResponseCode.USER_CANCELED) {
-      emit(false, "cancelled", true, false);
+      emit(id, false, "cancelled", true, false);
       return;
     }
     if (code == BillingClient.BillingResponseCode.ITEM_ALREADY_OWNED) {
       queryPurchases(true);
       return;
     }
-    emit(false, "error", true, true);
+    emit(id, false, "error", true, true);
   }
 
   private void connect() {
@@ -112,10 +123,10 @@ public final class PlayBilling implements PurchasesUpdatedListener {
         connecting = false;
         ready = result.getResponseCode() == BillingClient.BillingResponseCode.OK;
         if (ready) {
-          queryProduct(false);
+          queryProducts(false);
           queryPurchases(false);
         } else {
-          emit(false, "unavailable", false, true);
+          for (String id : PRODUCTS) emit(id, false, "unavailable", false, true);
         }
       }
 
@@ -127,27 +138,31 @@ public final class PlayBilling implements PurchasesUpdatedListener {
     });
   }
 
-  private void queryProduct(boolean userAction) {
+  private void queryProducts(boolean userAction) {
     if (client == null || !ready) return;
-    QueryProductDetailsParams.Product item = QueryProductDetailsParams.Product.newBuilder()
-      .setProductId(PRODUCT_ID)
-      .setProductType(BillingClient.ProductType.SUBS)
-      .build();
+    List<QueryProductDetailsParams.Product> items = new ArrayList<>();
+    for (String id : PRODUCTS) {
+      items.add(QueryProductDetailsParams.Product.newBuilder()
+        .setProductId(id)
+        .setProductType(BillingClient.ProductType.SUBS)
+        .build());
+    }
     QueryProductDetailsParams params = QueryProductDetailsParams.newBuilder()
-      .setProductList(Collections.singletonList(item))
+      .setProductList(items)
       .build();
     client.queryProductDetailsAsync(params, (result, details) -> {
       if (result.getResponseCode() == BillingClient.BillingResponseCode.OK && details != null) {
-        for (ProductDetails itemDetails : details) {
-          if (PRODUCT_ID.equals(itemDetails.getProductId())) {
-            product = itemDetails;
-            price = formattedPrice(itemDetails);
-            break;
-          }
+        for (ProductDetails item : details) {
+          if (item.getProductId() != null) products.put(item.getProductId(), item);
         }
       }
-      if (product == null && userAction) emit(false, "unavailable", true, true);
-      else emit(false, "price", false, false);
+      for (String id : PRODUCTS) {
+        if (products.get(id) == null && userAction && id.equals(pendingProduct)) {
+          emit(id, false, "unavailable", true, true);
+        } else {
+          emit(id, false, "price", false, false);
+        }
+      }
     });
   }
 
@@ -158,7 +173,10 @@ public final class PlayBilling implements PurchasesUpdatedListener {
       .build();
     client.queryPurchasesAsync(params, (result, purchases) -> {
       if (result.getResponseCode() != BillingClient.BillingResponseCode.OK) {
-        if (userAction) emit(false, "error", true, true);
+        if (userAction) {
+          String id = pendingProduct.isEmpty() ? PRO : pendingProduct;
+          emit(id, false, "error", true, true);
+        }
         return;
       }
       applyPurchases(purchases, userAction);
@@ -166,21 +184,24 @@ public final class PlayBilling implements PurchasesUpdatedListener {
   }
 
   private void applyPurchases(List<Purchase> purchases, boolean userAction) {
-    boolean active = false;
-    boolean pending = false;
-    if (purchases != null) {
-      for (Purchase purchase : purchases) {
-        if (purchase.getProducts() == null || !purchase.getProducts().contains(PRODUCT_ID)) continue;
-        if (purchase.getPurchaseState() == Purchase.PurchaseState.PENDING) pending = true;
-        if (purchase.getPurchaseState() == Purchase.PurchaseState.PURCHASED) {
-          active = true;
-          acknowledge(purchase);
+    for (String id : PRODUCTS) {
+      boolean active = false;
+      boolean pending = false;
+      if (purchases != null) {
+        for (Purchase purchase : purchases) {
+          if (purchase.getProducts() == null || !purchase.getProducts().contains(id)) continue;
+          if (purchase.getPurchaseState() == Purchase.PurchaseState.PENDING) pending = true;
+          if (purchase.getPurchaseState() == Purchase.PurchaseState.PURCHASED) {
+            active = true;
+            acknowledge(purchase);
+          }
         }
       }
+      boolean touched = userAction && (id.equals(pendingProduct) || pendingProduct.isEmpty());
+      if (active) emit(id, true, "active", touched, true);
+      else if (pending) emit(id, false, "pending", touched, true);
+      else emit(id, false, "none", touched, true);
     }
-    if (active) emit(true, "active", userAction, true);
-    else if (pending) emit(false, "pending", userAction, true);
-    else emit(false, "none", userAction, true);
   }
 
   private void acknowledge(Purchase purchase) {
@@ -191,15 +212,19 @@ public final class PlayBilling implements PurchasesUpdatedListener {
     client.acknowledgePurchase(params, result -> {});
   }
 
-  private void emit(boolean active, String status, boolean userAction, boolean checked) {
+  private void emit(String productId, boolean active, String status, boolean userAction, boolean checked) {
     activity.runOnUiThread(() -> {
       Bridge bridge = activity.getBridge();
       WebView webView = bridge != null ? bridge.getWebView() : null;
       if (webView == null) return;
       try {
+        ProductDetails details = products.get(productId);
         JSONObject payload = new JSONObject();
+        payload.put("product", productId == null ? "" : productId);
         payload.put("active", active);
-        payload.put("price", price == null ? "" : price);
+        payload.put("price", priceOf(details, ""));
+        payload.put("priceMonth", priceOf(details, "month"));
+        payload.put("priceYear", priceOf(details, "year"));
         payload.put("status", status == null ? "" : status);
         payload.put("userAction", userAction);
         payload.put("checked", checked);
@@ -209,21 +234,45 @@ public final class PlayBilling implements PurchasesUpdatedListener {
     });
   }
 
-  private static String offerToken(ProductDetails details) {
+  private static ProductDetails.SubscriptionOfferDetails offerFor(ProductDetails details, String period) {
     List<ProductDetails.SubscriptionOfferDetails> offers = details.getSubscriptionOfferDetails();
-    if (offers == null || offers.isEmpty()) return "";
-    String token = offers.get(0).getOfferToken();
-    return token == null ? "" : token;
+    if (offers == null || offers.isEmpty()) return null;
+    if (period == null || period.isEmpty() || "month".equals(period)) {
+      ProductDetails.SubscriptionOfferDetails month = findPeriod(offers, "month");
+      if (month != null) return month;
+      return period == null || period.isEmpty() ? offers.get(0) : null;
+    }
+    if ("year".equals(period)) return findPeriod(offers, "year");
+    return offers.get(0);
   }
 
-  private static String formattedPrice(ProductDetails details) {
-    List<ProductDetails.SubscriptionOfferDetails> offers = details.getSubscriptionOfferDetails();
-    if (offers == null || offers.isEmpty()) return "";
-    ProductDetails.SubscriptionOfferDetails offer = offers.get(0);
-    if (offer.getPricingPhases() == null) return "";
+  private static ProductDetails.SubscriptionOfferDetails findPeriod(
+    List<ProductDetails.SubscriptionOfferDetails> offers,
+    String period
+  ) {
+    for (ProductDetails.SubscriptionOfferDetails offer : offers) {
+      String billing = billingPeriod(offer);
+      if ("month".equals(period) && "P1M".equals(billing)) return offer;
+      if ("year".equals(period) && ("P1Y".equals(billing) || "P12M".equals(billing))) return offer;
+    }
+    return null;
+  }
+
+  private static String priceOf(ProductDetails details, String period) {
+    if (details == null) return "";
+    ProductDetails.SubscriptionOfferDetails offer = offerFor(details, period);
+    if (offer == null || offer.getPricingPhases() == null) return "";
     List<ProductDetails.PricingPhase> phases = offer.getPricingPhases().getPricingPhaseList();
     if (phases == null || phases.isEmpty()) return "";
     String formatted = phases.get(phases.size() - 1).getFormattedPrice();
     return formatted == null ? "" : formatted;
+  }
+
+  private static String billingPeriod(ProductDetails.SubscriptionOfferDetails offer) {
+    if (offer.getPricingPhases() == null) return "";
+    List<ProductDetails.PricingPhase> phases = offer.getPricingPhases().getPricingPhaseList();
+    if (phases == null || phases.isEmpty()) return "";
+    String period = phases.get(phases.size() - 1).getBillingPeriod();
+    return period == null ? "" : period;
   }
 }

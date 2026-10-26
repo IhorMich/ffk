@@ -898,6 +898,7 @@ function isCoachSub(){
 }
 function setCoachSub(on){
   settings.coachSub = !!on;
+  if(!on) settings.coachSource = '';
   saveSettings();
   try{
     const store = window.CoachStore;
@@ -914,8 +915,9 @@ function subscribeLabel(){
   const price = window.ffkPlayPrice || '';
   return price ? t('proSubscribePrice', {price: price}) : t('proSubscribe');
 }
-function openPlaySubscriptions(){
-  const url = 'https://play.google.com/store/account/subscriptions?sku=tempo_pro&package=app.tempo';
+function openPlaySubscriptions(sku){
+  const id = sku || 'tempo_pro';
+  const url = 'https://play.google.com/store/account/subscriptions?sku=' + encodeURIComponent(id) + '&package=app.tempo';
   try{
     const Browser = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Browser;
     if(Browser && typeof Browser.open === 'function'){
@@ -941,6 +943,10 @@ async function purchasePro(){
 }
 window.ffkApplyPlayBilling = function(state){
   if(!state || typeof state !== 'object') return;
+  if(state.product === 'tempo_coach'){
+    applyCoachPlayBilling(state);
+    return;
+  }
   if(state.price) window.ffkPlayPrice = String(state.price);
   if(state.active){
     const was = isPro();
@@ -969,21 +975,110 @@ window.ffkApplyPlayBilling = function(state){
   else if(state.status === 'unavailable') showToast(t('proPlayMissing'));
   else if(state.status === 'error') showToast(t('proPurchaseFail'));
 };
+function applyCoachPlayBilling(state){
+  if(state.priceMonth) window.ffkCoachPriceMonth = String(state.priceMonth);
+  else if(state.price) window.ffkCoachPriceMonth = String(state.price);
+  if(state.priceYear) window.ffkCoachPriceYear = String(state.priceYear);
+  if(state.active){
+    const was = isCoachSub();
+    settings.coachSub = true;
+    settings.coachSource = 'play';
+    if(state.userAction && window.ffkCoachBuyPeriod) settings.coachSubPlan = window.ffkCoachBuyPeriod;
+    saveSettings();
+    try{
+      const store = window.CoachStore;
+      const session = store && store.getSession && store.getSession();
+      if(session && store.setCoachSub) store.setCoachSub(session, true);
+    }catch(e){}
+    syncCoachBillingUi();
+    try{ if(typeof syncCoachPriceUi === 'function') syncCoachPriceUi(); }catch(e){}
+    if(!was && state.userAction) showToast(t('coachSubOn'));
+    return;
+  }
+  if(state.checked && state.status === 'none' && settings.coachSource === 'play'){
+    settings.coachSub = false;
+    settings.coachSource = '';
+    settings.coachSubPlan = '';
+    saveSettings();
+    try{
+      const store = window.CoachStore;
+      const session = store && store.getSession && store.getSession();
+      if(session && store.setCoachSub) store.setCoachSub(session, false);
+    }catch(e){}
+    syncCoachBillingUi();
+    if(state.userAction) showToast(t('coachSubOff'));
+    return;
+  }
+  syncCoachBillingUi();
+  if(!state.userAction) return;
+  if(state.status === 'pending') showToast(t('proPurchasePending'));
+  else if(state.status === 'cancelled') showToast(t('proPurchaseCancelled'));
+  else if(state.status === 'unavailable') showToast(t('proPlayMissing'));
+  else if(state.status === 'error') showToast(t('proPurchaseFail'));
+}
+function purchaseCoach(period){
+  let plan = period === 'year' ? 'year' : 'month';
+  if(plan === 'month' && !window.ffkCoachPriceMonth && window.ffkCoachPriceYear) plan = 'year';
+  if(playBillingAvailable() && !devBillingOn()){
+    window.ffkCoachBuyPeriod = plan;
+    try{ window.FfkBilling.purchaseProduct('tempo_coach', plan); }
+    catch(e){ showToast(t('proPurchaseFail')); }
+    return;
+  }
+  if(devBillingOn()){
+    setCoachSub(true);
+    settings.coachSubPlan = plan;
+    saveSettings();
+    return;
+  }
+  showToast(t('proPlayOnly'));
+}
+window.purchaseCoach = purchaseCoach;
+function coachSubscribeLabel(){
+  const price = window.ffkCoachPriceMonth || window.ffkCoachPriceYear || '';
+  return price ? t('proSubscribePrice', {price: price}) : t('proSubscribe');
+}
 function devBillingOn(){
   return !!(settings && settings.devBilling === true);
 }
 function syncCoachBillingUi(){
   const on = isCoachSub();
-  const showBilling = devBillingOn();
+  const showTest = devBillingOn();
+  const showPlay = playBillingAvailable() && !showTest;
   document.documentElement.classList.toggle('is-coach-sub', on);
   const unlock = document.getElementById('coachSubUnlockBtn');
   const lock = document.getElementById('coachSubLockBtn');
-  if(unlock) unlock.hidden = !showBilling || on;
-  if(lock) lock.hidden = !showBilling || !on;
+  if(unlock){
+    unlock.hidden = !(showPlay || showTest) || on;
+    unlock.disabled = false;
+    unlock.textContent = showPlay ? coachSubscribeLabel() : t('coachSubUnlock');
+  }
+  if(lock){
+    if(showTest){
+      lock.hidden = !on;
+      lock.textContent = t('coachSubLock');
+    }else if(on && settings.coachSource === 'play'){
+      lock.hidden = false;
+      lock.textContent = t('proManage');
+    }else{
+      lock.hidden = true;
+    }
+    lock.disabled = false;
+  }
   const prices = document.querySelector('.coach-price-row');
-  if(prices) prices.hidden = !showBilling;
+  if(prices) prices.hidden = !(showTest || showPlay);
+  const monthB = document.querySelector('#coachBuyMonthBtn b');
+  const yearB = document.querySelector('#coachBuyYearBtn b');
+  const yearBtn = document.getElementById('coachBuyYearBtn');
+  if(showPlay){
+    if(monthB) monthB.textContent = window.ffkCoachPriceMonth || t('proSubscribe');
+    if(yearBtn) yearBtn.hidden = !window.ffkCoachPriceYear;
+    if(yearB && window.ffkCoachPriceYear) yearB.textContent = window.ffkCoachPriceYear;
+  }else if(yearBtn){
+    yearBtn.hidden = false;
+  }
   const start = document.getElementById('coachStartBtn');
-  if(start) start.hidden = !showBilling && !on;
+  if(start) start.hidden = !(showTest || showPlay || on);
   const open = document.getElementById('openCoachBtn');
   if(open) open.disabled = false;
 }
@@ -1185,7 +1280,7 @@ async function runPersonalCloudSync(options){
   }
 }
 
-let settings = {club:'', player:'', position:'fwd', format:'2x30', minutes:'60', lang:'ru', seasonCloseDeclined:'', theme:'dark', iconSet:'clear', onboarded:false, onboardSkin:'', isPro:false, isCoach:false, coachSub:false, coachSubPlan:'', proSource:'', pwaTransferSeen:false, introMark:'', accountPrompted:false, devBilling:false, shareMilestonesSeen:''};
+let settings = {club:'', player:'', position:'fwd', format:'2x30', minutes:'60', lang:'ru', seasonCloseDeclined:'', theme:'dark', iconSet:'clear', onboarded:false, onboardSkin:'', isPro:false, isCoach:false, coachSub:false, coachSubPlan:'', coachSource:'', proSource:'', pwaTransferSeen:false, introMark:'', accountPrompted:false, devBilling:false, shareMilestonesSeen:''};
 window.settings = settings;
 let roster = {currentId:'', ids:[]};
 let player = defaultPlayer();
@@ -5411,8 +5506,17 @@ document.getElementById('termsLink')?.addEventListener('click', (e) => {
 });
 document.getElementById('legalBackBtn')?.addEventListener('click', () => closeLegalPage());
 document.getElementById('personalGoogleBtn')?.addEventListener('click', () => onPersonalGoogle());
-document.getElementById('coachSubUnlockBtn')?.addEventListener('click', () => setCoachSub(true));
-document.getElementById('coachSubLockBtn')?.addEventListener('click', () => setCoachSub(false));
+document.getElementById('coachSubUnlockBtn')?.addEventListener('click', () => {
+  if(playBillingAvailable() && !devBillingOn()) purchaseCoach('month');
+  else setCoachSub(true);
+});
+document.getElementById('coachSubLockBtn')?.addEventListener('click', () => {
+  if(settings.coachSource === 'play' && !devBillingOn()){
+    openPlaySubscriptions('tempo_coach');
+    return;
+  }
+  setCoachSub(false);
+});
 document.getElementById('appPushOnBtn')?.addEventListener('click', async () => {
   if(window.CoachPush) await window.CoachPush.enable();
   syncPushSettingsUi();

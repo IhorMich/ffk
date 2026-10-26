@@ -369,7 +369,12 @@ public class MainActivity extends BridgeActivity {
 
     @JavascriptInterface
     public void purchase() {
-      if (playBilling != null) playBilling.purchase();
+      if (playBilling != null) playBilling.purchase(PlayBilling.PRO, "");
+    }
+
+    @JavascriptInterface
+    public void purchaseProduct(String productId, String period) {
+      if (playBilling != null) playBilling.purchase(productId, period);
     }
   }
 

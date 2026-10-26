@@ -20,7 +20,7 @@ Free keeps one player, and that season stays on this phone. Before you change ph
 
 Email or Google sign-in is for a coach and for a parent invited to a child’s card. Without Pro, the personal season is not uploaded.
 
-TEMPO Pro is a Google Play subscription: up to 32 players, charts and sync between phones. The price is shown before you pay. Cancel it in Google Play subscriptions.
+TEMPO Pro and TEMPO Coach are Google Play subscriptions. The price is shown before you pay. Cancel either one in Google Play subscriptions.
 
 ## What’s new
 
@@ -31,7 +31,7 @@ A live match card, big pitch buttons right after Start, a short onboarding, and 
 - Category: Sports
 - Age: PEGI 3 / Everyone
 - Ads: no
-- In-app purchases: yes, TEMPO Pro subscription
+- In-app purchases: yes, TEMPO Pro and TEMPO Coach subscriptions
 
 ## Privacy
 
