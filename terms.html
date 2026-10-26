@@ -12,6 +12,7 @@
     h2{font-size:1.05rem;margin:28px 0 8px;}
     p,li{color:var(--soft);font-weight:500;}
     a{color:var(--gold);}
+    .back{margin:0 0 18px;}
     ul{padding-left:1.2em;}
     .meta{font-size:.85rem;color:var(--soft);margin-bottom:22px;}
   </style>
@@ -46,5 +47,19 @@
       <a href="https://github.com/IhorMich/ffk/issues">github.com/IhorMich/ffk/issues</a>
       · <a href="mailto:ihormykhailiuk@gmail.com?subject=TEMPO%20support">написать на email</a>.</p>
   </main>
+  <script>
+    (function(){
+      if(window.parent !== window) return;
+      var back = document.createElement('p');
+      back.className = 'back';
+      back.innerHTML = '<a href="./">← TEMPO</a>';
+      var main = document.querySelector('main');
+      if(main) main.insertBefore(back, main.firstChild);
+      window.ffkBack = function(){
+        try{ location.href = './'; }catch(e){}
+        return true;
+      };
+    })();
+  </script>
 </body>
 </html>

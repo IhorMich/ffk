@@ -1089,8 +1089,8 @@ window.ffkIsNative = function () {
             <button type="button" class="settings-link" id="settingsSupportBtn" data-i18n="settingsSupport">Написать в поддержку</button>
             <button type="button" class="settings-link" id="settingsRateBtn" data-i18n="settingsRate">Оценить приложение</button>
             <a class="settings-link" href="https://github.com/IhorMich/ffk/issues" id="settingsFeedbackLink" target="_blank" rel="noopener" data-i18n="settingsFeedback">Сообщить о проблеме</a>
-            <a class="settings-link settings-link-legal" href="privacy.html" id="privacyLink" target="_blank" rel="noopener" data-i18n="sPrivacy">Конфиденциальность</a>
-            <a class="settings-link" href="terms.html" id="termsLink" target="_blank" rel="noopener" data-i18n="sTerms">Условия использования</a>
+            <a class="settings-link settings-link-legal" href="privacy.html" id="privacyLink" data-i18n="sPrivacy">Конфиденциальность</a>
+            <a class="settings-link" href="terms.html" id="termsLink" data-i18n="sTerms">Условия использования</a>
           </div>
         </section>
 
@@ -1726,6 +1726,12 @@ window.ffkIsNative = function () {
     <button class="ghost-btn" id="liveUndoBtn" type="button" data-i18n="liveUndo" disabled>Отменить</button>
     <button class="save-btn" id="liveDoneBtn" type="button" data-i18n="liveDone">Готово</button>
   </div>
+  </div>
+  <div id="legalPage" class="legal-page" hidden>
+    <div class="legal-bar">
+      <button class="ghost-btn" id="legalBackBtn" type="button" data-i18n="coachBack">← Настройки</button>
+    </div>
+    <iframe id="legalFrame" title="TEMPO"></iframe>
   </div>
 </div>
 

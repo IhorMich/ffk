@@ -448,7 +448,15 @@ public class MainActivity extends BridgeActivity {
     webView.evaluateJavascript(
       "(window.ffkBack&&window.ffkBack())?'1':'0'",
       value -> {
-        if (value == null || !value.contains("1")) moveTaskToBack(true);
+        if (value != null && value.contains("1")) return;
+        String url = webView.getUrl() == null ? "" : webView.getUrl();
+        boolean away = url.contains("privacy.html") || url.contains("terms.html");
+        if (!away) {
+          moveTaskToBack(true);
+          return;
+        }
+        if (webView.canGoBack()) webView.goBack();
+        else webView.evaluateJavascript("location.replace('./')", null);
       }
     );
   }

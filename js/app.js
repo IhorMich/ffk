@@ -678,13 +678,7 @@ function openSettingsSupport(){
     showToast(t('settingsSupportFallback') || 'Email: ihormykhailiuk@gmail.com');
   }
 }
-function openSettingsRate(){
-  const play = 'https://play.google.com/store/apps/details?id=app.ffk.rating';
-  const web = 'https://ihormich.github.io/ffk/';
-  let url = web;
-  try{
-    if(typeof isNativeApp === 'function' && isNativeApp()) url = play;
-  }catch(e){}
+function openExternalPage(url){
   try{
     const Browser = typeof capPlugin === 'function' ? capPlugin('Browser') : null;
     if(Browser && typeof Browser.open === 'function'){
@@ -695,6 +689,31 @@ function openSettingsRate(){
   try{ window.open(url, '_blank', 'noopener'); }catch(e){
     try{ window.location.href = url; }catch(err){}
   }
+}
+function openLegalPage(url){
+  const page = document.getElementById('legalPage');
+  const frame = document.getElementById('legalFrame');
+  if(!page || !frame){
+    openExternalPage(url);
+    return;
+  }
+  frame.src = url;
+  page.hidden = false;
+}
+function closeLegalPage(){
+  const page = document.getElementById('legalPage');
+  const frame = document.getElementById('legalFrame');
+  if(page) page.hidden = true;
+  if(frame) frame.removeAttribute('src');
+}
+function openSettingsRate(){
+  const play = 'https://play.google.com/store/apps/details?id=app.ffk.rating';
+  const web = 'https://ihormich.github.io/ffk/';
+  let url = web;
+  try{
+    if(typeof isNativeApp === 'function' && isNativeApp()) url = play;
+  }catch(e){}
+  openExternalPage(url);
 }
 async function onSettingsSignOut(){
   if(typeof window.bindMatchcardAuth === 'function') window.bindMatchcardAuth();
@@ -5275,6 +5294,19 @@ document.getElementById('settingsDeleteCloudBtn')?.addEventListener('click', () 
 document.getElementById('cloudSyncNowBtn')?.addEventListener('click', () => onCloudSyncNow());
 document.getElementById('settingsSupportBtn')?.addEventListener('click', () => openSettingsSupport());
 document.getElementById('settingsRateBtn')?.addEventListener('click', () => openSettingsRate());
+document.getElementById('settingsFeedbackLink')?.addEventListener('click', (e) => {
+  e.preventDefault();
+  openExternalPage('https://github.com/IhorMich/ffk/issues');
+});
+document.getElementById('privacyLink')?.addEventListener('click', (e) => {
+  e.preventDefault();
+  openLegalPage('privacy.html');
+});
+document.getElementById('termsLink')?.addEventListener('click', (e) => {
+  e.preventDefault();
+  openLegalPage('terms.html');
+});
+document.getElementById('legalBackBtn')?.addEventListener('click', () => closeLegalPage());
 document.getElementById('personalGoogleBtn')?.addEventListener('click', () => onPersonalGoogle());
 document.getElementById('coachSubUnlockBtn')?.addEventListener('click', () => setCoachSub(true));
 document.getElementById('coachSubLockBtn')?.addEventListener('click', () => setCoachSub(false));
@@ -6216,6 +6248,7 @@ function requestAppBack(){
   try{ return handleAppBack(); } finally { popping = false; }
 }
 function handleAppBack(){
+  if(isElShown('legalPage')){ closeLegalPage(); return true; }
   if(isElShown('intro')){
     finishIntro();
     return true;
