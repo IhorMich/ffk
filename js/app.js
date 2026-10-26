@@ -892,39 +892,20 @@ function formatCloudSyncAt(iso){
     return raw;
   }
 }
-function updateCloudSyncStatusUi(state){
-  const el = document.getElementById('cloudSyncStatus');
-  const accountEl = document.getElementById('cloudSyncAccount');
-  const card = document.getElementById('cloudSyncCard');
-  const syncBtn = document.getElementById('cloudSyncNowBtn');
-  const st = state || (window.ParentCloud && typeof window.ParentCloud.personalSyncState === 'function'
-    ? window.ParentCloud.personalSyncState()
-    : null) || {};
-  const status = st.status || 'idle';
-  if(card){
-    // Visible whenever cloud UI exists; status text explains login / sync.
-    card.hidden = false;
+function paintCloudSyncStatus(el, syncBtn, accountEl, st, signedIn){
+  const pro = isPro();
+  if(syncBtn) syncBtn.hidden = !(pro && signedIn);
+  if(accountEl && !signedIn){
+    accountEl.hidden = true;
+    accountEl.textContent = '';
   }
-  if(accountEl){
-    getPersonalAccountSession().then(session => {
-      const live = personalAccountEmail(session);
-      if(!accountEl) return;
-      if(live){
-        accountEl.hidden = false;
-        accountEl.textContent = live;
-      }else{
-        accountEl.hidden = true;
-        accountEl.textContent = '';
-      }
-      if(syncBtn) syncBtn.hidden = !live;
-    }).catch(() => {
-      accountEl.hidden = true;
-      if(syncBtn) syncBtn.hidden = true;
-    });
-  }
-  if(syncBtn && status === 'need_account') syncBtn.hidden = true;
   if(!el) return;
-  if(status === 'need_account'){
+  if(!pro){
+    el.textContent = signedIn ? t('proCloudFreeSignedIn') : t('proCloudLocalOnly');
+    return;
+  }
+  const status = (st && st.status) || 'idle';
+  if(!signedIn){
     el.textContent = t('proCloudNeedAccount');
     return;
   }
@@ -942,8 +923,35 @@ function updateCloudSyncStatusUi(state){
   }
   el.textContent = t('proCloudIdle');
 }
+function updateCloudSyncStatusUi(state){
+  const el = document.getElementById('cloudSyncStatus');
+  const accountEl = document.getElementById('cloudSyncAccount');
+  const card = document.getElementById('cloudSyncCard');
+  const syncBtn = document.getElementById('cloudSyncNowBtn');
+  const st = state || (window.ParentCloud && typeof window.ParentCloud.personalSyncState === 'function'
+    ? window.ParentCloud.personalSyncState()
+    : null) || {};
+  if(card) card.hidden = false;
+  if(!isPro()) paintCloudSyncStatus(el, syncBtn, accountEl, st, false);
+  else if(syncBtn) syncBtn.hidden = true;
+  getPersonalAccountSession().then(session => {
+    const live = personalAccountEmail(session);
+    if(accountEl && live){
+      accountEl.hidden = false;
+      accountEl.textContent = live;
+    }
+    paintCloudSyncStatus(el, syncBtn, accountEl, st, !!live);
+  }).catch(() => {
+    paintCloudSyncStatus(el, syncBtn, accountEl, st, false);
+  });
+}
 window.updateCloudSyncStatusUi = updateCloudSyncStatusUi;
 async function onCloudSyncNow(){
+  if(!isPro()){
+    showToast(t('proCloudFreeSignedIn'));
+    updateCloudSyncStatusUi();
+    return;
+  }
   showToast(t('proCloudSyncing'));
   const out = await runPersonalCloudSync({pull: true, push: true, force: true});
   const st = (out && out.state) || (window.ParentCloud && window.ParentCloud.personalSyncState && window.ParentCloud.personalSyncState());
