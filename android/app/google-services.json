@@ -9,6 +9,25 @@
       "client_info": {
         "mobilesdk_app_id": "1:1066604038051:android:0557db5792b96822ad7c16",
         "android_client_info": {
+          "package_name": "app.ffk.rating"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA2Wm5fGtk4R9RmyFpTF8cHn64gq2h3wOk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1066604038051:android:fb33daf783ef52fdad7c16",
+        "android_client_info": {
           "package_name": "app.tempo"
         }
       },
