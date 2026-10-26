@@ -62,7 +62,7 @@ window.FFK_COACH_I18N.pt = {
   coachFirstPh: "Nome próprio",
   coachLastPh: "Apelido",
   coachPhase1Note: "Academia, equipas e plantel neste telemóvel. Jogos, avaliações e convites aos pais estão disponíveis nos respetivos separadores.",
-  coachStart: "Começar com o Coach",
+  coachStart: "Ativar época Coach",
   coachSoon: "O Coach já funciona localmente. Ligue o Supabase quando quiser — o Free/Pro pessoal permanece como está.",
   coachMatchKicker: "Próximos",
   coachMatchEmptyUpcoming: "Sem próximos jogos",

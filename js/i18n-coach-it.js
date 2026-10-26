@@ -62,7 +62,7 @@ window.FFK_COACH_I18N.it = {
   coachFirstPh: 'Nome',
   coachLastPh: 'Cognome',
   coachPhase1Note: 'Accademia, squadre e rosa su questo telefono. Partite, valutazioni e inviti ai genitori sono disponibili nelle rispettive schede.',
-  coachStart: 'Inizia con Coach',
+  coachStart: 'Attiva la stagione Coach',
   coachSoon: 'Coach è già attivo in locale. Collega Supabase quando vuoi — Free/Pro personali restano invariati.',
   coachMatchKicker: 'In programma',
   coachMatchEmptyUpcoming: 'Nessuna partita in programma',

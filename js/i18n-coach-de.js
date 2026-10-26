@@ -62,7 +62,7 @@ window.FFK_COACH_I18N.de = {
   coachFirstPh: 'Vorname',
   coachLastPh: 'Nachname',
   coachPhase1Note: 'Akademie, Teams und Kader auf diesem Smartphone. Spiele, Bewertungen und Einladungen an Eltern findest du in den jeweiligen Tabs.',
-  coachStart: 'Mit TEMPO Coach starten',
+  coachStart: 'Coach-Saison buchen',
   coachSoon: 'TEMPO Coach läuft lokal. Verbinde Supabase, wenn du bereit bist – Free/Pro bleiben unverändert.',
 
   coachMatchKicker: 'Anstehend',

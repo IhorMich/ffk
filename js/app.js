@@ -5572,8 +5572,9 @@ document.getElementById('appPushOffBtn')?.addEventListener('click', () => {
   syncPushSettingsUi();
 });
 document.getElementById('openCoachBtn')?.addEventListener('click', () => {
-  if(typeof enterCoachMode === 'function') enterCoachMode();
-  else showView('coach');
+  // Peek at Coach landing without flipping the whole app into coach tabs yet.
+  showView('coach');
+  if(typeof renderCoachUi === 'function') renderCoachUi();
 });
 document.getElementById('coachBackBtn')?.addEventListener('click', () => {
   if(isCoachPlan() && !(window.CoachStore && window.CoachStore.getSession && window.CoachStore.getSession())){

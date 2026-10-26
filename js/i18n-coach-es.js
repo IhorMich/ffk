@@ -62,7 +62,7 @@ window.FFK_COACH_I18N.es = {
   coachFirstPh: "Nombre",
   coachLastPh: "Apellidos",
   coachPhase1Note: "La academia, los equipos y la plantilla están en este teléfono. Los partidos, las valoraciones y las invitaciones a las familias están disponibles en sus pestañas.",
-  coachStart: "Empezar como entrenador",
+  coachStart: "Contratar temporada Coach",
   coachSoon: "El modo Entrenador ya funciona de forma local. Conecta Supabase cuando quieras; las opciones personales Free/Pro no cambiarán.",
 
   coachMatchKicker: "Próximos",

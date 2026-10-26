@@ -1034,8 +1034,32 @@ window.ffkIsNative = function () {
           <p class="settings-status settings-status-sub" id="appPushStatus"></p>
         </section>
 
+        <section class="settings-block" id="settingsModeBlock">
+          <h3 class="period-head" data-i18n="settingsSecMode">Режим</h3>
+          <div class="pro-card" id="modePersonalCard">
+            <div class="pro-kicker" data-i18n="planPersonalHead">Personal</div>
+            <p data-i18n="planPersonalHint">Личный TEMPO: один игрок или состав на этом телефоне. Free и Pro не связаны с командой.</p>
+          </div>
+          <div class="pro-card coach-card" id="coachCard">
+            <div class="pro-kicker" data-i18n="planCoachHead">Coach</div>
+            <p data-i18n="coachTeaserBody">Ведёте команду? Состав, оценки всех игроков и инвайт родителям — отдельно от личного Free/Pro.</p>
+            <ul class="pro-list">
+              <li data-i18n="coachTeaserTeam">Состав на матч и оценки всей команды</li>
+              <li data-i18n="coachTeaserAnalytics">Тренировки, матчи и сезон команды в облаке</li>
+              <li data-i18n="coachTeaserParents">Родитель видит только своего ребёнка</li>
+            </ul>
+            <div class="settings-actions">
+              <button class="save-btn" id="openCoachBtn" type="button" data-i18n="modeCoachCta">Я тренер — TEMPO Coach</button>
+              <button class="save-btn" id="coachSubUnlockBtn" type="button" hidden data-i18n="coachSubUnlock">Включить Coach</button>
+              <button class="ghost-btn" id="coachSubLockBtn" type="button" hidden data-i18n="coachSubLock">Выключить Coach</button>
+            </div>
+            <button class="ghost-btn" id="enterParentModeBtn" type="button" hidden data-i18n="coachSwitchParent">Перейти в режим родителя / Free</button>
+            <button class="ghost-btn" id="enterCoachModeBtn" type="button" hidden data-i18n="coachSwitchCoach">Вернуться в режим тренера</button>
+          </div>
+        </section>
+
         <section class="settings-block">
-          <h3 class="period-head" data-i18n="settingsSecPlans">Подписка</h3>
+          <h3 class="period-head" data-i18n="settingsSecPlans">Подписка Personal</h3>
           <div class="pro-card" id="proCard">
             <div class="pro-kicker">TEMPO Pro</div>
             <p id="proBody"></p>
@@ -1050,22 +1074,6 @@ window.ffkIsNative = function () {
               <button class="save-btn" id="proUnlockBtn" type="button" hidden data-i18n="proUnlock">Включить Pro</button>
               <button class="ghost-btn" id="proLockBtn" type="button" hidden data-i18n="proLock">Выключить Pro</button>
             </div>
-          </div>
-          <div class="pro-card coach-card" id="coachCard">
-            <div class="pro-kicker">TEMPO Coach</div>
-            <p data-i18n="coachTeaserBody">Управляй командой, оценивай каждого игрока и делись прогрессом с родителями.</p>
-            <ul class="pro-list">
-              <li data-i18n="coachTeaserTeam">Академия, команда, состав 10–50</li>
-              <li data-i18n="coachTeaserAnalytics">Командные матчи и аналитика</li>
-              <li data-i18n="coachTeaserParents">Invite родителя к профилю ребёнка</li>
-            </ul>
-            <div class="settings-actions">
-              <button class="save-btn" id="openCoachBtn" type="button" data-i18n="coachOpen">TEMPO Coach</button>
-              <button class="save-btn" id="coachSubUnlockBtn" type="button" hidden data-i18n="coachSubUnlock">Включить Coach</button>
-              <button class="ghost-btn" id="coachSubLockBtn" type="button" hidden data-i18n="coachSubLock">Выключить Coach</button>
-            </div>
-            <button class="ghost-btn" id="enterParentModeBtn" type="button" hidden data-i18n="coachSwitchParent">Перейти в режим родителя / Free</button>
-            <button class="ghost-btn" id="enterCoachModeBtn" type="button" hidden data-i18n="coachSwitchCoach">Вернуться в режим тренера</button>
           </div>
         </section>
 
@@ -1118,26 +1126,27 @@ window.ffkIsNative = function () {
       <div id="coachMarketing">
         <div class="coach-hero">
           <div class="pro-kicker">TEMPO Coach</div>
-          <h2 class="coach-title" data-i18n="coachTitle">TEMPO for Teams</h2>
-          <p class="coach-lead" data-i18n="coachLead">Manage your team. Track every player. Analyze team performance. Share player progress with parents.</p>
+          <h2 class="coach-title" data-i18n="coachTitle">Команда в одном месте</h2>
+          <p class="coach-lead" data-i18n="coachLead">Состав на матч, оценки всей команды, тренировки и инвайт родителям. Это не Pro — отдельная подписка для тренера.</p>
           <ul class="pro-list coach-bullets">
-            <li data-i18n="coachBullet1">Academy → Team → состав до 50 игроков</li>
-            <li data-i18n="coachBullet2">Командные матчи, оценки и аналитика</li>
-            <li data-i18n="coachBullet3">Invite родителя только к своему ребёнку</li>
-            <li data-i18n="coachBullet4">Облако отдельно от личного Free/Pro</li>
+            <li data-i18n="coachBullet1">Ведите состав и ставьте оценки каждому на матче</li>
+            <li data-i18n="coachBullet2">Календарь тренировок и сезон команды в облаке</li>
+            <li data-i18n="coachBullet3">Родитель видит прогресс только своего ребёнка</li>
+            <li data-i18n="coachBullet4">Личный Free/Pro на телефоне остаётся как был</li>
           </ul>
+          <p class="hint coach-separate" data-i18n="coachSeparateHint">TEMPO Pro — для личного дневника. TEMPO Coach — для академии и команды.</p>
           <div class="coach-price-row">
+            <button class="coach-price coach-price-year is-selected" id="coachBuyYearBtn" type="button">
+              <b data-i18n="coachPriceYear">$79.99 / year</b>
+              <span data-i18n="coachPriceYearHint">сезон выгоднее</span>
+            </button>
             <button class="coach-price" id="coachBuyMonthBtn" type="button">
               <b data-i18n="coachPriceMonth">$9.99 / month</b>
               <span data-i18n="coachPriceMonthHint">помесячно</span>
             </button>
-            <button class="coach-price coach-price-year" id="coachBuyYearBtn" type="button">
-              <b data-i18n="coachPriceYear">$79.99 / year</b>
-              <span data-i18n="coachPriceYearHint">сезон выгоднее</span>
-            </button>
           </div>
-          <p class="hint coach-limits" data-i18n="coachLimits">Лимит на старте: 1 академия · 10 команд · 50 игроков · 3 ассистента</p>
-          <button class="save-btn" id="coachStartBtn" type="button" data-i18n="coachStart">Start with Coach</button>
+          <p class="hint coach-limits" data-i18n="coachLimits">На старте: 1 академия · 10 команд · 50 игроков · 3 ассистента</p>
+          <button class="save-btn" id="coachStartBtn" type="button" data-i18n="coachStart">Оформить сезон Coach</button>
           <p class="hint" id="coachModeHint"></p>
         </div>
       </div>

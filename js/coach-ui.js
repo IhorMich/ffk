@@ -5198,7 +5198,8 @@
     document.getElementById('coachStartBtn')?.addEventListener('click', () => {
       if(typeof isCoachSub === 'function' && !isCoachSub()){
         if(typeof global.purchaseCoach === 'function' && global.FfkBilling && !(global.settings && global.settings.devBilling)){
-          global.purchaseCoach('month');
+          // Season default: year first; month is available on the secondary card.
+          global.purchaseCoach(window.ffkCoachPriceYear ? 'year' : 'month');
           return;
         }
         toast(tt('coachPickPlan', 'Choose a plan to continue.'));
