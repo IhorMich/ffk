@@ -472,6 +472,8 @@ function syncSettingsAccountFooterFromSnap(snap){
   }
   const clearBtn = document.getElementById('settingsDeleteAccountBtn');
   if(clearBtn) clearBtn.hidden = !!snap.canSignOut;
+  const cloudDeleteBtn = document.getElementById('settingsDeleteCloudBtn');
+  if(cloudDeleteBtn) cloudDeleteBtn.hidden = !snap.canSignOut;
   if(coachEmailEl) coachEmailEl.hidden = true;
 }
 function syncSettingsAccountFooter(personalEmail){
@@ -513,6 +515,86 @@ async function syncPersonalAccountUi(){
   syncSettingsAccountFooterFromSnap(snap);
   updateCloudSyncStatusUi();
   return session;
+}
+function signedInCloudClients(){
+  const out = [];
+  const cloud = window.CoachCloud;
+  if(!cloud) return out;
+  try{
+    if(typeof cloud.getParentClient === 'function'){
+      const parent = cloud.getParentClient();
+      if(parent) out.push(parent);
+    }
+  }catch(e){}
+  try{
+    if(typeof cloud.getClient === 'function'){
+      const coach = cloud.getClient();
+      if(coach && out.indexOf(coach) < 0) out.push(coach);
+    }
+  }catch(e){}
+  return out;
+}
+async function deleteSignedInCloudAccount(sb){
+  if(!sb) return 'skipped';
+  try{
+    if(typeof sb.auth.initialize === 'function') await sb.auth.initialize();
+  }catch(e){}
+  let session = null;
+  try{
+    const got = await sb.auth.getSession();
+    session = got && got.data && got.data.session;
+  }catch(e){}
+  if(!session || !session.user) return 'skipped';
+  try{
+    if(typeof sb.auth.refreshSession === 'function'){
+      const refreshed = await sb.auth.refreshSession();
+      if(refreshed && !refreshed.error && refreshed.data && refreshed.data.session){
+        session = refreshed.data.session;
+      }
+    }
+  }catch(e){}
+  const removed = await sb.rpc('delete_own_account');
+  if(removed && removed.error) throw removed.error;
+  return 'deleted';
+}
+async function onSettingsDeleteCloud(){
+  const snap = await getAuthSnapshot();
+  const personal = snap.personal && snap.personal.email;
+  const coachEmail = snap.coach && snap.coach.email;
+  const emails = [];
+  if(personal) emails.push(personal);
+  if(coachEmail && emails.indexOf(coachEmail) < 0) emails.push(coachEmail);
+  if(!emails.length) return;
+  const label = emails.join(' · ');
+  if(!confirm(t('settingsDeleteCloudConfirm', {email: label}))) return;
+  const clients = signedInCloudClients();
+  const gone = [];
+  let deleted = 0;
+  let failed = false;
+  for(let i = 0; i < clients.length; i++){
+    try{
+      const result = await deleteSignedInCloudAccount(clients[i]);
+      if(result === 'deleted'){
+        deleted += 1;
+        gone.push(clients[i]);
+      }
+    }catch(e){
+      failed = true;
+      try{ console.warn('delete account', e); }catch(err){}
+    }
+  }
+  if(deleted && !failed && window.MatchcardAuth && typeof window.MatchcardAuth.signOutAll === 'function'){
+    try{ await window.MatchcardAuth.signOutAll({personal: true, coach: true}); }catch(e){}
+  }else{
+    for(let i = 0; i < gone.length; i++){
+      try{ await gone[i].auth.signOut({scope: 'local'}); }catch(e){}
+    }
+  }
+  showToast(deleted && !failed ? t('settingsDeleteCloudDone') : t('settingsDeleteCloudFail'));
+  await syncPersonalAccountUi();
+  if(typeof renderCoachUi === 'function') renderCoachUi();
+  if(typeof renderParentUi === 'function') renderParentUi();
+  if(typeof showView === 'function') showView('settings');
 }
 async function onSettingsDeleteAccount(){
   const snap = await getAuthSnapshot();
@@ -5181,6 +5263,7 @@ document.getElementById('personalSignInBtn')?.addEventListener('click', () => on
 document.getElementById('personalSignOutBtn')?.addEventListener('click', () => onPersonalSignOut());
 document.getElementById('settingsSignOutBtn')?.addEventListener('click', () => onSettingsSignOut());
 document.getElementById('settingsDeleteAccountBtn')?.addEventListener('click', () => onSettingsDeleteAccount());
+document.getElementById('settingsDeleteCloudBtn')?.addEventListener('click', () => onSettingsDeleteCloud());
 document.getElementById('cloudSyncNowBtn')?.addEventListener('click', () => onCloudSyncNow());
 document.getElementById('settingsSupportBtn')?.addEventListener('click', () => openSettingsSupport());
 document.getElementById('settingsRateBtn')?.addEventListener('click', () => openSettingsRate());

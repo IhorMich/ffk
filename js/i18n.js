@@ -7199,3 +7199,65 @@ ru:{
     Object.assign(I18N[lang], extra.en, extra[lang] || {});
   });
 })();
+
+(function mergeDeleteAccountI18n(){
+  const extra = {
+    en:{
+      settingsDeleteCloud:'Delete account',
+      settingsDeleteCloudConfirm:'Delete account {email}? The cloud for this account goes away: the Pro season, a coach’s teams and parent invites. The season on this phone stays. This cannot be undone.',
+      settingsDeleteCloudDone:'Account deleted. The season on this phone is still here.',
+      settingsDeleteCloudFail:'Could not delete the account. Email support.'
+    },
+    uk:{
+      settingsDeleteCloud:'Видалити акаунт',
+      settingsDeleteCloudConfirm:'Видалити акаунт {email}? Хмара цього акаунта зникне: сезон Pro, команди тренера і запрошення батьків. Сезон на цьому телефоні залишиться. Повернути не можна.',
+      settingsDeleteCloudDone:'Акаунт видалено. Сезон на телефоні лишився.',
+      settingsDeleteCloudFail:'Не вдалося видалити акаунт. Напишіть у підтримку.'
+    },
+    pl:{
+      settingsDeleteCloud:'Usuń konto',
+      settingsDeleteCloudConfirm:'Usunąć konto {email}? Chmura tego konta zniknie: sezon Pro, drużyny trenera i zaproszenia rodziców. Sezon w tym telefonie zostanie. Tego nie da się cofnąć.',
+      settingsDeleteCloudDone:'Konto usunięte. Sezon w telefonie został.',
+      settingsDeleteCloudFail:'Nie udało się usunąć konta. Napisz do wsparcia.'
+    },
+    ru:{
+      settingsDeleteCloud:'Удалить аккаунт',
+      settingsDeleteCloudConfirm:'Удалить аккаунт {email}? Облако этого аккаунта исчезнет: сезон Pro, команды тренера и приглашения родителей. Сезон на этом телефоне останется. Вернуть нельзя.',
+      settingsDeleteCloudDone:'Аккаунт удалён. Сезон на телефоне остался.',
+      settingsDeleteCloudFail:'Не удалось удалить аккаунт. Напишите в поддержку.'
+    },
+    es:{
+      settingsDeleteCloud:'Eliminar cuenta',
+      settingsDeleteCloudConfirm:'¿Eliminar la cuenta {email}? La nube de esta cuenta desaparece: la temporada Pro, los equipos del entrenador y las invitaciones. La temporada de este teléfono se queda. No se puede deshacer.',
+      settingsDeleteCloudDone:'Cuenta eliminada. La temporada sigue en este teléfono.',
+      settingsDeleteCloudFail:'No se pudo eliminar la cuenta. Escribe al soporte.'
+    },
+    de:{
+      settingsDeleteCloud:'Konto löschen',
+      settingsDeleteCloudConfirm:'Konto {email} löschen? Die Cloud dieses Kontos verschwindet: Pro-Saison, Trainerteams und Elterneinladungen. Die Saison auf diesem Telefon bleibt. Das geht nicht zurück.',
+      settingsDeleteCloudDone:'Konto gelöscht. Die Saison auf dem Telefon ist noch da.',
+      settingsDeleteCloudFail:'Konto konnte nicht gelöscht werden. Schreib an den Support.'
+    },
+    it:{
+      settingsDeleteCloud:'Elimina account',
+      settingsDeleteCloudConfirm:'Eliminare l’account {email}? Il cloud di questo account sparisce: stagione Pro, squadre dell’allenatore e inviti. La stagione su questo telefono resta. Non si può annullare.',
+      settingsDeleteCloudDone:'Account eliminato. La stagione sul telefono è ancora qui.',
+      settingsDeleteCloudFail:'Impossibile eliminare l’account. Scrivi al supporto.'
+    },
+    fr:{
+      settingsDeleteCloud:'Supprimer le compte',
+      settingsDeleteCloudConfirm:'Supprimer le compte {email} ? Le cloud de ce compte disparaît : saison Pro, équipes du coach et invitations. La saison sur ce téléphone reste. C’est définitif.',
+      settingsDeleteCloudDone:'Compte supprimé. La saison est toujours sur ce téléphone.',
+      settingsDeleteCloudFail:'Impossible de supprimer le compte. Écrivez au support.'
+    },
+    pt:{
+      settingsDeleteCloud:'Eliminar conta',
+      settingsDeleteCloudConfirm:'Eliminar a conta {email}? A nuvem desta conta desaparece: época Pro, equipas do treinador e convites. A época neste telemóvel fica. Não dá para voltar atrás.',
+      settingsDeleteCloudDone:'Conta eliminada. A época continua neste telemóvel.',
+      settingsDeleteCloudFail:'Não foi possível eliminar a conta. Escreva ao suporte.'
+    }
+  };
+  LANGS.forEach(lang => {
+    Object.assign(I18N[lang], extra.en, extra[lang] || {});
+  });
+})();

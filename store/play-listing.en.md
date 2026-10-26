@@ -37,7 +37,7 @@ A live match card, big pitch buttons right after Start, a short onboarding, and 
 
 https://ihormich.github.io/ffk/privacy.html
 
-Accounts exist (email and Google). No ad analytics. A free season and its photo stay on the device until the user saves a copy or turns on Pro cloud. A coach’s team and invites live in the account. Deleting the cloud record is an email to support.
+Accounts exist (email and Google). No ad analytics. A free season and its photo stay on the device until the user saves a copy or turns on Pro cloud. A coach’s team and invites live in the account. “Delete account” in Settings removes that cloud. The on-phone season stays.
 
 Do not upload a real child’s face or full name on store screenshots. Use a “Demo” player with no photo.
 
