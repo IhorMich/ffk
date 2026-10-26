@@ -335,21 +335,24 @@
     }
     return session || null;
   }
-  async function signInWithGoogle(){
+  async function signInWithOAuthProvider(provider){
     const sb = getClient();
     if(!sb) throw new Error('no_cloud');
     try{ localStorage.setItem(OAUTH_ROLE_KEY, 'coach'); }catch(e){}
     const native = isNativeShell();
+    const options = {
+      redirectTo: authRedirectTo(),
+      skipBrowserRedirect: native
+    };
+    if(provider === 'google'){
+      options.queryParams = {
+        access_type: 'offline',
+        prompt: 'select_account'
+      };
+    }
     const {data, error} = await sb.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: authRedirectTo(),
-        skipBrowserRedirect: native,
-        queryParams: {
-          access_type: 'offline',
-          prompt: 'select_account'
-        }
-      }
+      provider,
+      options
     });
     if(error) throw error;
     if(native){
@@ -357,6 +360,12 @@
       await openAuthUrl(data.url);
     }
     return true;
+  }
+  async function signInWithGoogle(){
+    return signInWithOAuthProvider('google');
+  }
+  async function signInWithApple(){
+    return signInWithOAuthProvider('apple');
   }
   async function adoptGoogleSession(session){
     const user = session && session.user;
@@ -1099,6 +1108,7 @@
     watchCloudSession,
     refreshCoachPhotosUi,
     signInWithGoogle,
+    signInWithApple,
     handleAuthCallbackUrl,
     bindAuthDeepLinks,
     adoptGoogleSession,

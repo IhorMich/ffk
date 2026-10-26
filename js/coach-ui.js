@@ -2996,6 +2996,29 @@
       toast(tt('coachErrGeneric', 'Could not sign in.'));
     }
   }
+  async function onAppleSignIn(){
+    if(!global.CoachStore || typeof global.CoachStore.signInWithApple !== 'function'){
+      toast(tt('accountCloudMissing', 'Cloud is not configured.'));
+      return;
+    }
+    try{
+      const auth = document.getElementById('coachAuth');
+      if(auth) delete auth.dataset.forceCloud;
+      toast(tt('accountAppleOpening', 'Opening Apple…'));
+      await global.CoachStore.signInWithApple();
+    }catch(e){
+      const msg = String((e && e.message) || '');
+      if(/provider is not enabled|validation_failed|unsupported_provider/i.test(msg)){
+        toast(tt('accountAppleDisabled', 'Apple sign-in is not enabled yet.'));
+        return;
+      }
+      if(msg === 'no_cloud'){
+        toast(tt('accountCloudMissing', 'Cloud is not configured.'));
+        return;
+      }
+      toast(tt('coachErrGeneric', 'Could not sign in.'));
+    }
+  }
   function syncCoachPriceUi(){
     const plan = (global.settings && global.settings.coachSubPlan) || '';
     const monthBtn = document.getElementById('coachBuyMonthBtn');
@@ -5206,6 +5229,7 @@
     document.getElementById('coachSignUpBtn')?.addEventListener('click', () => { onSignUp(); });
     document.getElementById('coachSignInBtn')?.addEventListener('click', () => { onSignIn(); });
     document.getElementById('coachGoogleBtn')?.addEventListener('click', () => { onGoogleSignIn(); });
+    document.getElementById('coachAppleBtn')?.addEventListener('click', () => { onAppleSignIn(); });
     document.getElementById('coachSignOutBtn')?.addEventListener('click', () => { onSignOut(); });
     document.getElementById('coachEnterParentBtn')?.addEventListener('click', () => { enterParentMode(); });
     document.getElementById('enterParentModeBtn')?.addEventListener('click', () => { enterParentMode(); });

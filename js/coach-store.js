@@ -289,6 +289,12 @@
       }
       return global.CoachCloud.signInWithGoogle();
     },
+    async signInWithApple(){
+      if(!global.CoachCloud || typeof global.CoachCloud.signInWithApple !== 'function'){
+        throw new Error('no_cloud');
+      }
+      return global.CoachCloud.signInWithApple();
+    },
     async adoptCloudAuthSession(authSession){
       if(global.CoachCloud && typeof global.CoachCloud.adoptGoogleSession === 'function'){
         return global.CoachCloud.adoptGoogleSession(authSession);

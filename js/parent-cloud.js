@@ -576,21 +576,24 @@
       return null;
     }
   }
-  async function signInWithGoogle(){
+  async function signInWithOAuthProvider(provider){
     const sb = parentClient();
     if(!sb) throw new Error('no_cloud');
     try{ localStorage.setItem('ffk_oauth_role', 'parent'); }catch(e){}
     const native = isNativeShell();
+    const options = {
+      redirectTo: authRedirectTo(),
+      skipBrowserRedirect: native
+    };
+    if(provider === 'google'){
+      options.queryParams = {
+        access_type: 'offline',
+        prompt: 'select_account'
+      };
+    }
     const {data, error} = await sb.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: authRedirectTo(),
-        skipBrowserRedirect: native,
-        queryParams: {
-          access_type: 'offline',
-          prompt: 'select_account'
-        }
-      }
+      provider,
+      options
     });
     if(error) throw error;
     if(native){
@@ -598,6 +601,12 @@
       await openAuthUrl(data.url);
     }
     return true;
+  }
+  async function signInWithGoogle(){
+    return signInWithOAuthProvider('google');
+  }
+  async function signInWithApple(){
+    return signInWithOAuthProvider('apple');
   }
   let authDeepLinksBound = false;
   function bindAuthDeepLinks(onSession){
@@ -2008,6 +2017,7 @@
     signOut,
     signInWithEmail,
     signInWithGoogle,
+    signInWithApple,
     handleAuthCallbackUrl,
     bindAuthDeepLinks,
     consumeAuthRedirectFromLocation,

@@ -1471,6 +1471,17 @@
   .account-google-btn svg{width:20px;height:20px;flex:0 0 auto;display:block;}
   .account-google-btn span{min-width:0;}
   .account-google-btn:disabled{opacity:.42;filter:saturate(.3);cursor:default;}
+  .account-apple-btn{
+    width:100%;min-height:48px;margin:10px 0 0;padding:12px 16px;gap:10px;
+    border-radius:16px;border:1px solid transparent;
+    background:#111;color:#fff;
+    display:inline-flex;align-items:center;justify-content:center;
+    cursor:pointer;font:inherit;font-size:.92rem;font-weight:800;line-height:1.2;
+    box-sizing:border-box;
+  }
+  html[data-theme="day"] .account-apple-btn{background:#000;color:#fff;}
+  .account-apple-btn svg{width:18px;height:18px;flex:0 0 auto;display:block;}
+  .account-apple-btn:disabled{opacity:.42;cursor:default;}
   .coach-card{margin-top:0;}
   .coach-back{margin:0 0 12px;width:auto;}
   .coach-hero{

@@ -708,10 +708,16 @@ function closeLegalPage(){
 }
 function openSettingsRate(){
   const play = 'https://play.google.com/store/apps/details?id=app.tempo';
+  const appStore = 'https://apps.apple.com/app/id0000000000';
   const web = 'https://ihormich.github.io/ffk/';
   let url = web;
   try{
-    if(typeof isNativeApp === 'function' && isNativeApp()) url = play;
+    if(typeof isNativeApp === 'function' && isNativeApp()){
+      const plat = window.Capacitor && typeof window.Capacitor.getPlatform === 'function'
+        ? window.Capacitor.getPlatform()
+        : '';
+      url = plat === 'ios' ? appStore : play;
+    }
   }catch(e){}
   openExternalPage(url);
 }
@@ -868,6 +874,27 @@ async function onPersonalGoogle(){
     showToast(map[msg] || t('accountErrGeneric'));
   }
 }
+async function onPersonalApple(){
+  if(!window.ParentCloud || typeof window.ParentCloud.signInWithApple !== 'function'){
+    showToast(t('accountCloudMissing'));
+    return;
+  }
+  try{
+    showToast(t('accountAppleOpening'));
+    await window.ParentCloud.signInWithApple();
+  }catch(e){
+    const map = {
+      no_cloud: t('accountCloudMissing'),
+      auth: t('accountErrGeneric')
+    };
+    const msg = String((e && e.message) || '');
+    if(/provider is not enabled|validation_failed|unsupported_provider/i.test(msg)){
+      showToast(t('accountAppleDisabled'));
+      return;
+    }
+    showToast(map[msg] || t('accountErrGeneric'));
+  }
+}
 async function setPro(on){
   if(on){
     const session = await requirePersonalAccount('accountNeedForPro');
@@ -916,8 +943,19 @@ function subscribeLabel(){
   return price ? t('proSubscribePrice', {price: price}) : t('proSubscribe');
 }
 function openPlaySubscriptions(sku){
-  const id = sku || 'tempo_pro';
-  const url = 'https://play.google.com/store/account/subscriptions?sku=' + encodeURIComponent(id) + '&package=app.tempo';
+  let url = 'https://apps.apple.com/account/subscriptions';
+  try{
+    const plat = window.Capacitor && typeof window.Capacitor.getPlatform === 'function'
+      ? window.Capacitor.getPlatform()
+      : '';
+    if(plat !== 'ios'){
+      const id = sku || 'tempo_pro';
+      url = 'https://play.google.com/store/account/subscriptions?sku=' + encodeURIComponent(id) + '&package=app.tempo';
+    }
+  }catch(e){
+    const id = sku || 'tempo_pro';
+    url = 'https://play.google.com/store/account/subscriptions?sku=' + encodeURIComponent(id) + '&package=app.tempo';
+  }
   try{
     const Browser = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Browser;
     if(Browser && typeof Browser.open === 'function'){
@@ -5506,6 +5544,7 @@ document.getElementById('termsLink')?.addEventListener('click', (e) => {
 });
 document.getElementById('legalBackBtn')?.addEventListener('click', () => closeLegalPage());
 document.getElementById('personalGoogleBtn')?.addEventListener('click', () => onPersonalGoogle());
+document.getElementById('personalAppleBtn')?.addEventListener('click', () => onPersonalApple());
 document.getElementById('coachSubUnlockBtn')?.addEventListener('click', () => {
   if(playBillingAvailable() && !devBillingOn()) purchaseCoach('month');
   else setCoachSub(true);
