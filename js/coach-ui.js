@@ -3016,6 +3016,7 @@
     }
   }
   function purchaseCoachPlan(plan){
+    if(!(global.settings && global.settings.devBilling === true)) return;
     const value = plan === 'year' ? 'year' : 'month';
     try{
       if(global.settings){

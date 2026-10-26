@@ -797,15 +797,21 @@ function setCoachSub(on){
   syncCoachBillingUi();
   showToast(on ? t('coachSubOn') : t('coachSubOff'));
 }
+function devBillingOn(){
+  return !!(settings && settings.devBilling === true);
+}
 function syncCoachBillingUi(){
   const on = isCoachSub();
-  // Test unlock until Play Billing / App Store IAP ships.
-  const showBilling = true;
+  const showBilling = devBillingOn();
   document.documentElement.classList.toggle('is-coach-sub', on);
   const unlock = document.getElementById('coachSubUnlockBtn');
   const lock = document.getElementById('coachSubLockBtn');
   if(unlock) unlock.hidden = !showBilling || on;
   if(lock) lock.hidden = !showBilling || !on;
+  const prices = document.querySelector('.coach-price-row');
+  if(prices) prices.hidden = !showBilling;
+  const start = document.getElementById('coachStartBtn');
+  if(start) start.hidden = !showBilling && !on;
   const open = document.getElementById('openCoachBtn');
   if(open) open.disabled = false;
 }
@@ -835,7 +841,9 @@ function syncPushSettingsUi(){
 }
 window.syncPushSettingsUi = syncPushSettingsUi;
 function proTeaserHtml(titleKey){
-  const unlock = `<button class="save-btn pro-lock-btn" type="button">${escapeHtml(t('proUnlock'))}</button>`;
+  const unlock = devBillingOn()
+    ? `<button class="save-btn pro-lock-btn" type="button">${escapeHtml(t('proUnlock'))}</button>`
+    : '';
   return `<div class="pro-lock">
     <div class="pro-lock-kicker">TEMPO Pro</div>
     <p>${escapeHtml(t(titleKey))}</p>
@@ -849,14 +857,18 @@ function syncProUi(){
   if(body) body.textContent = isPro() ? t('proBodyOn') : t('proBodyOff');
   const unlock = document.getElementById('proUnlockBtn');
   const lock = document.getElementById('proLockBtn');
-  // Always show test purchase / cancel until real store IAP is wired.
+  const showTest = devBillingOn();
   if(unlock){
-    unlock.hidden = isPro();
+    unlock.hidden = !showTest || isPro();
     unlock.disabled = false;
   }
   if(lock){
-    lock.hidden = !isPro();
+    lock.hidden = !showTest || !isPro();
     lock.disabled = false;
+  }
+  const proActions = unlock && unlock.parentElement;
+  if(proActions && proActions.classList.contains('settings-actions')){
+    proActions.hidden = (!unlock || unlock.hidden) && (!lock || lock.hidden);
   }
   const cloudCard = document.getElementById('cloudSyncCard');
   if(cloudCard){
@@ -5197,7 +5209,7 @@ if(typeof bindCoachUi === 'function') bindCoachUi();
 if(typeof bindParentUi === 'function') bindParentUi();
 document.addEventListener('click', e => {
   const btn = e.target.closest('.pro-lock-btn');
-  if(!btn) return;
+  if(!btn || !devBillingOn()) return;
   e.preventDefault();
   setPro(true);
 });
